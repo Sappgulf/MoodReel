@@ -2,37 +2,33 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
+// TODO: Move this to a .env file for security
+const apiKey = 'f2b1a353af51ccd27736c209f7ea0ca6';
+
 function App() {
   const [mood, setMood] = useState('');
   const [recommendations, setRecommendations] = useState([]);
-  const [apiKey, setApiKey] = useState(''); // State for API key
   const [error, setError] = useState('');
 
   const handleMoodChange = (event) => {
     setMood(event.target.value);
   };
 
-  const handleApiKeyChange = (event) => {
-    setApiKey(event.target.value);
-  };
-
   const getRecommendations = async () => {
-    if (!apiKey) {
-      setError('Please enter your OMDb API key.');
-      return;
-    }
     if (!mood) {
       setError('Please enter a mood or a search term.');
       return;
     }
     setError('');
     try {
-      const response = await axios.get(`http://www.omdbapi.com/?s=${mood}&apikey=${apiKey}`);
-      if (response.data.Search) {
-        setRecommendations(response.data.Search);
+      const response = await axios.get(
+        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${mood}`
+      );
+      if (response.data.results) {
+        setRecommendations(response.data.results);
       } else {
         setRecommendations([]);
-        setError(response.data.Error || 'No results found.');
+        setError('No results found.');
       }
     } catch (err) {
       setError('Error fetching data. Please check the console.');
@@ -47,14 +43,6 @@ function App() {
         <p>Tell us your mood, we'll find you a reel.</p>
       </header>
       <main>
-        <div className="api-key-input">
-          <input
-            type="text"
-            value={apiKey}
-            onChange={handleApiKeyChange}
-            placeholder="Enter your OMDb API Key"
-          />
-        </div>
         <div className="mood-selector">
           <input
             type="text"
@@ -66,11 +54,18 @@ function App() {
         </div>
         {error && <p className="error">{error}</p>}
         <div className="recommendations">
-          {recommendations.map((rec, index) => (
-            <div key={index} className="recommendation">
-              <h2>{rec.Title}</h2>
-              <p>{rec.Year}</p>
-              <img src={rec.Poster} alt={rec.Title} />
+          {recommendations.map((rec) => (
+            <div key={rec.id} className="recommendation">
+              <h2>{rec.title}</h2>
+              <p>{rec.release_date}</p>
+              {rec.poster_path ? (
+                <img
+                  src={`https://image.tmdb.org/t/p/w500${rec.poster_path}`}
+                  alt={rec.title}
+                />
+              ) : (
+                <div className="no-poster">No Poster Available</div>
+              )}
             </div>
           ))}
         </div>

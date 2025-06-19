@@ -73,3 +73,13 @@
 .recommendation p {
   font-size: 0.9rem;
 }
+
+.no-poster {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eee;
+  color: #666;
+  border-radius: 4px;
+}
