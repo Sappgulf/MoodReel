@@ -74,6 +74,11 @@
   font-size: 0.9rem;
 }
 
+.recommendation a {
+  text-decoration: none;
+  color: inherit;
+}
+
 .no-poster {
   height: 300px;
   display: flex;
@@ -82,4 +87,17 @@
   background-color: #eee;
   color: #666;
   border-radius: 4px;
+}
+
+.movie-details {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  background-color: white;
+  text-align: left;
+}
+
+.movie-details img {
+  max-width: 400px;
+  border-radius: 8px;
 }
