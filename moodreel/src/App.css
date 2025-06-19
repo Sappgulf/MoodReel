@@ -1,0 +1,75 @@
+/* App.css */
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  min-height: 100vh;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.api-key-input,
+.mood-selector {
+  margin: 20px;
+}
+
+.api-key-input input,
+.mood-selector input {
+  padding: 10px;
+  margin-right: 10px;
+  width: 250px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.mood-selector button {
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #61dafb;
+  border: none;
+  border-radius: 4px;
+  color: #282c34;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  margin: 10px;
+}
+
+.recommendations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.recommendation {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px;
+  width: 200px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+.recommendation img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.recommendation h2 {
+  font-size: 1rem;
+}
+
+.recommendation p {
+  font-size: 0.9rem;
+}
