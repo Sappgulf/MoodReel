@@ -101,3 +101,37 @@
   max-width: 400px;
   border-radius: 8px;
 }
+
+.genre-filters {
+  margin: 20px 0;
+}
+
+.genre-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.genre-buttons button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.genre-buttons button:hover {
+  background-color: #f0f0f0;
+}
+
+.genre-buttons button.active {
+  background-color: #61dafb;
+  color: white;
+  border-color: #61dafb;
+}
+
+.search-container {
+  margin-top: 20px;
+}

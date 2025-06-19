@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -19,27 +19,57 @@ function Home() {
   const [mood, setMood] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [error, setError] = useState('');
+  const [genres, setGenres] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const response = await axios.get(
+          `https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`
+        );
+        setGenres(response.data.genres);
+      } catch (err) {
+        console.error('Error fetching genres:', err);
+      }
+    };
+    fetchGenres();
+  }, []);
+
+  const handleGenreClick = (genreId) => {
+    setSelectedGenres((prevSelected) =>
+      prevSelected.includes(genreId)
+        ? prevSelected.filter((id) => id !== genreId)
+        : [...prevSelected, genreId]
+    );
+  };
 
   const handleMoodChange = (event) => {
     setMood(event.target.value);
   };
 
   const getRecommendations = async () => {
-    if (!mood) {
-      setError('Please enter a mood or a search term.');
+    if (!mood && selectedGenres.length === 0) {
+      setError('Please enter a mood or select a genre.');
       return;
     }
     setError('');
 
     const lowerCaseMood = mood.toLowerCase();
-    const genreId = moodMap[lowerCaseMood];
+    const genreIdFromMood = moodMap[lowerCaseMood];
     let url;
 
-    if (genreId) {
-      // If the mood is in our map, discover movies by genre
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}&sort_by=popularity.desc`;
+    const allSelectedGenres = [...selectedGenres];
+    if (genreIdFromMood && !allSelectedGenres.includes(genreIdFromMood)) {
+      allSelectedGenres.push(genreIdFromMood);
+    }
+    
+    const genreQuery = allSelectedGenres.join(',');
+
+    if (genreQuery) {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreQuery}&sort_by=popularity.desc`;
     } else {
-      // Otherwise, search by the term directly
+      // Fallback to search if no genres are selected but mood is present
       url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${mood}`;
     }
 
@@ -49,7 +79,7 @@ function Home() {
         setRecommendations(response.data.results);
       } else {
         setRecommendations([]);
-        setError('No results found for that mood. Try another!');
+        setError('No results found. Try another combination!');
       }
     } catch (err) {
       setError('Error fetching data. Please check the console.');
@@ -64,10 +94,29 @@ function Home() {
           type="text"
           value={mood}
           onChange={handleMoodChange}
-          placeholder="How are you feeling?"
+          placeholder="How are you feeling? (e.g., happy, sad)"
         />
+      </div>
+
+      <div className="genre-filters">
+        <h3>Or pick your genres:</h3>
+        <div className="genre-buttons">
+          {genres.map((genre) => (
+            <button
+              key={genre.id}
+              onClick={() => handleGenreClick(genre.id)}
+              className={selectedGenres.includes(genre.id) ? 'active' : ''}
+            >
+              {genre.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div className="search-container">
         <button onClick={getRecommendations}>Get Recommendations</button>
       </div>
+
       {error && <p className="error">{error}</p>}
       <div className="recommendations">
         {recommendations.map((rec) => (
