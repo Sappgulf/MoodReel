@@ -5,6 +5,16 @@ import axios from 'axios';
 // TODO: Move this to a .env file for security
 const apiKey = 'f2b1a353af51ccd27736c209f7ea0ca6';
 
+const moodMap = {
+  happy: 35, // Comedy
+  sad: 18, // Drama
+  adventurous: 12, // Adventure
+  scared: 27, // Horror
+  romantic: 10749, // Romance
+  funny: 35, // Comedy
+  thrilling: 53, // Thriller
+};
+
 function Home() {
   const [mood, setMood] = useState('');
   const [recommendations, setRecommendations] = useState([]);
@@ -20,15 +30,26 @@ function Home() {
       return;
     }
     setError('');
+
+    const lowerCaseMood = mood.toLowerCase();
+    const genreId = moodMap[lowerCaseMood];
+    let url;
+
+    if (genreId) {
+      // If the mood is in our map, discover movies by genre
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}&sort_by=popularity.desc`;
+    } else {
+      // Otherwise, search by the term directly
+      url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${mood}`;
+    }
+
     try {
-      const response = await axios.get(
-        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${mood}`
-      );
-      if (response.data.results) {
+      const response = await axios.get(url);
+      if (response.data.results && response.data.results.length > 0) {
         setRecommendations(response.data.results);
       } else {
         setRecommendations([]);
-        setError('No results found.');
+        setError('No results found for that mood. Try another!');
       }
     } catch (err) {
       setError('Error fetching data. Please check the console.');
