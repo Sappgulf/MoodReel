@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
+import ShareButtons from '../components/ShareButtons';
+import StarRating from '../components/StarRating';
 import { useWatchlist } from '../hooks/useWatchlist';
+import { useRatings } from '../hooks/useRatings';
 import { Skeleton } from '../components/Skeleton';
 
 // Use environment variable if set, otherwise use default key
@@ -17,10 +20,18 @@ function MovieDetails() {
   const [content, setContent] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [providers, setProviders] = useState(null);
+  const [trailer, setTrailer] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewText, setReviewText] = useState('');
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { getRating, setRating, getReview, setReview } = useRatings();
+
+  // Get stored rating/review
+  const userRating = getRating(id);
+  const userReview = getReview(id);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -31,10 +42,11 @@ function MovieDetails() {
       setContent(null);
       setSimilar([]);
       setProviders(null);
+      setTrailer(null);
 
       try {
-        // Fetch all data in parallel
-        const [detailsResponse, similarResponse, providersResponse] = await Promise.all([
+        // Fetch all data in parallel (including videos for trailers)
+        const [detailsResponse, similarResponse, providersResponse, videosResponse] = await Promise.all([
           axios.get(
             `https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${apiKey}`,
             { signal: controller.signal }
@@ -47,6 +59,10 @@ function MovieDetails() {
             `https://api.themoviedb.org/3/${mediaType}/${id}/watch/providers?api_key=${apiKey}`,
             { signal: controller.signal }
           ),
+          axios.get(
+            `https://api.themoviedb.org/3/${mediaType}/${id}/videos?api_key=${apiKey}`,
+            { signal: controller.signal }
+          ),
         ]);
 
         setContent(detailsResponse.data);
@@ -55,6 +71,19 @@ function MovieDetails() {
         // Get US providers or first available region
         const results = providersResponse.data.results;
         setProviders(results?.US || results?.[Object.keys(results)[0]] || null);
+
+        // Find YouTube trailer
+        const videos = videosResponse.data.results || [];
+        const trailerVideo = videos.find(v =>
+          v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+        ) || videos.find(v => v.site === 'YouTube');
+        setTrailer(trailerVideo || null);
+
+        // Load saved review text
+        const savedReview = getReview(id);
+        if (savedReview) {
+          setReviewText(savedReview);
+        }
 
       } catch (err) {
         if (!axios.isCancel(err)) {
@@ -69,7 +98,7 @@ function MovieDetails() {
     fetchData();
 
     return () => controller.abort();
-  }, [id, mediaType]);
+  }, [id, mediaType, getReview]);
 
   const renderStars = useCallback((rating) => {
     const stars = Math.round(rating / 2);
@@ -81,6 +110,15 @@ function MovieDetails() {
       toggleWatchlist({ ...content, media_type: mediaType });
     }
   }, [content, mediaType, toggleWatchlist]);
+
+  const handleRatingChange = useCallback((rating) => {
+    setRating(id, rating);
+  }, [id, setRating]);
+
+  const handleReviewSubmit = useCallback(() => {
+    setReview(id, reviewText);
+    setShowReviewForm(false);
+  }, [id, reviewText, setReview]);
 
   if (error) {
     return (
@@ -171,17 +209,83 @@ function MovieDetails() {
               </div>
             )}
 
-            {/* Add to Watchlist Button */}
-            <button
-              className="primary-button"
-              onClick={handleToggleWatchlist}
-              style={{ marginTop: 'var(--spacing-lg)' }}
-              aria-pressed={isInWatchlist(content.id)}
-            >
-              {isInWatchlist(content.id) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
-            </button>
+            {/* Action Buttons Row */}
+            <div className="action-buttons">
+              <button
+                className="primary-button"
+                onClick={handleToggleWatchlist}
+                aria-pressed={isInWatchlist(content.id)}
+              >
+                {isInWatchlist(content.id) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
+              </button>
+
+              <ShareButtons title={title} />
+            </div>
+
+            {/* User Rating */}
+            <div className="user-rating-section">
+              <h4>Your Rating:</h4>
+              <StarRating
+                rating={userRating}
+                onRate={handleRatingChange}
+                size="large"
+              />
+
+              {!showReviewForm && !userReview && (
+                <button
+                  className="review-toggle-btn"
+                  onClick={() => setShowReviewForm(true)}
+                >
+                  ✏️ Write a Review
+                </button>
+              )}
+
+              {userReview && !showReviewForm && (
+                <div className="user-review">
+                  <p>"{userReview}"</p>
+                  <button
+                    className="review-edit-btn"
+                    onClick={() => setShowReviewForm(true)}
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+
+              {showReviewForm && (
+                <div className="review-form">
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="What did you think of this movie?"
+                    rows={3}
+                  />
+                  <div className="review-form-actions">
+                    <button onClick={handleReviewSubmit}>Save Review</button>
+                    <button onClick={() => setShowReviewForm(false)}>Cancel</button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Trailer Section */}
+        {trailer && (
+          <section className="trailer-section" aria-labelledby="trailer-heading">
+            <h3 id="trailer-heading">🎬 Watch Trailer</h3>
+            <div className="trailer-container">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailer.key}`}
+                title={`${title} trailer`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </section>
+        )}
 
         {/* Streaming Providers */}
         {providers && (providers.flatrate || providers.rent || providers.buy) && (
