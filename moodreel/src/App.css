@@ -1053,3 +1053,28 @@ main {
   gap: var(--spacing-md);
   align-items: center;
 }
+
+/* =====================================================
+   API Warning Banner
+   ===================================================== */
+.api-warning {
+  background: linear-gradient(135deg, #7c2d12 0%, #451a03 100%);
+  border: 1px solid #ea580c;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+  color: #fed7aa;
+}
+
+.api-warning strong {
+  color: #fb923c;
+}
+
+.api-warning code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9em;
+}

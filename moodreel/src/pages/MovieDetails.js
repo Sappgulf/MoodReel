@@ -7,6 +7,11 @@ import { Skeleton } from '../components/Skeleton';
 
 const apiKey = process.env.REACT_APP_TMDB_API_KEY;
 
+// Validate API key on load
+if (!apiKey) {
+  console.error('REACT_APP_TMDB_API_KEY is not set. Please add it to your .env file or Vercel environment variables.');
+}
+
 function MovieDetails() {
   const { id } = useParams();
   const location = useLocation();
@@ -18,10 +23,18 @@ function MovieDetails() {
   const [providers, setProviders] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [apiKeyMissing] = useState(!apiKey);
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
   useEffect(() => {
+    // Don't fetch if API key is missing
+    if (!apiKey) {
+      setError('API key not configured. Please set REACT_APP_TMDB_API_KEY.');
+      setIsLoading(false);
+      return;
+    }
+
     const controller = new AbortController();
 
     const fetchData = async () => {
@@ -84,6 +97,11 @@ function MovieDetails() {
   if (error) {
     return (
       <main role="main">
+        {apiKeyMissing && (
+          <div className="api-warning" role="alert">
+            <strong>⚠️ API Key Missing:</strong> Set <code>REACT_APP_TMDB_API_KEY</code> in your environment variables.
+          </div>
+        )}
         <Link to="/" className="back-button">← Back to Discover</Link>
         <p className="error" role="alert">{error}</p>
       </main>

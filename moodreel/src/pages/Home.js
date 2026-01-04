@@ -6,6 +6,11 @@ import { useWatchlist } from '../hooks/useWatchlist';
 
 const apiKey = process.env.REACT_APP_TMDB_API_KEY;
 
+// Validate API key on load
+if (!apiKey) {
+  console.error('REACT_APP_TMDB_API_KEY is not set. Please add it to your .env file or Vercel environment variables.');
+}
+
 // Extended mood mapping with more keywords
 const moodMap = {
   // Happy/Uplifting
@@ -79,6 +84,7 @@ function Home() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTV, setIsTV] = useState(false);
+  const [apiKeyMissing] = useState(!apiKey);
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
 
@@ -87,6 +93,11 @@ function Home() {
 
   // Fetch genres with AbortController
   useEffect(() => {
+    // Don't fetch if API key is missing
+    if (!apiKey) {
+      return;
+    }
+
     const controller = new AbortController();
 
     const fetchGenres = async () => {
@@ -128,6 +139,12 @@ function Home() {
   }, []);
 
   const getRecommendations = useCallback(async () => {
+    // Guard against missing API key
+    if (!apiKey) {
+      setError('API key not configured. Please set REACT_APP_TMDB_API_KEY.');
+      return;
+    }
+
     if (!mood && selectedGenres.length === 0) {
       setError('Please enter a mood or select a genre.');
       return;
@@ -203,6 +220,12 @@ function Home() {
 
   return (
     <main role="main">
+      {/* API Key Warning */}
+      {apiKeyMissing && (
+        <div className="api-warning" role="alert">
+          <strong>⚠️ API Key Missing:</strong> Set <code>REACT_APP_TMDB_API_KEY</code> in your environment variables.
+        </div>
+      )}
       {/* Content Type Toggle */}
       <div className="content-toggle">
         <span className={`toggle-label ${!isTV ? 'active' : ''}`}>Movies</span>
