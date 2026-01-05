@@ -337,7 +337,7 @@ function Home() {
     let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${apiKey}&page=${pageNum}&sort_by=popularity.desc`;
 
     if (allGenres.length > 0) {
-      url += `&with_genres=${allGenres.join(',')}`;
+      url += `&with_genres=${allGenres.join('|')}`;
     }
 
     if (selectedProviders.length > 0) {
