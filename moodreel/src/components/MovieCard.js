@@ -5,7 +5,14 @@ import { Link } from 'react-router-dom';
  * Premium movie card component with poster, info, watchlist button, and 3D parallax effect
  * Memoized to prevent unnecessary re-renders
  */
-const MovieCard = memo(function MovieCard({ movie, isInWatchlist, onToggleWatchlist, mediaType = 'movie' }) {
+const MovieCard = memo(function MovieCard({
+    movie,
+    isInWatchlist,
+    onToggleWatchlist,
+    isWatched,
+    onToggleWatched,
+    mediaType = 'movie'
+}) {
     const title = movie.title || movie.name;
     const date = movie.release_date || movie.first_air_date;
     const year = date ? new Date(date).getFullYear() : '';
@@ -22,6 +29,14 @@ const MovieCard = memo(function MovieCard({ movie, isInWatchlist, onToggleWatchl
         e.stopPropagation();
         onToggleWatchlist(movie);
     }, [movie, onToggleWatchlist]);
+
+    const handleWatchedClick = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onToggleWatched) {
+            onToggleWatched(movie.id);
+        }
+    }, [movie.id, onToggleWatched]);
 
     // 3D parallax tilt on mouse move
     const handleMouseMove = useCallback((e) => {
@@ -66,14 +81,27 @@ const MovieCard = memo(function MovieCard({ movie, isInWatchlist, onToggleWatchl
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <button
-                className={`watchlist-btn ${isInWatchlist ? 'active' : ''}`}
-                onClick={handleWatchlistClick}
-                aria-label={isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
-                aria-pressed={isInWatchlist}
-            >
-                {isInWatchlist ? '❤️' : '🤍'}
-            </button>
+            <div className="card-actions">
+                <button
+                    className={`watchlist-btn ${isInWatchlist ? 'active' : ''}`}
+                    onClick={handleWatchlistClick}
+                    aria-label={isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+                    aria-pressed={isInWatchlist}
+                >
+                    {isInWatchlist ? '❤️' : '🤍'}
+                </button>
+
+                {onToggleWatched && (
+                    <button
+                        className={`watched-card-btn ${isWatched ? 'active' : ''}`}
+                        onClick={handleWatchedClick}
+                        aria-label={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
+                        aria-pressed={isWatched}
+                    >
+                        {isWatched ? '✅' : '👁️'}
+                    </button>
+                )}
+            </div>
 
             <Link to={detailPath}>
                 <div className="poster-wrapper">

@@ -29,7 +29,10 @@ function MovieDetails() {
   const [reviewText, setReviewText] = useState('');
   const [showTrailerModal, setShowTrailerModal] = useState(false);
 
-  const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
+  const {
+    isInWatchlist, toggleWatchlist,
+    isWatched, toggleWatched
+  } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
 
   // Get stored rating/review
@@ -384,6 +387,8 @@ function MovieDetails() {
                   movie={{ ...item, media_type: mediaType }}
                   isInWatchlist={isInWatchlist(item.id)}
                   onToggleWatchlist={toggleWatchlist}
+                  isWatched={isWatched(item.id)}
+                  onToggleWatched={toggleWatched}
                   mediaType={mediaType}
                 />
               ))}

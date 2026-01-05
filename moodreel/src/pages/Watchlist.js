@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
+import EmptyState from '../components/EmptyState';
 
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
 
@@ -13,7 +14,7 @@ function Watchlist() {
     const {
         watchlist, toggleWatchlist, isInWatchlist,
         getNote, setNote, getRandomMovie,
-        isWatched, getWatchedCount,
+        isWatched, toggleWatched, getWatchedCount,
         exportData, importData
     } = useWatchlist();
     const [exportStatus, setExportStatus] = useState('');
@@ -29,11 +30,18 @@ function Watchlist() {
     const [recsBasedOn, setRecsBasedOn] = useState(null);
     const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
     const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
+    const [searchTerm, setSearchTerm] = useState('');
     const fileInputRef = useRef(null);
 
     // Sort and filter watchlist
     const sortedWatchlist = useMemo(() => {
         let list = [...watchlist];
+
+        // Apply search filter
+        if (searchTerm.trim()) {
+            const query = searchTerm.toLowerCase().trim();
+            list = list.filter(m => (m.title || '').toLowerCase().includes(query));
+        }
 
         // Apply sorting
         switch (sortBy) {
@@ -62,7 +70,7 @@ function Watchlist() {
             list = list.filter(m => !isWatched(m.id));
         }
         return list;
-    }, [watchlist, showWatched, isWatched, sortBy]);
+    }, [watchlist, showWatched, isWatched, sortBy, searchTerm]);
 
     // Import from JSON file
     const handleImportFile = useCallback((e) => {
@@ -227,6 +235,21 @@ function Watchlist() {
                 </div>
             </div>
 
+            {/* Watchlist Search */}
+            {watchlist.length > 0 && (
+                <div className="watchlist-search-wrapper">
+                    <span className="search-icon-hint">🔍</span>
+                    <input
+                        type="search"
+                        className="watchlist-search-input"
+                        placeholder="Search your watchlist..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        aria-label="Search watchlist"
+                    />
+                </div>
+            )}
+
             {/* Watched Filter */}
             {watchlist.length > 0 && (
                 <div className="watched-filter">
@@ -354,14 +377,15 @@ function Watchlist() {
             )}
 
             {sortedWatchlist.length === 0 ? (
-                <div className="empty-state">
-                    <div className="icon">🎬</div>
-                    <h3>Your watchlist is empty</h3>
-                    <p>Start adding movies and shows you want to watch!</p>
-                    <Link to="/" className="primary-button">
-                        Discover Movies
-                    </Link>
-                </div>
+                <EmptyState
+                    icon={watchlist.length === 0 ? "🎬" : "🔍"}
+                    title={watchlist.length === 0 ? "Your watchlist is empty" : "No matches found"}
+                    description={watchlist.length === 0
+                        ? "Start adding movies and shows you want to watch!"
+                        : `We couldn't find any items matching "${searchTerm}" in your watchlist.`}
+                    actionLink={watchlist.length === 0 ? "/" : null}
+                    actionText={watchlist.length === 0 ? "Discover Movies" : null}
+                />
             ) : (
                 <>
                     <p className="watchlist-count">
@@ -376,6 +400,8 @@ function Watchlist() {
                                         movie={item}
                                         isInWatchlist={isInWatchlist(item.id)}
                                         onToggleWatchlist={toggleWatchlist}
+                                        isWatched={isWatched(item.id)}
+                                        onToggleWatched={toggleWatched}
                                         mediaType={item.media_type}
                                     />
 

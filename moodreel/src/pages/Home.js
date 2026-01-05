@@ -7,6 +7,7 @@ import StreamingFilter from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
 import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
+import EmptyState from '../components/EmptyState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useSounds } from '../hooks/useSounds';
@@ -135,7 +136,7 @@ function Home() {
   const pullStartY = useRef(0);
   const mainRef = useRef(null);
 
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { history, addToHistory } = useMoodHistory();
   const { playSound } = useSounds();
 
@@ -549,6 +550,8 @@ function Home() {
                 movie={item}
                 isInWatchlist={isInWatchlist(item.id)}
                 onToggleWatchlist={toggleWatchlist}
+                isWatched={isWatched(item.id)}
+                onToggleWatched={toggleWatched}
                 mediaType={item.media_type}
               />
             ))}
@@ -676,28 +679,39 @@ function Home() {
               </>
             ) : (
               /* Empty state for swipe cards */
-              <div className="swipe-empty-state">
-                <div className="empty-icon">🎬</div>
-                <h3>All caught up!</h3>
-                <p>You've gone through all the recommendations.</p>
-                <button onClick={getRecommendations} className="primary-button">
-                  🔄 Get More Recommendations
-                </button>
-              </div>
+              <EmptyState
+                icon="🎬"
+                title="All caught up!"
+                description="You've gone through all the current recommendations. Ready for more?"
+                onActionClick={getRecommendations}
+                actionText="Get More Recommendations"
+              />
             )}
           </div>
         ) : (
           /* Desktop Grid View */
           <div className="recommendations">
-            {filteredRecommendations.map((rec) => (
-              <MovieCard
-                key={rec.id}
-                movie={rec}
-                isInWatchlist={isInWatchlist(rec.id)}
-                onToggleWatchlist={toggleWatchlist}
-                mediaType={rec.media_type}
+            {filteredRecommendations.length > 0 ? (
+              filteredRecommendations.map((rec) => (
+                <MovieCard
+                  key={rec.id}
+                  movie={rec}
+                  isInWatchlist={isInWatchlist(rec.id)}
+                  onToggleWatchlist={toggleWatchlist}
+                  isWatched={isWatched(rec.id)}
+                  onToggleWatched={toggleWatched}
+                  mediaType={rec.media_type}
+                />
+              ))
+            ) : hasSearched && !isLoading && (
+              <EmptyState
+                icon="✨"
+                title="No results found"
+                description={`We couldn't find anything for "${mood}". Try a different mood or clear your filters!`}
+                onActionClick={() => setMood('')}
+                actionText="Clear Search"
               />
-            ))}
+            )}
           </div>
         )}
 
