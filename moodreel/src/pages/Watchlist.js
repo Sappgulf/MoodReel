@@ -1,10 +1,13 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
 
+const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+
 /**
- * Watchlist page with export, notes, random picker, and matchmaker
+ * Watchlist page with export, notes, random picker, matchmaker, and personalized recs
  */
 function Watchlist() {
     const { watchlist, toggleWatchlist, isInWatchlist, getNote, setNote, getRandomMovie } = useWatchlist();
@@ -15,6 +18,9 @@ function Watchlist() {
     const [matchResults, setMatchResults] = useState(null);
     const [editingNote, setEditingNote] = useState(null);
     const [noteText, setNoteText] = useState('');
+    const [personalizedRecs, setPersonalizedRecs] = useState([]);
+    const [recsLoading, setRecsLoading] = useState(false);
+    const [recsBasedOn, setRecsBasedOn] = useState(null);
 
     // Sort by most recently added
     const sortedWatchlist = useMemo(() =>
@@ -94,6 +100,42 @@ function Watchlist() {
         }
     }, [editingNote, noteText, setNote]);
 
+    // Fetch personalized recommendations
+    const fetchPersonalizedRecs = useCallback(async () => {
+        if (watchlist.length === 0) return;
+
+        setRecsLoading(true);
+        const randomMovie = watchlist[Math.floor(Math.random() * watchlist.length)];
+        setRecsBasedOn(randomMovie);
+
+        try {
+            const mediaType = randomMovie.media_type || 'movie';
+            const response = await axios.get(
+                `https://api.themoviedb.org/3/${mediaType}/${randomMovie.id}/similar?api_key=${apiKey}`
+            );
+
+            // Filter out movies already in watchlist
+            const filtered = response.data.results
+                .filter(m => !watchlist.some(w => w.id === m.id))
+                .slice(0, 4)
+                .map(m => ({ ...m, media_type: mediaType }));
+
+            setPersonalizedRecs(filtered);
+        } catch (err) {
+            console.error('Error fetching recommendations:', err);
+            setPersonalizedRecs([]);
+        } finally {
+            setRecsLoading(false);
+        }
+    }, [watchlist]);
+
+    // Load personalized recs on mount if watchlist has items
+    useEffect(() => {
+        if (watchlist.length >= 3 && personalizedRecs.length === 0) {
+            fetchPersonalizedRecs();
+        }
+    }, [watchlist.length, personalizedRecs.length, fetchPersonalizedRecs]);
+
     return (
         <div className="watchlist-page">
             <div className="watchlist-header">
@@ -116,6 +158,43 @@ function Watchlist() {
                     )}
                 </div>
             </div>
+
+            {/* Personalized Recommendations */}
+            {watchlist.length >= 3 && (
+                <div className="personalized-recs">
+                    <div className="recs-header">
+                        <h3>
+                            {recsBasedOn ? (
+                                <>✨ Because you saved <em>{recsBasedOn.title}</em></>)
+                                : (
+                                    <>✨ Recommended for you</>)
+                            }
+                        </h3>
+                        <button
+                            className="refresh-recs-btn"
+                            onClick={fetchPersonalizedRecs}
+                            disabled={recsLoading}
+                        >
+                            {recsLoading ? '...' : '🔄 Refresh'}
+                        </button>
+                    </div>
+                    {personalizedRecs.length > 0 ? (
+                        <div className="recs-grid">
+                            {personalizedRecs.map(movie => (
+                                <MovieCard
+                                    key={movie.id}
+                                    movie={movie}
+                                    isInWatchlist={isInWatchlist(movie.id)}
+                                    onToggleWatchlist={toggleWatchlist}
+                                    mediaType={movie.media_type}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="recs-empty">Loading recommendations...</p>
+                    )}
+                </div>
+            )}
 
             {/* Random Pick Result */}
             {randomPick && (
