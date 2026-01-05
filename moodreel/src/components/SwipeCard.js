@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const SWIPE_THRESHOLD = 100;
@@ -8,6 +8,13 @@ function SwipeCard({ movie, onSwipeLeft, onSwipeRight, mediaType }) {
     const [isDragging, setIsDragging] = useState(false);
     const [isExiting, setIsExiting] = useState(null);
     const startX = useRef(0);
+
+    // Reset animation state when movie changes (new card appears)
+    useEffect(() => {
+        setOffset(0);
+        setIsDragging(false);
+        setIsExiting(null);
+    }, [movie?.id]);
 
     const title = movie.title || movie.name;
     const posterUrl = movie.poster_path

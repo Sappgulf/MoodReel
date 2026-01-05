@@ -316,6 +316,8 @@ function Home() {
 
   const handleSwipeRight = useCallback((movie) => {
     toggleWatchlist(movie);
+    // Also remove the card from recommendations so the next card appears
+    setRecommendations(prev => prev.filter(m => m.id !== movie.id));
   }, [toggleWatchlist]);
 
   const handleSwipeLeft = useCallback((movie) => {
