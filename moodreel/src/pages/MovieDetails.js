@@ -4,6 +4,7 @@ import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import ShareButtons from '../components/ShareButtons';
 import StarRating from '../components/StarRating';
+import TrailerModal from '../components/TrailerModal';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useRatings } from '../hooks/useRatings';
 import { Skeleton } from '../components/Skeleton';
@@ -26,8 +27,9 @@ function MovieDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewText, setReviewText] = useState('');
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
 
-  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
 
   // Get stored rating/review
@@ -229,6 +231,24 @@ function MovieDetails() {
                 {isInWatchlist(content.id) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
               </button>
 
+              {isInWatchlist(content.id) && (
+                <button
+                  className={`watched-btn ${isWatched(content.id) ? 'watched' : ''}`}
+                  onClick={() => toggleWatched(content.id)}
+                >
+                  {isWatched(content.id) ? '✅ Watched' : '👁️ Mark as Watched'}
+                </button>
+              )}
+
+              {trailer && (
+                <button
+                  className="trailer-btn"
+                  onClick={() => setShowTrailerModal(true)}
+                >
+                  ▶️ Watch Trailer
+                </button>
+              )}
+
               <ShareButtons title={title} />
             </div>
 
@@ -371,6 +391,14 @@ function MovieDetails() {
           </section>
         )}
       </article>
+
+      {/* Trailer Modal */}
+      {showTrailerModal && trailer && (
+        <TrailerModal
+          videoKey={trailer.key}
+          onClose={() => setShowTrailerModal(false)}
+        />
+      )}
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -8,6 +8,9 @@ import { useSounds } from './hooks/useSounds';
 import { useAchievements } from './hooks/useAchievements';
 import AchievementToast from './components/AchievementToast';
 import InstallPrompt from './components/InstallPrompt';
+import Confetti from './components/Confetti';
+import OnboardingModal from './components/OnboardingModal';
+import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 import './App.css';
 
 // Lazy load secondary routes for code-splitting
@@ -22,19 +25,71 @@ function App() {
   const { isDark, toggleTheme } = useTheme();
   const { isSoundEnabled, toggleSounds } = useSounds();
   const { newUnlock, dismissToast, unlockedCount, totalCount } = useAchievements();
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // ? = show shortcuts
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+      // D = toggle dark mode
+      if (e.key === 'd' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        toggleTheme();
+      }
+      // M = toggle sounds
+      if (e.key === 'm' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        toggleSounds();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleTheme, toggleSounds]);
+
+  // Trigger confetti on achievement unlock
+  useEffect(() => {
+    if (newUnlock) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [newUnlock]);
 
   return (
     <div className="App">
+      {/* Confetti celebration */}
+      <Confetti active={showConfetti} />
+
       {/* PWA Install Prompt */}
       <InstallPrompt />
 
+      {/* Onboarding for first-time users */}
+      <OnboardingModal />
+
       {/* Achievement Toast */}
       <AchievementToast achievement={newUnlock} onDismiss={dismissToast} />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
 
       <header className="App-header">
         <div className="header-top">
           <Link to="/" className="logo-link"><h1>🎬 MoodReel</h1></Link>
           <div className="header-controls">
+            <button
+              className="shortcuts-btn"
+              onClick={() => setShowShortcuts(true)}
+              title="Keyboard shortcuts (?)"
+            >
+              ⌨️
+            </button>
             <button
               className="sound-toggle"
               onClick={toggleSounds}

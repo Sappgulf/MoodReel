@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 
 const WATCHLIST_KEY = 'moodreel_watchlist';
 const NOTES_KEY = 'moodreel_notes';
+const WATCHED_KEY = 'moodreel_watched';
 
 /**
  * Custom hook for managing watchlist with localStorage persistence
- * Includes notes per movie and genre tracking
+ * Includes notes, watched status, and genre tracking
  */
 export function useWatchlist() {
     const [watchlist, setWatchlist] = useState(() => {
@@ -26,7 +27,16 @@ export function useWatchlist() {
         }
     });
 
-    // Persist watchlist to localStorage
+    const [watched, setWatched] = useState(() => {
+        try {
+            const saved = localStorage.getItem(WATCHED_KEY);
+            return saved ? JSON.parse(saved) : {};
+        } catch {
+            return {};
+        }
+    });
+
+    // Persist watchlist
     useEffect(() => {
         try {
             localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist));
@@ -35,7 +45,7 @@ export function useWatchlist() {
         }
     }, [watchlist]);
 
-    // Persist notes to localStorage
+    // Persist notes
     useEffect(() => {
         try {
             localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
@@ -43,6 +53,15 @@ export function useWatchlist() {
             console.error('Failed to save notes:', error);
         }
     }, [notes]);
+
+    // Persist watched
+    useEffect(() => {
+        try {
+            localStorage.setItem(WATCHED_KEY, JSON.stringify(watched));
+        } catch (error) {
+            console.error('Failed to save watched:', error);
+        }
+    }, [watched]);
 
     const addToWatchlist = useCallback((item) => {
         setWatchlist((prev) => {
@@ -64,11 +83,15 @@ export function useWatchlist() {
 
     const removeFromWatchlist = useCallback((id) => {
         setWatchlist((prev) => prev.filter((item) => item.id !== id));
-        // Also remove notes for this item
         setNotes(prev => {
             const newNotes = { ...prev };
             delete newNotes[id];
             return newNotes;
+        });
+        setWatched(prev => {
+            const newWatched = { ...prev };
+            delete newWatched[id];
+            return newWatched;
         });
     }, []);
 
@@ -96,14 +119,35 @@ export function useWatchlist() {
         }));
     }, []);
 
-    // Get random movie from watchlist
+    // Watched management
+    const isWatched = useCallback((movieId) => {
+        return !!watched[movieId];
+    }, [watched]);
+
+    const toggleWatched = useCallback((movieId) => {
+        setWatched(prev => {
+            if (prev[movieId]) {
+                const newWatched = { ...prev };
+                delete newWatched[movieId];
+                return newWatched;
+            } else {
+                return { ...prev, [movieId]: Date.now() };
+            }
+        });
+    }, []);
+
+    const getWatchedCount = useCallback(() => {
+        return Object.keys(watched).length;
+    }, [watched]);
+
+    // Random movie
     const getRandomMovie = useCallback(() => {
         if (watchlist.length === 0) return null;
         const randomIndex = Math.floor(Math.random() * watchlist.length);
         return watchlist[randomIndex];
     }, [watchlist]);
 
-    // Get genre breakdown for stats
+    // Genre breakdown
     const getGenreBreakdown = useCallback(() => {
         const genreCounts = {};
         watchlist.forEach(item => {
@@ -114,6 +158,37 @@ export function useWatchlist() {
         return genreCounts;
     }, [watchlist]);
 
+    // Export to JSON
+    const exportData = useCallback(() => {
+        const data = {
+            watchlist,
+            notes,
+            watched,
+            exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `moodreel-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [watchlist, notes, watched]);
+
+    // Import from JSON
+    const importData = useCallback((jsonData) => {
+        try {
+            const data = JSON.parse(jsonData);
+            if (data.watchlist) setWatchlist(data.watchlist);
+            if (data.notes) setNotes(data.notes);
+            if (data.watched) setWatched(data.watched);
+            return true;
+        } catch (e) {
+            console.error('Import failed:', e);
+            return false;
+        }
+    }, []);
+
     return {
         watchlist,
         addToWatchlist,
@@ -122,8 +197,13 @@ export function useWatchlist() {
         toggleWatchlist,
         getNote,
         setNote,
+        isWatched,
+        toggleWatched,
+        getWatchedCount,
         getRandomMovie,
         getGenreBreakdown,
+        exportData,
+        importData,
     };
 }
 

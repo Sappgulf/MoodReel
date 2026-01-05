@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -7,11 +7,17 @@ import MovieCard from '../components/MovieCard';
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
 
 /**
- * Watchlist page with export, notes, random picker, matchmaker, and personalized recs
+ * Watchlist page with export/import, notes, watched tracking, random picker, matchmaker
  */
 function Watchlist() {
-    const { watchlist, toggleWatchlist, isInWatchlist, getNote, setNote, getRandomMovie } = useWatchlist();
+    const {
+        watchlist, toggleWatchlist, isInWatchlist,
+        getNote, setNote, getRandomMovie,
+        isWatched, getWatchedCount,
+        exportData, importData
+    } = useWatchlist();
     const [exportStatus, setExportStatus] = useState('');
+    const [importStatus, setImportStatus] = useState('');
     const [randomPick, setRandomPick] = useState(null);
     const [showMatchmaker, setShowMatchmaker] = useState(false);
     const [matchInput, setMatchInput] = useState('');
@@ -21,12 +27,38 @@ function Watchlist() {
     const [personalizedRecs, setPersonalizedRecs] = useState([]);
     const [recsLoading, setRecsLoading] = useState(false);
     const [recsBasedOn, setRecsBasedOn] = useState(null);
+    const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
+    const fileInputRef = useRef(null);
 
-    // Sort by most recently added
-    const sortedWatchlist = useMemo(() =>
-        [...watchlist].sort((a, b) => b.addedAt - a.addedAt),
-        [watchlist]
-    );
+    // Sort and filter watchlist
+    const sortedWatchlist = useMemo(() => {
+        let list = [...watchlist].sort((a, b) => b.addedAt - a.addedAt);
+        if (showWatched === 'watched') {
+            list = list.filter(m => isWatched(m.id));
+        } else if (showWatched === 'unwatched') {
+            list = list.filter(m => !isWatched(m.id));
+        }
+        return list;
+    }, [watchlist, showWatched, isWatched]);
+
+    // Import from JSON file
+    const handleImportFile = useCallback((e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const success = importData(event.target.result);
+            if (success) {
+                setImportStatus('Imported!');
+            } else {
+                setImportStatus('Failed');
+            }
+            setTimeout(() => setImportStatus(''), 3000);
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    }, [importData]);
 
     // Export watchlist to clipboard
     const handleExport = useCallback(async () => {
@@ -152,12 +184,50 @@ function Watchlist() {
                                 👥 Matchmaker
                             </button>
                             <button className="export-btn" onClick={handleExport}>
-                                {exportStatus || '📋 Export'}
+                                {exportStatus || '📋 Copy'}
                             </button>
+                            <button className="export-json-btn" onClick={exportData}>
+                                📥 Export JSON
+                            </button>
+                            <button className="import-btn" onClick={() => fileInputRef.current?.click()}>
+                                {importStatus || '📤 Import'}
+                            </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".json"
+                                style={{ display: 'none' }}
+                                onChange={handleImportFile}
+                            />
                         </>
                     )}
                 </div>
             </div>
+
+            {/* Watched Filter */}
+            {watchlist.length > 0 && (
+                <div className="watched-filter">
+                    <span>Show:</span>
+                    <button
+                        className={showWatched === 'all' ? 'active' : ''}
+                        onClick={() => setShowWatched('all')}
+                    >
+                        All ({watchlist.length})
+                    </button>
+                    <button
+                        className={showWatched === 'watched' ? 'active' : ''}
+                        onClick={() => setShowWatched('watched')}
+                    >
+                        ✅ Watched ({getWatchedCount()})
+                    </button>
+                    <button
+                        className={showWatched === 'unwatched' ? 'active' : ''}
+                        onClick={() => setShowWatched('unwatched')}
+                    >
+                        👁️ To Watch ({watchlist.length - getWatchedCount()})
+                    </button>
+                </div>
+            )}
 
             {/* Personalized Recommendations */}
             {watchlist.length >= 3 && (

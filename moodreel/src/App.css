@@ -3215,3 +3215,324 @@ main {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* =====================================================
+   Trailer Modal
+   ===================================================== */
+.trailer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+.trailer-modal {
+  position: relative;
+  width: 90%;
+  max-width: 900px;
+}
+
+.trailer-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+}
+
+.trailer-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  /* 16:9 */
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.trailer-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.trailer-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff4757 0%, #ff6b6b 100%);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.trailer-btn:hover {
+  transform: scale(1.05);
+}
+
+/* =====================================================
+   Onboarding Modal
+   ===================================================== */
+.onboarding-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  animation: fadeIn 0.3s ease;
+}
+
+.onboarding-modal {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-2xl);
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+.onboarding-skip {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.onboarding-content {
+  margin: var(--spacing-xl) 0;
+}
+
+.onboarding-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.onboarding-content h2 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.onboarding-content p {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-xl) 0;
+}
+
+.onboarding-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-bg-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.onboarding-dots .dot.active {
+  background: var(--color-text-gold);
+  width: 24px;
+  border-radius: var(--radius-full);
+}
+
+.onboarding-next {
+  width: 100%;
+  padding: var(--spacing-md);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-bg-primary);
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+/* =====================================================
+   Keyboard Shortcuts Modal
+   ===================================================== */
+.shortcuts-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.shortcuts-modal {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  min-width: 320px;
+  max-width: 400px;
+  position: relative;
+}
+
+.shortcuts-close {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.shortcuts-modal h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shortcut-keys {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.shortcut-keys kbd {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-family: monospace;
+  font-size: 0.85rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  min-width: 24px;
+  text-align: center;
+}
+
+.shortcut-desc {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.shortcuts-hint {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.shortcuts-hint kbd {
+  padding: 2px 6px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.shortcuts-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+}
+
+/* =====================================================
+   Watched Filter & Button
+   ===================================================== */
+.watched-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.watched-filter span {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.watched-filter button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.watched-filter button.active {
+  color: var(--color-text-gold);
+  border-color: var(--color-border-gold);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.watched-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.watched-btn.watched {
+  color: #4CAF50;
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+/* =====================================================
+   Export/Import Buttons
+   ===================================================== */
+.export-json-btn,
+.import-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.export-json-btn:hover,
+.import-btn:hover {
+  border-color: var(--color-text-secondary);
+}
