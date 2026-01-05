@@ -4,12 +4,16 @@ import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
 import EmojiPicker from '../components/EmojiPicker';
 import StreamingFilter from '../components/StreamingFilter';
-import { SkeletonGrid } from '../components/Skeleton';
+import RatingFilter from '../components/RatingFilter';
+import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 
 // Use environment variable if set, otherwise use default key
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+
+// Offline cache key
+const CACHE_KEY = 'moodreel-recommendations-cache';
 
 // Extended mood mapping with NLP-style phrase support
 const moodMap = {
@@ -71,6 +75,35 @@ function parseMoodToGenres(text) {
   return Array.from(genres);
 }
 
+// Load cached recommendations
+function loadCachedRecommendations() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      // Cache valid for 1 hour
+      if (Date.now() - timestamp < 3600000) {
+        return data;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading cache:', e);
+  }
+  return null;
+}
+
+// Save recommendations to cache
+function cacheRecommendations(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.error('Error caching:', e);
+  }
+}
+
 function Home() {
   const [mood, setMood] = useState('');
   const [recommendations, setRecommendations] = useState([]);
@@ -84,6 +117,15 @@ function Home() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [minRating, setMinRating] = useState(0);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isCardLoading, setIsCardLoading] = useState(false);
+
+  // Pull-to-refresh state
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const pullStartY = useRef(0);
+  const mainRef = useRef(null);
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const { history, addToHistory } = useMoodHistory();
@@ -96,6 +138,15 @@ function Home() {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Load cached data on mount (offline support)
+  useEffect(() => {
+    const cached = loadCachedRecommendations();
+    if (cached && cached.length > 0) {
+      setRecommendations(cached);
+      setHasSearched(true);
+    }
   }, []);
 
   // Fetch trending on mount
@@ -165,6 +216,31 @@ function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
+  // Pull-to-refresh handlers
+  const handlePullStart = useCallback((e) => {
+    if (window.scrollY === 0) {
+      pullStartY.current = e.touches[0].clientY;
+      setIsPulling(true);
+    }
+  }, []);
+
+  const handlePullMove = useCallback((e) => {
+    if (!isPulling) return;
+    const currentY = e.touches[0].clientY;
+    const distance = Math.max(0, currentY - pullStartY.current);
+    setPullDistance(Math.min(distance, 150));
+  }, [isPulling]);
+
+  const handlePullEnd = useCallback(() => {
+    if (pullDistance > 80 && hasSearched) {
+      // Trigger refresh
+      getRecommendations();
+    }
+    setIsPulling(false);
+    setPullDistance(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pullDistance, hasSearched]);
+
   const handleGenreClick = useCallback((genreId) => {
     setSelectedGenres((prev) =>
       prev.includes(genreId)
@@ -208,6 +284,11 @@ function Home() {
     setRecommendations([]);
     setSelectedGenres([]);
     setPage(1);
+    setHasSearched(false);
+  }, []);
+
+  const handleRatingChange = useCallback((rating) => {
+    setMinRating(rating);
   }, []);
 
   const buildApiUrl = useCallback((pageNum = 1) => {
@@ -225,8 +306,13 @@ function Home() {
       url += `&with_watch_providers=${selectedProviders.join('|')}&watch_region=US`;
     }
 
+    // Add minimum rating filter
+    if (minRating > 0) {
+      url += `&vote_average.gte=${minRating}`;
+    }
+
     return { url, hasGenreFilter: allGenres.length > 0 };
-  }, [isTV, mood, selectedGenres, selectedProviders]);
+  }, [isTV, mood, selectedGenres, selectedProviders, minRating]);
 
   const getRecommendations = useCallback(async () => {
     if (!mood && selectedGenres.length === 0) {
@@ -244,6 +330,7 @@ function Home() {
     setError('');
     setIsLoading(true);
     setPage(1);
+    setHasSearched(true);
 
     // Add to mood history
     if (mood) {
@@ -260,12 +347,21 @@ function Home() {
     try {
       const response = await axios.get(finalUrl, { signal: controller.signal });
       if (response.data.results?.length > 0) {
-        const resultsWithType = response.data.results.map(item => ({
+        let resultsWithType = response.data.results.map(item => ({
           ...item,
           media_type: isTV ? 'tv' : 'movie'
         }));
+
+        // Apply client-side rating filter as backup
+        if (minRating > 0) {
+          resultsWithType = resultsWithType.filter(m => m.vote_average >= minRating);
+        }
+
         setRecommendations(resultsWithType);
         setHasMore(response.data.page < response.data.total_pages);
+
+        // Cache for offline use
+        cacheRecommendations(resultsWithType);
       } else {
         setRecommendations([]);
         setError('No results found. Try another combination!');
@@ -273,13 +369,20 @@ function Home() {
       }
     } catch (err) {
       if (!axios.isCancel(err)) {
-        setError('Error fetching data. Please check the console.');
+        // Try to load from cache on network error
+        const cached = loadCachedRecommendations();
+        if (cached && cached.length > 0) {
+          setRecommendations(cached);
+          setError('Showing cached results (offline mode)');
+        } else {
+          setError('Network error. Please check your connection.');
+        }
         console.error(err);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [mood, selectedGenres, isTV, addToHistory, buildApiUrl]);
+  }, [mood, selectedGenres, isTV, addToHistory, buildApiUrl, minRating]);
 
   const loadMoreResults = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -292,10 +395,16 @@ function Home() {
     try {
       const response = await axios.get(url, { signal: controller.signal });
       if (response.data.results?.length > 0) {
-        const resultsWithType = response.data.results.map(item => ({
+        let resultsWithType = response.data.results.map(item => ({
           ...item,
           media_type: isTV ? 'tv' : 'movie'
         }));
+
+        // Apply rating filter
+        if (minRating > 0) {
+          resultsWithType = resultsWithType.filter(m => m.vote_average >= minRating);
+        }
+
         setRecommendations(prev => [...prev, ...resultsWithType]);
         setHasMore(response.data.page < response.data.total_pages);
       }
@@ -306,7 +415,7 @@ function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, page, buildApiUrl, isTV]);
+  }, [isLoading, hasMore, page, buildApiUrl, isTV, minRating]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -315,13 +424,17 @@ function Home() {
   }, [getRecommendations]);
 
   const handleSwipeRight = useCallback((movie) => {
+    setIsCardLoading(true);
     toggleWatchlist(movie);
     // Also remove the card from recommendations so the next card appears
     setRecommendations(prev => prev.filter(m => m.id !== movie.id));
+    setTimeout(() => setIsCardLoading(false), 300);
   }, [toggleWatchlist]);
 
   const handleSwipeLeft = useCallback((movie) => {
+    setIsCardLoading(true);
     setRecommendations(prev => prev.filter(m => m.id !== movie.id));
+    setTimeout(() => setIsCardLoading(false), 300);
   }, []);
 
   // Cleanup on unmount
@@ -333,10 +446,33 @@ function Home() {
     };
   }, []);
 
+  // Filter recommendations by rating (for display)
+  const filteredRecommendations = minRating > 0
+    ? recommendations.filter(m => m.vote_average >= minRating)
+    : recommendations;
+
   return (
-    <main role="main">
+    <main
+      role="main"
+      ref={mainRef}
+      onTouchStart={handlePullStart}
+      onTouchMove={handlePullMove}
+      onTouchEnd={handlePullEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {isPulling && pullDistance > 0 && (
+        <div
+          className="pull-indicator"
+          style={{ height: pullDistance, opacity: pullDistance / 100 }}
+        >
+          <span className={pullDistance > 80 ? 'ready' : ''}>
+            {pullDistance > 80 ? '↓ Release to refresh' : '↓ Pull to refresh'}
+          </span>
+        </div>
+      )}
+
       {/* Trending Section */}
-      {trending.length > 0 && recommendations.length === 0 && (
+      {trending.length > 0 && recommendations.length === 0 && !hasSearched && (
         <section className="trending-section" aria-labelledby="trending-heading">
           <h2 id="trending-heading">🔥 Trending Now</h2>
           <div className="trending-grid">
@@ -422,6 +558,12 @@ function Home() {
         onToggle={handleProviderToggle}
       />
 
+      {/* Rating Filter */}
+      <RatingFilter
+        minRating={minRating}
+        onRatingChange={handleRatingChange}
+      />
+
       {/* Search Button */}
       <div className="search-container">
         <button onClick={getRecommendations} disabled={isLoading}>
@@ -436,21 +578,45 @@ function Home() {
       <div aria-live="polite" aria-busy={isLoading}>
         {isLoading && recommendations.length === 0 ? (
           <SkeletonGrid count={8} />
-        ) : isMobile && recommendations.length > 0 ? (
+        ) : isMobile && hasSearched ? (
           /* Mobile Swipe View */
           <div className="swipe-container">
-            <p className="swipe-hint">← Swipe left to pass, right to save →</p>
-            <SwipeCard
-              movie={recommendations[0]}
-              onSwipeLeft={handleSwipeLeft}
-              onSwipeRight={handleSwipeRight}
-              mediaType={recommendations[0]?.media_type}
-            />
+            {filteredRecommendations.length > 0 ? (
+              <>
+                <p className="swipe-hint">← Swipe left to pass, right to save →</p>
+                <p className="swipe-count">
+                  {filteredRecommendations.length} {filteredRecommendations.length === 1 ? 'movie' : 'movies'} remaining
+                </p>
+                {isCardLoading ? (
+                  <div className="swipe-card-loading">
+                    <MovieCardSkeleton />
+                  </div>
+                ) : (
+                  <SwipeCard
+                    movie={filteredRecommendations[0]}
+                    nextMovie={filteredRecommendations[1]}
+                    onSwipeLeft={handleSwipeLeft}
+                    onSwipeRight={handleSwipeRight}
+                    mediaType={filteredRecommendations[0]?.media_type}
+                  />
+                )}
+              </>
+            ) : (
+              /* Empty state for swipe cards */
+              <div className="swipe-empty-state">
+                <div className="empty-icon">🎬</div>
+                <h3>All caught up!</h3>
+                <p>You've gone through all the recommendations.</p>
+                <button onClick={getRecommendations} className="primary-button">
+                  🔄 Get More Recommendations
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           /* Desktop Grid View */
           <div className="recommendations">
-            {recommendations.map((rec) => (
+            {filteredRecommendations.map((rec) => (
               <MovieCard
                 key={rec.id}
                 movie={rec}

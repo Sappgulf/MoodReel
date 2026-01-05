@@ -21,6 +21,7 @@ function MovieDetails() {
   const [similar, setSimilar] = useState([]);
   const [providers, setProviders] = useState(null);
   const [trailer, setTrailer] = useState(null);
+  const [cast, setCast] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -43,10 +44,11 @@ function MovieDetails() {
       setSimilar([]);
       setProviders(null);
       setTrailer(null);
+      setCast([]);
 
       try {
-        // Fetch all data in parallel (including videos for trailers)
-        const [detailsResponse, similarResponse, providersResponse, videosResponse] = await Promise.all([
+        // Fetch all data in parallel (including videos for trailers and credits for cast)
+        const [detailsResponse, similarResponse, providersResponse, videosResponse, creditsResponse] = await Promise.all([
           axios.get(
             `https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${apiKey}`,
             { signal: controller.signal }
@@ -61,6 +63,10 @@ function MovieDetails() {
           ),
           axios.get(
             `https://api.themoviedb.org/3/${mediaType}/${id}/videos?api_key=${apiKey}`,
+            { signal: controller.signal }
+          ),
+          axios.get(
+            `https://api.themoviedb.org/3/${mediaType}/${id}/credits?api_key=${apiKey}`,
             { signal: controller.signal }
           ),
         ]);
@@ -78,6 +84,10 @@ function MovieDetails() {
           v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
         ) || videos.find(v => v.site === 'YouTube');
         setTrailer(trailerVideo || null);
+
+        // Get top 6 cast members
+        const castData = creditsResponse.data.cast || [];
+        setCast(castData.slice(0, 6));
 
         // Load saved review text
         const savedReview = getReview(id);
@@ -269,6 +279,33 @@ function MovieDetails() {
             </div>
           </div>
         </div>
+
+        {/* Cast Section */}
+        {cast.length > 0 && (
+          <section className="cast-section" aria-labelledby="cast-heading">
+            <h3 id="cast-heading">🎭 Cast</h3>
+            <div className="cast-grid">
+              {cast.map((person) => (
+                <div key={person.id} className="cast-member">
+                  {person.profile_path ? (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
+                      alt={person.name}
+                      className="cast-photo"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="cast-photo-placeholder">👤</div>
+                  )}
+                  <div className="cast-info">
+                    <p className="cast-name">{person.name}</p>
+                    <p className="cast-character">{person.character}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Trailer Section */}
         {trailer && (

@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 
 const SWIPE_THRESHOLD = 100;
 
-function SwipeCard({ movie, onSwipeLeft, onSwipeRight, mediaType }) {
+function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
     const [offset, setOffset] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [isExiting, setIsExiting] = useState(null);
     const startX = useRef(0);
+    const cardRef = useRef(null);
 
     // Reset animation state when movie changes (new card appears)
     useEffect(() => {
@@ -15,6 +16,50 @@ function SwipeCard({ movie, onSwipeLeft, onSwipeRight, mediaType }) {
         setIsDragging(false);
         setIsExiting(null);
     }, [movie?.id]);
+
+    // Preload next movie's poster image
+    useEffect(() => {
+        if (nextMovie?.poster_path) {
+            const img = new Image();
+            img.src = `https://image.tmdb.org/t/p/w342${nextMovie.poster_path}`;
+        }
+    }, [nextMovie?.poster_path]);
+
+    // Keyboard support for swiping
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Only act if not in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                triggerSwipe('right');
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                triggerSwipe('left');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [movie, onSwipeLeft, onSwipeRight]);
+
+    const triggerSwipe = useCallback((direction) => {
+        // Haptic feedback
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+
+        setIsExiting(direction);
+        setTimeout(() => {
+            if (direction === 'right') {
+                onSwipeRight?.(movie);
+            } else {
+                onSwipeLeft?.(movie);
+            }
+        }, 300);
+    }, [movie, onSwipeLeft, onSwipeRight]);
 
     const title = movie.title || movie.name;
     const posterUrl = movie.poster_path
@@ -38,17 +83,13 @@ function SwipeCard({ movie, onSwipeLeft, onSwipeRight, mediaType }) {
         setIsDragging(false);
 
         if (offset > SWIPE_THRESHOLD) {
-            // Swipe right - add to watchlist
-            setIsExiting('right');
-            setTimeout(() => onSwipeRight?.(movie), 300);
+            triggerSwipe('right');
         } else if (offset < -SWIPE_THRESHOLD) {
-            // Swipe left - dismiss
-            setIsExiting('left');
-            setTimeout(() => onSwipeLeft?.(movie), 300);
+            triggerSwipe('left');
         } else {
             setOffset(0);
         }
-    }, [offset, movie, onSwipeLeft, onSwipeRight]);
+    }, [offset, triggerSwipe]);
 
     const rotation = offset * 0.05;
     const opacity = 1 - Math.abs(offset) / 300;
@@ -63,11 +104,15 @@ function SwipeCard({ movie, onSwipeLeft, onSwipeRight, mediaType }) {
 
     return (
         <div
+            ref={cardRef}
             className="swipe-card"
             style={style}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            tabIndex={0}
+            role="button"
+            aria-label={`${title}. Press left arrow to pass, right arrow to save.`}
         >
             {/* Swipe indicators */}
             <div className={`swipe-indicator left ${offset < -30 ? 'visible' : ''}`}>
@@ -88,6 +133,12 @@ function SwipeCard({ movie, onSwipeLeft, onSwipeRight, mediaType }) {
                     <p className="rating">⭐ {movie.vote_average?.toFixed(1)}</p>
                 </div>
             </Link>
+
+            {/* Keyboard hint */}
+            <div className="keyboard-hint">
+                <span>← Pass</span>
+                <span>Save →</span>
+            </div>
         </div>
     );
 }

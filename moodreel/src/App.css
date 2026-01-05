@@ -1706,3 +1706,320 @@ main {
     gap: var(--spacing-md);
   }
 }
+
+/* =====================================================
+   Rating Filter Slider
+   ===================================================== */
+.rating-filter {
+  margin-bottom: var(--spacing-2xl);
+  text-align: center;
+}
+
+.rating-filter h4 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rating-slider-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.rating-slider {
+  flex: 1;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-tertiary);
+  appearance: none;
+  cursor: pointer;
+}
+
+.rating-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  box-shadow: var(--shadow-gold-sm);
+  cursor: pointer;
+  transition: transform var(--transition-base);
+}
+
+.rating-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.rating-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  box-shadow: var(--shadow-gold-sm);
+  cursor: pointer;
+  border: none;
+}
+
+.rating-value {
+  min-width: 70px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-weight: 600;
+  color: var(--color-text-gold);
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid var(--color-border-gold);
+  border-radius: var(--radius-full);
+  text-align: center;
+}
+
+/* =====================================================
+   Cast Section
+   ===================================================== */
+.cast-section {
+  margin-top: var(--spacing-2xl);
+  padding: var(--spacing-xl);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.cast-section h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text-gold);
+}
+
+.cast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.cast-member {
+  text-align: center;
+}
+
+.cast-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  margin-bottom: var(--spacing-sm);
+  transition: all var(--transition-base);
+}
+
+.cast-member:hover .cast-photo {
+  border-color: var(--color-border-gold);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-gold-sm);
+}
+
+.cast-photo-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--color-bg-tertiary);
+  border: 2px solid var(--color-border);
+  margin: 0 auto var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--color-text-muted);
+}
+
+.cast-info {
+  line-height: 1.4;
+}
+
+.cast-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.cast-character {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* =====================================================
+   Watchlist Export
+   ===================================================== */
+.watchlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+  flex-wrap: wrap;
+}
+
+.watchlist-header h2 {
+  margin-bottom: 0;
+}
+
+.export-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.export-btn:hover {
+  color: var(--color-text-gold);
+  border-color: var(--color-border-gold);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* =====================================================
+   Swipe Empty State
+   ===================================================== */
+.swipe-empty-state {
+  text-align: center;
+  padding: var(--spacing-4xl) var(--spacing-xl);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  animation: fadeInUp 0.5s ease;
+}
+
+.swipe-empty-state .empty-icon {
+  font-size: 5rem;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+}
+
+.swipe-empty-state h3 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.swipe-empty-state p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.swipe-count {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-md);
+}
+
+/* =====================================================
+   Pull-to-Refresh
+   ===================================================== */
+.pull-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+  transition: height 0.1s ease-out;
+}
+
+.pull-indicator span {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  transition: all var(--transition-base);
+}
+
+.pull-indicator span.ready {
+  color: var(--color-text-gold);
+  font-weight: 500;
+}
+
+/* =====================================================
+   Keyboard Hints (SwipeCard)
+   ===================================================== */
+.keyboard-hint {
+  display: none;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-glass);
+  border-radius: var(--radius-md);
+}
+
+@media (min-width: 769px) {
+  .keyboard-hint {
+    display: flex;
+  }
+}
+
+/* =====================================================
+   Card Loading State
+   ===================================================== */
+.swipe-card-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
+.swipe-card-loading .skeleton-card {
+  width: 280px;
+  max-width: 100%;
+}
+
+/* =====================================================
+   Mobile Responsive for New Features
+   ===================================================== */
+@media (max-width: 768px) {
+  .rating-slider-wrapper {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .rating-slider {
+    width: 100%;
+  }
+
+  .cast-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  .cast-photo,
+  .cast-photo-placeholder {
+    width: 70px;
+    height: 70px;
+  }
+
+  .cast-photo-placeholder {
+    font-size: 1.8rem;
+  }
+
+  .cast-name {
+    font-size: 0.8rem;
+  }
+
+  .cast-character {
+    font-size: 0.7rem;
+  }
+
+  .watchlist-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
