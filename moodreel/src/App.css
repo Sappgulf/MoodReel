@@ -3536,3 +3536,101 @@ main {
 .import-btn:hover {
   border-color: var(--color-text-secondary);
 }
+
+/* =====================================================
+   Sort Dropdown
+   ===================================================== */
+.sort-dropdown {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.sort-dropdown label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.sort-dropdown select {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.sort-dropdown select:focus {
+  outline: none;
+  border-color: var(--color-border-gold);
+}
+
+/* =====================================================
+   Custom Scrollbar
+   ===================================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-bg-tertiary) var(--color-bg-secondary);
+}
+
+/* =====================================================
+   Search History Enhancement
+   ===================================================== */
+.mood-history {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-md);
+}
+
+.history-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.history-chip {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.history-chip:hover {
+  color: var(--color-text-gold);
+  border-color: var(--color-border-gold);
+  background: rgba(255, 215, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* =====================================================
+   Smooth Theme Transition
+   ===================================================== */
+.App {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

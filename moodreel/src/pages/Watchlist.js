@@ -28,18 +28,41 @@ function Watchlist() {
     const [recsLoading, setRecsLoading] = useState(false);
     const [recsBasedOn, setRecsBasedOn] = useState(null);
     const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
+    const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
     const fileInputRef = useRef(null);
 
     // Sort and filter watchlist
     const sortedWatchlist = useMemo(() => {
-        let list = [...watchlist].sort((a, b) => b.addedAt - a.addedAt);
+        let list = [...watchlist];
+
+        // Apply sorting
+        switch (sortBy) {
+            case 'rating':
+                list.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+                break;
+            case 'title':
+                list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                break;
+            case 'watched':
+                list.sort((a, b) => {
+                    const aWatched = isWatched(a.id) ? 1 : 0;
+                    const bWatched = isWatched(b.id) ? 1 : 0;
+                    return bWatched - aWatched;
+                });
+                break;
+            case 'date':
+            default:
+                list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+        }
+
+        // Apply filter
         if (showWatched === 'watched') {
             list = list.filter(m => isWatched(m.id));
         } else if (showWatched === 'unwatched') {
             list = list.filter(m => !isWatched(m.id));
         }
         return list;
-    }, [watchlist, showWatched, isWatched]);
+    }, [watchlist, showWatched, isWatched, sortBy]);
 
     // Import from JSON file
     const handleImportFile = useCallback((e) => {
@@ -226,6 +249,20 @@ function Watchlist() {
                     >
                         👁️ To Watch ({watchlist.length - getWatchedCount()})
                     </button>
+
+                    <div className="sort-dropdown">
+                        <label htmlFor="sort-by">Sort:</label>
+                        <select
+                            id="sort-by"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                        >
+                            <option value="date">📅 Date Added</option>
+                            <option value="rating">⭐ Rating</option>
+                            <option value="title">🔤 Title</option>
+                            <option value="watched">✅ Watched</option>
+                        </select>
+                    </div>
                 </div>
             )}
 

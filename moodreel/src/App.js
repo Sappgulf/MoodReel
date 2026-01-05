@@ -28,6 +28,11 @@ function App() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Scroll to top on page navigation
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
