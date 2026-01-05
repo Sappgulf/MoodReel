@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
 import EmojiPicker from '../components/EmojiPicker';
 import StreamingFilter from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
+import AdvancedFilters from '../components/AdvancedFilters';
 import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
+import { useSounds } from '../hooks/useSounds';
 
 // Use environment variable if set, otherwise use default key
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
@@ -120,6 +122,12 @@ function Home() {
   const [minRating, setMinRating] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [isCardLoading, setIsCardLoading] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    yearMin: 1900,
+    yearMax: new Date().getFullYear(),
+    runtime: 'any'
+  });
+  const [surpriseMovie, setSurpriseMovie] = useState(null);
 
   // Pull-to-refresh state
   const [isPulling, setIsPulling] = useState(false);
@@ -129,6 +137,7 @@ function Home() {
 
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const { history, addToHistory } = useMoodHistory();
+  const { playSound } = useSounds();
 
   const abortControllerRef = useRef(null);
   const loadMoreRef = useRef(null);
@@ -291,6 +300,34 @@ function Home() {
     setMinRating(rating);
   }, []);
 
+  const handleAdvancedFiltersChange = useCallback((filters) => {
+    setAdvancedFilters(filters);
+  }, []);
+
+  // Time-based greeting and suggestions
+  const timeContext = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return { greeting: 'Good morning!', suggestion: 'uplifting', emoji: '☀️' };
+    } else if (hour >= 12 && hour < 17) {
+      return { greeting: 'Good afternoon!', suggestion: 'adventure', emoji: '🌤️' };
+    } else if (hour >= 17 && hour < 21) {
+      return { greeting: 'Good evening!', suggestion: 'date night', emoji: '🌅' };
+    } else {
+      return { greeting: 'Late night vibes', suggestion: 'thriller', emoji: '🌙' };
+    }
+  }, []);
+
+  // Surprise Me - random trending movie
+  const handleSurpriseMe = useCallback(() => {
+    if (trending.length === 0) return;
+    playSound('click');
+    const randomIndex = Math.floor(Math.random() * trending.length);
+    setSurpriseMovie(trending[randomIndex]);
+    // Clear after 8 seconds
+    setTimeout(() => setSurpriseMovie(null), 8000);
+  }, [trending, playSound]);
+
   const buildApiUrl = useCallback((pageNum = 1) => {
     const endpoint = isTV ? 'tv' : 'movie';
     const moodGenres = parseMoodToGenres(mood);
@@ -425,17 +462,18 @@ function Home() {
 
   const handleSwipeRight = useCallback((movie) => {
     setIsCardLoading(true);
+    playSound('save');
     toggleWatchlist(movie);
-    // Also remove the card from recommendations so the next card appears
     setRecommendations(prev => prev.filter(m => m.id !== movie.id));
     setTimeout(() => setIsCardLoading(false), 300);
-  }, [toggleWatchlist]);
+  }, [toggleWatchlist, playSound]);
 
   const handleSwipeLeft = useCallback((movie) => {
     setIsCardLoading(true);
+    playSound('swipe');
     setRecommendations(prev => prev.filter(m => m.id !== movie.id));
     setTimeout(() => setIsCardLoading(false), 300);
-  }, []);
+  }, [playSound]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -470,6 +508,35 @@ function Home() {
           </span>
         </div>
       )}
+
+      {/* Surprise Movie Banner */}
+      {surpriseMovie && (
+        <div className="surprise-banner">
+          <span className="surprise-icon">🎲</span>
+          <div className="surprise-content">
+            <p>Surprise Pick!</p>
+            <h3>{surpriseMovie.title || surpriseMovie.name}</h3>
+          </div>
+          <a href={`/${surpriseMovie.media_type}/${surpriseMovie.id}`} className="surprise-link">
+            View →
+          </a>
+        </div>
+      )}
+
+      {/* Time-based greeting */}
+      <div className="time-greeting">
+        <span className="time-emoji">{timeContext.emoji}</span>
+        <span>{timeContext.greeting}</span>
+        <button
+          className="time-suggestion-btn"
+          onClick={() => setMood(timeContext.suggestion)}
+        >
+          Try "{timeContext.suggestion}" vibes?
+        </button>
+        <button className="surprise-btn" onClick={handleSurpriseMe}>
+          🎲 Surprise Me
+        </button>
+      </div>
 
       {/* Trending Section */}
       {trending.length > 0 && recommendations.length === 0 && !hasSearched && (
@@ -562,6 +629,12 @@ function Home() {
       <RatingFilter
         minRating={minRating}
         onRatingChange={handleRatingChange}
+      />
+
+      {/* Advanced Filters */}
+      <AdvancedFilters
+        filters={advancedFilters}
+        onFiltersChange={handleAdvancedFiltersChange}
       />
 
       {/* Search Button */}

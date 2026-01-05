@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 
 // Emoji to genre mapping
 const emojiMoods = [
@@ -16,14 +16,58 @@ const emojiMoods = [
     { emoji: '📚', label: 'Documentary', genres: [99], keyword: 'documentary' },
 ];
 
-function EmojiPicker({ onSelect, selectedGenres = [] }) {
-    const handleClick = useCallback((mood) => {
+// Particle component for burst animation
+function Particle({ style }) {
+    return <span className="emoji-particle" style={style} />;
+}
+
+function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
+    const [particles, setParticles] = useState([]);
+    const particleIdRef = useRef(0);
+
+    const createParticleBurst = useCallback((e, color) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const newParticles = [];
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const velocity = 40 + Math.random() * 30;
+            const id = particleIdRef.current++;
+
+            newParticles.push({
+                id,
+                x: centerX + Math.cos(angle) * velocity,
+                y: centerY + Math.sin(angle) * velocity,
+                color
+            });
+        }
+
+        setParticles(prev => [...prev, ...newParticles]);
+
+        // Clean up particles after animation
+        setTimeout(() => {
+            setParticles(prev => prev.filter(p => !newParticles.some(np => np.id === p.id)));
+        }, 600);
+    }, []);
+
+    const handleClick = useCallback((mood, e) => {
+        // Create particle burst
+        const colors = {
+            happy: '#FFD700', sad: '#6B8DD6', horror: '#DC143C',
+            romantic: '#FF69B4', 'sci-fi': '#00CED1', action: '#FF6B6B',
+            fantasy: '#9C27B0', mystery: '#607D8B', funny: '#FFD700',
+            family: '#4CAF50', dramatic: '#6B8DD6', documentary: '#4CAF50'
+        };
+        createParticleBurst(e, colors[mood.keyword] || '#FFD700');
+
         onSelect(mood);
-    }, [onSelect]);
+    }, [onSelect, createParticleBurst]);
 
     return (
         <div className="emoji-picker" role="group" aria-label="Quick mood selection">
-            <h4>Quick pick:</h4>
+            <h4>Quick pick: {allowMultiple && <span className="multi-hint">(select multiple)</span>}</h4>
             <div className="emoji-grid">
                 {emojiMoods.map((mood) => {
                     const isActive = mood.genres.some(g => selectedGenres.includes(g));
@@ -31,7 +75,7 @@ function EmojiPicker({ onSelect, selectedGenres = [] }) {
                         <button
                             key={mood.emoji}
                             className={`emoji-btn ${isActive ? 'active' : ''}`}
-                            onClick={() => handleClick(mood)}
+                            onClick={(e) => handleClick(mood, e)}
                             title={mood.label}
                             aria-label={mood.label}
                             aria-pressed={isActive}
@@ -41,6 +85,20 @@ function EmojiPicker({ onSelect, selectedGenres = [] }) {
                         </button>
                     );
                 })}
+            </div>
+
+            {/* Particle container */}
+            <div className="particle-container">
+                {particles.map((particle) => (
+                    <Particle
+                        key={particle.id}
+                        style={{
+                            left: particle.x,
+                            top: particle.y,
+                            background: particle.color
+                        }}
+                    />
+                ))}
             </div>
         </div>
     );

@@ -1,17 +1,26 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
 
 /**
- * Watchlist page showing saved movies with export functionality
+ * Watchlist page with export, notes, random picker, and matchmaker
  */
 function Watchlist() {
-    const { watchlist, toggleWatchlist, isInWatchlist } = useWatchlist();
+    const { watchlist, toggleWatchlist, isInWatchlist, getNote, setNote, getRandomMovie } = useWatchlist();
     const [exportStatus, setExportStatus] = useState('');
+    const [randomPick, setRandomPick] = useState(null);
+    const [showMatchmaker, setShowMatchmaker] = useState(false);
+    const [matchInput, setMatchInput] = useState('');
+    const [matchResults, setMatchResults] = useState(null);
+    const [editingNote, setEditingNote] = useState(null);
+    const [noteText, setNoteText] = useState('');
 
     // Sort by most recently added
-    const sortedWatchlist = [...watchlist].sort((a, b) => b.addedAt - a.addedAt);
+    const sortedWatchlist = useMemo(() =>
+        [...watchlist].sort((a, b) => b.addedAt - a.addedAt),
+        [watchlist]
+    );
 
     // Export watchlist to clipboard
     const handleExport = useCallback(async () => {
@@ -29,35 +38,134 @@ function Watchlist() {
 
         try {
             await navigator.clipboard.writeText(fullExport);
-            setExportStatus('Copied to clipboard!');
+            setExportStatus('Copied!');
             setTimeout(() => setExportStatus(''), 3000);
         } catch (err) {
-            // Fallback for older browsers
             const textarea = document.createElement('textarea');
             textarea.value = fullExport;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            setExportStatus('Copied to clipboard!');
+            setExportStatus('Copied!');
             setTimeout(() => setExportStatus(''), 3000);
         }
     }, [sortedWatchlist]);
+
+    // Random picker
+    const handleRandomPick = useCallback(() => {
+        const movie = getRandomMovie();
+        setRandomPick(movie);
+        // Clear after 10 seconds
+        setTimeout(() => setRandomPick(null), 10000);
+    }, [getRandomMovie]);
+
+    // Matchmaker - find movies that appear in pasted friend's list
+    const handleMatch = useCallback(() => {
+        const friendTitles = matchInput
+            .split('\n')
+            .map(line => line.replace(/^[•\-*]\s*/, '').split('(')[0].trim().toLowerCase())
+            .filter(Boolean);
+
+        const matches = sortedWatchlist.filter(movie =>
+            friendTitles.some(title =>
+                movie.title.toLowerCase().includes(title) ||
+                title.includes(movie.title.toLowerCase())
+            )
+        );
+
+        setMatchResults({
+            count: matches.length,
+            movies: matches
+        });
+    }, [matchInput, sortedWatchlist]);
+
+    // Notes editing
+    const startEditNote = useCallback((movieId) => {
+        setEditingNote(movieId);
+        setNoteText(getNote(movieId));
+    }, [getNote]);
+
+    const saveNote = useCallback(() => {
+        if (editingNote) {
+            setNote(editingNote, noteText);
+            setEditingNote(null);
+            setNoteText('');
+        }
+    }, [editingNote, noteText, setNote]);
 
     return (
         <div className="watchlist-page">
             <div className="watchlist-header">
                 <h2>My Watchlist</h2>
-                {sortedWatchlist.length > 0 && (
-                    <button
-                        className="export-btn"
-                        onClick={handleExport}
-                        title="Export watchlist"
-                    >
-                        {exportStatus || '📋 Export'}
-                    </button>
-                )}
+                <div className="watchlist-actions">
+                    {sortedWatchlist.length > 1 && (
+                        <button className="action-btn" onClick={handleRandomPick} title="Pick random movie">
+                            🎲 Pick for Me
+                        </button>
+                    )}
+                    {sortedWatchlist.length > 0 && (
+                        <>
+                            <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
+                                👥 Matchmaker
+                            </button>
+                            <button className="export-btn" onClick={handleExport}>
+                                {exportStatus || '📋 Export'}
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
+
+            {/* Random Pick Result */}
+            {randomPick && (
+                <div className="random-pick-banner">
+                    <span className="pick-icon">🎲</span>
+                    <div className="pick-content">
+                        <p>Tonight's pick:</p>
+                        <h3>{randomPick.title}</h3>
+                    </div>
+                    <Link to={`/${randomPick.media_type}/${randomPick.id}`} className="view-pick-btn">
+                        View Details →
+                    </Link>
+                </div>
+            )}
+
+            {/* Matchmaker Panel */}
+            {showMatchmaker && (
+                <div className="matchmaker-panel">
+                    <h4>👥 Movie Matchmaker</h4>
+                    <p>Paste a friend's exported watchlist to find movies you both want to watch!</p>
+                    <textarea
+                        value={matchInput}
+                        onChange={(e) => setMatchInput(e.target.value)}
+                        placeholder="Paste friend's watchlist here..."
+                        rows={4}
+                    />
+                    <button onClick={handleMatch} className="primary-button">
+                        Find Matches
+                    </button>
+
+                    {matchResults && (
+                        <div className="match-results">
+                            {matchResults.count > 0 ? (
+                                <>
+                                    <p className="match-success">
+                                        🎉 Found {matchResults.count} movie{matchResults.count > 1 ? 's' : ''} in common!
+                                    </p>
+                                    <div className="match-list">
+                                        {matchResults.movies.map(m => (
+                                            <span key={m.id} className="match-chip">{m.title}</span>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <p className="no-matches">No matches found. You have unique taste! 🎬</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {sortedWatchlist.length === 0 ? (
                 <div className="empty-state">
@@ -70,26 +178,59 @@ function Watchlist() {
                 </div>
             ) : (
                 <>
-                    <p style={{
-                        textAlign: 'center',
-                        color: 'var(--color-text-secondary)',
-                        marginBottom: 'var(--spacing-xl)'
-                    }}>
+                    <p className="watchlist-count">
                         {sortedWatchlist.length} {sortedWatchlist.length === 1 ? 'item' : 'items'} saved
                     </p>
-                    <div className="recommendations">
-                        {sortedWatchlist.map((item) => (
-                            <MovieCard
-                                key={item.id}
-                                movie={item}
-                                isInWatchlist={isInWatchlist(item.id)}
-                                onToggleWatchlist={toggleWatchlist}
-                                mediaType={item.media_type}
-                            />
-                        ))}
+                    <div className="watchlist-grid">
+                        {sortedWatchlist.map((item) => {
+                            const note = getNote(item.id);
+                            return (
+                                <div key={item.id} className="watchlist-item">
+                                    <MovieCard
+                                        movie={item}
+                                        isInWatchlist={isInWatchlist(item.id)}
+                                        onToggleWatchlist={toggleWatchlist}
+                                        mediaType={item.media_type}
+                                    />
+
+                                    {/* Note section */}
+                                    <div className="movie-note">
+                                        {editingNote === item.id ? (
+                                            <div className="note-editor">
+                                                <textarea
+                                                    value={noteText}
+                                                    onChange={(e) => setNoteText(e.target.value)}
+                                                    placeholder="Add a note..."
+                                                    rows={2}
+                                                />
+                                                <div className="note-actions">
+                                                    <button onClick={saveNote}>Save</button>
+                                                    <button onClick={() => setEditingNote(null)}>Cancel</button>
+                                                </div>
+                                            </div>
+                                        ) : note ? (
+                                            <div className="note-display" onClick={() => startEditNote(item.id)}>
+                                                📝 {note}
+                                            </div>
+                                        ) : (
+                                            <button
+                                                className="add-note-btn"
+                                                onClick={() => startEditNote(item.id)}
+                                            >
+                                                + Add note
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </>
             )}
+
+            <Link to="/stats" className="stats-link">
+                📊 View Your Stats →
+            </Link>
         </div>
     );
 }
