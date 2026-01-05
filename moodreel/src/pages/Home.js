@@ -349,8 +349,29 @@ function Home() {
       url += `&vote_average.gte=${minRating}`;
     }
 
+    // Advanced Filters: Year Range
+    if (advancedFilters.yearMin > 1900) {
+      const date = `${advancedFilters.yearMin}-01-01`;
+      url += isTV ? `&first_air_date.gte=${date}` : `&primary_release_date.gte=${date}`;
+    }
+    if (advancedFilters.yearMax < new Date().getFullYear()) {
+      const date = `${advancedFilters.yearMax}-12-31`;
+      url += isTV ? `&first_air_date.lte=${date}` : `&primary_release_date.lte=${date}`;
+    }
+
+    // Advanced Filters: Runtime
+    if (advancedFilters.runtime !== 'any') {
+      if (advancedFilters.runtime === 'short') {
+        url += `&with_runtime.lte=90`;
+      } else if (advancedFilters.runtime === 'medium') {
+        url += `&with_runtime.gte=90&with_runtime.lte=150`;
+      } else if (advancedFilters.runtime === 'long') {
+        url += `&with_runtime.gte=150`;
+      }
+    }
+
     return { url, hasGenreFilter: allGenres.length > 0 };
-  }, [isTV, mood, selectedGenres, selectedProviders, minRating]);
+  }, [isTV, mood, selectedGenres, selectedProviders, minRating, advancedFilters]);
 
   const getRecommendations = useCallback(async () => {
     if (!mood && selectedGenres.length === 0) {
@@ -402,7 +423,7 @@ function Home() {
         cacheRecommendations(resultsWithType);
       } else {
         setRecommendations([]);
-        setError('No results found. Try another combination!');
+        setError(''); // Clear error if just no results, EmptyState will handle
         setHasMore(false);
       }
     } catch (err) {
@@ -427,8 +448,9 @@ function Home() {
 
     const controller = new AbortController();
     setIsLoading(true);
+    const nextPage = page + 1;
 
-    const { url } = buildApiUrl(page);
+    const { url } = buildApiUrl(nextPage);
 
     try {
       const response = await axios.get(url, { signal: controller.signal });
@@ -443,8 +465,17 @@ function Home() {
           resultsWithType = resultsWithType.filter(m => m.vote_average >= minRating);
         }
 
-        setRecommendations(prev => [...prev, ...resultsWithType]);
+        // Filter out duplicates
+        setRecommendations(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newItems = resultsWithType.filter(item => !existingIds.has(item.id));
+          return [...prev, ...newItems];
+        });
+
+        setPage(nextPage);
         setHasMore(response.data.page < response.data.total_pages);
+      } else {
+        setHasMore(false);
       }
     } catch (err) {
       if (!axios.isCancel(err)) {
