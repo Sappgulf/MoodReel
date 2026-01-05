@@ -66,6 +66,28 @@ function AdvancedFilters({ filters, onFiltersChange }) {
                         </div>
                     </div>
 
+                    {/* Sort Order */}
+                    <div className="filter-group">
+                        <label>Sort By:</label>
+                        <div className="runtime-buttons">
+                            {[
+                                { value: 'popularity.desc', label: '🔥 Trending' },
+                                { value: 'vote_average.desc', label: '💎 Hidden Gems' },
+                                { value: 'primary_release_date.desc', label: '📅 Newest' },
+                                { value: 'primary_release_date.asc', label: '🏛️ Classics' },
+                                { value: 'revenue.desc', label: '💰 Box Office' },
+                            ].map((option) => (
+                                <button
+                                    key={option.value}
+                                    className={filters.sortBy === option.value ? 'active' : ''}
+                                    onClick={() => onFiltersChange({ ...filters, sortBy: option.value })}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Runtime */}
                     <div className="filter-group">
                         <label>Runtime:</label>
@@ -94,7 +116,8 @@ function AdvancedFilters({ filters, onFiltersChange }) {
                             onClick={() => onFiltersChange({
                                 yearMin: 1900,
                                 yearMax: currentYear,
-                                runtime: 'any'
+                                runtime: 'any',
+                                sortBy: 'popularity.desc'
                             })}
                         >
                             ✕ Clear Filters

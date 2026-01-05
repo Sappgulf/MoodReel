@@ -126,7 +126,8 @@ function Home() {
   const [advancedFilters, setAdvancedFilters] = useState({
     yearMin: 1900,
     yearMax: new Date().getFullYear(),
-    runtime: 'any'
+    runtime: 'any',
+    sortBy: 'popularity.desc'
   });
   const [surpriseMovie, setSurpriseMovie] = useState(null);
 
@@ -333,8 +334,18 @@ function Home() {
     const endpoint = isTV ? 'tv' : 'movie';
     const moodGenres = parseMoodToGenres(mood);
     const allGenres = [...new Set([...selectedGenres, ...moodGenres])];
+    const sortBy = advancedFilters.sortBy || 'popularity.desc';
 
-    let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${apiKey}&page=${pageNum}&sort_by=popularity.desc`;
+    let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${apiKey}&page=${pageNum}&sort_by=${sortBy}`;
+
+    // For "Hidden Gems" (high rating), we must enforce a minimum vote count
+    // to avoid movies with one 10.0 vote appearing at the top
+    if (sortBy === 'vote_average.desc') {
+      url += `&vote_count.gte=300`;
+    } else if (sortBy === 'revenue.desc') {
+      // Revenue mostly applies to movies
+      url += `&vote_count.gte=100`;
+    }
 
     if (allGenres.length > 0) {
       url += `&with_genres=${allGenres.join('|')}`;
