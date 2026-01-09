@@ -92,7 +92,18 @@ function buildApiUrl(params, mediaType) {
         }
 
         if (allGenres.length > 0) {
-            url += `&with_genres=${allGenres.join('|')}`;
+            // Use comma for AND logic - results must match ALL selected genres
+            url += `&with_genres=${allGenres.join(',')}`;
+
+            // Exclude kids content when mature genres are selected
+            const matureGenres = [27, 53, 80, 9648]; // Horror, Thriller, Crime, Mystery
+            const kidsGenres = [10751, 16]; // Family, Animation
+            const hasMatureGenre = allGenres.some(g => matureGenres.includes(g));
+            const hasKidsGenre = allGenres.some(g => kidsGenres.includes(g));
+
+            if (hasMatureGenre && !hasKidsGenre) {
+                url += `&without_genres=${kidsGenres.join(',')}`;
+            }
         }
 
         if (providers.length > 0) {
