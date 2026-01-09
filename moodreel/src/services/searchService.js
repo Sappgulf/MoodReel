@@ -78,13 +78,17 @@ function buildApiUrl(params, mediaType) {
 
     // If we have genres, use discover. Otherwise use search.
     if (allGenres.length > 0 || !query) {
-        let url = `${BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&page=${page}&sort_by=${sortBy}`;
+        let url = `${BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&page=${page}&sort_by=${sortBy}&include_adult=false`;
 
-        // Hidden gems needs minimum vote count
+        // Always require minimum votes for quality results (except for newest releases)
         if (sortBy === 'vote_average.desc') {
+            // Hidden gems: higher threshold to avoid obscure titles
             url += '&vote_count.gte=300';
         } else if (sortBy === 'revenue.desc') {
             url += '&vote_count.gte=100';
+        } else if (sortBy !== 'primary_release_date.desc') {
+            // Default: require at least 50 votes for reliability
+            url += '&vote_count.gte=50';
         }
 
         if (allGenres.length > 0) {
@@ -110,8 +114,8 @@ function buildApiUrl(params, mediaType) {
 
         return url;
     } else {
-        // Text search
-        return `${BASE_URL}/search/${mediaType}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
+        // Text search - still apply include_adult filter
+        return `${BASE_URL}/search/${mediaType}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&include_adult=false`;
     }
 }
 

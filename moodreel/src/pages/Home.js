@@ -364,26 +364,40 @@ function Home() {
       let maxTotalPages = 0;
 
       if (contentType === 'all') {
-        // Fetch both movies and TV in parallel
-        const { url: movieUrl, hasGenreFilter: movieHasGenre } = buildApiUrl(1, 'movie');
-        const { url: tvUrl, hasGenreFilter: tvHasGenre } = buildApiUrl(1, 'tv');
+        // Fetch both movies and TV, pages 1 & 2 in parallel for more results
+        const { url: movieUrl1, hasGenreFilter: movieHasGenre } = buildApiUrl(1, 'movie');
+        const { url: movieUrl2 } = buildApiUrl(2, 'movie');
+        const { url: tvUrl1, hasGenreFilter: tvHasGenre } = buildApiUrl(1, 'tv');
+        const { url: tvUrl2 } = buildApiUrl(2, 'tv');
 
         // Build search URLs if no genre filter
-        const movieFinalUrl = movieHasGenre
-          ? movieUrl
-          : `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
-        const tvFinalUrl = tvHasGenre
-          ? tvUrl
-          : `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
+        const getUrl = (url, hasGenre, type, pg) => {
+          if (hasGenre) return url;
+          return `https://api.themoviedb.org/3/search/${type}?api_key=${apiKey}&query=${encodeURIComponent(mood)}&page=${pg}&include_adult=false`;
+        };
 
-        const [movieRes, tvRes] = await Promise.all([
-          axios.get(movieFinalUrl, { signal: controller.signal }),
-          axios.get(tvFinalUrl, { signal: controller.signal })
+        const movieFinal1 = getUrl(movieUrl1, movieHasGenre, 'movie', 1);
+        const movieFinal2 = getUrl(movieUrl2, movieHasGenre, 'movie', 2);
+        const tvFinal1 = getUrl(tvUrl1, tvHasGenre, 'tv', 1);
+        const tvFinal2 = getUrl(tvUrl2, tvHasGenre, 'tv', 2);
+
+        const [movieRes1, movieRes2, tvRes1, tvRes2] = await Promise.all([
+          axios.get(movieFinal1, { signal: controller.signal }),
+          axios.get(movieFinal2, { signal: controller.signal }).catch(() => ({ data: { results: [] } })),
+          axios.get(tvFinal1, { signal: controller.signal }),
+          axios.get(tvFinal2, { signal: controller.signal }).catch(() => ({ data: { results: [] } }))
         ]);
 
-        // Tag results with media_type
-        const movies = (movieRes.data.results || []).map(item => ({ ...item, media_type: 'movie' }));
-        const tvShows = (tvRes.data.results || []).map(item => ({ ...item, media_type: 'tv' }));
+        // Combine page 1 & 2 results
+        const movies = [
+          ...(movieRes1.data.results || []),
+          ...(movieRes2.data.results || [])
+        ].map(item => ({ ...item, media_type: 'movie' }));
+
+        const tvShows = [
+          ...(tvRes1.data.results || []),
+          ...(tvRes2.data.results || [])
+        ].map(item => ({ ...item, media_type: 'tv' }));
 
         // Interleave results for variety
         for (let i = 0; i < Math.max(movies.length, tvShows.length); i++) {
@@ -391,21 +405,37 @@ function Home() {
           if (tvShows[i]) allResults.push(tvShows[i]);
         }
 
-        maxTotalPages = Math.max(movieRes.data.total_pages || 0, tvRes.data.total_pages || 0);
+        maxTotalPages = Math.max(movieRes1.data.total_pages || 0, tvRes1.data.total_pages || 0);
+        // We've already fetched page 2, so set page state to 2
+        setPage(2);
       } else {
-        // Single type fetch
-        const { url, hasGenreFilter } = buildApiUrl(1);
+        // Single type fetch - 2 pages for more results
+        const { url: url1, hasGenreFilter } = buildApiUrl(1);
+        const { url: url2 } = buildApiUrl(2);
         const isTV = contentType === 'tv';
-        const finalUrl = hasGenreFilter
-          ? url
-          : `https://api.themoviedb.org/3/search/${isTV ? 'tv' : 'movie'}?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
 
-        const response = await axios.get(finalUrl, { signal: controller.signal });
-        allResults = (response.data.results || []).map(item => ({
+        const getFinalUrl = (url, hasGenre, pg) => {
+          if (hasGenre) return url;
+          return `https://api.themoviedb.org/3/search/${isTV ? 'tv' : 'movie'}?api_key=${apiKey}&query=${encodeURIComponent(mood)}&page=${pg}&include_adult=false`;
+        };
+
+        const finalUrl1 = getFinalUrl(url1, hasGenreFilter, 1);
+        const finalUrl2 = getFinalUrl(url2, hasGenreFilter, 2);
+
+        const [res1, res2] = await Promise.all([
+          axios.get(finalUrl1, { signal: controller.signal }),
+          axios.get(finalUrl2, { signal: controller.signal }).catch(() => ({ data: { results: [] } }))
+        ]);
+
+        allResults = [
+          ...(res1.data.results || []),
+          ...(res2.data.results || [])
+        ].map(item => ({
           ...item,
           media_type: isTV ? 'tv' : 'movie'
         }));
-        maxTotalPages = response.data.total_pages || 0;
+        maxTotalPages = res1.data.total_pages || 0;
+        setPage(2);
       }
 
       // Apply client-side rating filter as backup
