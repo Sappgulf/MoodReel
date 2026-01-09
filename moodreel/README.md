@@ -21,7 +21,7 @@
 - **Swipe cards** — Tinder-style swipe right to save, left to pass
 - **Pull-to-refresh** — Swipe down to reload recommendations
 - **Haptic feedback** — Vibration on swipe actions
-- **Keyboard shortcuts** — Press `?` to see all shortcuts, `D` theme, `M` sounds
+- **Keyboard shortcuts** — Press `?` to see all shortcuts
 - **PWA installable** — Add to home screen for app-like experience
 - **Onboarding tour** — First-time welcome with feature highlights
 
@@ -42,8 +42,6 @@
 - 😱 Horror Fan • 💕 Hopeless Romantic • 🔥 Trendsetter
 - 📅 Consistent (5-day streak) • ⭐ Critic (rate 5 movies)
 
-**Confetti celebration** on every unlock! 🎉
-
 ### 📊 Analytics
 - **Stats dashboard** — Total saved, avg ratings, top moods
 - **Mood calendar** — 30-day visualization of your mood searches
@@ -56,15 +54,87 @@
 - **Similar movies** — "You might also like" recommendations
 - **User ratings** — Rate and write personal reviews
 
-### 🎨 Visual Polish
-- **3D parallax cards** — Tilt effect on hover
-- **Particle animations** — Burst effects on mood selection
-- **Confetti** — Canvas celebration on achievements
-- **Dark/light theme** — Smooth 0.3s transition
-- **Custom scrollbar** — Themed thin scrollbar
-- **Skeleton loading** — Shimmer placeholders during load
-- **Sound effects** — Optional audio feedback (mutable)
-- **Scroll-to-top** — Smooth scroll on page navigation
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm 9+
+
+### Installation
+
+```bash
+# Clone and navigate
+cd moodreel
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env and add your TMDB API key
+
+# Start development server
+npm start
+```
+
+The app will open at http://localhost:3000
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `REACT_APP_TMDB_API_KEY` | ❌ Optional | Your own TMDB API key. If not set, uses shared key with rate limiting. |
+
+### Rate Limiting
+
+The app includes a shared TMDB API key with **rate limiting** for fair usage:
+- **Regular users**: 30 requests per minute
+- **Admin users**: Unlimited (no rate limiting)
+
+#### Enable Admin Mode (Unlimited Access)
+Open browser console and run:
+```javascript
+localStorage.setItem('moodreel-admin', 'true')
+```
+
+Then refresh the page. To disable:
+```javascript
+localStorage.removeItem('moodreel-admin')
+```
+
+> 💡 **Tip**: You can also provide your own TMDB API key via `.env` to bypass rate limiting entirely.
+
+---
+
+## 📦 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start dev server at http://localhost:3000 |
+| `npm run build` | Create production build in `/build` |
+| `npm test` | Run Jest test suite (26 tests) |
+| `npm run eject` | Eject from CRA (irreversible) |
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm test -- --coverage --watchAll=false
+
+# Run specific test file
+npm test -- useWatchlist.test.js
+```
+
+### Test Coverage
+- `useWatchlist.test.js` — 15 tests for watchlist operations
+- `moodParser.test.js` — 11 tests for mood-to-genre parsing
 
 ---
 
@@ -72,18 +142,17 @@
 
 ```
 src/
-├── components/           # 16 reusable UI components
+├── index.js              # React 18 createRoot entry
+├── App.js                # Routes + global state + shortcuts
+├── App.css               # ~3800 lines premium CSS
+├── index.css             # CSS reset + variables
+│
+├── components/           # 17 reusable UI components
 │   ├── MovieCard.js      # 3D parallax poster card
 │   ├── SwipeCard.js      # Tinder-style swipe interface
 │   ├── EmojiPicker.js    # Mood emoji grid with particles
 │   ├── TrailerModal.js   # YouTube trailer playback
 │   ├── Confetti.js       # Canvas celebration effect
-│   ├── OnboardingModal.js # First-time welcome tour
-│   ├── KeyboardShortcutsModal.js # Shortcuts help
-│   ├── AdvancedFilters.js # Year/runtime filter panel
-│   ├── StarRating.js     # 5-star rating input
-│   ├── InstallPrompt.js  # PWA install banner
-│   ├── AchievementToast.js # Unlock notification
 │   └── ...more
 │
 ├── pages/                # 6 route pages
@@ -96,20 +165,14 @@ src/
 │
 ├── hooks/                # 6 custom React hooks
 │   ├── useWatchlist.js   # Watchlist + watched + export/import
-│   ├── useAchievements.js # 8 badges + tracking
+│   ├── useAchievements.js# 8 badges + tracking
 │   ├── useMoodHistory.js # Search history + timestamps
 │   ├── useRatings.js     # Per-movie star ratings
 │   ├── useTheme.js       # Dark/light toggle
 │   └── useSounds.js      # Audio feedback
 │
-├── App.js                # Routes + global shortcuts
-├── App.css               # 3600+ lines of premium CSS
-└── index.js              # Entry point
-
-public/
-├── manifest.json         # PWA manifest
-├── service-worker.js     # Offline caching
-└── index.html            # Meta tags + SW registration
+└── utils/                # Utility modules
+    └── moodParser.js     # Mood-to-genre mapping
 ```
 
 ---
@@ -127,27 +190,6 @@ public/
 
 ---
 
-## 🚀 Getting Started
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm start
-
-# Build for production
-npm run build
-```
-
-### Environment Variables (optional)
-```
-REACT_APP_TMDB_API_KEY=your_api_key
-```
-A default TMDB key is included for development.
-
----
-
 ## 📱 PWA Installation
 
 On mobile Chrome/Safari:
@@ -157,17 +199,60 @@ On mobile Chrome/Safari:
 
 ---
 
+## 🚀 Deployment
+
+### Vercel (Recommended)
+```bash
+npm run build
+npx vercel --prod
+```
+
+The repo includes `vercel.json` with proper SPA routing config.
+
+### Other Platforms
+```bash
+npm run build
+# Deploy the /build folder to any static host
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### "No movies loading" / Blank recommendations
+- **Cause**: Missing or invalid TMDB API key
+- **Fix**: Ensure `REACT_APP_TMDB_API_KEY` is set in `.env` file
+- **Verify**: Check browser console for API errors
+
+### "Tests failing with localStorage errors"
+- **Cause**: Missing test setup
+- **Fix**: Ensure `src/setupTests.js` exists with localStorage mocks
+
+### PWA not installing
+- **Cause**: Not served over HTTPS or already installed
+- **Fix**: Deploy to HTTPS host (Vercel, Netlify) for install prompts
+
+### Build warnings about browserslist
+- **Cause**: Outdated browser data
+- **Fix**: Run `npx update-browserslist-db@latest`
+
+### Achievement not unlocking after rating
+- **Cause**: Fixed in latest version (was missing trackRating integration)
+- **Fix**: Pull latest code - achievements now properly track ratings
+
+---
+
 ## 🔑 Tech Stack
 
 - **React 18** with hooks
-- **React Router** for navigation
+- **React Router 7** for navigation
 - **Axios** for API calls
 - **TMDB API** for movie data
 - **localStorage** for persistence
 - **Web Audio API** for sounds
 - **Canvas API** for confetti
 - **Service Worker** for offline support
-- **CSS Variables** for theming (no Tailwind)
+- **CSS Variables** for theming
 
 ---
 

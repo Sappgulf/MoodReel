@@ -123,16 +123,33 @@ export function useAchievements() {
     }, [stats]);
 
     // Check for new achievements
+    // Use functional setState to avoid dependency on unlockedIds (prevents infinite loop)
     const checkAchievements = useCallback(() => {
-        ACHIEVEMENT_DEFS.forEach(achievement => {
-            if (!unlockedIds.includes(achievement.id) && achievement.condition(stats)) {
-                setUnlockedIds(prev => [...prev, achievement.id]);
-                setNewUnlock(achievement);
-                // Clear toast after 4 seconds
-                setTimeout(() => setNewUnlock(null), 4000);
+        setUnlockedIds(prevUnlockedIds => {
+            let newUnlockedIds = prevUnlockedIds;
+            let latestUnlock = null;
+
+            ACHIEVEMENT_DEFS.forEach(achievement => {
+                if (!prevUnlockedIds.includes(achievement.id) && achievement.condition(stats)) {
+                    if (newUnlockedIds === prevUnlockedIds) {
+                        newUnlockedIds = [...prevUnlockedIds];
+                    }
+                    newUnlockedIds.push(achievement.id);
+                    latestUnlock = achievement;
+                }
+            });
+
+            // Show toast for the latest unlock
+            if (latestUnlock) {
+                setTimeout(() => {
+                    setNewUnlock(latestUnlock);
+                    setTimeout(() => setNewUnlock(null), 4000);
+                }, 0);
             }
+
+            return newUnlockedIds;
         });
-    }, [unlockedIds, stats]);
+    }, [stats]);
 
     // Track movie save
     const trackSave = useCallback((movie) => {

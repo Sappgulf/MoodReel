@@ -5,6 +5,7 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
 import EmptyState from '../components/EmptyState';
 
+// TMDB API key - uses env var if set, otherwise default key with rate limiting
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
 
 /**
@@ -295,10 +296,10 @@ function Watchlist() {
                     <div className="recs-header">
                         <h3>
                             {recsBasedOn ? (
-                                <>✨ Because you saved <em>{recsBasedOn.title}</em></>)
-                                : (
-                                    <>✨ Recommended for you</>)
-                            }
+                                <>✨ Because you saved <em>{recsBasedOn.title}</em></>
+                            ) : (
+                                <>✨ Recommended for you</>
+                            )}
                         </h3>
                         <button
                             className="refresh-recs-btn"

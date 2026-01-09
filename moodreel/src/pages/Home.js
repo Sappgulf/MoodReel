@@ -11,72 +11,16 @@ import EmptyState from '../components/EmptyState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useSounds } from '../hooks/useSounds';
+import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
+import { parseMoodToGenres } from '../utils/moodParser';
 
-// Use environment variable if set, otherwise use default key
+// TMDB API key - uses env var if set, otherwise default key with rate limiting
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
 
 // Offline cache key
 const CACHE_KEY = 'moodreel-recommendations-cache';
 
-// Extended mood mapping with NLP-style phrase support
-const moodMap = {
-  // Happy/Uplifting
-  happy: 35, joyful: 35, cheerful: 35, funny: 35, laugh: 35, comedy: 35,
-  uplifting: 35, 'feel good': 35, 'pick me up': 35, lighthearted: 35,
-
-  // Sad/Emotional
-  sad: 18, emotional: 18, dramatic: 18, crying: 18, melancholy: 18,
-  heartbreak: 18, breakup: 18, 'after a breakup': 18, tearjerker: 18,
-
-  // Adventure/Action
-  adventurous: 12, adventure: 12, exciting: 28, action: 28, adrenaline: 28,
-  epic: 28, explosive: 28, intense: 28,
-
-  // Scary/Horror
-  scared: 27, scary: 27, horror: 27, spooky: 27, creepy: 27, terrifying: 27,
-  halloween: 27, nightmare: 27,
-
-  // Romance
-  romantic: 10749, love: 10749, romance: 10749, lovely: 10749,
-  'date night': 10749, passionate: 10749, 'fall in love': 10749,
-
-  // Thriller/Mystery
-  thrilling: 53, thriller: 53, suspense: 53, mystery: 9648, mysterious: 9648,
-  tense: 53, 'edge of seat': 53,
-
-  // Sci-Fi/Fantasy
-  scifi: 878, 'sci-fi': 878, futuristic: 878, fantasy: 14, magical: 14,
-  space: 878, aliens: 878, wizards: 14,
-
-  // Relaxed/Animated
-  relaxed: 16, chill: 16, animated: 16, family: 10751, kids: 10751,
-  cozy: 16, 'rainy day': 18, comfort: 35,
-
-  // Documentary
-  curious: 99, documentary: 99, learning: 99, educational: 99,
-  'true story': 99, inspiring: 99,
-};
-
-// Parse mood text to extract genre IDs
-function parseMoodToGenres(text) {
-  const lower = text.toLowerCase().trim();
-  const genres = new Set();
-
-  // Check for exact matches first
-  if (moodMap[lower]) {
-    genres.add(moodMap[lower]);
-    return Array.from(genres);
-  }
-
-  // Check for partial matches / phrases
-  for (const [phrase, genreId] of Object.entries(moodMap)) {
-    if (lower.includes(phrase) || phrase.includes(lower)) {
-      genres.add(genreId);
-    }
-  }
-
-  return Array.from(genres);
-}
+// NOTE: moodMap and parseMoodToGenres imported from '../utils/moodParser'
 
 // Load cached recommendations
 function loadCachedRecommendations() {
@@ -390,6 +334,12 @@ function Home() {
       return;
     }
 
+    // Check rate limit before making request
+    if (!canMakeRequest()) {
+      setError(`Rate limit reached. Please wait a moment before searching again. (${getRemainingRequests()} requests remaining)`);
+      return;
+    }
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -483,7 +433,7 @@ function Home() {
           return [...prev, ...newItems];
         });
 
-        setPage(nextPage);
+        // Note: page is already incremented by IntersectionObserver
         setHasMore(response.data.page < response.data.total_pages);
       } else {
         setHasMore(false);

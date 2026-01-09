@@ -7,9 +7,10 @@ import StarRating from '../components/StarRating';
 import TrailerModal from '../components/TrailerModal';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useRatings } from '../hooks/useRatings';
+import { useAchievements } from '../hooks/useAchievements';
 import { Skeleton } from '../components/Skeleton';
 
-// Use environment variable if set, otherwise use default key
+// TMDB API key - uses env var if set, otherwise default key with rate limiting
 const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
 
 function MovieDetails() {
@@ -34,6 +35,7 @@ function MovieDetails() {
     isWatched, toggleWatched
   } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
+  const { trackRating } = useAchievements();
 
   // Get stored rating/review
   const userRating = getRating(id);
@@ -94,12 +96,6 @@ function MovieDetails() {
         const castData = creditsResponse.data.cast || [];
         setCast(castData.slice(0, 6));
 
-        // Load saved review text
-        const savedReview = getReview(id);
-        if (savedReview) {
-          setReviewText(savedReview);
-        }
-
       } catch (err) {
         if (!axios.isCancel(err)) {
           setError('Error fetching details.');
@@ -113,7 +109,15 @@ function MovieDetails() {
     fetchData();
 
     return () => controller.abort();
-  }, [id, mediaType, getReview]);
+  }, [id, mediaType]);
+
+  // Load saved review text (separate effect to avoid refetching on rating change)
+  useEffect(() => {
+    const savedReview = getReview(id);
+    if (savedReview) {
+      setReviewText(savedReview);
+    }
+  }, [id, getReview]);
 
   const renderStars = useCallback((rating) => {
     const stars = Math.round(rating / 2);
@@ -128,7 +132,8 @@ function MovieDetails() {
 
   const handleRatingChange = useCallback((rating) => {
     setRating(id, rating);
-  }, [id, setRating]);
+    trackRating(); // Track for achievement system
+  }, [id, setRating, trackRating]);
 
   const handleReviewSubmit = useCallback(() => {
     setReview(id, reviewText);

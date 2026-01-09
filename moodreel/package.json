@@ -13,6 +13,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:ci": "react-scripts test --watchAll=false --coverage",
+    "smoke": "node scripts/smoke.js",
+    "verify": "npm run test:ci && npm run build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -32,5 +35,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.1"
   }
 }
