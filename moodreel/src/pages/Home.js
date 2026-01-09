@@ -60,7 +60,7 @@ function Home() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [selectedProviders, setSelectedProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isTV, setIsTV] = useState(false);
+  const [contentType, setContentType] = useState('all'); // 'all' | 'movie' | 'tv'
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -126,12 +126,12 @@ function Home() {
     return () => controller.abort();
   }, []);
 
-  // Fetch genres
+  // Fetch genres (for 'all', use movie genres as base)
   useEffect(() => {
     const controller = new AbortController();
     const fetchGenres = async () => {
       try {
-        const endpoint = isTV ? 'tv' : 'movie';
+        const endpoint = contentType === 'tv' ? 'tv' : 'movie';
         const response = await axios.get(
           `https://api.themoviedb.org/3/genre/${endpoint}/list?api_key=${apiKey}`,
           { signal: controller.signal }
@@ -145,7 +145,7 @@ function Home() {
     };
     fetchGenres();
     return () => controller.abort();
-  }, [isTV]);
+  }, [contentType]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -234,8 +234,8 @@ function Home() {
     }
   }, []);
 
-  const handleToggleContentType = useCallback(() => {
-    setIsTV((prev) => !prev);
+  const handleContentTypeChange = useCallback((newType) => {
+    setContentType(newType);
     setRecommendations([]);
     setSelectedGenres([]);
     setPage(1);
@@ -274,8 +274,9 @@ function Home() {
     setTimeout(() => setSurpriseMovie(null), 8000);
   }, [trending, playSound]);
 
-  const buildApiUrl = useCallback((pageNum = 1) => {
-    const endpoint = isTV ? 'tv' : 'movie';
+  const buildApiUrl = useCallback((pageNum = 1, mediaType = null) => {
+    // For 'all' mode, caller specifies which type to build URL for
+    const endpoint = mediaType || (contentType === 'tv' ? 'tv' : 'movie');
     const moodGenres = parseMoodToGenres(mood);
     const allGenres = [...new Set([...selectedGenres, ...moodGenres])];
     const sortBy = advancedFilters.sortBy || 'popularity.desc';
@@ -305,6 +306,7 @@ function Home() {
     }
 
     // Advanced Filters: Year Range
+    const isTV = endpoint === 'tv';
     if (advancedFilters.yearMin > 1900) {
       const date = `${advancedFilters.yearMin}-01-01`;
       url += isTV ? `&first_air_date.gte=${date}` : `&primary_release_date.gte=${date}`;
@@ -326,7 +328,7 @@ function Home() {
     }
 
     return { url, hasGenreFilter: allGenres.length > 0 };
-  }, [isTV, mood, selectedGenres, selectedProviders, minRating, advancedFilters]);
+  }, [contentType, mood, selectedGenres, selectedProviders, minRating, advancedFilters]);
 
   const getRecommendations = useCallback(async () => {
     if (!mood && selectedGenres.length === 0) {
@@ -357,39 +359,71 @@ function Home() {
       addToHistory(mood);
     }
 
-    const { url, hasGenreFilter } = buildApiUrl(1);
-
-    // If no genre filter, use search endpoint instead
-    const finalUrl = hasGenreFilter
-      ? url
-      : `https://api.themoviedb.org/3/search/${isTV ? 'tv' : 'movie'}?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
-
     try {
-      const response = await axios.get(finalUrl, { signal: controller.signal });
-      if (response.data.results?.length > 0) {
-        let resultsWithType = response.data.results.map(item => ({
+      let allResults = [];
+      let maxTotalPages = 0;
+
+      if (contentType === 'all') {
+        // Fetch both movies and TV in parallel
+        const { url: movieUrl, hasGenreFilter: movieHasGenre } = buildApiUrl(1, 'movie');
+        const { url: tvUrl, hasGenreFilter: tvHasGenre } = buildApiUrl(1, 'tv');
+
+        // Build search URLs if no genre filter
+        const movieFinalUrl = movieHasGenre
+          ? movieUrl
+          : `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
+        const tvFinalUrl = tvHasGenre
+          ? tvUrl
+          : `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
+
+        const [movieRes, tvRes] = await Promise.all([
+          axios.get(movieFinalUrl, { signal: controller.signal }),
+          axios.get(tvFinalUrl, { signal: controller.signal })
+        ]);
+
+        // Tag results with media_type
+        const movies = (movieRes.data.results || []).map(item => ({ ...item, media_type: 'movie' }));
+        const tvShows = (tvRes.data.results || []).map(item => ({ ...item, media_type: 'tv' }));
+
+        // Interleave results for variety
+        for (let i = 0; i < Math.max(movies.length, tvShows.length); i++) {
+          if (movies[i]) allResults.push(movies[i]);
+          if (tvShows[i]) allResults.push(tvShows[i]);
+        }
+
+        maxTotalPages = Math.max(movieRes.data.total_pages || 0, tvRes.data.total_pages || 0);
+      } else {
+        // Single type fetch
+        const { url, hasGenreFilter } = buildApiUrl(1);
+        const isTV = contentType === 'tv';
+        const finalUrl = hasGenreFilter
+          ? url
+          : `https://api.themoviedb.org/3/search/${isTV ? 'tv' : 'movie'}?api_key=${apiKey}&query=${encodeURIComponent(mood)}`;
+
+        const response = await axios.get(finalUrl, { signal: controller.signal });
+        allResults = (response.data.results || []).map(item => ({
           ...item,
           media_type: isTV ? 'tv' : 'movie'
         }));
+        maxTotalPages = response.data.total_pages || 0;
+      }
 
-        // Apply client-side rating filter as backup
-        if (minRating > 0) {
-          resultsWithType = resultsWithType.filter(m => m.vote_average >= minRating);
-        }
+      // Apply client-side rating filter as backup
+      if (minRating > 0) {
+        allResults = allResults.filter(m => m.vote_average >= minRating);
+      }
 
-        setRecommendations(resultsWithType);
-        setHasMore(response.data.page < response.data.total_pages);
-
-        // Cache for offline use
-        cacheRecommendations(resultsWithType);
+      if (allResults.length > 0) {
+        setRecommendations(allResults);
+        setHasMore(1 < maxTotalPages);
+        cacheRecommendations(allResults);
       } else {
         setRecommendations([]);
-        setError(''); // Clear error if just no results, EmptyState will handle
+        setError('');
         setHasMore(false);
       }
     } catch (err) {
       if (!axios.isCancel(err)) {
-        // Try to load from cache on network error
         const cached = loadCachedRecommendations();
         if (cached && cached.length > 0) {
           setRecommendations(cached);
@@ -402,7 +436,7 @@ function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [mood, selectedGenres, isTV, addToHistory, buildApiUrl, minRating]);
+  }, [mood, selectedGenres, contentType, addToHistory, buildApiUrl, minRating]);
 
   const loadMoreResults = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -411,33 +445,53 @@ function Home() {
     setIsLoading(true);
     const nextPage = page + 1;
 
-    const { url } = buildApiUrl(nextPage);
-
     try {
-      const response = await axios.get(url, { signal: controller.signal });
-      if (response.data.results?.length > 0) {
-        let resultsWithType = response.data.results.map(item => ({
-          ...item,
-          media_type: isTV ? 'tv' : 'movie'
-        }));
+      let newResults = [];
+      let maxTotalPages = 0;
 
-        // Apply rating filter
-        if (minRating > 0) {
-          resultsWithType = resultsWithType.filter(m => m.vote_average >= minRating);
+      if (contentType === 'all') {
+        // Fetch both movies and TV in parallel
+        const { url: movieUrl } = buildApiUrl(nextPage, 'movie');
+        const { url: tvUrl } = buildApiUrl(nextPage, 'tv');
+
+        const [movieRes, tvRes] = await Promise.all([
+          axios.get(movieUrl, { signal: controller.signal }),
+          axios.get(tvUrl, { signal: controller.signal })
+        ]);
+
+        const movies = (movieRes.data.results || []).map(item => ({ ...item, media_type: 'movie' }));
+        const tvShows = (tvRes.data.results || []).map(item => ({ ...item, media_type: 'tv' }));
+
+        // Interleave results
+        for (let i = 0; i < Math.max(movies.length, tvShows.length); i++) {
+          if (movies[i]) newResults.push(movies[i]);
+          if (tvShows[i]) newResults.push(tvShows[i]);
         }
 
-        // Filter out duplicates
-        setRecommendations(prev => {
-          const existingIds = new Set(prev.map(p => p.id));
-          const newItems = resultsWithType.filter(item => !existingIds.has(item.id));
-          return [...prev, ...newItems];
-        });
-
-        // Note: page is already incremented by IntersectionObserver
-        setHasMore(response.data.page < response.data.total_pages);
+        maxTotalPages = Math.max(movieRes.data.total_pages || 0, tvRes.data.total_pages || 0);
       } else {
-        setHasMore(false);
+        const { url } = buildApiUrl(nextPage);
+        const response = await axios.get(url, { signal: controller.signal });
+        newResults = (response.data.results || []).map(item => ({
+          ...item,
+          media_type: contentType === 'tv' ? 'tv' : 'movie'
+        }));
+        maxTotalPages = response.data.total_pages || 0;
       }
+
+      // Apply rating filter
+      if (minRating > 0) {
+        newResults = newResults.filter(m => m.vote_average >= minRating);
+      }
+
+      // Filter out duplicates and add to results
+      setRecommendations(prev => {
+        const existingIds = new Set(prev.map(p => `${p.id}-${p.media_type}`));
+        const unique = newResults.filter(item => !existingIds.has(`${item.id}-${item.media_type}`));
+        return [...prev, ...unique];
+      });
+
+      setHasMore(nextPage < maxTotalPages);
     } catch (err) {
       if (!axios.isCancel(err)) {
         console.error('Error loading more:', err);
@@ -445,7 +499,7 @@ function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, page, buildApiUrl, isTV, minRating]);
+  }, [isLoading, hasMore, page, buildApiUrl, contentType, minRating]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -551,16 +605,32 @@ function Home() {
         </section>
       )}
 
-      {/* Content Type Toggle */}
-      <div className="content-toggle">
-        <span className={`toggle-label ${!isTV ? 'active' : ''}`}>Movies</span>
+      {/* Content Type Toggle - 3-way */}
+      <div className="content-toggle-tabs" role="tablist" aria-label="Content type">
         <button
-          className={`toggle-switch ${isTV ? 'active' : ''}`}
-          onClick={handleToggleContentType}
-          aria-label={`Switch to ${isTV ? 'movies' : 'TV shows'}`}
-          aria-pressed={isTV}
-        />
-        <span className={`toggle-label ${isTV ? 'active' : ''}`}>TV Shows</span>
+          role="tab"
+          className={`content-tab ${contentType === 'all' ? 'active' : ''}`}
+          onClick={() => handleContentTypeChange('all')}
+          aria-selected={contentType === 'all'}
+        >
+          🎬 All
+        </button>
+        <button
+          role="tab"
+          className={`content-tab ${contentType === 'movie' ? 'active' : ''}`}
+          onClick={() => handleContentTypeChange('movie')}
+          aria-selected={contentType === 'movie'}
+        >
+          🎥 Movies
+        </button>
+        <button
+          role="tab"
+          className={`content-tab ${contentType === 'tv' ? 'active' : ''}`}
+          onClick={() => handleContentTypeChange('tv')}
+          aria-selected={contentType === 'tv'}
+        >
+          📺 TV Shows
+        </button>
       </div>
 
       {/* Mood History */}
@@ -639,8 +709,15 @@ function Home() {
         </button>
       </div>
 
-      {/* Error Message */}
-      {error && <p className="error" role="alert">{error}</p>}
+      {/* Error Message with Retry */}
+      {error && (
+        <div className="error-container" role="alert">
+          <p className="error">{error}</p>
+          <button className="retry-btn" onClick={getRecommendations}>
+            🔄 Retry
+          </button>
+        </div>
+      )}
 
       {/* Results */}
       <div aria-live="polite" aria-busy={isLoading}>
