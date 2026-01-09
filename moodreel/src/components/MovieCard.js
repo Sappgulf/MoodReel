@@ -26,7 +26,6 @@ const MovieCard = memo(function MovieCard({
     const [isHovering, setIsHovering] = useState(false);
     const cardRef = useRef(null);
     const touchStartX = useRef(null);
-    const touchEndX = useRef(null);
     const [swipeOffset, setSwipeOffset] = useState(0);
 
     const handleWatchlistClick = useCallback((e) => {

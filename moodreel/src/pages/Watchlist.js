@@ -4,9 +4,7 @@ import axios from 'axios';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
 import EmptyState from '../components/EmptyState';
-
-// TMDB API key - uses env var if set, otherwise default key with rate limiting
-const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+import searchService from '../services/searchService';
 
 /**
  * Watchlist page with export/import, notes, watched tracking, random picker, matchmaker
@@ -174,12 +172,10 @@ function Watchlist() {
 
         try {
             const mediaType = randomMovie.media_type || 'movie';
-            const response = await axios.get(
-                `https://api.themoviedb.org/3/${mediaType}/${randomMovie.id}/similar?api_key=${apiKey}`
-            );
+            const results = await searchService.fetchSimilar(randomMovie.id, mediaType);
 
             // Filter out movies already in watchlist
-            const filtered = response.data.results
+            const filtered = results
                 .filter(m => !watchlist.some(w => w.id === m.id))
                 .slice(0, 4)
                 .map(m => ({ ...m, media_type: mediaType }));

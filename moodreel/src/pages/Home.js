@@ -11,45 +11,9 @@ import EmptyState from '../components/EmptyState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useSounds } from '../hooks/useSounds';
-import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
 import { parseMoodToGenres } from '../utils/moodParser';
+import searchService from '../services/searchService';
 
-// TMDB API key - uses env var if set, otherwise default key with rate limiting
-const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
-
-// Offline cache key
-const CACHE_KEY = 'moodreel-recommendations-cache';
-
-// NOTE: moodMap and parseMoodToGenres imported from '../utils/moodParser'
-
-// Load cached recommendations
-function loadCachedRecommendations() {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      // Cache valid for 1 hour
-      if (Date.now() - timestamp < 3600000) {
-        return data;
-      }
-    }
-  } catch (e) {
-    console.error('Error loading cache:', e);
-  }
-  return null;
-}
-
-// Save recommendations to cache
-function cacheRecommendations(data) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      data,
-      timestamp: Date.now()
-    }));
-  } catch (e) {
-    console.error('Error caching:', e);
-  }
-}
 
 function Home() {
   const [mood, setMood] = useState('');
@@ -96,14 +60,6 @@ function Home() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load cached data on mount (offline support)
-  useEffect(() => {
-    const cached = loadCachedRecommendations();
-    if (cached && cached.length > 0) {
-      setRecommendations(cached);
-      setHasSearched(true);
-    }
-  }, []);
 
   // Fetch trending on mount
   useEffect(() => {
@@ -111,11 +67,8 @@ function Home() {
 
     const fetchTrending = async () => {
       try {
-        const response = await axios.get(
-          `https://api.themoviedb.org/3/trending/all/day?api_key=${apiKey}`,
-          { signal: controller.signal }
-        );
-        setTrending(response.data.results.slice(0, 8));
+        const results = await searchService.fetchTrending('all', 'day', controller.signal);
+        setTrending(results);
       } catch (err) {
         if (!axios.isCancel(err)) {
           console.error('Error fetching trending:', err);
@@ -133,11 +86,8 @@ function Home() {
     const fetchGenres = async () => {
       try {
         const endpoint = contentType === 'tv' ? 'tv' : 'movie';
-        const response = await axios.get(
-          `https://api.themoviedb.org/3/genre/${endpoint}/list?api_key=${apiKey}`,
-          { signal: controller.signal }
-        );
-        setGenres(response.data.genres);
+        const data = await searchService.fetchGenres(endpoint, controller.signal);
+        setGenres(data);
       } catch (err) {
         if (!axios.isCancel(err)) {
           console.error('Error fetching genres:', err);
@@ -275,85 +225,8 @@ function Home() {
     setTimeout(() => setSurpriseMovie(null), 8000);
   }, [trending, playSound]);
 
-  const buildApiUrl = useCallback((pageNum = 1, mediaType = null) => {
-    // For 'all' mode, caller specifies which type to build URL for
-    const endpoint = mediaType || (contentType === 'tv' ? 'tv' : 'movie');
-    const moodGenres = parseMoodToGenres(mood);
-    const allGenres = [...new Set([...selectedGenres, ...moodGenres])];
-    const sortBy = advancedFilters.sortBy || 'popularity.desc';
-
-    let url = `https://api.themoviedb.org/3/discover/${endpoint}?api_key=${apiKey}&page=${pageNum}&sort_by=${sortBy}`;
-
-    // For "Hidden Gems" (high rating), we must enforce a minimum vote count
-    // to avoid movies with one 10.0 vote appearing at the top
-    if (sortBy === 'vote_average.desc') {
-      url += `&vote_count.gte=300`;
-    } else if (sortBy === 'revenue.desc') {
-      // Revenue mostly applies to movies
-      url += `&vote_count.gte=100`;
-    }
-
-    if (allGenres.length > 0) {
-      // Use comma for AND logic - results must match ALL selected genres
-      url += `&with_genres=${allGenres.join(',')}`;
-
-      // Exclude kids content when mature genres are selected
-      const matureGenres = [27, 53, 80, 9648]; // Horror, Thriller, Crime, Mystery
-      const kidsGenres = [10751, 16]; // Family, Animation
-      const hasMatureGenre = allGenres.some(g => matureGenres.includes(g));
-      const hasKidsGenre = allGenres.some(g => kidsGenres.includes(g));
-
-      if (hasMatureGenre && !hasKidsGenre) {
-        url += `&without_genres=${kidsGenres.join(',')}`;
-      }
-    }
-
-    if (selectedProviders.length > 0) {
-      url += `&with_watch_providers=${selectedProviders.join('|')}&watch_region=US`;
-    }
-
-    // Add minimum rating filter
-    if (minRating > 0) {
-      url += `&vote_average.gte=${minRating}`;
-    }
-
-    // Advanced Filters: Year Range
-    const isTV = endpoint === 'tv';
-    if (advancedFilters.yearMin > 1900) {
-      const date = `${advancedFilters.yearMin}-01-01`;
-      url += isTV ? `&first_air_date.gte=${date}` : `&primary_release_date.gte=${date}`;
-    }
-    if (advancedFilters.yearMax < new Date().getFullYear()) {
-      const date = `${advancedFilters.yearMax}-12-31`;
-      url += isTV ? `&first_air_date.lte=${date}` : `&primary_release_date.lte=${date}`;
-    }
-
-    // Advanced Filters: Runtime
-    if (advancedFilters.runtime !== 'any') {
-      if (advancedFilters.runtime === 'short') {
-        url += `&with_runtime.lte=90`;
-      } else if (advancedFilters.runtime === 'medium') {
-        url += `&with_runtime.gte=90&with_runtime.lte=150`;
-      } else if (advancedFilters.runtime === 'long') {
-        url += `&with_runtime.gte=150`;
-      }
-    }
-
-    return { url, hasGenreFilter: allGenres.length > 0 };
-  }, [contentType, mood, selectedGenres, selectedProviders, minRating, advancedFilters]);
 
   const getRecommendations = useCallback(async () => {
-    if (!mood && selectedGenres.length === 0) {
-      setError('Please enter a mood or select a genre.');
-      return;
-    }
-
-    // Check rate limit before making request
-    if (!canMakeRequest()) {
-      setError(`Rate limit reached. Please wait a moment before searching again. (${getRemainingRequests()} requests remaining)`);
-      return;
-    }
-
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -366,119 +239,39 @@ function Home() {
     setPage(1);
     setHasSearched(true);
 
-    // Add to mood history
     if (mood) {
       addToHistory(mood);
     }
 
     try {
-      let allResults = [];
-      let maxTotalPages = 0;
+      const result = await searchService.search({
+        query: mood,
+        type: contentType,
+        genres: selectedGenres,
+        providers: selectedProviders,
+        minRating,
+        ...advancedFilters,
+        page: 1,
+        multiPage: true
+      }, controller.signal);
 
-      if (contentType === 'all') {
-        // Fetch both movies and TV, pages 1 & 2 in parallel for more results
-        const { url: movieUrl1, hasGenreFilter: movieHasGenre } = buildApiUrl(1, 'movie');
-        const { url: movieUrl2 } = buildApiUrl(2, 'movie');
-        const { url: tvUrl1, hasGenreFilter: tvHasGenre } = buildApiUrl(1, 'tv');
-        const { url: tvUrl2 } = buildApiUrl(2, 'tv');
-
-        // Build search URLs if no genre filter
-        const getUrl = (url, hasGenre, type, pg) => {
-          if (hasGenre) return url;
-          return `https://api.themoviedb.org/3/search/${type}?api_key=${apiKey}&query=${encodeURIComponent(mood)}&page=${pg}&include_adult=false`;
-        };
-
-        const movieFinal1 = getUrl(movieUrl1, movieHasGenre, 'movie', 1);
-        const movieFinal2 = getUrl(movieUrl2, movieHasGenre, 'movie', 2);
-        const tvFinal1 = getUrl(tvUrl1, tvHasGenre, 'tv', 1);
-        const tvFinal2 = getUrl(tvUrl2, tvHasGenre, 'tv', 2);
-
-        const [movieRes1, movieRes2, tvRes1, tvRes2] = await Promise.all([
-          axios.get(movieFinal1, { signal: controller.signal }),
-          axios.get(movieFinal2, { signal: controller.signal }).catch(() => ({ data: { results: [] } })),
-          axios.get(tvFinal1, { signal: controller.signal }),
-          axios.get(tvFinal2, { signal: controller.signal }).catch(() => ({ data: { results: [] } }))
-        ]);
-
-        // Combine page 1 & 2 results
-        const movies = [
-          ...(movieRes1.data.results || []),
-          ...(movieRes2.data.results || [])
-        ].map(item => ({ ...item, media_type: 'movie' }));
-
-        const tvShows = [
-          ...(tvRes1.data.results || []),
-          ...(tvRes2.data.results || [])
-        ].map(item => ({ ...item, media_type: 'tv' }));
-
-        // Interleave results for variety
-        for (let i = 0; i < Math.max(movies.length, tvShows.length); i++) {
-          if (movies[i]) allResults.push(movies[i]);
-          if (tvShows[i]) allResults.push(tvShows[i]);
-        }
-
-        maxTotalPages = Math.max(movieRes1.data.total_pages || 0, tvRes1.data.total_pages || 0);
-        // We've already fetched page 2, so set page state to 2
-        setPage(2);
-      } else {
-        // Single type fetch - 2 pages for more results
-        const { url: url1, hasGenreFilter } = buildApiUrl(1);
-        const { url: url2 } = buildApiUrl(2);
-        const isTV = contentType === 'tv';
-
-        const getFinalUrl = (url, hasGenre, pg) => {
-          if (hasGenre) return url;
-          return `https://api.themoviedb.org/3/search/${isTV ? 'tv' : 'movie'}?api_key=${apiKey}&query=${encodeURIComponent(mood)}&page=${pg}&include_adult=false`;
-        };
-
-        const finalUrl1 = getFinalUrl(url1, hasGenreFilter, 1);
-        const finalUrl2 = getFinalUrl(url2, hasGenreFilter, 2);
-
-        const [res1, res2] = await Promise.all([
-          axios.get(finalUrl1, { signal: controller.signal }),
-          axios.get(finalUrl2, { signal: controller.signal }).catch(() => ({ data: { results: [] } }))
-        ]);
-
-        allResults = [
-          ...(res1.data.results || []),
-          ...(res2.data.results || [])
-        ].map(item => ({
-          ...item,
-          media_type: isTV ? 'tv' : 'movie'
-        }));
-        maxTotalPages = res1.data.total_pages || 0;
-        setPage(2);
-      }
-
-      // Apply client-side rating filter as backup
-      if (minRating > 0) {
-        allResults = allResults.filter(m => m.vote_average >= minRating);
-      }
-
-      if (allResults.length > 0) {
-        setRecommendations(allResults);
-        setHasMore(1 < maxTotalPages);
-        cacheRecommendations(allResults);
-      } else {
+      if (result.error) {
+        setError(result.error);
         setRecommendations([]);
-        setError('');
-        setHasMore(false);
+      } else {
+        setRecommendations(result.results);
+        setHasMore(result.hasMore);
+        setPage(result.page);
       }
     } catch (err) {
       if (!axios.isCancel(err)) {
-        const cached = loadCachedRecommendations();
-        if (cached && cached.length > 0) {
-          setRecommendations(cached);
-          setError('Showing cached results (offline mode)');
-        } else {
-          setError('Network error. Please check your connection.');
-        }
+        setError('Network error. Please check your connection.');
         console.error(err);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [mood, selectedGenres, contentType, addToHistory, buildApiUrl, minRating]);
+  }, [mood, selectedGenres, contentType, selectedProviders, minRating, advancedFilters, addToHistory]);
 
   const loadMoreResults = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -488,52 +281,27 @@ function Home() {
     const nextPage = page + 1;
 
     try {
-      let newResults = [];
-      let maxTotalPages = 0;
+      const result = await searchService.search({
+        query: mood,
+        type: contentType,
+        genres: selectedGenres,
+        providers: selectedProviders,
+        minRating,
+        ...advancedFilters,
+        page: nextPage
+      }, controller.signal);
 
-      if (contentType === 'all') {
-        // Fetch both movies and TV in parallel
-        const { url: movieUrl } = buildApiUrl(nextPage, 'movie');
-        const { url: tvUrl } = buildApiUrl(nextPage, 'tv');
-
-        const [movieRes, tvRes] = await Promise.all([
-          axios.get(movieUrl, { signal: controller.signal }),
-          axios.get(tvUrl, { signal: controller.signal })
-        ]);
-
-        const movies = (movieRes.data.results || []).map(item => ({ ...item, media_type: 'movie' }));
-        const tvShows = (tvRes.data.results || []).map(item => ({ ...item, media_type: 'tv' }));
-
-        // Interleave results
-        for (let i = 0; i < Math.max(movies.length, tvShows.length); i++) {
-          if (movies[i]) newResults.push(movies[i]);
-          if (tvShows[i]) newResults.push(tvShows[i]);
-        }
-
-        maxTotalPages = Math.max(movieRes.data.total_pages || 0, tvRes.data.total_pages || 0);
+      if (result.results.length > 0) {
+        setRecommendations(prev => {
+          const existingIds = new Set(prev.map(p => `${p.id}-${p.media_type}`));
+          const unique = result.results.filter(item => !existingIds.has(`${item.id}-${item.media_type}`));
+          return [...prev, ...unique];
+        });
+        setPage(result.page);
+        setHasMore(result.hasMore);
       } else {
-        const { url } = buildApiUrl(nextPage);
-        const response = await axios.get(url, { signal: controller.signal });
-        newResults = (response.data.results || []).map(item => ({
-          ...item,
-          media_type: contentType === 'tv' ? 'tv' : 'movie'
-        }));
-        maxTotalPages = response.data.total_pages || 0;
+        setHasMore(false);
       }
-
-      // Apply rating filter
-      if (minRating > 0) {
-        newResults = newResults.filter(m => m.vote_average >= minRating);
-      }
-
-      // Filter out duplicates and add to results
-      setRecommendations(prev => {
-        const existingIds = new Set(prev.map(p => `${p.id}-${p.media_type}`));
-        const unique = newResults.filter(item => !existingIds.has(`${item.id}-${item.media_type}`));
-        return [...prev, ...unique];
-      });
-
-      setHasMore(nextPage < maxTotalPages);
     } catch (err) {
       if (!axios.isCancel(err)) {
         console.error('Error loading more:', err);
@@ -541,7 +309,7 @@ function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, page, buildApiUrl, contentType, minRating]);
+  }, [isLoading, hasMore, page, mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {

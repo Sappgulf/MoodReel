@@ -9,9 +9,7 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import { useRatings } from '../hooks/useRatings';
 import { useAchievements } from '../hooks/useAchievements';
 import { Skeleton } from '../components/Skeleton';
-
-// TMDB API key - uses env var if set, otherwise default key with rate limiting
-const apiKey = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+import searchService from '../services/searchService';
 
 function MovieDetails() {
   const { id } = useParams();
@@ -54,46 +52,24 @@ function MovieDetails() {
       setCast([]);
 
       try {
-        // Fetch all data in parallel (including videos for trailers and credits for cast)
-        const [detailsResponse, similarResponse, providersResponse, videosResponse, creditsResponse] = await Promise.all([
-          axios.get(
-            `https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${apiKey}`,
-            { signal: controller.signal }
-          ),
-          axios.get(
-            `https://api.themoviedb.org/3/${mediaType}/${id}/similar?api_key=${apiKey}`,
-            { signal: controller.signal }
-          ),
-          axios.get(
-            `https://api.themoviedb.org/3/${mediaType}/${id}/watch/providers?api_key=${apiKey}`,
-            { signal: controller.signal }
-          ),
-          axios.get(
-            `https://api.themoviedb.org/3/${mediaType}/${id}/videos?api_key=${apiKey}`,
-            { signal: controller.signal }
-          ),
-          axios.get(
-            `https://api.themoviedb.org/3/${mediaType}/${id}/credits?api_key=${apiKey}`,
-            { signal: controller.signal }
-          ),
-        ]);
+        const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
 
-        setContent(detailsResponse.data);
-        setSimilar(similarResponse.data.results?.slice(0, 6) || []);
+        setContent(data.details);
+        setSimilar(data.similar.slice(0, 6));
 
         // Get US providers or first available region
-        const results = providersResponse.data.results;
-        setProviders(results?.US || results?.[Object.keys(results)[0]] || null);
+        const results = data.providers;
+        setProviders(results?.US || results?.[Object.keys(results || {})[0]] || null);
 
         // Find YouTube trailer
-        const videos = videosResponse.data.results || [];
+        const videos = data.videos || [];
         const trailerVideo = videos.find(v =>
           v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
         ) || videos.find(v => v.site === 'YouTube');
         setTrailer(trailerVideo || null);
 
         // Get top 6 cast members
-        const castData = creditsResponse.data.cast || [];
+        const castData = data.credits.cast || [];
         setCast(castData.slice(0, 6));
 
       } catch (err) {

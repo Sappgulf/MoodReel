@@ -10,16 +10,38 @@
  */
 
 import axios from 'axios';
-import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
 import { parseMoodToGenres } from '../utils/moodParser';
+import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
 
 // TMDB API key
-const API_KEY = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
+
+if (!API_KEY) {
+    console.warn('REACT_APP_TMDB_API_KEY is not defined in environment variables.');
+}
+
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 // Cache settings
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
+const CACHE_KEY = 'moodreel-search-persistent-cache';
+
+// Initialize cache from localStorage
 const searchCache = new Map();
+try {
+    const saved = localStorage.getItem(CACHE_KEY);
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        Object.entries(parsed).forEach(([key, value]) => {
+            if (Date.now() - value.timestamp < CACHE_TTL_MS) {
+                searchCache.set(key, value);
+            }
+        });
+    }
+} catch (e) {
+    console.warn('Failed to load search cache from localStorage');
+}
+
 const inflightRequests = new Map();
 
 /**
@@ -62,6 +84,14 @@ function setCache(key, data) {
     if (searchCache.size > 50) {
         const oldestKey = searchCache.keys().next().value;
         searchCache.delete(oldestKey);
+    }
+
+    // Persist to localStorage
+    try {
+        const obj = Object.fromEntries(searchCache);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
+    } catch (e) {
+        // Silently fail if quota exceeded
     }
 }
 
@@ -168,7 +198,7 @@ async function fetchMediaType(params, mediaType, signal) {
  * @param {number} params.minRating - Minimum rating (0-10)
  * @param {number} params.yearMin - Minimum year
  * @param {number} params.yearMax - Maximum year
- * @param {string} params.sortBy - Sort order
+ * @param {boolean} params.multiPage - Fetch two pages at once (default for page 1)
  * @param {AbortSignal} signal - AbortSignal for cancellation
  * 
  * @returns {Promise<{results: Array, page: number, totalPages: number, hasMore: boolean}>}
@@ -221,25 +251,52 @@ export async function search(params, signal) {
 
             if (type === 'all') {
                 // Fetch both movies and TV in parallel
-                const [movieData, tvData] = await Promise.all([
+                const fetchPromises = [
                     fetchMediaType(params, 'movie', signal),
                     fetchMediaType(params, 'tv', signal)
-                ]);
+                ];
 
-                // Interleave results (alternating movie/tv for variety)
-                const maxLen = Math.max(movieData.results.length, tvData.results.length);
-                for (let i = 0; i < maxLen; i++) {
-                    if (movieData.results[i]) results.push(movieData.results[i]);
-                    if (tvData.results[i]) results.push(tvData.results[i]);
+                // For initial page 1, fetch page 2 too for more results if requested
+                if (params.multiPage && (params.page === 1 || !params.page)) {
+                    fetchPromises.push(
+                        fetchMediaType({ ...params, page: 2 }, 'movie', signal).catch(() => ({ results: [] })),
+                        fetchMediaType({ ...params, page: 2 }, 'tv', signal).catch(() => ({ results: [] }))
+                    );
                 }
 
-                page = Math.min(movieData.page, tvData.page);
-                totalPages = Math.max(movieData.totalPages, tvData.totalPages);
+                const dataResults = await Promise.all(fetchPromises);
+                const movie1 = dataResults[0];
+                const tv1 = dataResults[1];
+                const movie2 = dataResults[2] || { results: [] };
+                const tv2 = dataResults[3] || { results: [] };
+
+                const movies = [...movie1.results, ...movie2.results];
+                const tvs = [...tv1.results, ...tv2.results];
+
+                // Interleave results
+                const maxLen = Math.max(movies.length, tvs.length);
+                for (let i = 0; i < maxLen; i++) {
+                    if (movies[i]) results.push(movies[i]);
+                    if (tvs[i]) results.push(tvs[i]);
+                }
+
+                page = params.multiPage ? 2 : (params.page || 1);
+                totalPages = Math.max(movie1.totalPages, tv1.totalPages);
             } else {
-                const data = await fetchMediaType(params, type, signal);
-                results = data.results;
-                page = data.page;
-                totalPages = data.totalPages;
+                const data1 = await fetchMediaType(params, type, signal);
+                results = [...data1.results];
+                page = data1.page;
+                totalPages = data1.totalPages;
+
+                if (params.multiPage && (params.page === 1 || !params.page)) {
+                    try {
+                        const data2 = await fetchMediaType({ ...params, page: 2 }, type, signal);
+                        results = [...results, ...data2.results];
+                        page = 2;
+                    } catch (e) {
+                        // Ignore page 2 failure
+                    }
+                }
             }
 
             const result = {
@@ -276,10 +333,63 @@ export async function search(params, signal) {
 }
 
 /**
+ * Fetch genres list for movies or TV
+ */
+export async function fetchGenres(type = 'movie', signal) {
+    const url = `${BASE_URL}/genre/${type}/list?api_key=${API_KEY}`;
+    const response = await axios.get(url, { signal });
+    return response.data.genres;
+}
+
+/**
+ * Fetch trending content
+ */
+export async function fetchTrending(type = 'all', timeWindow = 'day', signal) {
+    const url = `${BASE_URL}/trending/${type}/${timeWindow}?api_key=${API_KEY}`;
+    const response = await axios.get(url, { signal });
+    return response.data.results.slice(0, 8);
+}
+
+/**
+ * Fetch all details for a movie or TV show in parallel
+ */
+export async function fetchContentDetails(id, mediaType = 'movie', signal) {
+    const endpoints = [
+        `${BASE_URL}/${mediaType}/${id}?api_key=${API_KEY}`,
+        `${BASE_URL}/${mediaType}/${id}/similar?api_key=${API_KEY}`,
+        `${BASE_URL}/${mediaType}/${id}/watch/providers?api_key=${API_KEY}`,
+        `${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`,
+        `${BASE_URL}/${mediaType}/${id}/credits?api_key=${API_KEY}`
+    ];
+
+    const responses = await Promise.all(
+        endpoints.map(url => axios.get(url, { signal }).catch(err => {
+            console.warn(`Failed to fetch endpoint: ${url}`, err);
+            return { data: {} };
+        }))
+    );
+
+    return {
+        details: responses[0].data,
+        similar: responses[1].data.results || [],
+        providers: responses[2].data.results || null,
+        videos: responses[3].data.results || [],
+        credits: responses[4].data || { cast: [] }
+    };
+}
+
+export async function fetchSimilar(id, mediaType = 'movie', signal) {
+    const url = `${BASE_URL}/${mediaType}/${id}/similar?api_key=${API_KEY}`;
+    const response = await axios.get(url, { signal });
+    return response.data.results || [];
+}
+
+/**
  * Clear all cached search results
  */
 export function clearCache() {
     searchCache.clear();
+    localStorage.removeItem(CACHE_KEY);
 }
 
 /**
@@ -297,7 +407,11 @@ const searchService = {
     search,
     generateCacheKey,
     clearCache,
-    getCacheStats
+    getCacheStats,
+    fetchGenres,
+    fetchTrending,
+    fetchContentDetails,
+    fetchSimilar
 };
 
 export default searchService;
