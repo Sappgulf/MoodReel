@@ -1179,28 +1179,40 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--spacing-lg);
   position: relative;
 }
 
-.theme-toggle {
+.header-controls {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.theme-toggle,
+.sound-toggle,
+.shortcuts-btn {
   background: var(--color-bg-glass);
   border: 1px solid var(--color-border);
   border-radius: 50%;
-  width: 42px;
-  height: 42px;
-  font-size: 1.3rem;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.sound-toggle:hover,
+.shortcuts-btn:hover {
   border-color: var(--color-border-gold);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
   box-shadow: var(--shadow-gold-sm);
 }
 
@@ -2870,28 +2882,7 @@ main {
   will-change: transform;
 }
 
-/* =====================================================
-   Sound Toggle
-   ===================================================== */
-.header-controls {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.sound-toggle {
-  font-size: 1.2rem;
-  padding: var(--spacing-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.sound-toggle:hover {
-  background: var(--color-bg-glass);
-  border-color: var(--color-border);
-}
+/* Sound Toggle - styles are in Theme Toggle section above */
 
 /* =====================================================
    Mobile Responsive for Advanced Features
