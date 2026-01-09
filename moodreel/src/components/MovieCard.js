@@ -11,7 +11,9 @@ const MovieCard = memo(function MovieCard({
     onToggleWatchlist,
     isWatched,
     onToggleWatched,
-    mediaType = 'movie'
+    mediaType = 'movie',
+    onSwipeRight,
+    onSwipeLeft
 }) {
     const title = movie.title || movie.name;
     const date = movie.release_date || movie.first_air_date;
@@ -23,6 +25,9 @@ const MovieCard = memo(function MovieCard({
     const [tilt, setTilt] = useState({ x: 0, y: 0 });
     const [isHovering, setIsHovering] = useState(false);
     const cardRef = useRef(null);
+    const touchStartX = useRef(null);
+    const touchEndX = useRef(null);
+    const [swipeOffset, setSwipeOffset] = useState(0);
 
     const handleWatchlistClick = useCallback((e) => {
         e.preventDefault();
@@ -64,12 +69,43 @@ const MovieCard = memo(function MovieCard({
         setTilt({ x: 0, y: 0 });
     }, []);
 
+    // Swipe gestures for mobile
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.targetTouches[0].clientX;
+    };
+
+    const handleTouchMove = (e) => {
+        if (touchStartX.current === null) return;
+        const currentX = e.targetTouches[0].clientX;
+        const diff = currentX - touchStartX.current;
+
+        // Only track horizontal movement
+        if (Math.abs(diff) > 20) {
+            setSwipeOffset(diff);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (touchStartX.current === null) return;
+
+        const threshold = 100;
+        if (swipeOffset > threshold && onSwipeRight) {
+            onSwipeRight(movie);
+        } else if (swipeOffset < -threshold && onSwipeLeft) {
+            onSwipeLeft(movie);
+        }
+
+        touchStartX.current = null;
+        setSwipeOffset(0);
+    };
+
     const cardStyle = isHovering ? {
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(20px)`,
         transition: 'transform 0.1s ease-out'
     } : {
-        transform: 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)',
-        transition: 'transform 0.3s ease-out'
+        transform: `perspective(1000px) rotateX(0) rotateY(0) translateZ(0) translateX(${swipeOffset}px) rotate(${swipeOffset * 0.05}deg)`,
+        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none',
+        opacity: swipeOffset !== 0 ? Math.max(0.5, 1 - Math.abs(swipeOffset) / 300) : 1
     };
 
     return (
@@ -80,7 +116,22 @@ const MovieCard = memo(function MovieCard({
             onMouseMove={handleMouseMove}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
+            {/* Visual feedback for swipe */}
+            {swipeOffset > 20 && (
+                <div className="swipe-feedback swipe-right" style={{ opacity: Math.min(1, swipeOffset / 100) }}>
+                    ❤️
+                </div>
+            )}
+            {swipeOffset < -20 && (
+                <div className="swipe-feedback swipe-left" style={{ opacity: Math.min(1, -swipeOffset / 100) }}>
+                    👎
+                </div>
+            )}
+
             <div className="card-actions">
                 <button
                     className={`watchlist-btn ${isInWatchlist ? 'active' : ''}`}

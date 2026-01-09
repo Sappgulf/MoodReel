@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const ONBOARDING_KEY = 'moodreel-onboarded';
 
@@ -37,6 +37,8 @@ function OnboardingModal() {
     const [show, setShow] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
 
+    const touchStart = useRef(null);
+
     useEffect(() => {
         const hasOnboarded = localStorage.getItem(ONBOARDING_KEY);
         if (!hasOnboarded) {
@@ -61,8 +63,30 @@ function OnboardingModal() {
 
     const slide = slides[currentSlide];
 
+    // Swipe support for mobile
+    const handleTouchStart = (e) => {
+        touchStart.current = e.targetTouches[0].clientX;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!touchStart.current) return;
+        const touchEnd = e.changedTouches[0].clientX;
+        const diff = touchStart.current - touchEnd;
+
+        if (diff > 50) {
+            // Swipe Left -> Next
+            handleNext();
+        } else if (diff < -50) {
+            // Swipe Right -> Previous
+            if (currentSlide > 0) {
+                setCurrentSlide(prev => prev - 1);
+            }
+        }
+        touchStart.current = null;
+    };
+
     return (
-        <div className="onboarding-backdrop">
+        <div className="onboarding-backdrop" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             <div className="onboarding-modal">
                 <button className="onboarding-skip" onClick={handleClose}>
                     Skip

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const shortcuts = [
     { keys: ['←', '→'], description: 'Swipe left/right (mobile mode)' },
@@ -32,10 +32,26 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
         }
     }, [isOpen, handleKeyDown]);
 
+    const touchStart = useRef(null);
+    const handleTouchStart = (e) => {
+        touchStart.current = e.targetTouches[0].clientX;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!touchStart.current) return;
+        const touchEnd = e.changedTouches[0].clientX;
+        const diff = Math.abs(touchStart.current - touchEnd);
+
+        if (diff > 100) {
+            onClose();
+        }
+        touchStart.current = null;
+    };
+
     if (!visible) return null;
 
     return (
-        <div className="shortcuts-backdrop" onClick={onClose}>
+        <div className="shortcuts-backdrop" onClick={onClose} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             <div className="shortcuts-modal" onClick={e => e.stopPropagation()}>
                 <button className="shortcuts-close" onClick={onClose}>✕</button>
 

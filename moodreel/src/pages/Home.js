@@ -74,6 +74,7 @@ function Home() {
     sortBy: 'popularity.desc'
   });
   const [surpriseMovie, setSurpriseMovie] = useState(null);
+  const [showFilters, setShowFilters] = useState(!isMobile);
 
   // Pull-to-refresh state
   const [isPulling, setIsPulling] = useState(false);
@@ -708,43 +709,58 @@ function Home() {
       {/* Emoji Picker */}
       <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
 
-      {/* Genre Filters */}
-      <div className="genre-filters">
-        <h3>Or pick your genres:</h3>
-        <div className="genre-buttons" role="group" aria-label="Genre filters">
-          {genres.map((genre) => (
-            <button
-              key={genre.id}
-              onClick={() => handleGenreClick(genre.id)}
-              className={selectedGenres.includes(genre.id) ? 'active' : ''}
-              aria-pressed={selectedGenres.includes(genre.id)}
-            >
-              {genre.name}
-            </button>
-          ))}
+      {/* Filter Toggle for Mobile */}
+      {isMobile && (
+        <button
+          className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          {showFilters ? '✕ Hide Filters' : '🔍 Filter & Sort'}
+        </button>
+      )}
+
+      {/* Conditionally reveal filters on mobile */}
+      {(showFilters || !isMobile) && (
+        <div className="filters-wrapper">
+          {/* Genre Filters */}
+          <div className="genre-filters">
+            <h3>Or pick your genres:</h3>
+            <div className="genre-buttons" role="group" aria-label="Genre filters">
+              {genres.map((genre) => (
+                <button
+                  key={genre.id}
+                  onClick={() => handleGenreClick(genre.id)}
+                  className={selectedGenres.includes(genre.id) ? 'active' : ''}
+                  aria-pressed={selectedGenres.includes(genre.id)}
+                >
+                  {genre.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Streaming Filter */}
+          <StreamingFilter
+            selectedProviders={selectedProviders}
+            onToggle={handleProviderToggle}
+          />
+
+          {/* Rating Filter */}
+          <RatingFilter
+            minRating={minRating}
+            onRatingChange={handleRatingChange}
+          />
+
+          {/* Advanced Filters */}
+          <AdvancedFilters
+            filters={advancedFilters}
+            onFiltersChange={handleAdvancedFiltersChange}
+          />
         </div>
-      </div>
-
-      {/* Streaming Filter */}
-      <StreamingFilter
-        selectedProviders={selectedProviders}
-        onToggle={handleProviderToggle}
-      />
-
-      {/* Rating Filter */}
-      <RatingFilter
-        minRating={minRating}
-        onRatingChange={handleRatingChange}
-      />
-
-      {/* Advanced Filters */}
-      <AdvancedFilters
-        filters={advancedFilters}
-        onFiltersChange={handleAdvancedFiltersChange}
-      />
+      )}
 
       {/* Search Button */}
-      <div className="search-container">
+      <div className={`search-container ${isMobile ? 'sticky-search' : ''}`}>
         <button onClick={getRecommendations} disabled={isLoading}>
           {isLoading ? 'Searching...' : 'Get Recommendations'}
         </button>

@@ -115,7 +115,7 @@ function App() {
         </div>
         <p>Discover films that match your mood</p>
 
-        <nav className="nav-links">
+        <nav className="nav-links desktop-nav">
           <Link
             to="/"
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
@@ -148,6 +148,45 @@ function App() {
           </Link>
         </nav>
       </header>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav">
+        <Link
+          to="/"
+          className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">🎬</span>
+          <span className="bottom-nav-label">Discover</span>
+        </Link>
+        <Link
+          to="/watchlist"
+          className={`bottom-nav-item ${location.pathname === '/watchlist' ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">❤️</span>
+          <span className="bottom-nav-label">Watchlist</span>
+        </Link>
+        <Link
+          to="/achievements"
+          className={`bottom-nav-item ${location.pathname === '/achievements' ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">🏆</span>
+          <span className="bottom-nav-label">{unlockedCount}/{totalCount}</span>
+        </Link>
+        <Link
+          to="/stats"
+          className={`bottom-nav-item ${location.pathname === '/stats' ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">📊</span>
+          <span className="bottom-nav-label">Stats</span>
+        </Link>
+        <Link
+          to="/calendar"
+          className={`bottom-nav-item ${location.pathname === '/calendar' ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">📅</span>
+          <span className="bottom-nav-label">Calendar</span>
+        </Link>
+      </nav>
 
       <ErrorBoundary>
         <Suspense fallback={<main><SkeletonGrid count={8} /></main>}>
