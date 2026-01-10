@@ -1,5 +1,7 @@
 // MoodReel Service Worker for PWA functionality
-const CACHE_NAME = 'moodreel-v1';
+// IMPORTANT: Bump CACHE_VERSION on each deploy to invalidate old caches
+const CACHE_VERSION = 2;
+const CACHE_NAME = `moodreel-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
     '/',
     '/index.html',

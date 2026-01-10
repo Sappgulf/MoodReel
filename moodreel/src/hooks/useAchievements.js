@@ -95,6 +95,7 @@ export function useAchievements() {
                 surpriseCount: 0,
                 searchStreak: 0,
                 ratingsGiven: 0,
+                ratedMovieIds: [],
                 lastSearchDate: null
             };
         } catch {
@@ -106,6 +107,7 @@ export function useAchievements() {
                 surpriseCount: 0,
                 searchStreak: 0,
                 ratingsGiven: 0,
+                ratedMovieIds: [],
                 lastSearchDate: null
             };
         }
@@ -197,9 +199,19 @@ export function useAchievements() {
         });
     }, []);
 
-    // Track rating
-    const trackRating = useCallback(() => {
-        setStats(prev => ({ ...prev, ratingsGiven: prev.ratingsGiven + 1 }));
+    // Track rating (only count unique movies)
+    const trackRating = useCallback((movieId) => {
+        setStats(prev => {
+            // Skip if already rated this movie
+            if (prev.ratedMovieIds?.includes(movieId)) {
+                return prev;
+            }
+            return {
+                ...prev,
+                ratingsGiven: prev.ratingsGiven + 1,
+                ratedMovieIds: [...(prev.ratedMovieIds || []), movieId]
+            };
+        });
     }, []);
 
     // Get achievement status

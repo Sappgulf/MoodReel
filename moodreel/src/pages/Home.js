@@ -6,9 +6,11 @@ import EmojiPicker from '../components/EmojiPicker';
 import StreamingFilter from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
+import MoodPlaylists from '../components/MoodPlaylists';
 import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { useWatchlist } from '../hooks/useWatchlist';
+import { useAchievements } from '../hooks/useAchievements';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useSounds } from '../hooks/useSounds';
 import { parseMoodToGenres } from '../utils/moodParser';
@@ -46,7 +48,8 @@ function Home() {
   const pullStartY = useRef(0);
   const mainRef = useRef(null);
 
-  const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
+  const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } = useWatchlist();
+  const { trackSave } = useAchievements();
   const { history, addToHistory } = useMoodHistory();
   const { playSound } = useSounds();
 
@@ -320,10 +323,13 @@ function Home() {
   const handleSwipeRight = useCallback((movie) => {
     setIsCardLoading(true);
     playSound('save');
-    toggleWatchlist(movie);
+    const added = addToWatchlist(movie);
+    if (added) {
+      trackSave(added); // Track for achievements
+    }
     setRecommendations(prev => prev.filter(m => m.id !== movie.id));
     setTimeout(() => setIsCardLoading(false), 300);
-  }, [toggleWatchlist, playSound]);
+  }, [addToWatchlist, trackSave, playSound]);
 
   const handleSwipeLeft = useCallback((movie) => {
     setIsCardLoading(true);
@@ -476,6 +482,15 @@ function Home() {
 
       {/* Emoji Picker */}
       <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
+
+      {/* Mood Playlists - Curated Collections */}
+      {recommendations.length === 0 && !isLoading && (
+        <MoodPlaylists onSelectPlaylist={({ genres, name }) => {
+          setSelectedGenres(genres);
+          setMood(name.replace(/^[^\s]+\s/, '')); // Remove emoji prefix
+          getRecommendations();
+        }} />
+      )}
 
       {/* Filter Toggle for Mobile */}
       {isMobile && (

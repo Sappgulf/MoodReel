@@ -1,5 +1,24 @@
 import { useCallback } from 'react';
 
+// AudioContext singleton - browsers limit these (typically 6 per tab)
+let audioContextInstance = null;
+
+function getAudioContext() {
+    if (!audioContextInstance) {
+        try {
+            audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.debug('AudioContext not available:', e);
+            return null;
+        }
+    }
+    // Resume if suspended (browsers suspend until user gesture)
+    if (audioContextInstance.state === 'suspended') {
+        audioContextInstance.resume();
+    }
+    return audioContextInstance;
+}
+
 /**
  * Hook for playing sound effects
  * Respects user's sound preference stored in localStorage
@@ -20,9 +39,10 @@ export function useSounds() {
     const playSound = useCallback((soundName) => {
         if (!isSoundEnabled()) return;
 
+        const audioContext = getAudioContext();
+        if (!audioContext) return;
+
         try {
-            // Create a simple oscillator-based sound for better compatibility
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
 

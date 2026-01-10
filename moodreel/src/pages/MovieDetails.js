@@ -8,6 +8,7 @@ import TrailerModal from '../components/TrailerModal';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useRatings } from '../hooks/useRatings';
 import { useAchievements } from '../hooks/useAchievements';
+import { useWatchHistory } from '../hooks/useWatchHistory';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
 
@@ -27,6 +28,9 @@ function MovieDetails() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewText, setReviewText] = useState('');
   const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const [selectedActor, setSelectedActor] = useState(null);
+  const [actorFilmography, setActorFilmography] = useState([]);
+  const [actorLoading, setActorLoading] = useState(false);
 
   const {
     isInWatchlist, toggleWatchlist,
@@ -34,6 +38,7 @@ function MovieDetails() {
   } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
   const { trackRating } = useAchievements();
+  const { addToHistory } = useWatchHistory();
 
   // Get stored rating/review
   const userRating = getRating(id);
@@ -72,6 +77,9 @@ function MovieDetails() {
         const castData = data.credits.cast || [];
         setCast(castData.slice(0, 6));
 
+        // Track this view in history
+        addToHistory({ ...data.details, media_type: mediaType });
+
       } catch (err) {
         if (!axios.isCancel(err)) {
           setError('Error fetching details.');
@@ -85,7 +93,7 @@ function MovieDetails() {
     fetchData();
 
     return () => controller.abort();
-  }, [id, mediaType]);
+  }, [id, mediaType, addToHistory]);
 
   // Load saved review text (separate effect to avoid refetching on rating change)
   useEffect(() => {
@@ -100,6 +108,30 @@ function MovieDetails() {
     return '★'.repeat(stars) + '☆'.repeat(5 - stars);
   }, []);
 
+  // Fetch actor filmography
+  const handleActorClick = useCallback(async (actor) => {
+    setSelectedActor(actor);
+    setActorLoading(true);
+    setActorFilmography([]);
+
+    try {
+      const API_KEY = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+      const response = await axios.get(
+        `https://api.themoviedb.org/3/person/${actor.id}/combined_credits?api_key=${API_KEY}`
+      );
+      // Sort by popularity and filter out current movie
+      const credits = response.data.cast
+        .filter(c => c.id !== parseInt(id) && (c.poster_path || c.backdrop_path))
+        .sort((a, b) => b.popularity - a.popularity)
+        .slice(0, 12);
+      setActorFilmography(credits);
+    } catch (err) {
+      console.error('Error fetching actor filmography:', err);
+    } finally {
+      setActorLoading(false);
+    }
+  }, [id]);
+
   const handleToggleWatchlist = useCallback(() => {
     if (content) {
       toggleWatchlist({ ...content, media_type: mediaType });
@@ -108,7 +140,7 @@ function MovieDetails() {
 
   const handleRatingChange = useCallback((rating) => {
     setRating(id, rating);
-    trackRating(); // Track for achievement system
+    trackRating(id); // Track for achievement system (unique movies only)
   }, [id, setRating, trackRating]);
 
   const handleReviewSubmit = useCallback(() => {
@@ -290,7 +322,14 @@ function MovieDetails() {
             <h3 id="cast-heading">🎭 Cast</h3>
             <div className="cast-grid">
               {cast.map((person) => (
-                <div key={person.id} className="cast-member">
+                <div
+                  key={person.id}
+                  className="cast-member clickable"
+                  onClick={() => handleActorClick(person)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleActorClick(person)}
+                >
                   {person.profile_path ? (
                     <img
                       src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
@@ -384,6 +423,57 @@ function MovieDetails() {
           videoKey={trailer.key}
           onClose={() => setShowTrailerModal(false)}
         />
+      )}
+
+      {/* Actor Filmography Modal */}
+      {selectedActor && (
+        <div className="filmography-overlay" onClick={() => setSelectedActor(null)}>
+          <div className="filmography-modal" onClick={e => e.stopPropagation()}>
+            <button className="filmography-close" onClick={() => setSelectedActor(null)}>✕</button>
+            <div className="filmography-header">
+              {selectedActor.profile_path && (
+                <img
+                  src={`https://image.tmdb.org/t/p/w185${selectedActor.profile_path}`}
+                  alt={selectedActor.name}
+                  className="filmography-actor-photo"
+                />
+              )}
+              <div>
+                <h3>{selectedActor.name}</h3>
+                <p className="filmography-subtitle">Filmography</p>
+              </div>
+            </div>
+
+            {actorLoading ? (
+              <div className="filmography-loading">Loading filmography...</div>
+            ) : actorFilmography.length > 0 ? (
+              <div className="filmography-grid">
+                {actorFilmography.map(credit => (
+                  <Link
+                    key={`${credit.id}-${credit.media_type}`}
+                    to={`/${credit.media_type === 'tv' ? 'tv' : 'movie'}/${credit.id}`}
+                    className="filmography-item"
+                    onClick={() => setSelectedActor(null)}
+                  >
+                    {credit.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w154${credit.poster_path}`}
+                        alt={credit.title || credit.name}
+                        className="filmography-poster"
+                      />
+                    ) : (
+                      <div className="filmography-poster-placeholder">🎬</div>
+                    )}
+                    <p className="filmography-title">{credit.title || credit.name}</p>
+                    <p className="filmography-role">{credit.character || credit.job}</p>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="filmography-empty">No other credits found</p>
+            )}
+          </div>
+        </div>
       )}
     </main>
   );

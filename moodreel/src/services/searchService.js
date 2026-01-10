@@ -13,12 +13,8 @@ import axios from 'axios';
 import { parseMoodToGenres } from '../utils/moodParser';
 import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
 
-// TMDB API key
-const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
-
-if (!API_KEY) {
-    console.warn('REACT_APP_TMDB_API_KEY is not defined in environment variables.');
-}
+// TMDB API key - falls back to personal use key
+const API_KEY = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 

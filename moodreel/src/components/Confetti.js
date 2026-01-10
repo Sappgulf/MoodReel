@@ -21,8 +21,8 @@ function Confetti({ active, duration = 2000 }) {
         const colors = ['#FFD700', '#FF6B6B', '#4CAF50', '#2196F3', '#E91E63', '#9C27B0'];
         const particles = [];
 
-        // Create particles
-        for (let i = 0; i < 150; i++) {
+        // Create particles (80 is enough for visual impact, reduces CPU spike)
+        for (let i = 0; i < 80; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height - canvas.height,

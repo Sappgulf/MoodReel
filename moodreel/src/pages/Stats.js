@@ -3,7 +3,17 @@ import { Link } from 'react-router-dom';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useRatings } from '../hooks/useRatings';
+import { useWatchHistory } from '../hooks/useWatchHistory';
+import GenrePieChart from '../components/GenrePieChart';
 
+// Genre ID to name mapping (TMDB)
+const GENRE_MAP = {
+    28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy',
+    80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family',
+    14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music',
+    9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi', 10770: 'TV Movie',
+    53: 'Thriller', 10752: 'War', 37: 'Western'
+};
 // Colors for genre chart
 const genreColors = [
     '#FFD700', '#DC143C', '#00CED1', '#FF6B6B', '#4CAF50',
@@ -14,6 +24,7 @@ function Stats() {
     const { watchlist } = useWatchlist();
     const { history } = useMoodHistory();
     const { getRating } = useRatings();
+    const { history: watchHistory, getStats: getWatchStats } = useWatchHistory();
 
     // Calculate stats
     const stats = useMemo(() => {
@@ -48,6 +59,18 @@ function Stats() {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
 
+        // Genre breakdown from watchlist
+        const genreCounts = {};
+        watchlist.forEach(movie => {
+            (movie.genre_ids || []).forEach(gid => {
+                const name = GENRE_MAP[gid] || 'Other';
+                genreCounts[name] = (genreCounts[name] || 0) + 1;
+            });
+        });
+        const genreData = Object.entries(genreCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+
         return {
             totalMovies,
             totalFilms,
@@ -56,6 +79,7 @@ function Stats() {
             avgUserRating,
             userRatingsCount,
             topMoods,
+            genreData,
             searchCount: history.length
         };
     }, [watchlist, history, getRating]);
@@ -102,6 +126,39 @@ function Stats() {
                 </div>
             )}
 
+            {/* Genre Pie Chart */}
+            {stats.genreData.length > 0 && (
+                <div className="stats-section">
+                    <h3>🎬 Genre Breakdown</h3>
+                    <GenrePieChart data={stats.genreData} size={220} />
+                </div>
+            )}
+
+            {/* Movie vs TV Ratio */}
+            {stats.totalMovies > 0 && (
+                <div className="stats-section">
+                    <h3>🎬 Movies vs 📺 TV Shows</h3>
+                    <div className="ratio-bar">
+                        <div
+                            className="ratio-movies"
+                            style={{ width: `${(stats.totalFilms / stats.totalMovies) * 100}%` }}
+                        >
+                            {stats.totalFilms > 0 && `${Math.round((stats.totalFilms / stats.totalMovies) * 100)}%`}
+                        </div>
+                        <div
+                            className="ratio-tv"
+                            style={{ width: `${(stats.totalTV / stats.totalMovies) * 100}%` }}
+                        >
+                            {stats.totalTV > 0 && `${Math.round((stats.totalTV / stats.totalMovies) * 100)}%`}
+                        </div>
+                    </div>
+                    <div className="ratio-legend">
+                        <span>🎬 {stats.totalFilms} Movies</span>
+                        <span>📺 {stats.totalTV} TV Shows</span>
+                    </div>
+                </div>
+            )}
+
             {/* Top Moods */}
             {stats.topMoods.length > 0 && (
                 <div className="stats-section">
@@ -122,6 +179,46 @@ function Stats() {
                                 <span className="mood-count">{count}</span>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Discovery Timeline */}
+            {watchHistory.length > 0 && (
+                <div className="stats-section">
+                    <h3>📱 Discovery Timeline</h3>
+                    <div className="discovery-stats">
+                        <span className="discovery-stat">
+                            <strong>{getWatchStats().thisWeek}</strong> this week
+                        </span>
+                        <span className="discovery-stat">
+                            <strong>{getWatchStats().thisMonth}</strong> this month
+                        </span>
+                        <span className="discovery-stat">
+                            <strong>{getWatchStats().total}</strong> total
+                        </span>
+                    </div>
+                    <div className="recent-discoveries">
+                        <p className="section-subtitle">Recently Viewed</p>
+                        <div className="discovery-grid">
+                            {watchHistory.slice(0, 8).map(item => (
+                                <Link
+                                    key={item.id}
+                                    to={`/${item.media_type}/${item.id}`}
+                                    className="discovery-item"
+                                >
+                                    {item.poster_path ? (
+                                        <img
+                                            src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
+                                            alt={item.title}
+                                            className="discovery-poster"
+                                        />
+                                    ) : (
+                                        <div className="discovery-poster-placeholder">🎬</div>
+                                    )}
+                                </Link>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

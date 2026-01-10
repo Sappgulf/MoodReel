@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
+import SpinWheel from '../components/SpinWheel';
 import EmptyState from '../components/EmptyState';
 import searchService from '../services/searchService';
 
@@ -30,6 +31,8 @@ function Watchlist() {
     const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
     const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
     const [searchTerm, setSearchTerm] = useState('');
+    const [showSpinWheel, setShowSpinWheel] = useState(false);
+    const [shareStatus, setShareStatus] = useState('');
     const fileInputRef = useRef(null);
 
     // Sort and filter watchlist
@@ -120,6 +123,45 @@ function Watchlist() {
         }
     }, [sortedWatchlist]);
 
+    // Generate shareable link
+    const handleShareLink = useCallback(async () => {
+        // Create minimal data for sharing (only essential fields)
+        const shareData = {
+            sharedBy: 'A Friend',
+            items: sortedWatchlist.slice(0, 20).map(item => ({
+                id: item.id,
+                title: item.title || item.name,
+                poster_path: item.poster_path,
+                vote_average: item.vote_average,
+                media_type: item.media_type || 'movie'
+            }))
+        };
+
+        // Use robust base64 encoding to support Unicode (e.g. movies with accents)
+        const encodedData = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+
+        const shareUrl = `${window.location.origin}/shared?data=${encodedData}`;
+
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setShareStatus('✓ Copied!');
+            setTimeout(() => setShareStatus(''), 3000);
+        } catch (err) {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = shareUrl;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            setShareStatus('✓ Copied!');
+            setTimeout(() => setShareStatus(''), 3000);
+        }
+    }, [sortedWatchlist]);
+
     // Random picker
     const handleRandomPick = useCallback(() => {
         const movie = getRandomMovie();
@@ -135,12 +177,13 @@ function Watchlist() {
             .map(line => line.replace(/^[•\-*]\s*/, '').split('(')[0].trim().toLowerCase())
             .filter(Boolean);
 
-        const matches = sortedWatchlist.filter(movie =>
-            friendTitles.some(title =>
-                movie.title.toLowerCase().includes(title) ||
-                title.includes(movie.title.toLowerCase())
-            )
-        );
+        const matches = sortedWatchlist.filter(movie => {
+            const movieTitle = (movie.title || movie.name || '').toLowerCase();
+            return friendTitles.some(title =>
+                movieTitle.includes(title) ||
+                title.includes(movieTitle)
+            );
+        });
 
         setMatchResults({
             count: matches.length,
@@ -202,14 +245,22 @@ function Watchlist() {
                 <h2>My Watchlist</h2>
                 <div className="watchlist-actions">
                     {sortedWatchlist.length > 1 && (
-                        <button className="action-btn" onClick={handleRandomPick} title="Pick random movie">
-                            🎲 Pick for Me
-                        </button>
+                        <>
+                            <button className="action-btn spin-wheel-btn" onClick={() => setShowSpinWheel(true)} title="Spin the wheel!">
+                                🎡 Spin Wheel
+                            </button>
+                            <button className="action-btn" onClick={handleRandomPick} title="Pick random movie">
+                                🎲 Quick Pick
+                            </button>
+                        </>
                     )}
                     {sortedWatchlist.length > 0 && (
                         <>
                             <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
                                 👥 Matchmaker
+                            </button>
+                            <button className="share-link-btn" onClick={handleShareLink}>
+                                {shareStatus || '🔗 Share Link'}
                             </button>
                             <button className="export-btn" onClick={handleExport}>
                                 {exportStatus || '📋 Copy'}
@@ -440,6 +491,17 @@ function Watchlist() {
             <Link to="/stats" className="stats-link">
                 📊 View Your Stats →
             </Link>
+
+            {/* Spin the Wheel Modal */}
+            {showSpinWheel && (
+                <SpinWheel
+                    movies={sortedWatchlist.filter(m => !isWatched(m.id))}
+                    onSelect={(movie) => {
+                        window.location.href = `/movie/${movie.id}?type=${movie.media_type || 'movie'}`;
+                    }}
+                    onClose={() => setShowSpinWheel(false)}
+                />
+            )}
         </div>
     );
 }

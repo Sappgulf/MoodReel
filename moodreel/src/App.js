@@ -19,6 +19,7 @@ const Watchlist = lazy(() => import('./pages/Watchlist'));
 const Stats = lazy(() => import('./pages/Stats'));
 const MoodCalendar = lazy(() => import('./pages/MoodCalendar'));
 const Achievements = lazy(() => import('./pages/Achievements'));
+const SharedList = lazy(() => import('./pages/SharedList'));
 
 function App() {
   const location = useLocation();
@@ -195,6 +196,7 @@ function App() {
             <Route path="/movie/:id" element={<MovieDetails />} />
             <Route path="/tv/:id" element={<MovieDetails />} />
             <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/shared" element={<SharedList />} />
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/calendar" element={<MoodCalendar />} />
