@@ -348,29 +348,20 @@ export async function fetchTrending(type = 'all', timeWindow = 'day', signal) {
 
 /**
  * Fetch all details for a movie or TV show in parallel
+ * Uses append_to_response to minimize API requests
  */
 export async function fetchContentDetails(id, mediaType = 'movie', signal) {
-    const endpoints = [
-        `${BASE_URL}/${mediaType}/${id}?api_key=${API_KEY}`,
-        `${BASE_URL}/${mediaType}/${id}/similar?api_key=${API_KEY}`,
-        `${BASE_URL}/${mediaType}/${id}/watch/providers?api_key=${API_KEY}`,
-        `${BASE_URL}/${mediaType}/${id}/videos?api_key=${API_KEY}`,
-        `${BASE_URL}/${mediaType}/${id}/credits?api_key=${API_KEY}`
-    ];
+    const url = `${BASE_URL}/${mediaType}/${id}?api_key=${API_KEY}&append_to_response=similar,videos,credits,watch/providers`;
 
-    const responses = await Promise.all(
-        endpoints.map(url => axios.get(url, { signal }).catch(err => {
-            console.warn(`Failed to fetch endpoint: ${url}`, err);
-            return { data: {} };
-        }))
-    );
+    const response = await axios.get(url, { signal });
+    const data = response.data;
 
     return {
-        details: responses[0].data,
-        similar: responses[1].data.results || [],
-        providers: responses[2].data.results || null,
-        videos: responses[3].data.results || [],
-        credits: responses[4].data || { cast: [] }
+        details: data,
+        similar: data.similar?.results || [],
+        providers: data['watch/providers']?.results || null,
+        videos: data.videos?.results || [],
+        credits: data.credits || { cast: [] }
     };
 }
 

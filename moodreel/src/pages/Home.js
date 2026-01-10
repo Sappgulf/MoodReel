@@ -108,7 +108,7 @@ function Home() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
-          setPage(prev => prev + 1);
+          loadMoreResults();
         }
       },
       { threshold: 0.1 }
@@ -118,12 +118,6 @@ function Home() {
     return () => observer.disconnect();
   }, [hasMore, isLoading]);
 
-  // Load more results when page changes
-  useEffect(() => {
-    if (page === 1) return;
-    loadMoreResults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
 
   // Pull-to-refresh handlers
   const handlePullStart = useCallback((e) => {
@@ -264,7 +258,7 @@ function Home() {
       } else {
         setRecommendations(result.results);
         setHasMore(result.hasMore);
-        setPage(result.page);
+        setPage(result.page || 1);
       }
     } catch (err) {
       if (!axios.isCancel(err)) {

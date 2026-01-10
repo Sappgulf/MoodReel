@@ -9,7 +9,7 @@
 
 const RATE_LIMIT_KEY = 'moodreel-rate-limit';
 const ADMIN_KEY = 'moodreel-admin';
-const MAX_REQUESTS_PER_MINUTE = 30;  // TMDB allows 40/10s, we're conservative
+const MAX_REQUESTS_PER_MINUTE = 60;  // Increased for better UX in media-heavy app
 const WINDOW_MS = 60000; // 1 minute window
 
 /**
