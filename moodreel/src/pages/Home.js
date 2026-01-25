@@ -29,6 +29,7 @@ function Home() {
   const [selectedProviders, setSelectedProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [contentType, setContentType] = useState('all'); // 'all' | 'movie' | 'tv'
+  const [matchType, setMatchType] = useState('all'); // 'all' | 'any'
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -250,6 +251,7 @@ function Home() {
         genres: selectedGenres,
         providers: selectedProviders,
         minRating,
+        matchType,
         ...advancedFilters,
         page: 1,
         multiPage: true
@@ -287,6 +289,7 @@ function Home() {
         genres: selectedGenres,
         providers: selectedProviders,
         minRating,
+        matchType,
         ...advancedFilters,
         page: nextPage
       }, controller.signal);
@@ -551,7 +554,38 @@ function Home() {
           <div className="filters-wrapper">
             {/* Genre Filters */}
             <div className="genre-filters">
-              <h3>Or pick your genres:</h3>
+              <div className="filters-header">
+                <h3>Or pick your genres:</h3>
+                {selectedGenres.length > 0 && (
+                  <div className="filter-actions">
+                    <div className="match-toggle">
+                      <button
+                        className={`toggle-btn ${matchType === 'all' ? 'active' : ''}`}
+                        onClick={() => setMatchType('all')}
+                        title="Match ALL selected genres (stricter)"
+                      >
+                        Match All
+                      </button>
+                      <button
+                        className={`toggle-btn ${matchType === 'any' ? 'active' : ''}`}
+                        onClick={() => setMatchType('any')}
+                        title="Match ANY selected genre (broader)"
+                      >
+                        Match Any
+                      </button>
+                    </div>
+                    <button
+                      className="clear-filters-btn"
+                      onClick={() => {
+                        setSelectedGenres([]);
+                        setMood('');
+                      }}
+                    >
+                      ✕ Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="genre-buttons" role="group" aria-label="Genre filters">
                 {genres.map((genre) => (
                   <button

@@ -49,6 +49,7 @@ export function generateCacheKey(params) {
         type: params.type || 'all',
         page: params.page || 1,
         genres: [...(params.genres || [])].sort(),
+        matchType: params.matchType || 'all', // Include in cache key used
         providers: [...(params.providers || [])].sort(),
         minRating: params.minRating || 0,
         yearMin: params.yearMin || 1900,
@@ -96,7 +97,9 @@ function setCache(key, data) {
  */
 function buildApiUrl(params, mediaType) {
     const { query, page = 1, genres = [], providers = [], minRating = 0,
-        yearMin = 1900, yearMax = new Date().getFullYear(), sortBy = 'popularity.desc' } = params;
+        yearMin = 1900, yearMax = new Date().getFullYear(), sortBy = 'popularity.desc',
+        matchType = 'all' // 'all' (AND) or 'any' (OR)
+    } = params;
 
     // Parse mood query to genres
     const moodGenres = parseMoodToGenres(query);
@@ -118,17 +121,21 @@ function buildApiUrl(params, mediaType) {
         }
 
         if (allGenres.length > 0) {
-            // Use comma for AND logic - results must match ALL selected genres
-            url += `&with_genres=${allGenres.join(',')}`;
+            // Delimiter: comma (,) for AND, pipe (|) for OR
+            const delimiter = matchType === 'any' ? '|' : ',';
+            url += `&with_genres=${allGenres.join(delimiter)}`;
 
-            // Exclude kids content when mature genres are selected
-            const matureGenres = [27, 53, 80, 9648]; // Horror, Thriller, Crime, Mystery
-            const kidsGenres = [10751, 16]; // Family, Animation
-            const hasMatureGenre = allGenres.some(g => matureGenres.includes(g));
-            const hasKidsGenre = allGenres.some(g => kidsGenres.includes(g));
+            // Exclude kids content when mature genres are selected AND matchType is ALL
+            // (If matchType is ANY, we might want family + action mixed, so skipping exclusion is safer)
+            if (matchType === 'all') {
+                const matureGenres = [27, 53, 80, 9648]; // Horror, Thriller, Crime, Mystery
+                const kidsGenres = [10751, 16]; // Family, Animation
+                const hasMatureGenre = allGenres.some(g => matureGenres.includes(g));
+                const hasKidsGenre = allGenres.some(g => kidsGenres.includes(g));
 
-            if (hasMatureGenre && !hasKidsGenre) {
-                url += `&without_genres=${kidsGenres.join(',')}`;
+                if (hasMatureGenre && !hasKidsGenre) {
+                    url += `&without_genres=${kidsGenres.join(',')}`;
+                }
             }
         }
 

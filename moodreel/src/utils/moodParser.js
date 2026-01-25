@@ -35,11 +35,23 @@ export const moodMap = {
 
     // Relaxed/Animated
     relaxed: 16, chill: 16, animated: 16, family: 10751, kids: 10751,
-    cozy: 16, 'rainy day': 18, comfort: 35,
+    cozy: 16, 'rainy day': 18, comfort: 35, wholesome: 10751, heartwarming: 10751,
 
-    // Documentary
+    // Documentary/Learning
     curious: 99, documentary: 99, learning: 99, educational: 99,
-    'true story': 99, inspiring: 99,
+    'true story': 99, inspiring: 99, nature: 99, history: 36,
+
+    // Intense/Dark
+    dark: 80, gritty: 80, noir: 80, intense: 53, disturbing: 27,
+    'high stakes': 53, survival: 53, psychological: 9648,
+
+    // Mind-bending
+    'mind-bending': 878, 'mind bending': 878, surreal: 14, trippy: 878,
+    complex: 9648, puzzle: 9648, 'thought provoking': 18,
+
+    // Specific Activities
+    'gym': 28, 'workout': 28, 'party': 35, 'date': 10749, 'study': 99,
+    'sleep': 99, 'background': 35,
 };
 
 // TMDB Genre ID to name mapping
