@@ -44,6 +44,7 @@ function Home() {
   });
   const [surpriseMovie, setSurpriseMovie] = useState(null);
   const [showFilters, setShowFilters] = useState(!isMobile);
+  const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
 
   // Pull-to-refresh state
   const [isPulling, setIsPulling] = useState(false);
@@ -216,15 +217,41 @@ function Home() {
     }
   }, []);
 
-  // Surprise Me - random trending movie
-  const handleSurpriseMe = useCallback(() => {
-    if (trending.length === 0) return;
+  // Surprise Me - random discovery
+  const handleSurpriseMe = useCallback(async () => {
+    // If already loading, ignore click
+    if (isSurpriseLoading) return;
+
     playSound('click');
-    const randomIndex = Math.floor(Math.random() * trending.length);
-    setSurpriseMovie(trending[randomIndex]);
-    // Clear after 8 seconds
-    setTimeout(() => setSurpriseMovie(null), 8000);
-  }, [trending, playSound]);
+    setIsSurpriseLoading(true);
+
+    // Artificial delay for "shuffling" feel (800ms)
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    try {
+      const randomPick = await searchService.fetchRandomDiscovery();
+      if (randomPick) {
+        setSurpriseMovie(randomPick);
+        // Clear after 10 seconds (gave user a bit more time)
+        setTimeout(() => setSurpriseMovie(null), 10000);
+      } else {
+        // Fallback to trending if discovery fails
+        if (trending.length > 0) {
+          const randomIndex = Math.floor(Math.random() * trending.length);
+          setSurpriseMovie(trending[randomIndex]);
+          setTimeout(() => setSurpriseMovie(null), 8000);
+        }
+      }
+    } catch (err) {
+      console.error('Surprise me failed:', err);
+      // Fallback
+      if (trending.length > 0) {
+        setSurpriseMovie(trending[0]);
+      }
+    } finally {
+      setIsSurpriseLoading(false);
+    }
+  }, [trending, playSound, isSurpriseLoading]);
 
 
   const getRecommendations = useCallback(async () => {
@@ -414,8 +441,8 @@ function Home() {
         >
           Try "{timeContext.suggestion}" vibes?
         </button>
-        <button className="surprise-btn" onClick={handleSurpriseMe}>
-          🎲 Surprise Me
+        <button className="surprise-btn" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
+          {isSurpriseLoading ? '🎲 Rolling...' : '🎲 Surprise Me'}
         </button>
       </div>
 

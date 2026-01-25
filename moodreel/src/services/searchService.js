@@ -364,6 +364,39 @@ export async function fetchGenres(type = 'movie', signal) {
 }
 
 /**
+ * Fetch a random discovery result (True Random)
+ */
+export async function fetchRandomDiscovery(signal) {
+    // Randomly choose Movie or TV
+    const type = Math.random() > 0.5 ? 'movie' : 'tv';
+
+    // Random page between 1 and 20 (Top 400 items)
+    const page = Math.floor(Math.random() * 20) + 1;
+
+    const url = `${BASE_URL}/discover/${type}?api_key=${API_KEY}` +
+        `&language=en-US` +
+        `&sort_by=popularity.desc` +
+        `&include_adult=false` +
+        `&include_video=false` +
+        `&vote_count.gte=100` + // Ensure some popularity
+        `&vote_average.gte=6.0` + // No trash
+        `&page=${page}`;
+
+    const response = await axios.get(url, { signal });
+    const results = response.data.results || [];
+
+    if (results.length === 0) return null;
+
+    // Pick a random item from the results
+    const randomItem = results[Math.floor(Math.random() * results.length)];
+
+    return {
+        ...randomItem,
+        media_type: type
+    };
+}
+
+/**
  * Fetch trending content
  */
 export async function fetchTrending(type = 'all', timeWindow = 'day', signal) {
@@ -424,7 +457,8 @@ const searchService = {
     fetchGenres,
     fetchTrending,
     fetchContentDetails,
-    fetchSimilar
+    fetchSimilar,
+    fetchRandomDiscovery
 };
 
 export default searchService;
