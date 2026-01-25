@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
+import { SkeletonGrid } from '../components/Skeleton';
 import SpinWheel from '../components/SpinWheel';
 import EmptyState from '../components/EmptyState';
 import searchService from '../services/searchService';
@@ -369,7 +369,7 @@ function Watchlist() {
                             ))}
                         </div>
                     ) : (
-                        <p className="recs-empty">Loading recommendations...</p>
+                        <SkeletonGrid count={4} />
                     )}
                 </div>
             )}

@@ -21,7 +21,7 @@ function Profile() {
     const { exp, level, progressToNextLevel, achievements } = useAchievements();
     const { watchlist } = useWatchlist();
     const { history: moodHistory } = useMoodHistory();
-    const { watchHistory } = useWatchHistory();
+    const { history: watchHistory } = useWatchHistory();
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState(profile);
 
