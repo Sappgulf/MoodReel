@@ -48,13 +48,25 @@ function Stats() {
         });
         const avgUserRating = userRatingsCount > 0 ? (userRatingsSum / userRatingsCount).toFixed(1) : 0;
 
-        // Genre breakdown (from mood history)
+        // Cinematic DNA aggregation
+        const actorCounts = {};
+        const directorCounts = {};
+
+        watchHistory.forEach(movie => {
+            (movie.cast || []).forEach(actor => {
+                actorCounts[actor] = (actorCounts[actor] || 0) + 1;
+            });
+            (movie.directors || []).forEach(director => {
+                directorCounts[director] = (directorCounts[director] || 0) + 1;
+            });
+        });
+
+        // Mood aggregation (from search history)
         const moodCounts = {};
         history.forEach(mood => {
             moodCounts[mood] = (moodCounts[mood] || 0) + 1;
         });
 
-        // Most searched moods (top 5)
         const topMoods = Object.entries(moodCounts)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
@@ -71,6 +83,16 @@ function Stats() {
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count);
 
+        const topActors = Object.entries(actorCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([name, count]) => ({ name, count }));
+
+        const topDirectors = Object.entries(directorCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([name, count]) => ({ name, count }));
+
         return {
             totalMovies,
             totalFilms,
@@ -80,9 +102,17 @@ function Stats() {
             userRatingsCount,
             topMoods,
             genreData,
-            searchCount: history.length
+            topActors,
+            topDirectors,
+            searchCount: history.length,
+            decades: Object.entries(watchlist.reduce((acc, movie) => {
+                const year = new Date(movie.release_date || movie.first_air_date || Date.now()).getFullYear();
+                const decade = Math.floor(year / 10) * 10;
+                acc[decade] = (acc[decade] || 0) + 1;
+                return acc;
+            }, {})).sort((a, b) => b[1] - a[1]) // Sort by count desc
         };
-    }, [watchlist, history, getRating]);
+    }, [watchlist, history, getRating, watchHistory]);
 
     // Simple bar chart for moods
     const maxMoodCount = stats.topMoods.length > 0
@@ -155,6 +185,54 @@ function Stats() {
                     <div className="ratio-legend">
                         <span>🎬 {stats.totalFilms} Movies</span>
                         <span>📺 {stats.totalTV} TV Shows</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Cinematic DNA */}
+            {(stats.topActors.length > 0 || stats.topDirectors.length > 0) && (
+                <div className="stats-section dna-section">
+                    <h3>🧬 Your Cinematic DNA</h3>
+                    <div className="dna-grid">
+                        <div className="dna-category">
+                            <h4>Top Stars</h4>
+                            <div className="dna-list">
+                                {stats.topActors.map((actor, i) => (
+                                    <div key={actor.name} className="dna-item">
+                                        <span className="dna-rank">#{i + 1}</span>
+                                        <span className="dna-name">{actor.name}</span>
+                                        <span className="dna-count">{actor.count} views</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="dna-category">
+                            <h4>Top Directors</h4>
+                            <div className="dna-list">
+                                {stats.topDirectors.map((director, i) => (
+                                    <div key={director.name} className="dna-item">
+                                        <span className="dna-rank">#{i + 1}</span>
+                                        <span className="dna-name">{director.name}</span>
+                                        <span className="dna-count">{director.count} views</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Favorite Decades */}
+            {stats.decades.length > 0 && (
+                <div className="stats-section">
+                    <h3>🕰️ Favorite Eras</h3>
+                    <div className="decades-grid">
+                        {stats.decades.map(([decade, count]) => (
+                            <div key={decade} className="decade-item">
+                                <span className="decade-label">{decade}s</span>
+                                <span className="decade-count">{count} titles</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

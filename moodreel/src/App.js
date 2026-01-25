@@ -11,6 +11,9 @@ import InstallPrompt from './components/InstallPrompt';
 import Confetti from './components/Confetti';
 import OnboardingModal from './components/OnboardingModal';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import { TrailerProvider, useTrailer } from './context/TrailerContext';
+import TrailerPiP from './components/TrailerPiP';
+import { useUserProfile } from './hooks/useUserProfile';
 import './App.css';
 
 // Lazy load secondary routes for code-splitting
@@ -20,12 +23,15 @@ const Stats = lazy(() => import('./pages/Stats'));
 const MoodCalendar = lazy(() => import('./pages/MoodCalendar'));
 const Achievements = lazy(() => import('./pages/Achievements'));
 const SharedList = lazy(() => import('./pages/SharedList'));
+const Profile = lazy(() => import('./pages/Profile'));
 
-function App() {
+function AppContent() {
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const { isSoundEnabled, toggleSounds } = useSounds();
   const { newUnlock, dismissToast, unlockedCount, totalCount } = useAchievements();
+  const { activeTrailer, closeTrailer } = useTrailer();
+  const { profile } = useUserProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -76,10 +82,19 @@ function App() {
       {/* Onboarding for first-time users */}
       <OnboardingModal />
 
-      {/* Achievement Toast */}
       <AchievementToast achievement={newUnlock} onDismiss={dismissToast} />
 
+      {/* Global Trailer PiP */}
+      {activeTrailer && (
+        <TrailerPiP
+          videoKey={activeTrailer.videoKey}
+          title={activeTrailer.title}
+          onClose={closeTrailer}
+        />
+      )}
+
       {/* Keyboard Shortcuts Modal */}
+
       <KeyboardShortcutsModal
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
@@ -136,6 +151,13 @@ function App() {
             🏆 {unlockedCount}/{totalCount}
           </Link>
           <Link
+            to="/profile"
+            className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}
+            title="My Profile"
+          >
+            <span className="nav-avatar">{profile.avatar}</span> Profile
+          </Link>
+          <Link
             to="/stats"
             className={`nav-link ${location.pathname === '/stats' ? 'active' : ''}`}
           >
@@ -167,11 +189,11 @@ function App() {
           <span className="bottom-nav-label">Watchlist</span>
         </Link>
         <Link
-          to="/achievements"
-          className={`bottom-nav-item ${location.pathname === '/achievements' ? 'active' : ''}`}
+          to="/profile"
+          className={`bottom-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
         >
-          <span className="bottom-nav-icon">🏆</span>
-          <span className="bottom-nav-label">{unlockedCount}/{totalCount}</span>
+          <span className="bottom-nav-icon">{profile.avatar}</span>
+          <span className="bottom-nav-label">Profile</span>
         </Link>
         <Link
           to="/stats"
@@ -198,6 +220,8 @@ function App() {
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/shared" element={<SharedList />} />
             <Route path="/achievements" element={<Achievements />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/share/:shareId" element={<SharedList />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/calendar" element={<MoodCalendar />} />
           </Routes>
@@ -207,4 +231,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <TrailerProvider>
+      <AppContent />
+    </TrailerProvider>
+  );
+}

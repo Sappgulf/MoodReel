@@ -7,11 +7,13 @@ import StreamingFilter from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
+import MoodPulse from '../components/MoodPulse';
 import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAchievements } from '../hooks/useAchievements';
 import { useMoodHistory } from '../hooks/useMoodHistory';
+import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
 import { useSounds } from '../hooks/useSounds';
 import { parseMoodToGenres } from '../utils/moodParser';
 import searchService from '../services/searchService';
@@ -51,6 +53,7 @@ function Home() {
   const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { trackSave } = useAchievements();
   const { history, addToHistory } = useMoodHistory();
+  const { savePlaylist } = useCustomPlaylists();
   const { playSound } = useSounds();
 
   const abortControllerRef = useRef(null);
@@ -346,6 +349,24 @@ function Home() {
     ? recommendations.filter(m => m.vote_average >= minRating)
     : recommendations;
 
+  const handleSaveVibe = useCallback(() => {
+    if (!mood && selectedGenres.length === 0) return;
+
+    const name = prompt("Name your custom vibe (e.g. 'Late Night Thrills', 'Cozy Musicals'):");
+    if (name) {
+      savePlaylist(name, {
+        mood,
+        contentType,
+        selectedGenres,
+        selectedProviders,
+        minRating,
+        advancedFilters
+      });
+      playSound('save');
+      alert(`Vibe "${name}" saved to your playlists!`);
+    }
+  }, [mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters, savePlaylist, playSound]);
+
   return (
     <main
       role="main"
@@ -395,25 +416,32 @@ function Home() {
         </button>
       </div>
 
+      {/* Global Mood Pulse */}
+      {!hasSearched && <MoodPulse />}
+
+
+
       {/* Trending Section */}
-      {trending.length > 0 && recommendations.length === 0 && !hasSearched && (
-        <section className="trending-section" aria-labelledby="trending-heading">
-          <h2 id="trending-heading">🔥 Trending Now</h2>
-          <div className="trending-grid">
-            {trending.map((item) => (
-              <MovieCard
-                key={item.id}
-                movie={item}
-                isInWatchlist={isInWatchlist(item.id)}
-                onToggleWatchlist={toggleWatchlist}
-                isWatched={isWatched(item.id)}
-                onToggleWatched={toggleWatched}
-                mediaType={item.media_type}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {
+        trending.length > 0 && recommendations.length === 0 && !hasSearched && (
+          <section className="trending-section" aria-labelledby="trending-heading">
+            <h2 id="trending-heading">🔥 Trending Now</h2>
+            <div className="trending-grid">
+              {trending.map((item) => (
+                <MovieCard
+                  key={item.id}
+                  movie={item}
+                  isInWatchlist={isInWatchlist(item.id)}
+                  onToggleWatchlist={toggleWatchlist}
+                  isWatched={isWatched(item.id)}
+                  onToggleWatched={toggleWatched}
+                  mediaType={item.media_type}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      }
 
       {/* Content Type Toggle - 3-way */}
       <div className="content-toggle-tabs" role="tablist" aria-label="Content type">
@@ -444,20 +472,22 @@ function Home() {
       </div>
 
       {/* Mood History */}
-      {history.length > 0 && (
-        <div className="mood-history">
-          <span className="history-label">Recent:</span>
-          {history.slice(0, 5).map((h, i) => (
-            <button
-              key={i}
-              className="history-chip"
-              onClick={() => handleHistoryClick(h)}
-            >
-              {h}
-            </button>
-          ))}
-        </div>
-      )}
+      {
+        history.length > 0 && (
+          <div className="mood-history">
+            <span className="history-label">Recent:</span>
+            {history.slice(0, 5).map((h, i) => (
+              <button
+                key={i}
+                className="history-chip"
+                onClick={() => handleHistoryClick(h)}
+              >
+                {h}
+              </button>
+            ))}
+          </div>
+        )
+      }
 
       {/* Mood Input */}
       <div className="mood-selector">
@@ -478,63 +508,84 @@ function Home() {
       <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
 
       {/* Mood Playlists - Curated Collections */}
-      {recommendations.length === 0 && !isLoading && (
-        <MoodPlaylists onSelectPlaylist={({ genres, name }) => {
-          setSelectedGenres(genres);
-          setMood(name.replace(/^[^\s]+\s/, '')); // Remove emoji prefix
-          getRecommendations();
-        }} />
-      )}
+      {
+        recommendations.length === 0 && !isLoading && (
+          <MoodPlaylists onSelectPlaylist={({ genres, name, customFilters }) => {
+            if (customFilters) {
+              setMood(customFilters.mood || '');
+              setContentType(customFilters.contentType || 'all');
+              setSelectedGenres(customFilters.selectedGenres || []);
+              setSelectedProviders(customFilters.selectedProviders || []);
+              setMinRating(customFilters.minRating || 0);
+              setAdvancedFilters(customFilters.advancedFilters || {
+                yearMin: 1900,
+                yearMax: new Date().getFullYear(),
+                runtime: 'any',
+                sortBy: 'popularity.desc'
+              });
+            } else {
+              setSelectedGenres(genres);
+              setMood(name.replace(/^[^\s]+\s/, '')); // Remove emoji prefix
+            }
+            // Use setTimeout to ensure state updates are processed
+            setTimeout(() => getRecommendations(), 0);
+          }} />
+        )
+      }
 
       {/* Filter Toggle for Mobile */}
-      {isMobile && (
-        <button
-          className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          {showFilters ? '✕ Hide Filters' : '🔍 Filter & Sort'}
-        </button>
-      )}
+      {
+        isMobile && (
+          <button
+            className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? '✕ Hide Filters' : '🔍 Filter & Sort'}
+          </button>
+        )
+      }
 
       {/* Conditionally reveal filters on mobile */}
-      {(showFilters || !isMobile) && (
-        <div className="filters-wrapper">
-          {/* Genre Filters */}
-          <div className="genre-filters">
-            <h3>Or pick your genres:</h3>
-            <div className="genre-buttons" role="group" aria-label="Genre filters">
-              {genres.map((genre) => (
-                <button
-                  key={genre.id}
-                  onClick={() => handleGenreClick(genre.id)}
-                  className={selectedGenres.includes(genre.id) ? 'active' : ''}
-                  aria-pressed={selectedGenres.includes(genre.id)}
-                >
-                  {genre.name}
-                </button>
-              ))}
+      {
+        (showFilters || !isMobile) && (
+          <div className="filters-wrapper">
+            {/* Genre Filters */}
+            <div className="genre-filters">
+              <h3>Or pick your genres:</h3>
+              <div className="genre-buttons" role="group" aria-label="Genre filters">
+                {genres.map((genre) => (
+                  <button
+                    key={genre.id}
+                    onClick={() => handleGenreClick(genre.id)}
+                    className={selectedGenres.includes(genre.id) ? 'active' : ''}
+                    aria-pressed={selectedGenres.includes(genre.id)}
+                  >
+                    {genre.name}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Streaming Filter */}
+            <StreamingFilter
+              selectedProviders={selectedProviders}
+              onToggle={handleProviderToggle}
+            />
+
+            {/* Rating Filter */}
+            <RatingFilter
+              minRating={minRating}
+              onRatingChange={handleRatingChange}
+            />
+
+            {/* Advanced Filters */}
+            <AdvancedFilters
+              filters={advancedFilters}
+              onFiltersChange={handleAdvancedFiltersChange}
+            />
           </div>
-
-          {/* Streaming Filter */}
-          <StreamingFilter
-            selectedProviders={selectedProviders}
-            onToggle={handleProviderToggle}
-          />
-
-          {/* Rating Filter */}
-          <RatingFilter
-            minRating={minRating}
-            onRatingChange={handleRatingChange}
-          />
-
-          {/* Advanced Filters */}
-          <AdvancedFilters
-            filters={advancedFilters}
-            onFiltersChange={handleAdvancedFiltersChange}
-          />
-        </div>
-      )}
+        )
+      }
 
       {/* Search Button */}
       <div className={`search-container ${isMobile ? 'sticky-search' : ''}`}>
@@ -544,14 +595,16 @@ function Home() {
       </div>
 
       {/* Error Message with Retry */}
-      {error && (
-        <div className="error-container" role="alert">
-          <p className="error">{error}</p>
-          <button className="retry-btn" onClick={getRecommendations}>
-            🔄 Retry
-          </button>
-        </div>
-      )}
+      {
+        error && (
+          <div className="error-container" role="alert">
+            <p className="error">{error}</p>
+            <button className="retry-btn" onClick={getRecommendations}>
+              🔄 Retry
+            </button>
+          </div>
+        )
+      }
 
       {/* Results */}
       <div aria-live="polite" aria-busy={isLoading}>
@@ -593,28 +646,38 @@ function Home() {
           </div>
         ) : (
           /* Desktop Grid View */
-          <div className="recommendations">
-            {filteredRecommendations.length > 0 ? (
-              filteredRecommendations.map((rec) => (
-                <MovieCard
-                  key={rec.id}
-                  movie={rec}
-                  isInWatchlist={isInWatchlist(rec.id)}
-                  onToggleWatchlist={toggleWatchlist}
-                  isWatched={isWatched(rec.id)}
-                  onToggleWatched={toggleWatched}
-                  mediaType={rec.media_type}
-                />
-              ))
-            ) : hasSearched && !isLoading && (
-              <EmptyState
-                icon="✨"
-                title="No results found"
-                description={`We couldn't find anything for "${mood}". Try a different mood or clear your filters!`}
-                onActionClick={() => setMood('')}
-                actionText="Clear Search"
-              />
+          <div className="recommendations-container">
+            {filteredRecommendations.length > 0 && (
+              <div className="results-header">
+                <h2>{mood ? `Vibes for "${mood}"` : 'Your Recommendations'}</h2>
+                <button className="save-vibe-btn" onClick={handleSaveVibe}>
+                  💾 Save this Vibe
+                </button>
+              </div>
             )}
+            <div className="recommendations">
+              {filteredRecommendations.length > 0 ? (
+                filteredRecommendations.map((rec) => (
+                  <MovieCard
+                    key={rec.id}
+                    movie={rec}
+                    isInWatchlist={isInWatchlist(rec.id)}
+                    onToggleWatchlist={toggleWatchlist}
+                    isWatched={isWatched(rec.id)}
+                    onToggleWatched={toggleWatched}
+                    mediaType={rec.media_type}
+                  />
+                ))
+              ) : hasSearched && !isLoading && (
+                <EmptyState
+                  icon="✨"
+                  title="No results found"
+                  description={`We couldn't find anything for "${mood}". Try a different mood or clear your filters!`}
+                  onActionClick={() => setMood('')}
+                  actionText="Clear Search"
+                />
+              )}
+            </div>
           </div>
         )}
 
@@ -625,7 +688,8 @@ function Home() {
           </div>
         )}
       </div>
-    </main>
+
+    </main >
   );
 }
 

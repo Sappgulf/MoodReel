@@ -64,24 +64,27 @@ export function useWatchlist() {
     }, [watched]);
 
     const addToWatchlist = useCallback((item) => {
-        // Check if already exists
-        const existing = watchlist.some((i) => i.id === item.id);
-        if (existing) return null;
+        let added = null;
+        setWatchlist((prev) => {
+            // Check if already exists inside the updater to avoid stale closure
+            const existing = prev.some((i) => i.id === item.id);
+            if (existing) return prev;
 
-        const newItem = {
-            id: item.id,
-            title: item.title || item.name,
-            poster_path: item.poster_path,
-            vote_average: item.vote_average,
-            release_date: item.release_date || item.first_air_date,
-            media_type: item.media_type || 'movie',
-            genre_ids: item.genre_ids || [],
-            addedAt: Date.now(),
-        };
-
-        setWatchlist((prev) => [...prev, newItem]);
-        return newItem; // Return for external tracking (achievements)
-    }, [watchlist]);
+            const newItem = {
+                id: item.id,
+                title: item.title || item.name,
+                poster_path: item.poster_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type || 'movie',
+                genre_ids: item.genre_ids || [],
+                addedAt: Date.now(),
+            };
+            added = newItem;
+            return [...prev, newItem];
+        });
+        return added; // Return for external tracking (achievements)
+    }, []);
 
     const removeFromWatchlist = useCallback((id) => {
         setWatchlist((prev) => prev.filter((item) => item.id !== id));

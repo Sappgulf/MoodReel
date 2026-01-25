@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
 
 /**
  * Pre-defined mood playlists with curated genre/keyword combinations
@@ -71,18 +72,33 @@ const PLAYLISTS = [
 ];
 
 /**
- * MoodPlaylists - Curated movie collections by mood
+ * MoodPlaylists - Curated and custom movie collections
  */
 function MoodPlaylists({ onSelectPlaylist }) {
+    const { playlists, deletePlaylist } = useCustomPlaylists();
     const [hoveredId, setHoveredId] = useState(null);
 
-    const handleSelect = useCallback((playlist) => {
-        onSelectPlaylist({
-            genres: playlist.genres,
-            keywords: playlist.keywords,
-            name: playlist.name
-        });
+    const handleSelect = useCallback((playlist, isCustom = false) => {
+        if (isCustom) {
+            onSelectPlaylist({
+                name: playlist.name,
+                customFilters: playlist.filters
+            });
+        } else {
+            onSelectPlaylist({
+                genres: playlist.genres,
+                keywords: playlist.keywords,
+                name: playlist.name
+            });
+        }
     }, [onSelectPlaylist]);
+
+    const handleDelete = (e, id) => {
+        e.stopPropagation();
+        if (window.confirm("Delete this custom vibe?")) {
+            deletePlaylist(id);
+        }
+    };
 
     return (
         <div className="mood-playlists-section">
@@ -90,6 +106,7 @@ function MoodPlaylists({ onSelectPlaylist }) {
             <p className="playlists-subtitle">Curated collections for every vibe</p>
 
             <div className="playlists-grid">
+                {/* Curated Playlists */}
                 {PLAYLISTS.map(playlist => (
                     <button
                         key={playlist.id}
@@ -103,6 +120,30 @@ function MoodPlaylists({ onSelectPlaylist }) {
                     >
                         <span className="playlist-name">{playlist.name}</span>
                         <span className="playlist-desc">{playlist.description}</span>
+                    </button>
+                ))}
+
+                {/* Custom Playlists */}
+                {playlists.map(playlist => (
+                    <button
+                        key={playlist.id}
+                        className="playlist-card custom-playlist"
+                        onClick={() => handleSelect(playlist, true)}
+                        onMouseEnter={() => setHoveredId(playlist.id)}
+                        onMouseLeave={() => setHoveredId(null)}
+                        style={{
+                            '--playlist-color': playlist.color
+                        }}
+                    >
+                        <span className="playlist-name">✨ {playlist.name}</span>
+                        <span className="playlist-desc">{playlist.desc}</span>
+                        <span
+                            className="delete-playlist"
+                            onClick={(e) => handleDelete(e, playlist.id)}
+                            title="Delete vibe"
+                        >
+                            ✕
+                        </span>
                     </button>
                 ))}
             </div>

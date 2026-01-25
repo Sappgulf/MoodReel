@@ -22,13 +22,15 @@ export function useWatchHistory() {
     }, [history]);
 
     // Add a movie to history
-    const addToHistory = useCallback((movie) => {
+    const addToHistory = useCallback((movie, credits) => {
         const entry = {
             id: movie.id,
             title: movie.title || movie.name,
             poster_path: movie.poster_path,
             media_type: movie.media_type || 'movie',
             viewedAt: Date.now(),
+            cast: credits?.cast?.slice(0, 5).map(c => c.name) || [],
+            directors: credits?.crew?.filter(c => c.job === 'Director').map(c => c.name) || [],
         };
 
         setHistory(prev => {

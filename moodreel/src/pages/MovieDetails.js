@@ -9,6 +9,7 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import { useRatings } from '../hooks/useRatings';
 import { useAchievements } from '../hooks/useAchievements';
 import { useWatchHistory } from '../hooks/useWatchHistory';
+import { useTrailer } from '../context/TrailerContext';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
 
@@ -18,6 +19,8 @@ function MovieDetails() {
   const isTV = location.pathname.startsWith('/tv');
   const mediaType = isTV ? 'tv' : 'movie';
 
+  const { addToHistory } = useWatchHistory();
+  const { playTrailer } = useTrailer();
   const [content, setContent] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [providers, setProviders] = useState(null);
@@ -38,7 +41,6 @@ function MovieDetails() {
   } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
   const { trackRating } = useAchievements();
-  const { addToHistory } = useWatchHistory();
 
   // Get stored rating/review
   const userRating = getRating(id);
@@ -77,8 +79,8 @@ function MovieDetails() {
         const castData = data.credits.cast || [];
         setCast(castData.slice(0, 6));
 
-        // Track this view in history
-        addToHistory({ ...data.details, media_type: mediaType });
+        // Track this view in history with credits for DNA feature
+        addToHistory({ ...data.details, media_type: mediaType }, data.credits);
 
       } catch (err) {
         if (!axios.isCancel(err)) {
@@ -257,12 +259,21 @@ function MovieDetails() {
               )}
 
               {trailer && (
-                <button
-                  className="trailer-btn"
-                  onClick={() => setShowTrailerModal(true)}
-                >
-                  ▶️ Watch Trailer
-                </button>
+                <div className="trailer-actions">
+                  <button
+                    className="trailer-btn"
+                    onClick={() => setShowTrailerModal(true)}
+                  >
+                    ▶️ Watch Trailer
+                  </button>
+                  <button
+                    className="pip-button"
+                    onClick={() => playTrailer(trailer.key, title)}
+                    title="Watch in Picture-in-Picture"
+                  >
+                    📍 PiP Mode
+                  </button>
+                </div>
               )}
 
               <ShareButtons title={title} />
