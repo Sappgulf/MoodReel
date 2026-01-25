@@ -61,13 +61,21 @@ export function generateCacheKey(params) {
 
 /**
  * Get cached result if valid
+ * @param {string} key - Cache key
+ * @param {boolean} ignoreTTL - If true, returns cached data even if expired
  */
-function getCached(key) {
+function getCached(key, ignoreTTL = false) {
     const cached = searchCache.get(key);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    if (!cached) return null;
+
+    if (ignoreTTL || Date.now() - cached.timestamp < CACHE_TTL_MS) {
         return cached.data;
     }
-    searchCache.delete(key);
+
+    // Only delete if we are strictly checking TTL
+    if (!ignoreTTL) {
+        searchCache.delete(key);
+    }
     return null;
 }
 
@@ -318,7 +326,18 @@ export async function search(params, signal) {
                 throw err; // Rethrow cancellation
             }
 
-            // Return error state
+            // ATTEMPT TO RECOVER FROM STALE CACHE
+            const staleData = getCached(cacheKey, true); // true = ignoreTTL
+            if (staleData) {
+                console.log('Returning stale cache data due to network error');
+                return {
+                    ...staleData,
+                    isStale: true, // Marker for UI
+                    error: 'Showing offline results'
+                };
+            }
+
+            // Return error state if no cache
             return {
                 results: [],
                 page: 1,

@@ -34,6 +34,21 @@ function AppContent() {
   const { profile } = useUserProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Scroll to top on page navigation
   useEffect(() => {
@@ -95,10 +110,18 @@ function AppContent() {
 
       {/* Keyboard Shortcuts Modal */}
 
+      {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
       />
+
+      {/* Offline Indicator */}
+      {isOffline && (
+        <div className="offline-banner" role="alert">
+          📡 You are offline. Showing cached results.
+        </div>
+      )}
 
       <header className="App-header">
         <div className="header-top">

@@ -5361,3 +5361,46 @@ main {
   border-color: #ff453a;
 }
 
+
+
+/* =====================================================
+   Offline Indicator
+   ===================================================== */
+.offline-banner {
+  background-color: var(--color-warning);
+  color: #000;
+  text-align: center;
+  padding: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  animation: slideDown 0.3s ease-out;
+}
+
+
+.calendar-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.clear-history-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.clear-history-btn:hover {
+  border-color: #ff453a;
+  color: #ff453a;
+}
+

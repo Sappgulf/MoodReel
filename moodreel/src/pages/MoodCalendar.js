@@ -23,7 +23,7 @@ function getMoodColor(mood) {
 }
 
 function MoodCalendar() {
-    const { history, historyWithDates } = useMoodHistory();
+    const { history, historyWithDates, clearHistory } = useMoodHistory();
 
     // Generate calendar data for the last 30 days
     const calendarData = useMemo(() => {
@@ -56,9 +56,22 @@ function MoodCalendar() {
     // Get week labels
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    const handleClearHistory = () => {
+        if (window.confirm('Are you sure you want to clear your mood history? This cannot be undone.')) {
+            clearHistory();
+        }
+    };
+
     return (
         <div className="calendar-page">
-            <Link to="/" className="back-button">← Back to Discover</Link>
+            <div className="calendar-page-header">
+                <Link to="/" className="back-button">← Back to Discover</Link>
+                {history.length > 0 && (
+                    <button onClick={handleClearHistory} className="clear-history-btn">
+                        🗑️ Clear Log
+                    </button>
+                )}
+            </div>
 
             <h2>📅 Mood Calendar</h2>
             <p className="calendar-subtitle">Your mood search history over the last 30 days</p>
