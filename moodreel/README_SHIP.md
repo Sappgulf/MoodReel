@@ -17,6 +17,15 @@ npm start
 |----------|----------|-------------|
 | `REACT_APP_TMDB_API_KEY` | ✅ | [Get one here](https://www.themoviedb.org/settings/api) |
 
+### Local Runtime Key (Optional)
+If you want to avoid editing `.env`, set a local-only key in the browser console:
+
+```javascript
+localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
+```
+
+Reload the page after setting it.
+
 ## Scripts
 
 | Command | Description |

@@ -6,6 +6,8 @@ Format: Keep a Changelog (minimal). Dates are YYYY-MM-DD.
 Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
+- Planned (2026-02-04, frontend): Restore client-side TMDB API access path while keeping credentials out of the repo; baseline verification to run `npm test -- --watchAll=false`.
+- Implemented (2026-02-04, frontend): Restored client-side TMDB API access with runtime key fallback and updated docs for local setup. Verification: `npm test -- --watchAll=false`.
 - Planned (2026-02-04, frontend): Reinstate API key usage guidance and record memory note; baseline verification with `npm test -- --watchAll=false`.
 - Planned (2026-02-04, frontend): Implement Sprints 1–3 foundation/usefulness/delight upgrades, with baseline verification. Verification: `npm run test:ci`.
 - Planned (2026-02-04, frontend): Audit performance, UI polish, and bug fixes with baseline tests run (`npm test -- --watchAll=false`).

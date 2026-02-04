@@ -3,6 +3,18 @@ import axios from 'axios';
 const API_BASE_URL = process.env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
 const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
+function getApiKey() {
+    if (API_KEY) return API_KEY;
+    if (typeof window === 'undefined') return null;
+    if (window.__MOODREEL_TMDB_API_KEY__) {
+        return window.__MOODREEL_TMDB_API_KEY__;
+    }
+    if (window.localStorage) {
+        return window.localStorage.getItem('moodreel-tmdb-api-key');
+    }
+    return null;
+}
+
 const memoryCache = new Map();
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
 
@@ -47,11 +59,12 @@ export function ensureArray(value) {
 }
 
 export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs = DEFAULT_TTL_MS } = {}) {
-    if (!API_KEY) {
-        throw new Error('Missing TMDB API key. Set REACT_APP_TMDB_API_KEY in your environment.');
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        throw new Error('Missing TMDB API key. Set REACT_APP_TMDB_API_KEY or localStorage moodreel-tmdb-api-key.');
     }
 
-    const finalParams = { ...params, api_key: API_KEY };
+    const finalParams = { ...params, api_key: apiKey };
     const cacheKey = cache ? getCacheKey(path, finalParams) : null;
 
     if (cache && cacheKey) {
