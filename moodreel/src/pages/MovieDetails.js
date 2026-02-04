@@ -26,6 +26,7 @@ function MovieDetails() {
   const [providers, setProviders] = useState(null);
   const [trailer, setTrailer] = useState(null);
   const [cast, setCast] = useState([]);
+  const [director, setDirector] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -75,9 +76,13 @@ function MovieDetails() {
         ) || videos.find(v => v.site === 'YouTube');
         setTrailer(trailerVideo || null);
 
-        // Get top 6 cast members
+        // Get top 6 cast members and director
         const castData = data.credits.cast || [];
+        const crewData = data.credits.crew || [];
         setCast(castData.slice(0, 6));
+
+        const dir = crewData.find(c => c.job === 'Director');
+        setDirector(dir || null);
 
         // Track this view in history with credits for DNA feature
         addToHistory({ ...data.details, media_type: mediaType }, data.credits);
@@ -188,8 +193,20 @@ function MovieDetails() {
   const runtime = content.runtime || (content.episode_run_time?.[0]);
 
   return (
-    <main role="main">
-      <Link to="/" className="back-button">← Back to Discover</Link>
+    <main role="main" className="immersive-main">
+      {content.backdrop_path && (
+        <div className="movie-details-backdrop">
+          <img
+            src={`https://image.tmdb.org/t/p/original${content.backdrop_path}`}
+            alt=""
+            className="backdrop-img"
+          />
+        </div>
+      )}
+
+      <Link to="/" className="back-button glass-card" style={{ position: 'relative', zIndex: 10, display: 'inline-block', marginBottom: '20px' }}>
+        ← Back to Discover
+      </Link>
 
       <article className="movie-details">
         <div className="movie-details-header">
@@ -209,7 +226,7 @@ function MovieDetails() {
           <div className="movie-info">
             <h1>{title}</h1>
 
-            <div className="meta-info">
+            <div className="meta-row">
               {year && (
                 <span className="meta-item">
                   <span aria-hidden="true">📅</span> {year}
@@ -220,9 +237,14 @@ function MovieDetails() {
                   <span aria-hidden="true">⏱️</span> {runtime} min
                 </span>
               )}
+              {director && (
+                <span className="meta-item">
+                  <span aria-hidden="true">🎬</span> Dir. {director.name}
+                </span>
+              )}
               <div className="rating-large" aria-label={`Rating: ${content.vote_average?.toFixed(1)} out of 10`}>
-                <span className="stars" aria-hidden="true">{renderStars(content.vote_average)}</span>
-                <span>{content.vote_average?.toFixed(1)} / 10</span>
+                <span className="stars" aria-hidden="true" style={{ color: 'var(--color-gold)' }}>{renderStars(content.vote_average)}</span>
+                <span style={{ marginLeft: '8px', fontWeight: 'bold' }}>{content.vote_average?.toFixed(1)}</span>
               </div>
             </div>
 

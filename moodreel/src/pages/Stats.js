@@ -5,6 +5,7 @@ import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useRatings } from '../hooks/useRatings';
 import { useWatchHistory } from '../hooks/useWatchHistory';
 import GenrePieChart from '../components/GenrePieChart';
+import CountUp from '../components/CountUp';
 
 // Genre ID to name mapping (TMDB)
 const GENRE_MAP = {
@@ -58,7 +59,11 @@ function Stats() {
                 actorCounts[actor] = (actorCounts[actor] || 0) + 1;
             });
             (movie.directors || []).forEach(director => {
-                directorCounts[director] = (directorCounts[director] || 0) + 1;
+                if (!directorCounts[director]) {
+                    directorCounts[director] = { count: 0, movies: [] };
+                }
+                directorCounts[director].count += 1;
+                directorCounts[director].movies.push(movie.title);
             });
         });
 
@@ -90,9 +95,9 @@ function Stats() {
             .map(([name, count]) => ({ name, count }));
 
         const topDirectors = Object.entries(directorCounts)
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].count - a[1].count)
             .slice(0, 3)
-            .map(([name, count]) => ({ name, count }));
+            .map(([name, data]) => ({ name, count: data.count, movies: [...new Set(data.movies)] }));
 
         return {
             totalMovies,
@@ -135,21 +140,21 @@ function Stats() {
 
             {/* Overview Cards */}
             <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-value">{stats.totalMovies}</div>
-                    <div className="stat-label">Saved</div>
+                <div className="stat-card glass-card">
+                    <div className="stat-value"><CountUp end={stats.totalMovies} /></div>
+                    <div className="stat-label">Total Saved</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-value">{stats.totalFilms}</div>
+                <div className="stat-card glass-card">
+                    <div className="stat-value"><CountUp end={stats.totalFilms} /></div>
                     <div className="stat-label">Movies</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-value">{stats.totalTV}</div>
+                <div className="stat-card glass-card">
+                    <div className="stat-value"><CountUp end={stats.totalTV} /></div>
                     <div className="stat-label">TV Shows</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-value">⭐ {stats.avgTmdbRating}</div>
-                    <div className="stat-label">Avg Rating</div>
+                <div className="stat-card glass-card">
+                    <div className="stat-value">⭐ <CountUp end={stats.avgTmdbRating} /></div>
+                    <div className="stat-label">Avg TMDB</div>
                 </div>
             </div>
 
@@ -199,29 +204,38 @@ function Stats() {
 
             {/* Cinematic DNA */}
             {(stats.topActors.length > 0 || stats.topDirectors.length > 0) && (
-                <div className="stats-section dna-section">
+                <div className="stats-section dna-section glass-panel">
                     <h3>🧬 Your Cinematic DNA</h3>
+                    <p className="section-subtitle">Based on your watch history and saved favorites</p>
                     <div className="dna-grid">
                         <div className="dna-category">
-                            <h4>Top Stars</h4>
+                            <h4>🌟 Top Stars</h4>
                             <div className="dna-list">
                                 {stats.topActors.map((actor, i) => (
                                     <div key={actor.name} className="dna-item">
                                         <span className="dna-rank">#{i + 1}</span>
                                         <span className="dna-name">{actor.name}</span>
-                                        <span className="dna-count">{actor.count} views</span>
+                                        <span className="dna-count">{actor.count} titles</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                         <div className="dna-category">
-                            <h4>Top Directors</h4>
+                            <h4>🎬 Top Directors</h4>
                             <div className="dna-list">
                                 {stats.topDirectors.map((director, i) => (
-                                    <div key={director.name} className="dna-item">
-                                        <span className="dna-rank">#{i + 1}</span>
-                                        <span className="dna-name">{director.name}</span>
-                                        <span className="dna-count">{director.count} views</span>
+                                    <div key={director.name} className="dna-item director-dna-item">
+                                        <div className="dna-item-header">
+                                            <span className="dna-rank">#{i + 1}</span>
+                                            <span className="dna-name">{director.name}</span>
+                                            <span className="dna-count">{director.count} titles</span>
+                                        </div>
+                                        <div className="dna-movie-list">
+                                            {director.movies.slice(0, 2).map((m, j) => (
+                                                <span key={j} className="dna-movie-tag">{m}</span>
+                                            ))}
+                                            {director.movies.length > 2 && <span className="dna-movie-tag">+{director.movies.length - 2} more</span>}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

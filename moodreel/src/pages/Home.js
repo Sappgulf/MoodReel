@@ -57,6 +57,27 @@ function Home() {
     return new Map(genres.map((genre) => [genre.id, genre.name]));
   }, [genres]);
 
+  // Dynamic Mood Themes
+  useEffect(() => {
+    const body = document.body;
+    body.classList.remove('mood-romantic', 'mood-thriller', 'mood-happy', 'mood-classic');
+
+    if (!mood) return;
+
+    const moodLower = mood.toLowerCase();
+    if (moodLower.includes('romance') || moodLower.includes('love') || moodLower.includes('date')) {
+      body.classList.add('mood-romantic');
+    } else if (moodLower.includes('thrill') || moodLower.includes('scary') || moodLower.includes('horror') || moodLower.includes('dark')) {
+      body.classList.add('mood-thriller');
+    } else if (moodLower.includes('happy') || moodLower.includes('uplift') || moodLower.includes('fun') || moodLower.includes('comedy')) {
+      body.classList.add('mood-happy');
+    } else if (moodLower.includes('classic') || moodLower.includes('old') || moodLower.includes('noir') || moodLower.includes('retro')) {
+      body.classList.add('mood-classic');
+    }
+
+    return () => body.classList.remove('mood-romantic', 'mood-thriller', 'mood-happy', 'mood-classic');
+  }, [mood]);
+
   // Fetch trending on mount
   useEffect(() => {
     const controller = new AbortController();

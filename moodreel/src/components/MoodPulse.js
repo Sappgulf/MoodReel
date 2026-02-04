@@ -23,7 +23,7 @@ function MoodPulse() {
     return (
         <div className="mood-pulse-container">
             <div className="pulse-header">
-                <span className="pulse-dot"></span>
+                <span className="pulse-dot pulse-animation"></span>
                 <h3>Global Mood Pulse</h3>
                 <span className="pulse-live">LIVE</span>
             </div>

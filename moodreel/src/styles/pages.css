@@ -42,51 +42,117 @@
     animation: pageEnter 0.6s var(--ease-out) forwards;
 }
 
-/* Movie Details Page */
+/* Movie Details Page - Immersive Style */
+.movie-details-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70vh;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.movie-details-backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(9, 9, 11, 0.4) 0%,
+            rgba(9, 9, 11, 0.8) 60%,
+            rgba(9, 9, 11, 1) 100%);
+    z-index: 1;
+}
+
+.backdrop-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(4px) scale(1.1);
+    transform-origin: center;
+    animation: slowZoom 20s linear infinite alternate;
+}
+
+@keyframes slowZoom {
+    from {
+        transform: scale(1.05);
+    }
+
+    to {
+        transform: scale(1.15);
+    }
+}
+
 .movie-details {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
-    animation: pageEnter 0.6s var(--ease-out) forwards;
+    padding-top: 20vh;
+    animation: pageEnter 0.8s var(--ease-out) forwards;
 }
 
 .movie-details-header {
     display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: var(--spacing-3xl);
-    margin-bottom: var(--spacing-3xl);
+    grid-template-columns: 340px 1fr;
+    gap: var(--spacing-4xl);
+    margin-bottom: var(--spacing-4xl);
+    align-items: end;
 }
 
 .movie-details .poster-container {
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-2xl);
     overflow: hidden;
-    box-shadow: var(--shadow-xl);
-    border: 1px solid var(--color-border);
+    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
-    transition: transform var(--transition-slow);
+    aspect-ratio: 2/3;
 }
 
-.movie-details .poster-container:hover {
-    transform: scale(1.02) rotate(1deg);
+.movie-details .movie-info {
+    padding-bottom: var(--spacing-lg);
 }
 
 .movie-details .movie-info h1 {
     font-family: var(--font-display);
-    font-size: 4rem;
-    font-weight: 700;
-    margin-bottom: var(--spacing-lg);
-    line-height: 1.1;
-    background: linear-gradient(180deg, var(--color-text-primary), var(--color-text-secondary));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    margin-bottom: var(--spacing-md);
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.movie-details .meta-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-text-secondary);
+    font-weight: 500;
 }
 
 .movie-details .overview {
     font-size: 1.25rem;
-    line-height: 1.8;
+    line-height: 1.7;
     color: var(--color-text-secondary);
-    margin-bottom: var(--spacing-xl);
-    max-width: 75ch;
+    margin-bottom: var(--spacing-2xl);
+    max-width: 80ch;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-3xl);
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-2xl);
+    padding: var(--spacing-2xl);
+    margin-bottom: var(--spacing-4xl);
 }
 
 /* Watchlist Page */
@@ -123,5 +189,76 @@
 @media (max-width: 768px) {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
+    }
+}
+/* Stats Page Enhancements */
+.dna-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-sm);
+}
+
+.dna-item-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.dna-rank {
+    font-weight: 800;
+    color: var(--color-gold);
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.dna-name {
+    font-weight: 600;
+    flex-grow: 1;
+}
+
+.dna-count {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.dna-movie-list {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.dna-movie-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-full);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Director DNA Specific */
+.director-dna-item {
+    border-left: 3px solid var(--color-gold);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .movie-details-header {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+        padding: 0 var(--spacing-md);
+    }
+    
+    .movie-details .movie-info h1 {
+        font-size: 2.5rem;
+    }
+    
+    .movie-details {
+        padding-top: 10vh;
     }
 }
