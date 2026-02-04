@@ -1,0 +1,147 @@
+/* =====================================================
+   MoodReel Layout Styles
+   ===================================================== */
+
+.App {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header - Cinematic Premium Style */
+.App-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(180deg, rgba(9, 9, 11, 0.95) 0%, rgba(9, 9, 11, 0.85) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.App-header.scrolled {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    background: rgba(9, 9, 11, 0.98);
+    box-shadow: var(--shadow-lg);
+}
+
+.App-header h1 {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 700;
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: var(--spacing-xs);
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 60px rgba(255, 215, 0, 0.3);
+    position: relative;
+    display: inline-block;
+    transition: all var(--transition-base);
+}
+
+.App-header.scrolled h1 {
+    font-size: 2rem;
+}
+
+.nav-links {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    transition: margin var(--transition-base);
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    transition: all var(--transition-base);
+}
+
+.nav-link.active {
+    color: var(--color-bg-primary);
+    background: var(--gradient-gold);
+    box-shadow: var(--shadow-gold-sm);
+}
+
+/* Main Content */
+main {
+    flex: 1;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Footer (if any) */
+.App-footer {
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--color-border);
+    margin-top: var(--spacing-4xl);
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .App-header h1 {
+        font-size: 2rem;
+    }
+
+    .App-header p {
+        font-size: 0.9rem;
+    }
+
+    main {
+        padding: var(--spacing-xl) var(--spacing-md);
+        padding-bottom: 5rem;
+        /* Space for bottom nav */
+    }
+
+    .nav-links {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(9, 9, 11, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: var(--spacing-md);
+        margin-top: 0;
+        border-top: 1px solid var(--color-border);
+        z-index: var(--z-sticky);
+        justify-content: space-around;
+        gap: 0;
+    }
+
+    .nav-link {
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.75rem;
+        padding: var(--spacing-xs);
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: var(--color-text-muted);
+    }
+
+    .nav-link.active {
+        color: var(--color-text-gold);
+    }
+
+    .nav-link .nav-icon {
+        font-size: 1.5rem;
+    }
+}

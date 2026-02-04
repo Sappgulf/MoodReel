@@ -1,0 +1,130 @@
+/* =====================================================
+   MoodReel Animation System
+   ===================================================== */
+
+/* Page Level Transitions */
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+        filter: blur(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+.page-enter {
+    animation: pageEnter var(--transition-slow) forwards;
+}
+
+/* Skeleton Loading */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg,
+            var(--color-bg-card) 25%,
+            var(--color-bg-glass) 50%,
+            var(--color-bg-card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite var(--ease-in-out);
+    border-radius: var(--radius-md);
+}
+
+/* Enhanced Fade In */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeInUp 0.8s var(--ease-out) forwards;
+}
+
+/* Pulse Grow for Accents */
+@keyframes pulseGrow {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: var(--shadow-gold-sm);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow: var(--shadow-gold-md);
+    }
+}
+
+.pulse-grow {
+    animation: pulseGrow 3s var(--ease-in-out) infinite;
+}
+
+/* Floating Animation */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+.float {
+    animation: float 4s var(--ease-in-out) infinite;
+}
+
+/* Staggered Delay Utilities */
+.stagger-1 {
+    animation-delay: 50ms;
+}
+
+.stagger-2 {
+    animation-delay: 100ms;
+}
+
+.stagger-3 {
+    animation-delay: 150ms;
+}
+
+.stagger-4 {
+    animation-delay: 200ms;
+}
+
+.stagger-5 {
+    animation-delay: 250ms;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

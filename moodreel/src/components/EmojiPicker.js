@@ -61,6 +61,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
             family: '#4CAF50', dramatic: '#6B8DD6', documentary: '#4CAF50'
         };
         createParticleBurst(e, colors[mood.keyword] || '#FFD700');
+        if (navigator.vibrate) navigator.vibrate(15);
 
         onSelect(mood);
     }, [onSelect, createParticleBurst]);

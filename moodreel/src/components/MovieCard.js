@@ -57,6 +57,7 @@ const MovieCard = memo(function MovieCard({
     const handleWatchlistClick = useCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (navigator.vibrate) navigator.vibrate(5);
         onToggleWatchlist(movie);
     }, [movie, onToggleWatchlist]);
 
@@ -64,6 +65,7 @@ const MovieCard = memo(function MovieCard({
         e.preventDefault();
         e.stopPropagation();
         if (onToggleWatched) {
+            if (navigator.vibrate) navigator.vibrate(5);
             onToggleWatched(movie.id);
         }
     }, [movie.id, onToggleWatched]);
@@ -128,8 +130,10 @@ const MovieCard = memo(function MovieCard({
 
         const threshold = 100;
         if (swipeOffset > threshold && onSwipeRight) {
+            if (navigator.vibrate) navigator.vibrate(10); // Subtle tick
             onSwipeRight(movie);
         } else if (swipeOffset < -threshold && onSwipeLeft) {
+            if (navigator.vibrate) navigator.vibrate(10); // Subtle tick
             onSwipeLeft(movie);
         }
 

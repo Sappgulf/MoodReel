@@ -1,0 +1,127 @@
+/* =====================================================
+   MoodReel Page-Specific Styles
+   ===================================================== */
+
+/* Welcome / Hero Styling */
+.page-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-xl);
+}
+
+.page-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Home / Discovery Page */
+.trending-section {
+    margin-bottom: var(--spacing-4xl);
+}
+
+.trending-section h2 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-text-primary);
+}
+
+.recommendations {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-xl);
+    animation: pageEnter 0.6s var(--ease-out) forwards;
+}
+
+/* Movie Details Page */
+.movie-details {
+    max-width: 1100px;
+    margin: 0 auto;
+    animation: pageEnter 0.6s var(--ease-out) forwards;
+}
+
+.movie-details-header {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: var(--spacing-3xl);
+    margin-bottom: var(--spacing-3xl);
+}
+
+.movie-details .poster-container {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--color-border);
+    position: relative;
+    transition: transform var(--transition-slow);
+}
+
+.movie-details .poster-container:hover {
+    transform: scale(1.02) rotate(1deg);
+}
+
+.movie-details .movie-info h1 {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.1;
+    background: linear-gradient(180deg, var(--color-text-primary), var(--color-text-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.movie-details .overview {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xl);
+    max-width: 75ch;
+}
+
+/* Watchlist Page */
+.watchlist-page {
+    animation: pageEnter 0.6s var(--ease-out) forwards;
+}
+
+.watchlist-page h2 {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-2xl);
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Stats Page */
+.stats-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    animation: pageEnter 0.8s var(--ease-out) forwards;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-4xl);
+}
+
+/* Desktop Bottom Navigation */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}

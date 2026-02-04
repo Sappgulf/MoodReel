@@ -35,6 +35,17 @@ function AppContent() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Monitor scroll for header polish
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Monitor online status
   useEffect(() => {
@@ -123,7 +134,7 @@ function AppContent() {
         </div>
       )}
 
-      <header className="App-header">
+      <header className={`App-header ${isScrolled ? 'scrolled' : ''}`}>
         <div className="header-top">
           <Link to="/" className="logo-link"><h1>🎬 MoodReel</h1></Link>
           <div className="header-controls">
