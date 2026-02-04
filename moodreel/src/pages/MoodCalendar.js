@@ -73,8 +73,15 @@ function MoodCalendar() {
                 )}
             </div>
 
-            <h2>📅 Mood Calendar</h2>
-            <p className="calendar-subtitle">Your mood search history over the last 30 days</p>
+            <div className="page-hero">
+                <div>
+                    <h2 className="page-title">📅 Mood Calendar</h2>
+                    <p className="page-subtitle">Your mood search history over the last 30 days</p>
+                </div>
+                {history.length > 0 && (
+                    <div className="page-hero-chip">Last 30 days</div>
+                )}
+            </div>
 
             {/* Calendar Grid */}
             <div className="calendar-container">

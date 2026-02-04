@@ -145,6 +145,43 @@ main {
   width: 100%;
 }
 
+/* Page Hero */
+.page-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-subtitle {
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.page-hero-chip {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-gold);
+  color: var(--color-text-gold);
+  background: rgba(255, 215, 0, 0.08);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
 /* Shared Glass Surface */
 .glass-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
@@ -1012,7 +1049,7 @@ main {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: var(--spacing-2xl);
-  text-align: center;
+  text-align: left;
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1161,6 +1198,15 @@ main {
 
   .summary-chips {
     justify-content: center;
+  }
+
+  .page-hero {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .page-title {
+    font-size: 2rem;
   }
 
   /* Hide desktop nav on tablet and show bottom nav */
@@ -2331,7 +2377,7 @@ main {
 .watchlist-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
   flex-wrap: wrap;
@@ -2717,14 +2763,7 @@ main {
 }
 
 .stats-page h2 {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: var(--spacing-2xl);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-align: left;
 }
 
 .stats-grid {
@@ -2847,14 +2886,7 @@ main {
 }
 
 .calendar-page h2 {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: var(--spacing-sm);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-align: left;
 }
 
 .calendar-subtitle {
@@ -3353,14 +3385,7 @@ main {
 }
 
 .achievements-page h2 {
-  font-family: var(--font-display);
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: var(--spacing-sm);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-align: left;
 }
 
 .achievements-progress {

@@ -124,7 +124,14 @@ function Stats() {
         <div className="stats-page">
             <Link to="/" className="back-button">← Back to Discover</Link>
 
-            <h2>📊 Your Watch Stats</h2>
+            <div className="page-hero">
+                <div>
+                    <h2 className="page-title">📊 Your Watch Stats</h2>
+                    <p className="page-subtitle">
+                        {stats.totalMovies} saved · {stats.searchCount} searches · {stats.userRatingsCount} ratings
+                    </p>
+                </div>
+            </div>
 
             {/* Overview Cards */}
             <div className="stats-grid">

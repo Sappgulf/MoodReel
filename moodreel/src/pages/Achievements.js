@@ -15,7 +15,16 @@ function Achievements() {
         <div className="achievements-page">
             <Link to="/" className="back-button">← Back to Discover</Link>
 
-            <h2>🏆 Achievements</h2>
+            <div className="page-hero">
+                <div>
+                    <h2 className="page-title">🏆 Achievements</h2>
+                    <p className="page-subtitle">Unlock badges by saving, rating, and exploring.</p>
+                </div>
+                <div className="page-hero-chip">
+                    {unlockedCount} / {totalCount}
+                </div>
+            </div>
+
             <p className="achievements-progress">
                 {unlockedCount} / {totalCount} unlocked
             </p>
