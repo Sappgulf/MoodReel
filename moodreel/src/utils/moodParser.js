@@ -15,7 +15,7 @@ export const moodMap = {
 
     // Adventure/Action
     adventurous: 12, adventure: 12, exciting: 28, action: 28, adrenaline: 28,
-    epic: 28, explosive: 28, intense: 28,
+    epic: 28, explosive: 28,
 
     // Scary/Horror
     scared: 27, scary: 27, horror: 27, spooky: 27, creepy: 27, terrifying: 27,

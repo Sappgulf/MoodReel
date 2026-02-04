@@ -1,17 +1,16 @@
 import React, { useRef, useEffect } from 'react';
 
+const CHART_COLORS = [
+    '#FFD700', '#DC143C', '#00CED1', '#FF6B6B', '#4CAF50',
+    '#9C27B0', '#FF9800', '#2196F3', '#E91E63', '#8BC34A',
+    '#607D8B', '#795548', '#009688', '#CDDC39', '#3F51B5'
+];
+
 /**
  * GenrePieChart - Canvas-based pie chart for genre visualization
  */
 function GenrePieChart({ data, size = 200 }) {
     const canvasRef = useRef(null);
-
-    // Colors for segments
-    const colors = [
-        '#FFD700', '#DC143C', '#00CED1', '#FF6B6B', '#4CAF50',
-        '#9C27B0', '#FF9800', '#2196F3', '#E91E63', '#8BC34A',
-        '#607D8B', '#795548', '#009688', '#CDDC39', '#3F51B5'
-    ];
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -40,7 +39,7 @@ function GenrePieChart({ data, size = 200 }) {
             ctx.moveTo(centerX, centerY);
             ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + segmentAngle);
             ctx.closePath();
-            ctx.fillStyle = colors[index % colors.length];
+            ctx.fillStyle = CHART_COLORS[index % CHART_COLORS.length];
             ctx.fill();
 
             // Add shine effect
@@ -67,7 +66,7 @@ function GenrePieChart({ data, size = 200 }) {
         ctx.font = '11px Inter, sans-serif';
         ctx.fillText('titles', centerX, centerY + 10);
 
-    }, [data, colors]);
+    }, [data]);
 
     if (data.length === 0) {
         return (
@@ -90,7 +89,7 @@ function GenrePieChart({ data, size = 200 }) {
                     <div key={item.name} className="legend-item">
                         <span
                             className="legend-color"
-                            style={{ background: colors[index % colors.length] }}
+                            style={{ background: CHART_COLORS[index % CHART_COLORS.length] }}
                         />
                         <span className="legend-label">{item.name}</span>
                         <span className="legend-count">{item.count}</span>

@@ -1,5 +1,10 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 
+const WHEEL_COLORS = [
+    '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+    '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE'
+];
+
 /**
  * Spin the Wheel - Animated random movie picker
  * Shows a colorful wheel with movie titles, spins dramatically, and lands on a winner
@@ -10,12 +15,6 @@ function SpinWheel({ movies, onSelect, onClose }) {
     const [winner, setWinner] = useState(null);
     const [rotation, setRotation] = useState(0);
     const animationRef = useRef(null);
-
-    // Colors for wheel segments
-    const colors = [
-        '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-        '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE'
-    ];
 
     // Limit to 10 movies max for readability
     const wheelMovies = movies.slice(0, 10);
@@ -44,7 +43,7 @@ function SpinWheel({ movies, onSelect, onClose }) {
             ctx.moveTo(centerX, centerY);
             ctx.arc(centerX, centerY, radius, startAngle, endAngle);
             ctx.closePath();
-            ctx.fillStyle = colors[i % colors.length];
+            ctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
             ctx.fill();
             ctx.strokeStyle = '#09090b';
             ctx.lineWidth = 2;
@@ -82,7 +81,7 @@ function SpinWheel({ movies, onSelect, onClose }) {
         ctx.strokeStyle = '#09090b';
         ctx.lineWidth = 2;
         ctx.stroke();
-    }, [wheelMovies, segmentAngle, colors]);
+    }, [wheelMovies, segmentAngle]);
 
     // Initial draw
     useEffect(() => {

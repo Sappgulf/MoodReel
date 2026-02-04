@@ -7,7 +7,7 @@ export const calculatePersona = (stats) => {
         };
     }
 
-    const { genreData, topDirectors } = stats;
+    const { genreData } = stats;
 
     // Most watched genre
     const topGenre = genreData?.[0]?.name;
