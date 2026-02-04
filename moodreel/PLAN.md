@@ -1,0 +1,11 @@
+- Add required docs (.env.example, VERIFY.md) and refresh memory/changelog entries.
+- Centralize TMDB API access with a shared client + guards and update services to use it.
+- Normalize media data with safe fallbacks for titles, images, and overviews.
+- Implement debounced title search with scope toggle and abort handling.
+- Add ranking rules for title search and apply taste-profile boosts.
+- Add taste profile (thumbs up/down) with localStorage persistence and reset control.
+- Add provider catalog + per-title provider lookup with caching and badges.
+- Add “My Services” selection with persistence and filtering by provider availability.
+- Add region selection in settings and apply to provider data.
+- Add shareable links by syncing UI state to URL params with copy link control.
+- Add consistent error UI and loading skeletons where needed.

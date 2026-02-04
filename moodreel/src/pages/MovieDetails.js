@@ -1,17 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import ShareButtons from '../components/ShareButtons';
 import StarRating from '../components/StarRating';
 import TrailerModal from '../components/TrailerModal';
+import ErrorState from '../components/ErrorState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useRatings } from '../hooks/useRatings';
 import { useAchievements } from '../hooks/useAchievements';
 import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useTrailer } from '../context/TrailerContext';
+import { useTasteProfile } from '../hooks/useTasteProfile';
+import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
+import { tmdbGet } from '../services/apiClient';
+import { getBackdropUrl, getDisplayOverview, getDisplayTitle, getPosterUrl, normalizeProviderList } from '../utils/mediaUtils';
 
 function MovieDetails() {
   const { id } = useParams();
@@ -24,6 +29,7 @@ function MovieDetails() {
   const [content, setContent] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [providers, setProviders] = useState(null);
+  const [allProviders, setAllProviders] = useState(null);
   const [trailer, setTrailer] = useState(null);
   const [cast, setCast] = useState([]);
   const [director, setDirector] = useState(null);
@@ -42,6 +48,8 @@ function MovieDetails() {
   } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
   const { trackRating } = useAchievements();
+  const { like, dislike, statusFor } = useTasteProfile();
+  const { region } = useProviderSettings();
 
   // Get stored rating/review
   const userRating = getRating(id);
@@ -56,6 +64,7 @@ function MovieDetails() {
       setContent(null);
       setSimilar([]);
       setProviders(null);
+      setAllProviders(null);
       setTrailer(null);
       setCast([]);
 
@@ -67,7 +76,7 @@ function MovieDetails() {
 
         // Get US providers or first available region
         const results = data.providers;
-        setProviders(results?.US || results?.[Object.keys(results || {})[0]] || null);
+        setAllProviders(results || null);
 
         // Find YouTube trailer
         const videos = data.videos || [];
@@ -102,6 +111,14 @@ function MovieDetails() {
     return () => controller.abort();
   }, [id, mediaType, addToHistory]);
 
+  useEffect(() => {
+    if (!allProviders) {
+      setProviders(null);
+      return;
+    }
+    setProviders(allProviders?.[region] || allProviders?.US || allProviders?.[Object.keys(allProviders || {})[0]] || null);
+  }, [allProviders, region]);
+
   // Load saved review text (separate effect to avoid refetching on rating change)
   useEffect(() => {
     const savedReview = getReview(id);
@@ -122,12 +139,9 @@ function MovieDetails() {
     setActorFilmography([]);
 
     try {
-      const API_KEY = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
-      const response = await axios.get(
-        `https://api.themoviedb.org/3/person/${actor.id}/combined_credits?api_key=${API_KEY}`
-      );
+      const response = await tmdbGet(`/person/${actor.id}/combined_credits`);
       // Sort by popularity and filter out current movie
-      const credits = response.data.cast
+      const credits = response.cast
         .filter(c => c.id !== parseInt(id) && (c.poster_path || c.backdrop_path))
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, 12);
@@ -155,11 +169,24 @@ function MovieDetails() {
     setShowReviewForm(false);
   }, [id, reviewText, setReview]);
 
+  const providerGroups = useMemo(() => {
+    if (!providers) return null;
+    return {
+      stream: normalizeProviderList(providers.flatrate || []),
+      rent: normalizeProviderList(providers.rent || []),
+      buy: normalizeProviderList(providers.buy || [])
+    };
+  }, [providers]);
+
   if (error) {
     return (
       <main role="main">
         <Link to="/" className="back-button">← Back to Discover</Link>
-        <p className="error" role="alert">{error}</p>
+        <ErrorState
+          title="Couldn't load details"
+          message={error}
+          onRetry={() => window.location.reload()}
+        />
       </main>
     );
   }
@@ -187,24 +214,24 @@ function MovieDetails() {
     return null;
   }
 
-  const title = content.title || content.name;
+  const title = getDisplayTitle(content);
   const date = content.release_date || content.first_air_date;
   const year = date ? new Date(date).getFullYear() : '';
   const runtime = content.runtime || (content.episode_run_time?.[0]);
+  const overview = getDisplayOverview(content);
+  const tasteStatus = statusFor(content.id, mediaType);
 
   return (
     <main role="main" className="immersive-main">
-      {content.backdrop_path && (
-        <div className="movie-details-backdrop">
-          <img
-            src={`https://image.tmdb.org/t/p/original${content.backdrop_path}`}
-            alt=""
-            className="backdrop-img"
-            decoding="async"
-            onError={(e) => e.target.style.display = 'none'}
-          />
-        </div>
-      )}
+      <div className="movie-details-backdrop">
+        <img
+          src={getBackdropUrl(content.backdrop_path)}
+          alt=""
+          className="backdrop-img"
+          decoding="async"
+          onError={(e) => e.target.style.display = 'none'}
+        />
+      </div>
 
       <Link to="/" className="back-button glass-card" style={{ position: 'relative', zIndex: 10, display: 'inline-block', marginBottom: '20px' }}>
         ← Back to Discover
@@ -216,12 +243,12 @@ function MovieDetails() {
           <div className="poster-container">
             {content.poster_path ? (
               <img
-                src={`https://image.tmdb.org/t/p/w500${content.poster_path}`}
+                src={getPosterUrl(content.poster_path)}
                 alt={`${title} poster`}
                 decoding="async"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = 'https://via.placeholder.com/500x750?text=No+Poster';
+                  e.target.src = getPosterUrl();
                 }}
               />
             ) : (
@@ -255,7 +282,7 @@ function MovieDetails() {
               </div>
             </div>
 
-            <p className="overview">{content.overview}</p>
+            <p className="overview">{overview}</p>
 
             {/* Genres */}
             {content.genres && content.genres.length > 0 && (
@@ -306,6 +333,23 @@ function MovieDetails() {
               )}
 
               <ShareButtons title={title} />
+            </div>
+
+            <div className="taste-profile-actions" role="group" aria-label="Taste profile">
+              <button
+                className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
+                onClick={() => like(content, mediaType)}
+                aria-pressed={tasteStatus === 'liked'}
+              >
+                👍 Like
+              </button>
+              <button
+                className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
+                onClick={() => dislike(content, mediaType)}
+                aria-pressed={tasteStatus === 'disliked'}
+              >
+                👎 Dislike
+              </button>
             </div>
 
             {/* User Rating */}
@@ -392,54 +436,88 @@ function MovieDetails() {
         )}
 
         {/* Trailer Section */}
-        {trailer && (
-          <section className="trailer-section" aria-labelledby="trailer-heading">
-            <h3 id="trailer-heading">🎬 Watch Trailer</h3>
-            <div className="trailer-container">
-              <iframe
-                src={`https://www.youtube.com/embed/${trailer.key}`}
-                title={`${title} trailer`}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                loading="lazy"
-              />
-            </div>
-          </section>
+      <section className="trailer-section" aria-labelledby="trailer-heading">
+        <h3 id="trailer-heading">🎬 Watch Trailer</h3>
+        {trailer ? (
+          <div className="trailer-container">
+            <iframe
+              src={`https://www.youtube.com/embed/${trailer.key}`}
+              title={`${title} trailer`}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <p className="trailer-empty">Trailer unavailable right now.</p>
         )}
+      </section>
 
         {/* Streaming Providers */}
-        {providers && (providers.flatrate || providers.rent || providers.buy) && (
-          <section className="streaming-section" aria-labelledby="providers-heading">
-            <h3 id="providers-heading">Where to Watch</h3>
-            <div className="streaming-providers">
-              {/* Subscription streaming */}
-              {providers.flatrate?.map((provider) => (
-                <img
-                  key={provider.provider_id}
-                  src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                  alt={provider.provider_name}
-                  title={`Stream on ${provider.provider_name}`}
-                  className="provider-logo"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ))}
-              {/* Rent */}
-              {providers.rent?.slice(0, 4).map((provider) => (
-                <img
-                  key={`rent-${provider.provider_id}`}
-                  src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                  alt={provider.provider_name}
-                  title={`Rent on ${provider.provider_name}`}
-                  className="provider-logo"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ))}
-            </div>
-          </section>
+      <section className="streaming-section" aria-labelledby="providers-heading">
+        <h3 id="providers-heading">Where to Watch ({region})</h3>
+        {providerGroups && (providerGroups.stream.length > 0 || providerGroups.rent.length > 0 || providerGroups.buy.length > 0) ? (
+          <div className="streaming-providers">
+            {providerGroups.stream.length > 0 && (
+              <div className="provider-group">
+                <h4>Stream</h4>
+                <div className="provider-grid">
+                  {providerGroups.stream.map((provider) => (
+                    <img
+                      key={`stream-${provider.id}`}
+                      src={getPosterUrl(provider.logoPath, 'w92')}
+                      alt={provider.name}
+                      title={`Stream on ${provider.name}`}
+                      className="provider-logo"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {providerGroups.rent.length > 0 && (
+              <div className="provider-group">
+                <h4>Rent</h4>
+                <div className="provider-grid">
+                  {providerGroups.rent.map((provider) => (
+                    <img
+                      key={`rent-${provider.id}`}
+                      src={getPosterUrl(provider.logoPath, 'w92')}
+                      alt={provider.name}
+                      title={`Rent on ${provider.name}`}
+                      className="provider-logo"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {providerGroups.buy.length > 0 && (
+              <div className="provider-group">
+                <h4>Buy</h4>
+                <div className="provider-grid">
+                  {providerGroups.buy.map((provider) => (
+                    <img
+                      key={`buy-${provider.id}`}
+                      src={getPosterUrl(provider.logoPath, 'w92')}
+                      alt={provider.name}
+                      title={`Buy on ${provider.name}`}
+                      className="provider-logo"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="providers-empty">No provider data available for this title.</p>
         )}
+      </section>
 
         {/* Similar Content */}
         {similar.length > 0 && (
@@ -455,6 +533,9 @@ function MovieDetails() {
                   isWatched={isWatched(item.id)}
                   onToggleWatched={toggleWatched}
                   mediaType={mediaType}
+                  onLike={like}
+                  onDislike={dislike}
+                  tasteStatus={statusFor(item.id, mediaType)}
                 />
               ))}
             </div>

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
 import EmojiPicker from '../components/EmojiPicker';
@@ -9,6 +11,7 @@ import MoodPlaylists from '../components/MoodPlaylists';
 import MoodPulse from '../components/MoodPulse';
 import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
+import ErrorState from '../components/ErrorState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAchievements } from '../hooks/useAchievements';
 import { useMoodHistory } from '../hooks/useMoodHistory';
@@ -16,16 +19,23 @@ import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
 import { useSounds } from '../hooks/useSounds';
 import { useMovieDiscovery } from '../hooks/useMovieDiscovery';
 import { useWindowSize } from '../hooks/useWindowSize';
+import { useProviderSettings } from '../hooks/useProviderSettings';
+import { useTasteProfile } from '../hooks/useTasteProfile';
 import searchService from '../services/searchService';
+import { fetchProviderCatalog, fetchTitleProviders, getCachedTitleProviders } from '../services/providerService';
+import { applySearchRanking } from '../utils/searchRanking';
 
 function Home() {
   const currentYear = new Date().getFullYear();
   const { isMobile } = useWindowSize();
+  const location = useLocation();
   const { playSound } = useSounds();
   const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { trackSave } = useAchievements();
   const { addToHistory } = useMoodHistory();
   const { savePlaylist } = useCustomPlaylists();
+  const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
+  const { like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } = useTasteProfile();
 
   const {
     mood, setMood,
@@ -36,6 +46,7 @@ function Home() {
     selectedProviders, setSelectedProviders,
     isLoading,
     contentType, setContentType,
+    matchType,
     hasMore,
     minRating, setMinRating,
     hasSearched, setHasSearched,
@@ -43,15 +54,99 @@ function Home() {
     fetchTrending,
     search: getRecommendations,
     loadMore: loadMoreResults
-  } = useMovieDiscovery(currentYear);
+  } = useMovieDiscovery(currentYear, region);
 
   const [genres, setGenres] = useState([]);
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(!isMobile);
   const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
   const [surpriseMovie, setSurpriseMovie] = useState(null);
+  const [titleQuery, setTitleQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchScope, setSearchScope] = useState('within');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchError, setSearchError] = useState('');
+  const [isSearchingAll, setIsSearchingAll] = useState(false);
+  const [providerSnapshot, setProviderSnapshot] = useState({});
+  const [providerCatalog, setProviderCatalog] = useState([]);
 
   const loadMoreRef = useRef(null);
+  const searchControllerRef = useRef(null);
+  const hasHydratedRef = useRef(false);
+
+  const handleSearch = useCallback(() => {
+    if (mood) addToHistory(mood);
+    getRecommendations();
+  }, [mood, addToHistory, getRecommendations]);
+
+  useEffect(() => {
+    setSelectedProviders(myServices);
+  }, [myServices, setSelectedProviders]);
+
+  useEffect(() => {
+    if (hasHydratedRef.current) return;
+    const params = new URLSearchParams(location.search);
+    const moodParam = params.get('mood');
+    const queryParam = params.get('query');
+    const typeParam = params.get('type');
+    const yearMinParam = params.get('yearMin');
+    const yearMaxParam = params.get('yearMax');
+    const ratingParam = params.get('rating');
+    const regionParam = params.get('region');
+    const servicesParam = params.get('services');
+    const scopeParam = params.get('scope');
+    const showHiddenParam = params.get('showHidden');
+
+    if (moodParam) setMood(moodParam);
+    if (queryParam) setTitleQuery(queryParam);
+    if (typeParam) setContentType(typeParam);
+    if (scopeParam) setSearchScope(scopeParam);
+    if (regionParam) setRegion(regionParam);
+
+    if (yearMinParam || yearMaxParam || ratingParam) {
+      setAdvancedFilters((prev) => ({
+        ...prev,
+        yearMin: yearMinParam ? parseInt(yearMinParam, 10) : prev.yearMin,
+        yearMax: yearMaxParam ? parseInt(yearMaxParam, 10) : prev.yearMax
+      }));
+      if (ratingParam) setMinRating(parseFloat(ratingParam));
+    }
+
+    if (servicesParam) {
+      const ids = servicesParam.split(',').map((id) => parseInt(id, 10)).filter(Boolean);
+      setMyServices(ids);
+    }
+
+    if (showHiddenParam) {
+      setShowHidden(showHiddenParam === 'true');
+    }
+
+    hasHydratedRef.current = true;
+
+    if (moodParam) {
+      setTimeout(() => handleSearch(), 0);
+    }
+  }, [location.search, handleSearch, setAdvancedFilters, setContentType, setMinRating, setMood, setMyServices, setRegion, setSearchScope, setShowHidden]);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
+    const params = new URLSearchParams();
+
+    if (mood) params.set('mood', mood);
+    if (titleQuery) params.set('query', titleQuery);
+    if (contentType && contentType !== 'all') params.set('type', contentType);
+    if (advancedFilters.yearMin && advancedFilters.yearMin > 1900) params.set('yearMin', advancedFilters.yearMin);
+    if (advancedFilters.yearMax && advancedFilters.yearMax < currentYear) params.set('yearMax', advancedFilters.yearMax);
+    if (minRating > 0) params.set('rating', minRating);
+    if (region && region !== 'US') params.set('region', region);
+    if (myServices.length > 0) params.set('services', myServices.join(','));
+    if (searchScope !== 'within') params.set('scope', searchScope);
+    if (showHidden) params.set('showHidden', 'true');
+
+    const queryString = params.toString();
+    const nextUrl = `${location.pathname}${queryString ? `?${queryString}` : ''}`;
+    window.history.replaceState(null, '', nextUrl);
+  }, [mood, titleQuery, contentType, advancedFilters, minRating, region, myServices, searchScope, showHidden, location.pathname, currentYear]);
 
 
   // Dynamic Mood Themes
@@ -82,6 +177,70 @@ function Home() {
     return () => controller.abort();
   }, [fetchTrending]);
 
+  useEffect(() => {
+    setProviderSnapshot({});
+  }, [region]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedQuery(titleQuery.trim());
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [titleQuery]);
+
+  const performAllSearch = useCallback(async (query, controller) => {
+    try {
+      const result = await searchService.search({
+        query,
+        type: contentType,
+        genres: [],
+        providers: selectedProviders,
+        minRating,
+        matchType,
+        region,
+        ...advancedFilters,
+        page: 1,
+        multiPage: true
+      }, controller.signal);
+
+      if (result.error) {
+        setSearchError(result.error);
+      }
+      setSearchResults(result.results || []);
+    } catch (err) {
+      if (!axios.isCancel(err)) {
+        setSearchError('Search failed. Please try again.');
+      }
+    } finally {
+      setIsSearchingAll(false);
+    }
+  }, [contentType, selectedProviders, minRating, matchType, region, advancedFilters]);
+
+  useEffect(() => {
+    if (searchScope !== 'all') {
+      setSearchResults([]);
+      setSearchError('');
+      return;
+    }
+    if (!debouncedQuery) {
+      setSearchResults([]);
+      setSearchError('');
+      return;
+    }
+
+    if (searchControllerRef.current) {
+      searchControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    searchControllerRef.current = controller;
+    setIsSearchingAll(true);
+    setSearchError('');
+
+    performAllSearch(debouncedQuery, controller);
+
+    return () => controller.abort();
+  }, [debouncedQuery, searchScope, performAllSearch]);
+
   // Fetch genres
   useEffect(() => {
     const controller = new AbortController();
@@ -97,6 +256,31 @@ function Home() {
     fetchGenres();
     return () => controller.abort();
   }, [contentType]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadProviders = async () => {
+      try {
+        const [movieProviders, tvProviders] = await Promise.all([
+          fetchProviderCatalog('movie', region, controller.signal),
+          fetchProviderCatalog('tv', region, controller.signal)
+        ]);
+        const merged = [...movieProviders, ...tvProviders].reduce((acc, provider) => {
+          if (!acc.some((p) => p.id === provider.id)) {
+            acc.push(provider);
+          }
+          return acc;
+        }, []);
+        setProviderCatalog(merged);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching provider catalog:', err);
+        }
+      }
+    };
+    loadProviders();
+    return () => controller.abort();
+  }, [region]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -118,10 +302,8 @@ function Home() {
   }, [setSelectedGenres]);
 
   const handleProviderToggle = useCallback((providerId) => {
-    setSelectedProviders((prev) =>
-      prev.includes(providerId) ? prev.filter((id) => id !== providerId) : [...prev, providerId]
-    );
-  }, [setSelectedProviders]);
+    toggleService(providerId);
+  }, [toggleService]);
 
   const handleEmojiSelect = useCallback((emojiMood) => {
     setMood(emojiMood.keyword);
@@ -189,10 +371,92 @@ function Home() {
     return recommendations.filter(m => m.vote_average >= minRating);
   }, [recommendations, minRating]);
 
-  const handleSearch = useCallback(() => {
-    if (mood) addToHistory(mood);
-    getRecommendations();
-  }, [mood, addToHistory, getRecommendations]);
+  const tieBreakers = useCallback((a, b) => {
+    const aPopularity = a.popularity || 0;
+    const bPopularity = b.popularity || 0;
+    if (aPopularity !== bPopularity) return bPopularity - aPopularity;
+    return (b.vote_count || 0) - (a.vote_count || 0);
+  }, []);
+
+  const scopedResults = useMemo(() => {
+    if (debouncedQuery && searchScope === 'within') {
+      const filtered = filteredRecommendations.filter((item) => {
+        const title = (item.title || item.name || '').toLowerCase();
+        return title.includes(debouncedQuery.toLowerCase());
+      });
+      return applySearchRanking(filtered, debouncedQuery, tieBreakers);
+    }
+    if (debouncedQuery && searchScope === 'all') {
+      return applySearchRanking(searchResults, debouncedQuery, tieBreakers);
+    }
+    return filteredRecommendations;
+  }, [filteredRecommendations, searchResults, debouncedQuery, searchScope, tieBreakers]);
+
+  const tasteAdjustedResults = useMemo(() => {
+    let results = scopedResults;
+    if (!showHidden) {
+      results = results.filter((item) => statusFor(item.id, item.media_type || contentType) !== 'disliked');
+    }
+    return [...results].sort((a, b) => {
+      const aStatus = statusFor(a.id, a.media_type || contentType);
+      const bStatus = statusFor(b.id, b.media_type || contentType);
+      if (aStatus === bStatus) return 0;
+      if (aStatus === 'liked') return -1;
+      if (bStatus === 'liked') return 1;
+      if (aStatus === 'disliked') return 1;
+      if (bStatus === 'disliked') return -1;
+      return 0;
+    });
+  }, [scopedResults, showHidden, statusFor, contentType]);
+
+  const getProviderKey = useCallback((item) => {
+    return `${item.id}-${item.media_type || contentType}-${region}`;
+  }, [contentType, region]);
+
+  const filteredByServices = useMemo(() => {
+    if (myServices.length === 0) return tasteAdjustedResults;
+    return tasteAdjustedResults.filter((item) => {
+      const mediaType = item.media_type || contentType;
+      const cached = providerSnapshot[getProviderKey(item)] || getCachedTitleProviders(item.id, mediaType, region);
+      if (!cached) return true;
+      const ids = [
+        ...cached.flatrate.map((p) => p.id),
+        ...cached.rent.map((p) => p.id),
+        ...cached.buy.map((p) => p.id)
+      ];
+      return myServices.some((id) => ids.includes(id));
+    });
+  }, [tasteAdjustedResults, myServices, providerSnapshot, getProviderKey, contentType, region]);
+
+  useEffect(() => {
+    if (filteredByServices.length === 0) return;
+    const controller = new AbortController();
+    const itemsToFetch = filteredByServices.slice(0, 12);
+
+    itemsToFetch.forEach((item) => {
+      const mediaType = item.media_type || contentType;
+      const key = getProviderKey(item);
+      const cached = providerSnapshot[key] || getCachedTitleProviders(item.id, mediaType, region);
+      if (cached) return;
+      fetchTitleProviders(item.id, mediaType, region, controller.signal)
+        .then((data) => {
+          setProviderSnapshot((prev) => ({
+            ...prev,
+            [key]: data
+          }));
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error('Provider lookup failed:', err);
+          }
+        });
+    });
+
+    return () => controller.abort();
+  }, [filteredByServices, contentType, getProviderKey, providerSnapshot, region]);
+
+  const isBusy = isLoading || isSearchingAll;
+  const hasAnySearch = hasSearched || (searchScope === 'all' && debouncedQuery);
 
   return (
     <main className="page-enter">
@@ -224,9 +488,9 @@ function Home() {
         </div>
       </div>
 
-      {!hasSearched && <MoodPulse />}
+      {!hasAnySearch && <MoodPulse />}
 
-      {trending.length > 0 && recommendations.length === 0 && !hasSearched && (
+      {trending.length > 0 && recommendations.length === 0 && !hasAnySearch && (
         <section className="trending-section">
           <h2>🔥 Trending Now</h2>
           <div className="recommendations">
@@ -239,6 +503,10 @@ function Home() {
                 isWatched={isWatched(item.id)}
                 onToggleWatched={toggleWatched}
                 mediaType={item.media_type}
+                providerBadges={(providerSnapshot[getProviderKey(item)] || getCachedTitleProviders(item.id, item.media_type, region))?.flatrate?.slice(0, 3) || []}
+                onLike={like}
+                onDislike={dislike}
+                tasteStatus={statusFor(item.id, item.media_type)}
               />
             ))}
           </div>
@@ -266,8 +534,36 @@ function Home() {
             onChange={(e) => setMood(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="What's your mood tonight?"
+            aria-label="Mood search"
           />
           {mood && <button className="mood-clear-btn" onClick={() => setMood('')}>✕</button>}
+        </div>
+      </div>
+
+      <div className="title-search">
+        <label htmlFor="title-search-input">Search titles</label>
+        <input
+          id="title-search-input"
+          type="text"
+          value={titleQuery}
+          onChange={(e) => setTitleQuery(e.target.value)}
+          placeholder="Search movies or TV"
+        />
+        <div className="search-scope-toggle" role="group" aria-label="Search scope">
+          <button
+            className={searchScope === 'within' ? 'active' : ''}
+            onClick={() => setSearchScope('within')}
+            aria-pressed={searchScope === 'within'}
+          >
+            Search within mood results
+          </button>
+          <button
+            className={searchScope === 'all' ? 'active' : ''}
+            onClick={() => setSearchScope('all')}
+            aria-pressed={searchScope === 'all'}
+          >
+            Search all
+          </button>
         </div>
       </div>
 
@@ -312,45 +608,95 @@ function Home() {
               ))}
             </div>
           </div>
-          <StreamingFilter selectedProviders={selectedProviders} onToggle={handleProviderToggle} />
+          <StreamingFilter
+            selectedProviders={selectedProviders}
+            onToggle={handleProviderToggle}
+            providers={providerCatalog.length > 0 ? providerCatalog : undefined}
+            label="My Services"
+          />
           <RatingFilter minRating={minRating} onRatingChange={setMinRating} />
           <AdvancedFilters filters={advancedFilters} onFiltersChange={setAdvancedFilters} />
         </div>
       )}
 
       <div className="search-container">
-        <button className="primary-button" onClick={handleSearch} disabled={isLoading}>
-          {isLoading ? 'Searching...' : 'Get Recommendations'}
+        <button className="primary-button" onClick={handleSearch} disabled={isBusy}>
+          {isBusy ? 'Searching...' : 'Get Recommendations'}
+        </button>
+        <button
+          className="secondary-button"
+          aria-label="Copy shareable link"
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Shareable link copied!');
+          }}
+        >
+          🔗 Copy Link
         </button>
       </div>
 
-      {error && <div className="error-container"><p className="error">{error}</p></div>}
+      {error && (
+        <ErrorState
+          title="Search error"
+          message={error}
+          onRetry={handleSearch}
+        />
+      )}
+
+      {searchError && searchScope === 'all' && (
+        <ErrorState
+          title="Search error"
+          message={searchError}
+          onRetry={() => {
+            if (!debouncedQuery) return;
+            const controller = new AbortController();
+            searchControllerRef.current = controller;
+            setIsSearchingAll(true);
+            setSearchError('');
+            performAllSearch(debouncedQuery, controller);
+          }}
+        />
+      )}
 
       <div aria-live="polite">
-        {isLoading && recommendations.length === 0 ? (
+        {isBusy && filteredByServices.length === 0 ? (
           <SkeletonGrid count={8} />
-        ) : isMobile && hasSearched && filteredRecommendations.length > 0 ? (
+        ) : isMobile && hasAnySearch && filteredByServices.length > 0 ? (
           <div className="swipe-container" style={{ textAlign: 'center' }}>
             {isCardLoading ? <MovieCardSkeleton /> : (
               <SwipeCard
-                movie={filteredRecommendations[0]}
-                nextMovie={filteredRecommendations[1]}
+                movie={filteredByServices[0]}
+                nextMovie={filteredByServices[1]}
                 onSwipeLeft={handleSwipeLeft}
                 onSwipeRight={handleSwipeRight}
-                mediaType={filteredRecommendations[0]?.media_type}
+                mediaType={filteredByServices[0]?.media_type}
               />
             )}
           </div>
         ) : (
           <div className="recommendations-container">
-            {filteredRecommendations.length > 0 && (
+            {filteredByServices.length > 0 && (
               <div className="results-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <h2>Results</h2>
+                <div>
+                  <h2>Results</h2>
+                  <div className="taste-summary">
+                    <span>👍 {tasteCounts.liked}</span>
+                    <span>👎 {tasteCounts.disliked}</span>
+                  </div>
+                  <label className="show-hidden-toggle">
+                    <input
+                      type="checkbox"
+                      checked={showHidden}
+                      onChange={(e) => setShowHidden(e.target.checked)}
+                    />
+                    Show hidden
+                  </label>
+                </div>
                 <button className="primary-button" style={{ padding: '8px 16px', fontSize: '0.9rem' }} onClick={handleSaveVibe}>Save Vibe</button>
               </div>
             )}
             <div className="recommendations">
-              {filteredRecommendations.map(rec => (
+              {filteredByServices.map(rec => (
                 <MovieCard
                   key={rec.id}
                   movie={rec}
@@ -359,9 +705,13 @@ function Home() {
                   isWatched={isWatched(rec.id)}
                   onToggleWatched={toggleWatched}
                   mediaType={rec.media_type}
+                  providerBadges={(providerSnapshot[getProviderKey(rec)] || getCachedTitleProviders(rec.id, rec.media_type, region))?.flatrate?.slice(0, 3) || []}
+                  onLike={like}
+                  onDislike={dislike}
+                  tasteStatus={statusFor(rec.id, rec.media_type)}
                 />
               ))}
-              {hasSearched && !isLoading && filteredRecommendations.length === 0 && (
+              {hasAnySearch && !isBusy && filteredByServices.length === 0 && (
                 <EmptyState
                   icon="✨"
                   title="No results found"
@@ -374,7 +724,7 @@ function Home() {
           </div>
         )}
 
-        {hasMore && !isMobile && (
+        {hasMore && !isMobile && searchScope !== 'all' && (
           <div ref={loadMoreRef} style={{ textAlign: 'center', padding: '40px' }}>
             {isLoading ? <SkeletonGrid count={4} /> : <button className="primary-button" onClick={loadMoreResults}>Load More</button>}
           </div>

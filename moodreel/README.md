@@ -85,12 +85,13 @@ The app will open at http://localhost:3000
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `REACT_APP_TMDB_API_KEY` | ❌ Optional | Your own TMDB API key. If not set, uses shared key with rate limiting. |
+| `REACT_APP_TMDB_API_KEY` | ✅ Required | Your TMDB API key. |
+| `REACT_APP_TMDB_BASE_URL` | ❌ Optional | Override TMDB base URL (default: https://api.themoviedb.org/3). |
 
 ### Rate Limiting
 
-The app includes a shared TMDB API key with **rate limiting** for fair usage:
-- **Regular users**: 30 requests per minute
+The app includes client-side rate limiting to reduce accidental API request bursts:
+- **Regular users**: 60 requests per minute
 - **Admin users**: Unlimited (no rate limiting)
 
 #### Enable Admin Mode (Unlimited Access)
@@ -103,8 +104,6 @@ Then refresh the page. To disable:
 ```javascript
 localStorage.removeItem('moodreel-admin')
 ```
-
-> 💡 **Tip**: You can also provide your own TMDB API key via `.env` to bypass rate limiting entirely.
 
 ---
 

@@ -84,6 +84,7 @@ describe('searchService', () => {
             expect(parsed.minRating).toBe(0);
             expect(parsed.yearMin).toBe(1900);
             expect(parsed.sortBy).toBe('popularity.desc');
+            expect(parsed.region).toBe('US');
         });
 
         it('should handle empty query', () => {

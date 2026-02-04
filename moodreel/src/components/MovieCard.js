@@ -1,5 +1,7 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import ProviderBadges from './ProviderBadges';
+import { getDisplayTitle, getPosterUrl, getReleaseYear } from '../utils/mediaUtils';
 
 /**
  * Premium movie card component with poster, info, watchlist button, and 3D parallax effect
@@ -13,11 +15,14 @@ const MovieCard = memo(function MovieCard({
     onToggleWatched,
     mediaType = 'movie',
     onSwipeRight,
-    onSwipeLeft
+    onSwipeLeft,
+    providerBadges = [],
+    onLike,
+    onDislike,
+    tasteStatus = 'neutral'
 }) {
-    const title = movie.title || movie.name;
-    const date = movie.release_date || movie.first_air_date;
-    const year = date ? new Date(date).getFullYear() : '';
+    const title = getDisplayTitle(movie);
+    const year = getReleaseYear(movie);
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
     const detailPath = mediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
 
@@ -69,6 +74,18 @@ const MovieCard = memo(function MovieCard({
             onToggleWatched(movie.id);
         }
     }, [movie.id, onToggleWatched]);
+
+    const handleLike = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onLike) onLike(movie, mediaType);
+    }, [movie, mediaType, onLike]);
+
+    const handleDislike = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onDislike) onDislike(movie, mediaType);
+    }, [movie, mediaType, onDislike]);
 
     // 3D parallax tilt on mouse move
     const applyTilt = useCallback((x, y) => {
@@ -196,24 +213,41 @@ const MovieCard = memo(function MovieCard({
                         {isWatched ? '✅' : '👁️'}
                     </button>
                 )}
+
+                {(onLike || onDislike) && (
+                    <div className="taste-actions" role="group" aria-label="Taste profile">
+                        <button
+                            className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
+                            onClick={handleLike}
+                            aria-label="Thumbs up"
+                            aria-pressed={tasteStatus === 'liked'}
+                        >
+                            👍
+                        </button>
+                        <button
+                            className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
+                            onClick={handleDislike}
+                            aria-label="Thumbs down"
+                            aria-pressed={tasteStatus === 'disliked'}
+                        >
+                            👎
+                        </button>
+                    </div>
+                )}
             </div>
 
             <Link to={detailPath}>
                 <div className="poster-wrapper">
-                    {movie.poster_path ? (
-                        <img
-                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                            alt={`${title} poster`}
-                            loading="lazy"
-                            decoding="async"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = 'https://via.placeholder.com/500x750?text=No+Poster';
-                            }}
-                        />
-                    ) : (
-                        <div className="no-poster">No Poster</div>
-                    )}
+                    <img
+                        src={getPosterUrl(movie.poster_path)}
+                        alt={`${title} poster`}
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getPosterUrl();
+                        }}
+                    />
                 </div>
 
                 <div className="card-content">
@@ -226,6 +260,8 @@ const MovieCard = memo(function MovieCard({
                         </div>
                     )}
                 </div>
+
+                <ProviderBadges providers={providerBadges} />
             </Link>
         </div>
     );

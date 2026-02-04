@@ -757,3 +757,92 @@
     text-align: center;
     font-style: italic;
 }
+
+.secondary-button {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.error-state {
+    background: rgba(255, 80, 80, 0.08);
+    border: 1px solid rgba(255, 80, 80, 0.2);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    text-align: center;
+}
+
+.provider-badges {
+    display: flex;
+    gap: 6px;
+    padding: 8px 0 0;
+    flex-wrap: wrap;
+}
+
+.provider-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    object-fit: cover;
+}
+
+.provider-badge.overflow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--color-text-secondary);
+}
+
+.taste-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.taste-btn {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
+    padding: 6px 10px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+}
+
+.taste-btn.active {
+    border-color: rgba(255, 215, 0, 0.6);
+    color: var(--color-gold);
+}
+
+.streaming-logo-img {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.provider-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.provider-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.providers-empty,
+.trailer-empty {
+    color: var(--color-text-muted);
+}

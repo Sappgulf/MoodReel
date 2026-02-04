@@ -15,7 +15,7 @@ const https = require('https');
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
-const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
+const TMDB_API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 
 // Test results
 const results = {
@@ -106,6 +106,10 @@ async function testStaticAssets() {
 
 async function testTMDBApiConnectivity() {
     try {
+        if (!TMDB_API_KEY) {
+            fail('TMDB API connectivity', 'Missing REACT_APP_TMDB_API_KEY');
+            return;
+        }
         const url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&page=1`;
         const res = await request(url);
         if (res.status === 200) {
@@ -125,6 +129,10 @@ async function testTMDBApiConnectivity() {
 
 async function testTMDBSearchEndpoint() {
     try {
+        if (!TMDB_API_KEY) {
+            fail('TMDB search endpoint', 'Missing REACT_APP_TMDB_API_KEY');
+            return;
+        }
         const url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=comedy`;
         const res = await request(url);
         if (res.status === 200) {
@@ -144,6 +152,10 @@ async function testTMDBSearchEndpoint() {
 
 async function testTMDBTVEndpoint() {
     try {
+        if (!TMDB_API_KEY) {
+            fail('TMDB TV endpoint', 'Missing REACT_APP_TMDB_API_KEY');
+            return;
+        }
         const url = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&page=1`;
         const res = await request(url);
         if (res.status === 200) {
@@ -163,6 +175,10 @@ async function testTMDBTVEndpoint() {
 
 async function testTMDBGenresEndpoint() {
     try {
+        if (!TMDB_API_KEY) {
+            fail('TMDB genres endpoint', 'Missing REACT_APP_TMDB_API_KEY');
+            return;
+        }
         const url = `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}`;
         const res = await request(url);
         if (res.status === 200) {
@@ -182,6 +198,10 @@ async function testTMDBGenresEndpoint() {
 
 async function testTMDBMovieDetails() {
     try {
+        if (!TMDB_API_KEY) {
+            fail('TMDB movie details', 'Missing REACT_APP_TMDB_API_KEY');
+            return;
+        }
         // Test with a known movie ID (Fight Club = 550)
         const url = `https://api.themoviedb.org/3/movie/550?api_key=${TMDB_API_KEY}`;
         const res = await request(url);

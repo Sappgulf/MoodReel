@@ -2,13 +2,13 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import searchService from '../services/searchService';
 
-export function useMovieDiscovery(currentYear) {
+export function useMovieDiscovery(currentYear, region = 'US', initialProviders = []) {
     const [mood, setMood] = useState('');
     const [recommendations, setRecommendations] = useState([]);
     const [trending, setTrending] = useState([]);
     const [error, setError] = useState('');
     const [selectedGenres, setSelectedGenres] = useState([]);
-    const [selectedProviders, setSelectedProviders] = useState([]);
+    const [selectedProviders, setSelectedProviders] = useState(initialProviders);
     const [isLoading, setIsLoading] = useState(false);
     const [contentType, setContentType] = useState('all');
     const [matchType, setMatchType] = useState('all');
@@ -86,6 +86,7 @@ export function useMovieDiscovery(currentYear) {
                 providers: selectedProviders,
                 minRating,
                 matchType,
+                region,
                 ...advancedFilters,
                 page: 1,
                 multiPage: true
@@ -111,7 +112,7 @@ export function useMovieDiscovery(currentYear) {
         } finally {
             setIsLoading(false);
         }
-    }, [mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters]);
+    }, [mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters, region]);
 
     const loadMore = useCallback(async () => {
         if (isLoading || !hasMore || loadMoreInFlightRef.current) return;
@@ -130,6 +131,7 @@ export function useMovieDiscovery(currentYear) {
                 providers: selectedProviders,
                 minRating,
                 matchType,
+                region,
                 ...advancedFilters,
                 page: nextPage
             }, controller.signal);
@@ -153,7 +155,7 @@ export function useMovieDiscovery(currentYear) {
             setIsLoading(false);
             loadMoreInFlightRef.current = false;
         }
-    }, [isLoading, hasMore, page, mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters]);
+    }, [isLoading, hasMore, page, mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters, region]);
 
     // Clean up on unmount
     useEffect(() => {
