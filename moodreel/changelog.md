@@ -6,6 +6,8 @@ Format: Keep a Changelog (minimal). Dates are YYYY-MM-DD.
 Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
+- Planned (2026-02-04, frontend): Audit performance, UI polish, and bug fixes with baseline tests run (`npm test -- --watchAll=false`).
+- Implemented (2026-02-04, frontend): Improved discovery search resiliency by keeping cached results visible during errors and preventing overlapping pagination fetches; added abort handling for load-more requests. Verification: `npm test -- --watchAll=false`, `npm run build` (Browserslist warning only).
 - Added: Glassmorphic "Vibe Bar" hero section with interactive suggestions.
 - Added: Triple-A CSS animations with spring easing and GPU acceleration.
 - Added: Fallback placeholder handling for broken movie posters and missing backdrops.
