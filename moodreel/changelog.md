@@ -6,8 +6,10 @@ Format: Keep a Changelog (minimal). Dates are YYYY-MM-DD.
 Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
+- Planned (2026-02-04, frontend): Reinstate API key usage guidance and record memory note; baseline verification with `npm test -- --watchAll=false`.
 - Planned (2026-02-04, frontend): Implement Sprints 1–3 foundation/usefulness/delight upgrades, with baseline verification. Verification: `npm run test:ci`.
 - Planned (2026-02-04, frontend): Audit performance, UI polish, and bug fixes with baseline tests run (`npm test -- --watchAll=false`).
+- Implemented (2026-02-04, frontend): Added memory reminder to keep TMDB API key sourced via environment variables. Verification: `npm test -- --watchAll=false`.
 - Implemented (2026-02-04, frontend): Added API client + normalization, debounced search with scope toggle, provider catalog/badges, taste profile, shareable links, and docs updates. Verification: `npm run test:ci`, `npm run build` (Browserslist warning).
 - Added (2026-02-04, frontend): Provider badges, taste profile controls, shareable links, and settings for region selection.
 - Changed (2026-02-04, frontend): Centralized TMDB API access with normalization, debounced search, and safe fallbacks.

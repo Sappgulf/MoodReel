@@ -21,6 +21,7 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
 ## Data Source (Verified)
 - Primary API provider: TMDB (The Movie Database)
 - Auth: env var key name(s): `REACT_APP_TMDB_API_KEY`
+- Note: DO NOT TOUCH. LEAVE IT ALONE. Keep the TMDB API key sourced from environment variables only.
 - Base URL(s): `https://api.themoviedb.org/3` (override with `REACT_APP_TMDB_BASE_URL` if needed)
 - Endpoints used:
   - Search: `/search/movie`, `/search/tv`
