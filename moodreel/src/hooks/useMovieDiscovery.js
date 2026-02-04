@@ -24,6 +24,8 @@ export function useMovieDiscovery(currentYear) {
     });
 
     const abortControllerRef = useRef(null);
+    const loadMoreControllerRef = useRef(null);
+    const loadMoreInFlightRef = useRef(false);
 
     const resetAdvancedFilters = useCallback(() => {
         setAdvancedFilters({
@@ -63,6 +65,10 @@ export function useMovieDiscovery(currentYear) {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
+        if (loadMoreControllerRef.current) {
+            loadMoreControllerRef.current.abort();
+        }
+        loadMoreInFlightRef.current = false;
 
         const controller = new AbortController();
         abortControllerRef.current = controller;
@@ -87,11 +93,15 @@ export function useMovieDiscovery(currentYear) {
 
             if (result.error) {
                 setError(result.error);
-                setRecommendations([]);
-            } else {
+            }
+
+            if (result.results && result.results.length > 0) {
                 setRecommendations(result.results);
                 setHasMore(result.hasMore);
                 setPage(result.page || 1);
+            } else if (result.error) {
+                setRecommendations([]);
+                setHasMore(false);
             }
         } catch (err) {
             if (!axios.isCancel(err)) {
@@ -104,9 +114,11 @@ export function useMovieDiscovery(currentYear) {
     }, [mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters]);
 
     const loadMore = useCallback(async () => {
-        if (isLoading || !hasMore) return;
+        if (isLoading || !hasMore || loadMoreInFlightRef.current) return;
 
         const controller = new AbortController();
+        loadMoreControllerRef.current = controller;
+        loadMoreInFlightRef.current = true;
         setIsLoading(true);
         const nextPage = page + 1;
 
@@ -139,6 +151,7 @@ export function useMovieDiscovery(currentYear) {
             }
         } finally {
             setIsLoading(false);
+            loadMoreInFlightRef.current = false;
         }
     }, [isLoading, hasMore, page, mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters]);
 
@@ -147,6 +160,9 @@ export function useMovieDiscovery(currentYear) {
         return () => {
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
+            }
+            if (loadMoreControllerRef.current) {
+                loadMoreControllerRef.current.abort();
             }
         };
     }, []);
