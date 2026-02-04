@@ -347,6 +347,7 @@ function MovieDetails() {
                       alt={person.name}
                       className="cast-photo"
                       loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="cast-photo-placeholder">👤</div>
@@ -391,6 +392,8 @@ function MovieDetails() {
                   alt={provider.provider_name}
                   title={`Stream on ${provider.provider_name}`}
                   className="provider-logo"
+                  loading="lazy"
+                  decoding="async"
                 />
               ))}
               {/* Rent */}
@@ -401,6 +404,8 @@ function MovieDetails() {
                   alt={provider.provider_name}
                   title={`Rent on ${provider.provider_name}`}
                   className="provider-logo"
+                  loading="lazy"
+                  decoding="async"
                 />
               ))}
             </div>
@@ -471,6 +476,8 @@ function MovieDetails() {
                         src={`https://image.tmdb.org/t/p/w154${credit.poster_path}`}
                         alt={credit.title || credit.name}
                         className="filmography-poster"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="filmography-poster-placeholder">🎬</div>

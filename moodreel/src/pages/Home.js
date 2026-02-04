@@ -106,24 +106,6 @@ function Home() {
     return () => controller.abort();
   }, [contentType]);
 
-  // Infinite scroll observer
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasMore || isLoading) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMoreResults();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, isLoading]);
-
-
   // Pull-to-refresh handlers
   const handlePullStart = useCallback((e) => {
     if (window.scrollY === 0) {
@@ -138,16 +120,6 @@ function Home() {
     const distance = Math.max(0, currentY - pullStartY.current);
     setPullDistance(Math.min(distance, 150));
   }, [isPulling]);
-
-  const handlePullEnd = useCallback(() => {
-    if (pullDistance > 80 && hasSearched) {
-      // Trigger refresh
-      getRecommendations();
-    }
-    setIsPulling(false);
-    setPullDistance(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pullDistance, hasSearched]);
 
   const handleGenreClick = useCallback((genreId) => {
     setSelectedGenres((prev) =>
@@ -167,12 +139,12 @@ function Home() {
 
   const handleEmojiSelect = useCallback((emojiMood) => {
     setMood(emojiMood.keyword);
-    emojiMood.genres.forEach(genreId => {
-      if (!selectedGenres.includes(genreId)) {
-        setSelectedGenres(prev => [...prev, genreId]);
-      }
+    setSelectedGenres((prev) => {
+      const next = new Set(prev);
+      emojiMood.genres.forEach((genreId) => next.add(genreId));
+      return Array.from(next);
     });
-  }, [selectedGenres]);
+  }, []);
 
   const handleMoodChange = useCallback((event) => {
     setMood(event.target.value);
@@ -300,7 +272,7 @@ function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [mood, selectedGenres, contentType, selectedProviders, minRating, advancedFilters, addToHistory]);
+  }, [mood, selectedGenres, contentType, selectedProviders, minRating, matchType, advancedFilters, addToHistory]);
 
   const loadMoreResults = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -339,7 +311,33 @@ function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, page, mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters]);
+  }, [isLoading, hasMore, page, mood, contentType, selectedGenres, selectedProviders, minRating, matchType, advancedFilters]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadMoreResults();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, loadMoreResults]);
+
+  const handlePullEnd = useCallback(() => {
+    if (pullDistance > 80 && hasSearched) {
+      // Trigger refresh
+      getRecommendations();
+    }
+    setIsPulling(false);
+    setPullDistance(0);
+  }, [pullDistance, hasSearched, getRecommendations]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -375,9 +373,10 @@ function Home() {
   }, []);
 
   // Filter recommendations by rating (for display)
-  const filteredRecommendations = minRating > 0
-    ? recommendations.filter(m => m.vote_average >= minRating)
-    : recommendations;
+  const filteredRecommendations = useMemo(() => {
+    if (minRating <= 0) return recommendations;
+    return recommendations.filter(m => m.vote_average >= minRating);
+  }, [recommendations, minRating]);
 
   const handleSaveVibe = useCallback(() => {
     if (!mood && selectedGenres.length === 0) return;

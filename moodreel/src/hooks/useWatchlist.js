@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const WATCHLIST_KEY = 'moodreel_watchlist';
 const NOTES_KEY = 'moodreel_notes';
@@ -100,9 +100,13 @@ export function useWatchlist() {
         });
     }, []);
 
-    const isInWatchlist = useCallback((id) => {
-        return watchlist.some((item) => item.id === id);
+    const watchlistIds = useMemo(() => {
+        return new Set(watchlist.map((item) => item.id));
     }, [watchlist]);
+
+    const isInWatchlist = useCallback((id) => {
+        return watchlistIds.has(id);
+    }, [watchlistIds]);
 
     const toggleWatchlist = useCallback((item) => {
         if (isInWatchlist(item.id)) {

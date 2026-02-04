@@ -25,6 +25,7 @@ function Stats() {
     const { history } = useMoodHistory();
     const { getRating } = useRatings();
     const { history: watchHistory, getStats: getWatchStats } = useWatchHistory();
+    const watchStats = useMemo(() => getWatchStats(), [getWatchStats]);
 
     // Calculate stats
     const stats = useMemo(() => {
@@ -267,13 +268,13 @@ function Stats() {
                     <h3>📱 Discovery Timeline</h3>
                     <div className="discovery-stats">
                         <span className="discovery-stat">
-                            <strong>{getWatchStats().thisWeek}</strong> this week
+                            <strong>{watchStats.thisWeek}</strong> this week
                         </span>
                         <span className="discovery-stat">
-                            <strong>{getWatchStats().thisMonth}</strong> this month
+                            <strong>{watchStats.thisMonth}</strong> this month
                         </span>
                         <span className="discovery-stat">
-                            <strong>{getWatchStats().total}</strong> total
+                            <strong>{watchStats.total}</strong> total
                         </span>
                     </div>
                     <div className="recent-discoveries">
@@ -290,6 +291,8 @@ function Stats() {
                                             src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
                                             alt={item.title}
                                             className="discovery-poster"
+                                            loading="lazy"
+                                            decoding="async"
                                         />
                                     ) : (
                                         <div className="discovery-poster-placeholder">🎬</div>

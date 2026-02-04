@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, useDeferredValue } from 'react';
 import { Link } from 'react-router-dom';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
@@ -31,6 +31,7 @@ function Watchlist() {
     const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
     const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
     const [searchTerm, setSearchTerm] = useState('');
+    const deferredSearchTerm = useDeferredValue(searchTerm);
     const [showSpinWheel, setShowSpinWheel] = useState(false);
     const [shareStatus, setShareStatus] = useState('');
     const fileInputRef = useRef(null);
@@ -40,8 +41,8 @@ function Watchlist() {
         let list = [...watchlist];
 
         // Apply search filter
-        if (searchTerm.trim()) {
-            const query = searchTerm.toLowerCase().trim();
+        if (deferredSearchTerm.trim()) {
+            const query = deferredSearchTerm.toLowerCase().trim();
             list = list.filter(m => (m.title || '').toLowerCase().includes(query));
         }
 
@@ -72,7 +73,9 @@ function Watchlist() {
             list = list.filter(m => !isWatched(m.id));
         }
         return list;
-    }, [watchlist, showWatched, isWatched, sortBy, searchTerm]);
+    }, [watchlist, showWatched, isWatched, sortBy, deferredSearchTerm]);
+
+    const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
 
     // Import from JSON file
     const handleImportFile = useCallback((e) => {
@@ -312,13 +315,13 @@ function Watchlist() {
                         className={showWatched === 'watched' ? 'active' : ''}
                         onClick={() => setShowWatched('watched')}
                     >
-                        ✅ Watched ({getWatchedCount()})
+                        ✅ Watched ({watchedCount})
                     </button>
                     <button
                         className={showWatched === 'unwatched' ? 'active' : ''}
                         onClick={() => setShowWatched('unwatched')}
                     >
-                        👁️ To Watch ({watchlist.length - getWatchedCount()})
+                        👁️ To Watch ({watchlist.length - watchedCount})
                     </button>
 
                     <div className="sort-dropdown">

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState, useRef } from 'react';
+import React, { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 /**
@@ -21,12 +21,38 @@ const MovieCard = memo(function MovieCard({
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
     const detailPath = mediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
 
-    // Parallax state
-    const [tilt, setTilt] = useState({ x: 0, y: 0 });
-    const [isHovering, setIsHovering] = useState(false);
     const cardRef = useRef(null);
     const touchStartX = useRef(null);
     const [swipeOffset, setSwipeOffset] = useState(0);
+    const rafRef = useRef(null);
+    const tiltRef = useRef({ x: 0, y: 0 });
+    const rectRef = useRef(null);
+    const reduceMotionRef = useRef(false);
+
+    useEffect(() => {
+        if (window.matchMedia) {
+            const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+            reduceMotionRef.current = media.matches;
+            const handler = (event) => {
+                reduceMotionRef.current = event.matches;
+            };
+            if (media.addEventListener) {
+                media.addEventListener('change', handler);
+                return () => media.removeEventListener('change', handler);
+            }
+            media.addListener(handler);
+            return () => media.removeListener(handler);
+        }
+        return undefined;
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+            }
+        };
+    }, []);
 
     const handleWatchlistClick = useCallback((e) => {
         e.preventDefault();
@@ -43,10 +69,27 @@ const MovieCard = memo(function MovieCard({
     }, [movie.id, onToggleWatched]);
 
     // 3D parallax tilt on mouse move
-    const handleMouseMove = useCallback((e) => {
-        if (!cardRef.current) return;
+    const applyTilt = useCallback((x, y) => {
+        tiltRef.current = { x, y };
+        if (rafRef.current) return;
 
-        const rect = cardRef.current.getBoundingClientRect();
+        rafRef.current = requestAnimationFrame(() => {
+            rafRef.current = null;
+            if (!cardRef.current) return;
+            cardRef.current.style.setProperty('--tilt-x', `${tiltRef.current.x}deg`);
+            cardRef.current.style.setProperty('--tilt-y', `${tiltRef.current.y}deg`);
+        });
+    }, []);
+
+    const handleMouseEnter = useCallback(() => {
+        if (!cardRef.current) return;
+        rectRef.current = cardRef.current.getBoundingClientRect();
+    }, []);
+
+    const handleMouseMove = useCallback((e) => {
+        if (!cardRef.current || reduceMotionRef.current) return;
+
+        const rect = rectRef.current || cardRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
@@ -56,17 +99,13 @@ const MovieCard = memo(function MovieCard({
         const rotateX = ((y - centerY) / centerY) * -8;
         const rotateY = ((x - centerX) / centerX) * 8;
 
-        setTilt({ x: rotateX, y: rotateY });
-    }, []);
-
-    const handleMouseEnter = useCallback(() => {
-        setIsHovering(true);
-    }, []);
+        applyTilt(rotateX, rotateY);
+    }, [applyTilt]);
 
     const handleMouseLeave = useCallback(() => {
-        setIsHovering(false);
-        setTilt({ x: 0, y: 0 });
-    }, []);
+        rectRef.current = null;
+        applyTilt(0, 0);
+    }, [applyTilt]);
 
     // Swipe gestures for mobile
     const handleTouchStart = (e) => {
@@ -98,13 +137,15 @@ const MovieCard = memo(function MovieCard({
         setSwipeOffset(0);
     };
 
-    const cardStyle = isHovering ? {
-        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(20px)`,
-        transition: 'transform 0.1s ease-out'
-    } : {
-        transform: `perspective(1000px) rotateX(0) rotateY(0) translateZ(0) translateX(${swipeOffset}px) rotate(${swipeOffset * 0.05}deg)`,
-        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none',
-        opacity: swipeOffset !== 0 ? Math.max(0.5, 1 - Math.abs(swipeOffset) / 300) : 1
+    const swipeOpacity = swipeOffset !== 0
+        ? Math.max(0.5, 1 - Math.abs(swipeOffset) / 300)
+        : 1;
+
+    const cardStyle = {
+        '--swipe-x': `${swipeOffset}px`,
+        '--swipe-rot': `${swipeOffset * 0.05}deg`,
+        opacity: swipeOpacity,
+        ...(swipeOffset !== 0 ? { transition: 'none' } : {})
     };
 
     return (
@@ -112,8 +153,8 @@ const MovieCard = memo(function MovieCard({
             ref={cardRef}
             className="recommendation fade-in parallax-card"
             style={cardStyle}
-            onMouseMove={handleMouseMove}
             onMouseEnter={handleMouseEnter}
+            onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -160,6 +201,7 @@ const MovieCard = memo(function MovieCard({
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                             alt={`${title} poster`}
                             loading="lazy"
+                            decoding="async"
                         />
                     ) : (
                         <div className="no-poster">No Poster</div>

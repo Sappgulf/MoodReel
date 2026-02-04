@@ -124,7 +124,7 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
 
             <Link to={detailPath} className="swipe-card-link">
                 {posterUrl ? (
-                    <img src={posterUrl} alt={title} loading="lazy" />
+                    <img src={posterUrl} alt={title} loading="lazy" decoding="async" />
                 ) : (
                     <div className="no-poster">No Poster</div>
                 )}
