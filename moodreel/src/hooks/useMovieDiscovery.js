@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import axios from 'axios';
 import searchService from '../services/searchService';
-import { parseMoodToGenres } from '../utils/moodParser';
 
 export function useMovieDiscovery(currentYear) {
     const [mood, setMood] = useState('');
@@ -174,3 +173,5 @@ export function useMovieDiscovery(currentYear) {
         loadMore
     };
 }
+
+export default useMovieDiscovery;

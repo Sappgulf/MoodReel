@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
 import EmojiPicker from '../components/EmojiPicker';
-import StreamingFilter, { STREAMING_PROVIDERS } from '../components/StreamingFilter';
+import StreamingFilter from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
@@ -30,7 +30,7 @@ function Home() {
   const {
     mood, setMood,
     recommendations, setRecommendations,
-    trending, setTrending,
+    trending,
     error,
     selectedGenres, setSelectedGenres,
     selectedProviders, setSelectedProviders,
@@ -53,9 +53,6 @@ function Home() {
 
   const loadMoreRef = useRef(null);
 
-  const genreMap = useMemo(() => {
-    return new Map(genres.map((genre) => [genre.id, genre.name]));
-  }, [genres]);
 
   // Dynamic Mood Themes
   useEffect(() => {
