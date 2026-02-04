@@ -55,6 +55,7 @@ export function generateCacheKey(params) {
         yearMin: params.yearMin || 1900,
         yearMax: params.yearMax || new Date().getFullYear(),
         sortBy: params.sortBy || 'popularity.desc',
+        runtime: params.runtime || 'any',
     };
     return JSON.stringify(normalized);
 }
@@ -106,7 +107,8 @@ function setCache(key, data) {
 function buildApiUrl(params, mediaType) {
     const { query, page = 1, genres = [], providers = [], minRating = 0,
         yearMin = 1900, yearMax = new Date().getFullYear(), sortBy = 'popularity.desc',
-        matchType = 'all' // 'all' (AND) or 'any' (OR)
+        matchType = 'all', // 'all' (AND) or 'any' (OR)
+        runtime = 'any'
     } = params;
 
     // Parse mood query to genres
@@ -164,6 +166,17 @@ function buildApiUrl(params, mediaType) {
             url += `&${dateField}.lte=${yearMax}-12-31`;
         }
 
+        // Runtime filter (movie-only: TV runtimes are inconsistent in list responses)
+        if (mediaType === 'movie' && runtime && runtime !== 'any') {
+            if (runtime === 'short') {
+                url += '&with_runtime.lte=90';
+            } else if (runtime === 'medium') {
+                url += '&with_runtime.gte=90&with_runtime.lte=150';
+            } else if (runtime === 'long') {
+                url += '&with_runtime.gte=150';
+            }
+        }
+
         return url;
     } else {
         // Text search - still apply include_adult filter
@@ -209,6 +222,7 @@ async function fetchMediaType(params, mediaType, signal) {
  * @param {number} params.minRating - Minimum rating (0-10)
  * @param {number} params.yearMin - Minimum year
  * @param {number} params.yearMax - Maximum year
+ * @param {string} params.runtime - Runtime bucket ('any' | 'short' | 'medium' | 'long')
  * @param {boolean} params.multiPage - Fetch two pages at once (default for page 1)
  * @param {AbortSignal} signal - AbortSignal for cancellation
  * 

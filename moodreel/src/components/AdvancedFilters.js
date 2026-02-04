@@ -23,7 +23,8 @@ function AdvancedFilters({ filters, onFiltersChange }) {
     const activeFilterCount = [
         filters.yearMin > 1900,
         filters.yearMax < currentYear,
-        filters.runtime !== 'any'
+        filters.runtime !== 'any',
+        filters.sortBy !== 'popularity.desc'
     ].filter(Boolean).length;
 
     return (

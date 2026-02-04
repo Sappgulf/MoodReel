@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 
 // TMDB streaming provider IDs (US region)
-const STREAMING_PROVIDERS = [
+export const STREAMING_PROVIDERS = [
     { id: 8, name: 'Netflix', logo: '🔴' },
     { id: 9, name: 'Prime Video', logo: '📦' },
     { id: 337, name: 'Disney+', logo: '🏰' },

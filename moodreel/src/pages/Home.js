@@ -3,7 +3,7 @@ import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
 import EmojiPicker from '../components/EmojiPicker';
-import StreamingFilter from '../components/StreamingFilter';
+import StreamingFilter, { STREAMING_PROVIDERS } from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
@@ -20,6 +20,7 @@ import searchService from '../services/searchService';
 
 
 function Home() {
+  const currentYear = new Date().getFullYear();
   const [mood, setMood] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [trending, setTrending] = useState([]);
@@ -38,7 +39,7 @@ function Home() {
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
     yearMin: 1900,
-    yearMax: new Date().getFullYear(),
+    yearMax: currentYear,
     runtime: 'any',
     sortBy: 'popularity.desc'
   });
@@ -60,6 +61,66 @@ function Home() {
 
   const abortControllerRef = useRef(null);
   const loadMoreRef = useRef(null);
+
+  const genreMap = useMemo(() => {
+    return new Map(genres.map((genre) => [genre.id, genre.name]));
+  }, [genres]);
+
+  const providerMap = useMemo(() => {
+    return new Map(STREAMING_PROVIDERS.map((provider) => [provider.id, provider.name]));
+  }, []);
+
+  const runtimeLabels = useMemo(() => ({
+    any: 'Any',
+    short: '< 90 min',
+    medium: '90-150 min',
+    long: '> 150 min'
+  }), []);
+
+  const sortLabels = useMemo(() => ({
+    'popularity.desc': 'Trending',
+    'vote_average.desc': 'Hidden Gems',
+    'primary_release_date.desc': 'Newest',
+    'primary_release_date.asc': 'Classics',
+    'revenue.desc': 'Box Office'
+  }), []);
+
+  const detectedGenres = useMemo(() => {
+    if (!mood.trim()) return [];
+    return parseMoodToGenres(mood);
+  }, [mood]);
+
+  const detectedGenreLabels = useMemo(() => {
+    return detectedGenres.map((id) => genreMap.get(id) || `Genre ${id}`);
+  }, [detectedGenres, genreMap]);
+
+  const canApplyDetected = useMemo(() => {
+    if (detectedGenres.length === 0) return false;
+    return detectedGenres.some((id) => !selectedGenres.includes(id));
+  }, [detectedGenres, selectedGenres]);
+
+  const resetAdvancedFilters = useCallback(() => {
+    setAdvancedFilters({
+      yearMin: 1900,
+      yearMax: currentYear,
+      runtime: 'any',
+      sortBy: 'popularity.desc'
+    });
+  }, [currentYear]);
+
+  const resetAllFilters = useCallback(() => {
+    setMood('');
+    setSelectedGenres([]);
+    setSelectedProviders([]);
+    setMinRating(0);
+    setMatchType('all');
+    setContentType('all');
+    setHasSearched(false);
+    setRecommendations([]);
+    setHasMore(false);
+    setPage(1);
+    resetAdvancedFilters();
+  }, [resetAdvancedFilters]);
 
   // Check for mobile viewport
   useEffect(() => {
@@ -343,6 +404,9 @@ function Home() {
     if (e.key === 'Enter') {
       getRecommendations();
     }
+    if (e.key === 'Escape') {
+      setMood('');
+    }
   }, [getRecommendations]);
 
   const handleSwipeRight = useCallback((movie) => {
@@ -530,7 +594,43 @@ function Home() {
             placeholder="What's your mood tonight? (e.g. 'cozy rainy day')"
             aria-label="Enter your mood"
           />
+          {mood && (
+            <button
+              className="mood-clear-btn"
+              onClick={() => setMood('')}
+              aria-label="Clear mood"
+              type="button"
+            >
+              ✕
+            </button>
+          )}
         </div>
+        {detectedGenreLabels.length > 0 && (
+          <div className="detected-genres">
+            <span className="detected-label">Auto-detected:</span>
+            <div className="detected-chips">
+              {detectedGenreLabels.map((label, index) => (
+                <span key={`${label}-${index}`} className="detected-chip">
+                  {label}
+                </span>
+              ))}
+            </div>
+            {canApplyDetected && (
+              <button
+                className="detected-apply-btn"
+                onClick={() => {
+                  setSelectedGenres((prev) => {
+                    const next = new Set(prev);
+                    detectedGenres.forEach((id) => next.add(id));
+                    return Array.from(next);
+                  });
+                }}
+              >
+                + Add to Filters
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Emoji Picker */}
@@ -548,7 +648,7 @@ function Home() {
               setMinRating(customFilters.minRating || 0);
               setAdvancedFilters(customFilters.advancedFilters || {
                 yearMin: 1900,
-                yearMax: new Date().getFullYear(),
+                yearMax: currentYear,
                 runtime: 'any',
                 sortBy: 'popularity.desc'
               });
@@ -647,6 +747,68 @@ function Home() {
         )
       }
 
+      {/* Search Summary */}
+      {(mood || selectedGenres.length > 0 || selectedProviders.length > 0 || minRating > 0 ||
+        contentType !== 'all' || matchType !== 'all' ||
+        advancedFilters.yearMin > 1900 || advancedFilters.yearMax < currentYear ||
+        advancedFilters.runtime !== 'any' || advancedFilters.sortBy !== 'popularity.desc') && (
+          <div className="search-summary">
+            <div className="summary-header">
+              <span className="summary-title">Active Filters</span>
+              <button className="summary-reset" onClick={resetAllFilters}>
+                Reset All
+              </button>
+            </div>
+            <div className="summary-chips">
+              {mood && (
+                <button className="filter-chip" onClick={() => setMood('')}>
+                  Mood: "{mood}" ✕
+                </button>
+              )}
+              {contentType !== 'all' && (
+                <button className="filter-chip" onClick={() => handleContentTypeChange('all')}>
+                  Type: {contentType === 'movie' ? 'Movies' : 'TV'} ✕
+                </button>
+              )}
+              {matchType !== 'all' && (
+                <button className="filter-chip" onClick={() => setMatchType('all')}>
+                  Match: Any ✕
+                </button>
+              )}
+              {selectedGenres.map((id) => (
+                <button key={`genre-${id}`} className="filter-chip" onClick={() => handleGenreClick(id)}>
+                  {genreMap.get(id) || `Genre ${id}`} ✕
+                </button>
+              ))}
+              {selectedProviders.map((id) => (
+                <button key={`provider-${id}`} className="filter-chip" onClick={() => handleProviderToggle(id)}>
+                  {providerMap.get(id) || `Provider ${id}`} ✕
+                </button>
+              ))}
+              {minRating > 0 && (
+                <button className="filter-chip" onClick={() => setMinRating(0)}>
+                  Rating: {minRating}+ ✕
+                </button>
+              )}
+              {(advancedFilters.yearMin > 1900 || advancedFilters.yearMax < currentYear) && (
+                <button className="filter-chip" onClick={resetAdvancedFilters}>
+                  Years: {advancedFilters.yearMin}-{advancedFilters.yearMax} ✕
+                </button>
+              )}
+              {advancedFilters.runtime !== 'any' && (
+                <button className="filter-chip" onClick={() => setAdvancedFilters(prev => ({ ...prev, runtime: 'any' }))}>
+                  Runtime: {runtimeLabels[advancedFilters.runtime] || advancedFilters.runtime} ✕
+                </button>
+              )}
+              {advancedFilters.sortBy !== 'popularity.desc' && (
+                <button className="filter-chip" onClick={() => setAdvancedFilters(prev => ({ ...prev, sortBy: 'popularity.desc' }))}>
+                  Sort: {sortLabels[advancedFilters.sortBy] || 'Custom'} ✕
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
       {/* Search Button */}
       <div className={`search-container ${isMobile ? 'sticky-search' : ''}`}>
         <button onClick={getRecommendations} disabled={isLoading}>
@@ -709,7 +871,12 @@ function Home() {
           <div className="recommendations-container">
             {filteredRecommendations.length > 0 && (
               <div className="results-header">
-                <h2>{mood ? `Vibes for "${mood}"` : 'Your Recommendations'}</h2>
+                <div>
+                  <h2>{mood ? `Vibes for "${mood}"` : 'Your Recommendations'}</h2>
+                  <p className="results-count">
+                    Showing {filteredRecommendations.length} {filteredRecommendations.length === 1 ? 'result' : 'results'}
+                  </p>
+                </div>
                 <button className="save-vibe-btn" onClick={handleSaveVibe}>
                   💾 Save this Vibe
                 </button>
@@ -744,7 +911,13 @@ function Home() {
         {/* Infinite Scroll Trigger */}
         {hasMore && !isMobile && (
           <div ref={loadMoreRef} className="load-more-trigger">
-            {isLoading && <SkeletonGrid count={4} />}
+            {isLoading ? (
+              <SkeletonGrid count={4} />
+            ) : (
+              <button className="load-more-btn" onClick={loadMoreResults}>
+                Load More
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -298,6 +298,16 @@ function Watchlist() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         aria-label="Search watchlist"
                     />
+                    {searchTerm && (
+                        <button
+                            className="search-clear-btn"
+                            onClick={() => setSearchTerm('')}
+                            aria-label="Clear watchlist search"
+                            type="button"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
             )}
 
