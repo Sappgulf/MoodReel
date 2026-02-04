@@ -5,6 +5,8 @@ import { useAchievements } from '../hooks/useAchievements';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useWatchHistory } from '../hooks/useWatchHistory';
+import { useProviderSettings } from '../hooks/useProviderSettings';
+import { useTasteProfile } from '../hooks/useTasteProfile';
 import { calculatePersona } from '../utils/personaUtils';
 
 const AVATARS = ['🎬', '🍿', '⭐', '🎭', '🎥', '🎞️', '🎟️', '📺', '🎧', '🎮', '💡', '✨'];
@@ -16,12 +18,25 @@ const GENRE_MAP = {
     10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
 };
 
+const REGIONS = [
+    { code: 'US', label: 'United States' },
+    { code: 'CA', label: 'Canada' },
+    { code: 'GB', label: 'United Kingdom' },
+    { code: 'AU', label: 'Australia' },
+    { code: 'DE', label: 'Germany' },
+    { code: 'FR', label: 'France' },
+    { code: 'JP', label: 'Japan' },
+    { code: 'BR', label: 'Brazil' }
+];
+
 function Profile() {
     const { profile, updateProfile } = useUserProfile();
     const { exp, level, progressToNextLevel, achievements } = useAchievements();
     const { watchlist } = useWatchlist();
     const { history: moodHistory } = useMoodHistory();
     const { history: watchHistory } = useWatchHistory();
+    const { region, setRegion } = useProviderSettings();
+    const { resetProfile, tasteCounts } = useTasteProfile();
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState(profile);
 
@@ -163,6 +178,29 @@ function Profile() {
                         </div>
                     </div>
                 )}
+
+                <div className="settings-card glass-card">
+                    <h3>⚙️ Streaming Settings</h3>
+                    <label htmlFor="region-select">Region</label>
+                    <select
+                        id="region-select"
+                        value={region}
+                        onChange={(e) => setRegion(e.target.value)}
+                    >
+                        {REGIONS.map((regionOption) => (
+                            <option key={regionOption.code} value={regionOption.code}>
+                                {regionOption.label}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="taste-profile-summary">
+                        <h4>🎯 Taste Profile</h4>
+                        <p>Liked: {tasteCounts.liked} • Disliked: {tasteCounts.disliked}</p>
+                        <button className="secondary-button" onClick={resetProfile}>
+                            Reset taste profile
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <button className="share-profile-btn" onClick={() => {

@@ -6,7 +6,14 @@ Format: Keep a Changelog (minimal). Dates are YYYY-MM-DD.
 Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
+- Planned (2026-02-04, frontend): Implement Sprints 1–3 foundation/usefulness/delight upgrades, with baseline verification. Verification: `npm run test:ci`.
 - Planned (2026-02-04, frontend): Audit performance, UI polish, and bug fixes with baseline tests run (`npm test -- --watchAll=false`).
+- Implemented (2026-02-04, frontend): Added API client + normalization, debounced search with scope toggle, provider catalog/badges, taste profile, shareable links, and docs updates. Verification: `npm run test:ci`, `npm run build` (Browserslist warning).
+- Added (2026-02-04, frontend): Provider badges, taste profile controls, shareable links, and settings for region selection.
+- Changed (2026-02-04, frontend): Centralized TMDB API access with normalization, debounced search, and safe fallbacks.
+- Fixed (2026-02-04, frontend): Error handling consistency and trailer/overview/poster fallbacks.
+- Performance (2026-02-04, frontend): Cached provider and search data; reduced request storms with abort + debounce.
+- Security (2026-02-04, frontend): Removed hardcoded API key; require env configuration.
 - Implemented (2026-02-04, frontend): Improved discovery search resiliency by keeping cached results visible during errors and preventing overlapping pagination fetches; added abort handling for load-more requests. Verification: `npm test -- --watchAll=false`, `npm run build` (Browserslist warning only).
 - Added: Glassmorphic "Vibe Bar" hero section with interactive suggestions.
 - Added: Triple-A CSS animations with spring easing and GPU acceleration.

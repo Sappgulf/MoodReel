@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { getPosterUrl } from '../utils/mediaUtils';
 
 // TMDB streaming provider IDs (US region)
 export const STREAMING_PROVIDERS = [
@@ -12,16 +13,16 @@ export const STREAMING_PROVIDERS = [
     { id: 531, name: 'Paramount+', logo: '⭐' },
 ];
 
-function StreamingFilter({ selectedProviders = [], onToggle }) {
+function StreamingFilter({ selectedProviders = [], onToggle, providers = STREAMING_PROVIDERS, label = 'Filter by streaming:' }) {
     const handleToggle = useCallback((providerId) => {
         onToggle(providerId);
     }, [onToggle]);
 
     return (
         <div className="streaming-filter" role="group" aria-label="Streaming service filter">
-            <h4>Filter by streaming:</h4>
+            <h4>{label}</h4>
             <div className="streaming-buttons">
-                {STREAMING_PROVIDERS.map((provider) => {
+                {providers.map((provider) => {
                     const isSelected = selectedProviders.includes(provider.id);
                     return (
                         <button
@@ -31,7 +32,17 @@ function StreamingFilter({ selectedProviders = [], onToggle }) {
                             aria-pressed={isSelected}
                             title={provider.name}
                         >
-                            <span className="streaming-logo" aria-hidden="true">{provider.logo}</span>
+                            {provider.logoPath ? (
+                                <img
+                                    className="streaming-logo-img"
+                                    src={getPosterUrl(provider.logoPath, 'w45')}
+                                    alt=""
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            ) : (
+                                <span className="streaming-logo" aria-hidden="true">{provider.logo}</span>
+                            )}
                             <span className="streaming-name">{provider.name}</span>
                         </button>
                     );

@@ -8,6 +8,8 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
 2) Search → relevant results with sane ranking.
 3) Open a title → detail view (metadata + trailer if available).
 4) Watchlist add/remove → persists after refresh.
+5) Taste profile (like/dislike) → influences ranking and can hide disliked titles.
+6) Shareable links → URL encodes mood/search/filters for easy sharing.
 
 ## Frontend Stack (Verified)
 - Framework: React 18 (CRA-based)
@@ -19,12 +21,14 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
 ## Data Source (Verified)
 - Primary API provider: TMDB (The Movie Database)
 - Auth: env var key name(s): `REACT_APP_TMDB_API_KEY`
-- Base URL(s): `https://api.themoviedb.org/3`
+- Base URL(s): `https://api.themoviedb.org/3` (override with `REACT_APP_TMDB_BASE_URL` if needed)
 - Endpoints used:
   - Search: `/search/movie`, `/search/tv`
   - Discover: `/discover/movie`, `/discover/tv`
   - Details: `/{mediaType}/{id}` (with `append_to_response=similar,videos,credits,watch/providers`)
   - Trending: `/trending/all/day`
+  - Watch providers: `/{mediaType}/{id}/watch/providers`, `/watch/providers/{mediaType}`
+  - Person credits: `/person/{id}/combined_credits`
 - Rules:
   - Normalize API responses in `searchService.js`.
   - Fields may be missing; UI handles null/undefined with fallbacks.
@@ -46,6 +50,10 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
   - `moodreel-user-reviews`: User text reviews
   - `moodreel-playlists`: Custom "Vibe" saves
   - `moodreel_profile`: User profile data
+  - `moodreel-region`: Selected watch provider region
+  - `moodreel-my-services`: Selected streaming services
+  - `moodreel-taste-profile`: Liked/disliked IDs
+  - `moodreel-taste-show-hidden`: Show hidden toggle
 
 ## UI Principles
 - Cinema Noir Premium aesthetics (Dark mode, glassmorphism).
@@ -56,5 +64,5 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
 
 ## Known Pitfalls
 - API rate limits (TMDB): Tracked via `rateLimiter.js`.
-- Missing assets: Fallbacks implemented for posters and trailers.
+- Missing assets: Fallbacks implemented for posters, backdrops, and trailers.
 - Request storms: `AbortController` and `inflightRequests` Map used for deduplication.

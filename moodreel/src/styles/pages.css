@@ -960,3 +960,73 @@
     color: #fff;
     background: rgba(255, 255, 255, 0.1);
 }
+
+.title-search {
+    margin: var(--spacing-lg) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.title-search input {
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-primary);
+}
+
+.search-scope-toggle {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.search-scope-toggle button {
+    padding: 8px 14px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-secondary);
+}
+
+.search-scope-toggle button.active {
+    border-color: rgba(255, 215, 0, 0.4);
+    color: var(--color-text-primary);
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.taste-summary {
+    display: flex;
+    gap: var(--spacing-sm);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.show-hidden-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.settings-card select {
+    margin: var(--spacing-sm) 0 var(--spacing-md);
+    padding: 10px 12px;
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.taste-profile-summary {
+    margin-top: var(--spacing-md);
+}
+
+.taste-profile-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    flex-wrap: wrap;
+}

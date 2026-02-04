@@ -12,11 +12,9 @@
 import axios from 'axios';
 import { parseMoodToGenres } from '../utils/moodParser';
 import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
-
-// TMDB API key - falls back to personal use key
-const API_KEY = process.env.REACT_APP_TMDB_API_KEY || 'f2b1a353af51ccd27736c209f7ea0ca6';
-
-const BASE_URL = 'https://api.themoviedb.org/3';
+import { tmdbGet, ensureArray, ensureNumber } from './apiClient';
+import { getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
+import { applySearchRanking } from '../utils/searchRanking';
 
 // Cache settings
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
@@ -40,6 +38,28 @@ try {
 
 const inflightRequests = new Map();
 
+function normalizeMediaItem(item, mediaType) {
+    const title = getDisplayTitle(item);
+    return {
+        ...item,
+        media_type: mediaType,
+        title,
+        name: item.name || item.title || title,
+        overview: getDisplayOverview(item),
+        release_year: getReleaseYear(item)
+    };
+}
+
+function getTieBreakers(a, b) {
+    const aPopularity = ensureNumber(a.popularity, 0);
+    const bPopularity = ensureNumber(b.popularity, 0);
+    if (aPopularity !== bPopularity) return bPopularity - aPopularity;
+
+    const aVotes = ensureNumber(a.vote_count, 0);
+    const bVotes = ensureNumber(b.vote_count, 0);
+    return bVotes - aVotes;
+}
+
 /**
  * Generate stable cache key from search params
  */
@@ -56,6 +76,7 @@ export function generateCacheKey(params) {
         yearMax: params.yearMax || new Date().getFullYear(),
         sortBy: params.sortBy || 'popularity.desc',
         runtime: params.runtime || 'any',
+        region: params.region || 'US'
     };
     return JSON.stringify(normalized);
 }
@@ -104,11 +125,12 @@ function setCache(key, data) {
 /**
  * Build TMDB API URL for discover/search
  */
-function buildApiUrl(params, mediaType) {
+function buildApiRequest(params, mediaType) {
     const { query, page = 1, genres = [], providers = [], minRating = 0,
         yearMin = 1900, yearMax = new Date().getFullYear(), sortBy = 'popularity.desc',
         matchType = 'all', // 'all' (AND) or 'any' (OR)
-        runtime = 'any'
+        runtime = 'any',
+        region = 'US'
     } = params;
 
     // Parse mood query to genres
@@ -117,23 +139,28 @@ function buildApiUrl(params, mediaType) {
 
     // If we have genres, use discover. Otherwise use search.
     if (allGenres.length > 0 || !query) {
-        let url = `${BASE_URL}/discover/${mediaType}?api_key=${API_KEY}&page=${page}&sort_by=${sortBy}&include_adult=false`;
+        const params = {
+            page,
+            sort_by: sortBy,
+            include_adult: false,
+            watch_region: region
+        };
 
         // Always require minimum votes for quality results (except for newest releases)
         if (sortBy === 'vote_average.desc') {
             // Hidden gems: higher threshold to avoid obscure titles
-            url += '&vote_count.gte=300';
+            params['vote_count.gte'] = 300;
         } else if (sortBy === 'revenue.desc') {
-            url += '&vote_count.gte=100';
+            params['vote_count.gte'] = 100;
         } else if (sortBy !== 'primary_release_date.desc') {
             // Default: require at least 50 votes for reliability
-            url += '&vote_count.gte=50';
+            params['vote_count.gte'] = 50;
         }
 
         if (allGenres.length > 0) {
             // Delimiter: comma (,) for AND, pipe (|) for OR
             const delimiter = matchType === 'any' ? '|' : ',';
-            url += `&with_genres=${allGenres.join(delimiter)}`;
+            params.with_genres = allGenres.join(delimiter);
 
             // Exclude kids content when mature genres are selected AND matchType is ALL
             // (If matchType is ANY, we might want family + action mixed, so skipping exclusion is safer)
@@ -144,43 +171,52 @@ function buildApiUrl(params, mediaType) {
                 const hasKidsGenre = allGenres.some(g => kidsGenres.includes(g));
 
                 if (hasMatureGenre && !hasKidsGenre) {
-                    url += `&without_genres=${kidsGenres.join(',')}`;
+                    params.without_genres = kidsGenres.join(',');
                 }
             }
         }
 
         if (providers.length > 0) {
-            url += `&with_watch_providers=${providers.join('|')}&watch_region=US`;
+            params.with_watch_providers = providers.join('|');
+            params.watch_region = region;
         }
 
         if (minRating > 0) {
-            url += `&vote_average.gte=${minRating}`;
+            params['vote_average.gte'] = minRating;
         }
 
         // Year filters
         const dateField = mediaType === 'tv' ? 'first_air_date' : 'primary_release_date';
         if (yearMin > 1900) {
-            url += `&${dateField}.gte=${yearMin}-01-01`;
+            params[`${dateField}.gte`] = `${yearMin}-01-01`;
         }
         if (yearMax < new Date().getFullYear()) {
-            url += `&${dateField}.lte=${yearMax}-12-31`;
+            params[`${dateField}.lte`] = `${yearMax}-12-31`;
         }
 
         // Runtime filter (movie-only: TV runtimes are inconsistent in list responses)
         if (mediaType === 'movie' && runtime && runtime !== 'any') {
             if (runtime === 'short') {
-                url += '&with_runtime.lte=90';
+                params['with_runtime.lte'] = 90;
             } else if (runtime === 'medium') {
-                url += '&with_runtime.gte=90&with_runtime.lte=150';
+                params['with_runtime.gte'] = 90;
+                params['with_runtime.lte'] = 150;
             } else if (runtime === 'long') {
-                url += '&with_runtime.gte=150';
+                params['with_runtime.gte'] = 150;
             }
         }
 
-        return url;
+        return { path: `/discover/${mediaType}`, params };
     } else {
         // Text search - still apply include_adult filter
-        return `${BASE_URL}/search/${mediaType}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&include_adult=false`;
+        return {
+            path: `/search/${mediaType}`,
+            params: {
+                query,
+                page,
+                include_adult: false
+            }
+        };
     }
 }
 
@@ -188,14 +224,10 @@ function buildApiUrl(params, mediaType) {
  * Fetch results for a single media type
  */
 async function fetchMediaType(params, mediaType, signal) {
-    const url = buildApiUrl(params, mediaType);
-    const response = await axios.get(url, { signal });
+    const request = buildApiRequest(params, mediaType);
+    const response = await tmdbGet(request.path, { params: request.params, signal });
 
-    // Add media_type to each result
-    const results = (response.data.results || []).map(item => ({
-        ...item,
-        media_type: mediaType
-    }));
+    const results = ensureArray(response.results).map((item) => normalizeMediaItem(item, mediaType));
 
     // Apply client-side rating filter as backup
     const filtered = params.minRating > 0
@@ -204,9 +236,9 @@ async function fetchMediaType(params, mediaType, signal) {
 
     return {
         results: filtered,
-        page: response.data.page,
-        totalPages: response.data.total_pages,
-        totalResults: response.data.total_results
+        page: ensureNumber(response.page, 1),
+        totalPages: ensureNumber(response.total_pages, 0),
+        totalResults: ensureNumber(response.total_results, 0)
     };
 }
 
@@ -324,8 +356,10 @@ export async function search(params, signal) {
                 }
             }
 
+            const rankedResults = applySearchRanking(results, normalizedQuery, getTieBreakers);
+
             const result = {
-                results,
+                results: rankedResults,
                 page,
                 totalPages,
                 hasMore: page < totalPages
@@ -338,6 +372,15 @@ export async function search(params, signal) {
         } catch (err) {
             if (axios.isCancel(err)) {
                 throw err; // Rethrow cancellation
+            }
+            if (err.message && err.message.includes('Missing TMDB API key')) {
+                return {
+                    results: [],
+                    page: 1,
+                    totalPages: 0,
+                    hasMore: false,
+                    error: 'Missing TMDB API key. Please add REACT_APP_TMDB_API_KEY to your environment.'
+                };
             }
 
             // ATTEMPT TO RECOVER FROM STALE CACHE
@@ -372,9 +415,8 @@ export async function search(params, signal) {
  * Fetch genres list for movies or TV
  */
 export async function fetchGenres(type = 'movie', signal) {
-    const url = `${BASE_URL}/genre/${type}/list?api_key=${API_KEY}`;
-    const response = await axios.get(url, { signal });
-    return response.data.genres;
+    const response = await tmdbGet(`/genre/${type}/list`, { signal, cache: true, ttlMs: 24 * 60 * 60 * 1000 });
+    return ensureArray(response.genres);
 }
 
 /**
@@ -387,17 +429,19 @@ export async function fetchRandomDiscovery(signal) {
     // Random page between 1 and 20 (Top 400 items)
     const page = Math.floor(Math.random() * 20) + 1;
 
-    const url = `${BASE_URL}/discover/${type}?api_key=${API_KEY}` +
-        `&language=en-US` +
-        `&sort_by=popularity.desc` +
-        `&include_adult=false` +
-        `&include_video=false` +
-        `&vote_count.gte=100` + // Ensure some popularity
-        `&vote_average.gte=6.0` + // No trash
-        `&page=${page}`;
-
-    const response = await axios.get(url, { signal });
-    const results = response.data.results || [];
+    const response = await tmdbGet(`/discover/${type}`, {
+        signal,
+        params: {
+            language: 'en-US',
+            sort_by: 'popularity.desc',
+            include_adult: false,
+            include_video: false,
+            'vote_count.gte': 100,
+            'vote_average.gte': 6.0,
+            page
+        }
+    });
+    const results = ensureArray(response.results);
 
     if (results.length === 0) return null;
 
@@ -414,9 +458,8 @@ export async function fetchRandomDiscovery(signal) {
  * Fetch trending content
  */
 export async function fetchTrending(type = 'all', timeWindow = 'day', signal) {
-    const url = `${BASE_URL}/trending/${type}/${timeWindow}?api_key=${API_KEY}`;
-    const response = await axios.get(url, { signal });
-    return response.data.results.slice(0, 8);
+    const response = await tmdbGet(`/trending/${type}/${timeWindow}`, { signal, cache: true, ttlMs: 10 * 60 * 1000 });
+    return ensureArray(response.results).slice(0, 8);
 }
 
 /**
@@ -424,24 +467,23 @@ export async function fetchTrending(type = 'all', timeWindow = 'day', signal) {
  * Uses append_to_response to minimize API requests
  */
 export async function fetchContentDetails(id, mediaType = 'movie', signal) {
-    const url = `${BASE_URL}/${mediaType}/${id}?api_key=${API_KEY}&append_to_response=similar,videos,credits,watch/providers`;
-
-    const response = await axios.get(url, { signal });
-    const data = response.data;
+    const data = await tmdbGet(`/${mediaType}/${id}`, {
+        signal,
+        params: { append_to_response: 'similar,videos,credits,watch/providers' }
+    });
 
     return {
-        details: data,
-        similar: data.similar?.results || [],
+        details: normalizeMediaItem(data, mediaType),
+        similar: ensureArray(data.similar?.results).map((item) => normalizeMediaItem(item, mediaType)),
         providers: data['watch/providers']?.results || null,
-        videos: data.videos?.results || [],
+        videos: ensureArray(data.videos?.results),
         credits: data.credits || { cast: [] }
     };
 }
 
 export async function fetchSimilar(id, mediaType = 'movie', signal) {
-    const url = `${BASE_URL}/${mediaType}/${id}/similar?api_key=${API_KEY}`;
-    const response = await axios.get(url, { signal });
-    return response.data.results || [];
+    const response = await tmdbGet(`/${mediaType}/${id}/similar`, { signal });
+    return ensureArray(response.results).map((item) => normalizeMediaItem(item, mediaType));
 }
 
 /**
