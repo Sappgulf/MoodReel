@@ -379,7 +379,7 @@ export async function search(params, signal) {
                     page: 1,
                     totalPages: 0,
                     hasMore: false,
-                    error: 'Missing TMDB API key. Please add REACT_APP_TMDB_API_KEY to your environment.'
+                    error: 'Missing TMDB API key. Please add REACT_APP_TMDB_API_KEY or set localStorage moodreel-tmdb-api-key.'
                 };
             }
 

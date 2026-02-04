@@ -13,6 +13,11 @@ Edit `.env` and set:
 - `REACT_APP_TMDB_API_KEY`
 - Optional: `REACT_APP_TMDB_BASE_URL`
 
+Optional alternative (no `.env` edit): set a runtime key in the browser console and reload:
+```javascript
+localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
+```
+
 ## Run (Dev)
 ```bash
 npm start

@@ -88,6 +88,19 @@ The app will open at http://localhost:3000
 | `REACT_APP_TMDB_API_KEY` | ✅ Required | Your TMDB API key. |
 | `REACT_APP_TMDB_BASE_URL` | ❌ Optional | Override TMDB base URL (default: https://api.themoviedb.org/3). |
 
+### Local Runtime Key (Optional)
+If you prefer not to edit `.env`, you can set a local-only key in the browser:
+
+```javascript
+localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
+```
+
+Reload the page after setting it. Remove it with:
+
+```javascript
+localStorage.removeItem('moodreel-tmdb-api-key')
+```
+
 ### Rate Limiting
 
 The app includes client-side rate limiting to reduce accidental API request bursts:
