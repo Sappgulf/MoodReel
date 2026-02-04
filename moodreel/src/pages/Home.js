@@ -207,15 +207,21 @@ function Home() {
         </div>
       )}
 
-      <div className="time-greeting">
-        <span className="time-emoji">{timeContext.emoji}</span>
-        <span>{timeContext.greeting}</span>
-        <button className="time-suggestion-btn" onClick={() => setMood(timeContext.suggestion)}>
-          Try "{timeContext.suggestion}"?
-        </button>
-        <button className="surprise-btn" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
-          {isSurpriseLoading ? '🎲 Rolling...' : '🎲 Surprise Me'}
-        </button>
+      <div className="hero-vibe-bar glass-panel">
+        <div className="vibe-greeting">
+          <span className="vibe-emoji">{timeContext.emoji}</span>
+          <div className="vibe-text">
+            <span className="vibe-label">{timeContext.greeting}</span>
+            <button className="vibe-suggestion" onClick={() => { setMood(timeContext.suggestion); playSound('pop'); }}>
+              Try <span className="text-gold">"{timeContext.suggestion}"</span>
+            </button>
+          </div>
+        </div>
+        <div className="hero-actions">
+          <button className="surprise-pill" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
+            {isSurpriseLoading ? '🎲 Rolling...' : '🔥 Surprise Me'}
+          </button>
+        </div>
       </div>
 
       {!hasSearched && <MoodPulse />}

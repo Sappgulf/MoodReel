@@ -206,6 +206,10 @@ const MovieCard = memo(function MovieCard({
                             alt={`${title} poster`}
                             loading="lazy"
                             decoding="async"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/500x750?text=No+Poster';
+                            }}
                         />
                     ) : (
                         <div className="no-poster">No Poster</div>

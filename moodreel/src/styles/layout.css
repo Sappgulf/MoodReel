@@ -94,7 +94,15 @@ main {
     margin-top: var(--spacing-4xl);
 }
 
-/* Mobile Responsive Adjustments */
+/* Nav Visibility Logic */
+.desktop-nav {
+    display: flex;
+}
+
+.mobile-bottom-nav {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .App-header h1 {
         font-size: 2rem;
@@ -107,41 +115,63 @@ main {
     main {
         padding: var(--spacing-xl) var(--spacing-md);
         padding-bottom: 5rem;
-        /* Space for bottom nav */
     }
 
-    .nav-links {
+    .desktop-nav {
+        display: none !important;
+    }
+
+    .mobile-bottom-nav {
+        display: flex;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: rgba(9, 9, 11, 0.95);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(9, 9, 11, 0.9);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
         padding: var(--spacing-md);
-        margin-top: 0;
         border-top: 1px solid var(--color-border);
         z-index: var(--z-sticky);
         justify-content: space-around;
-        gap: 0;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
     }
 
-    .nav-link {
+    .bottom-nav-item {
+        display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 4px;
-        font-size: 0.75rem;
-        padding: var(--spacing-xs);
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
         color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: 0.7rem;
+        transition: all var(--transition-fast);
     }
 
-    .nav-link.active {
-        color: var(--color-text-gold);
+    .bottom-nav-item.active {
+        color: var(--color-gold);
+        transform: translateY(-2px);
     }
 
-    .nav-link .nav-icon {
-        font-size: 1.5rem;
+    .bottom-nav-icon {
+        font-size: 1.4rem;
     }
+}
+
+/* Snappier Interactions */
+.primary-button,
+.time-suggestion-btn,
+.surprise-btn {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.primary-button:active,
+.time-suggestion-btn:active,
+.surprise-btn:active {
+    transform: scale(0.96);
+}
+
+.primary-button:hover,
+.surprise-btn:hover {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }

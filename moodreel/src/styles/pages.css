@@ -14,13 +14,116 @@
 
 .page-title {
     font-family: var(--font-display);
-    font-size: 2.5rem;
-    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
     margin: 0;
+    letter-spacing: -0.02em;
     background: var(--gradient-gold);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 30px rgba(255, 215, 0, 0.2);
+}
+
+/* Triple-A Vibe Bar */
+.hero-vibe-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    margin-bottom: var(--spacing-4xl);
+    border-radius: var(--radius-3xl);
+    gap: var(--spacing-xl);
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.vibe-greeting {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.vibe-emoji {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 0 12px var(--color-glow));
+    animation: float 4s ease-in-out infinite;
+}
+
+.vibe-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.vibe-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.vibe-suggestion {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.vibe-suggestion:hover {
+    color: var(--color-gold);
+}
+
+.surprise-pill {
+    padding: 12px 28px;
+    background: var(--gradient-gold);
+    color: var(--color-bg-primary);
+    border-radius: var(--radius-full);
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.surprise-pill:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3);
+}
+
+.surprise-pill:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .hero-vibe-bar {
+        flex-direction: column;
+        padding: var(--spacing-xl);
+        text-align: center;
+        gap: var(--spacing-lg);
+    }
+
+    .vibe-greeting {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .vibe-text {
+        align-items: center;
+    }
+
+    .vibe-suggestion {
+        text-align: center;
+    }
 }
 
 /* Home / Discovery Page */
@@ -191,6 +294,7 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
 /* Stats Page Enhancements */
 .dna-item {
     display: flex;
@@ -253,11 +357,11 @@
         gap: var(--spacing-xl);
         padding: 0 var(--spacing-md);
     }
-    
+
     .movie-details .movie-info h1 {
         font-size: 2.5rem;
     }
-    
+
     .movie-details {
         padding-top: 10vh;
     }

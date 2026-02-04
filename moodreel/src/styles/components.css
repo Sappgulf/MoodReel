@@ -47,9 +47,10 @@
 
 .mood-selector input:focus {
     border-color: var(--color-border-gold);
-    background: rgba(255, 215, 0, 0.02);
-    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1), var(--shadow-gold-sm);
+    background: rgba(255, 215, 0, 0.04);
+    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1), var(--shadow-gold-md);
     transform: translateY(-2px);
+    color: var(--color-text-primary);
 }
 
 .mood-clear-btn {
@@ -288,7 +289,7 @@
     --swipe-rot: 0deg;
     transform:
         perspective(1000px) translateY(var(--hover-lift)) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(var(--tilt-z)) translateX(var(--swipe-x)) rotate(var(--swipe-rot));
-    will-change: transform;
+    will-change: transform, box-shadow, opacity;
 }
 
 .recommendation:hover {
@@ -516,7 +517,7 @@
 .primary-button:hover,
 .surprise-btn:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-gold-lg);
+    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.4);
 }
 
 /* Toggle Buttons */
@@ -657,6 +658,7 @@
     z-index: 2000;
     box-shadow: var(--shadow-md);
 }
+
 /* Mood Pulse Styles */
 .mood-pulse-container {
     background: var(--color-bg-card);
@@ -686,9 +688,20 @@
 }
 
 @keyframes pulseRed {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    }
 }
 
 .pulse-live {

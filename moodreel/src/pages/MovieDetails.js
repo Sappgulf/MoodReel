@@ -200,6 +200,8 @@ function MovieDetails() {
             src={`https://image.tmdb.org/t/p/original${content.backdrop_path}`}
             alt=""
             className="backdrop-img"
+            decoding="async"
+            onError={(e) => e.target.style.display = 'none'}
           />
         </div>
       )}
@@ -216,6 +218,11 @@ function MovieDetails() {
               <img
                 src={`https://image.tmdb.org/t/p/w500${content.poster_path}`}
                 alt={`${title} poster`}
+                decoding="async"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/500x750?text=No+Poster';
+                }}
               />
             ) : (
               <div className="no-poster" style={{ height: '450px' }}>No Poster</div>
