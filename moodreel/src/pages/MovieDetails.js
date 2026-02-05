@@ -16,7 +16,6 @@ import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
-import { tmdbGet } from '../services/apiClient';
 import { getBackdropUrl, getDisplayOverview, getDisplayTitle, getPosterUrl, normalizeProviderList } from '../utils/mediaUtils';
 
 function MovieDetails() {
