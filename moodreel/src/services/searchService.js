@@ -486,6 +486,11 @@ export async function fetchSimilar(id, mediaType = 'movie', signal) {
     return ensureArray(response.results).map((item) => normalizeMediaItem(item, mediaType));
 }
 
+export async function fetchActorCredits(actorId, signal) {
+    const response = await tmdbGet(`/person/${actorId}/combined_credits`, { signal });
+    return ensureArray(response.cast);
+}
+
 /**
  * Clear all cached search results
  */
@@ -514,7 +519,8 @@ const searchService = {
     fetchTrending,
     fetchContentDetails,
     fetchSimilar,
-    fetchRandomDiscovery
+    fetchRandomDiscovery,
+    fetchActorCredits
 };
 
 export default searchService;

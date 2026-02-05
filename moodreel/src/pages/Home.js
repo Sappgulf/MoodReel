@@ -494,7 +494,7 @@ function Home() {
         <section className="trending-section">
           <h2>🔥 Trending Now</h2>
           <div className="recommendations">
-            {trending.map((item) => (
+            {trending.map((item, idx) => (
               <MovieCard
                 key={item.id}
                 movie={item}
@@ -507,6 +507,7 @@ function Home() {
                 onLike={like}
                 onDislike={dislike}
                 tasteStatus={statusFor(item.id, item.media_type)}
+                index={idx}
               />
             ))}
           </div>
@@ -696,7 +697,7 @@ function Home() {
               </div>
             )}
             <div className="recommendations">
-              {filteredByServices.map(rec => (
+              {filteredByServices.map((rec, idx) => (
                 <MovieCard
                   key={rec.id}
                   movie={rec}
@@ -709,6 +710,7 @@ function Home() {
                   onLike={like}
                   onDislike={dislike}
                   tasteStatus={statusFor(rec.id, rec.media_type)}
+                  index={idx}
                 />
               ))}
               {hasAnySearch && !isBusy && filteredByServices.length === 0 && (

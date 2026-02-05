@@ -347,12 +347,36 @@
     box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1);
 }
 
-.search-icon-hint {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0.6;
+.search-scope-toggle {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-md);
+    padding: 4px;
+    background: var(--color-bg-glass);
+    border-radius: var(--radius-lg);
+    width: fit-content;
+}
+
+.search-scope-toggle button {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--color-text-secondary);
+    transition: all var(--transition-base);
+}
+
+.search-scope-toggle button:hover {
+    color: var(--color-text-primary);
+}
+
+.search-scope-toggle button.active {
+    background: var(--color-bg-elevated);
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
 }
 
 .watched-filter {

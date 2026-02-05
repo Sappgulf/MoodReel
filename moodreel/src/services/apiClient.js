@@ -72,16 +72,23 @@ export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs 
         if (cached) return cached;
     }
 
-    const response = await axios.get(`${API_BASE_URL}${path}`, {
-        params: finalParams,
-        signal
-    });
+    try {
+        const response = await axios.get(`${API_BASE_URL}${path}`, {
+            params: finalParams,
+            signal
+        });
 
-    if (cache && cacheKey) {
-        setCached(cacheKey, response.data);
+        if (cache && cacheKey) {
+            setCached(cacheKey, response.data);
+        }
+
+        return response.data;
+    } catch (err) {
+        if (!axios.isCancel(err)) {
+            console.error(`TMDB API Error (${path}):`, err.response?.data || err.message);
+        }
+        throw err;
     }
-
-    return response.data;
 }
 
 const apiClient = {

@@ -11,6 +11,7 @@ import { useRatings } from '../hooks/useRatings';
 import { useAchievements } from '../hooks/useAchievements';
 import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useTrailer } from '../context/TrailerContext';
+import { useSounds } from '../hooks/useSounds';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
@@ -26,6 +27,7 @@ function MovieDetails() {
 
   const { addToHistory } = useWatchHistory();
   const { playTrailer } = useTrailer();
+  const { playSound } = useSounds();
   const [content, setContent] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [providers, setProviders] = useState(null);
@@ -138,16 +140,19 @@ function MovieDetails() {
     setActorLoading(true);
     setActorFilmography([]);
 
+    const controller = new AbortController();
     try {
-      const response = await tmdbGet(`/person/${actor.id}/combined_credits`);
+      const response = await searchService.fetchActorCredits(actor.id, controller.signal);
       // Sort by popularity and filter out current movie
-      const credits = response.cast
+      const credits = response
         .filter(c => c.id !== parseInt(id) && (c.poster_path || c.backdrop_path))
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, 12);
       setActorFilmography(credits);
     } catch (err) {
-      console.error('Error fetching actor filmography:', err);
+      if (!axios.isCancel(err)) {
+        console.error('Error fetching actor filmography:', err);
+      }
     } finally {
       setActorLoading(false);
     }
@@ -162,12 +167,14 @@ function MovieDetails() {
   const handleRatingChange = useCallback((rating) => {
     setRating(id, rating);
     trackRating(id); // Track for achievement system (unique movies only)
-  }, [id, setRating, trackRating]);
+    playSound('pop');
+  }, [id, setRating, trackRating, playSound]);
 
   const handleReviewSubmit = useCallback(() => {
     setReview(id, reviewText);
     setShowReviewForm(false);
-  }, [id, reviewText, setReview]);
+    playSound('save');
+  }, [id, reviewText, setReview, playSound]);
 
   const providerGroups = useMemo(() => {
     if (!providers) return null;
@@ -436,88 +443,88 @@ function MovieDetails() {
         )}
 
         {/* Trailer Section */}
-      <section className="trailer-section" aria-labelledby="trailer-heading">
-        <h3 id="trailer-heading">🎬 Watch Trailer</h3>
-        {trailer ? (
-          <div className="trailer-container">
-            <iframe
-              src={`https://www.youtube.com/embed/${trailer.key}`}
-              title={`${title} trailer`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <p className="trailer-empty">Trailer unavailable right now.</p>
-        )}
-      </section>
+        <section className="trailer-section" aria-labelledby="trailer-heading">
+          <h3 id="trailer-heading">🎬 Watch Trailer</h3>
+          {trailer ? (
+            <div className="trailer-container">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailer.key}`}
+                title={`${title} trailer`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <p className="trailer-empty">Trailer unavailable right now.</p>
+          )}
+        </section>
 
         {/* Streaming Providers */}
-      <section className="streaming-section" aria-labelledby="providers-heading">
-        <h3 id="providers-heading">Where to Watch ({region})</h3>
-        {providerGroups && (providerGroups.stream.length > 0 || providerGroups.rent.length > 0 || providerGroups.buy.length > 0) ? (
-          <div className="streaming-providers">
-            {providerGroups.stream.length > 0 && (
-              <div className="provider-group">
-                <h4>Stream</h4>
-                <div className="provider-grid">
-                  {providerGroups.stream.map((provider) => (
-                    <img
-                      key={`stream-${provider.id}`}
-                      src={getPosterUrl(provider.logoPath, 'w92')}
-                      alt={provider.name}
-                      title={`Stream on ${provider.name}`}
-                      className="provider-logo"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ))}
+        <section className="streaming-section" aria-labelledby="providers-heading">
+          <h3 id="providers-heading">Where to Watch ({region})</h3>
+          {providerGroups && (providerGroups.stream.length > 0 || providerGroups.rent.length > 0 || providerGroups.buy.length > 0) ? (
+            <div className="streaming-providers">
+              {providerGroups.stream.length > 0 && (
+                <div className="provider-group">
+                  <h4>Stream</h4>
+                  <div className="provider-grid">
+                    {providerGroups.stream.map((provider) => (
+                      <img
+                        key={`stream-${provider.id}`}
+                        src={getPosterUrl(provider.logoPath, 'w92')}
+                        alt={provider.name}
+                        title={`Stream on ${provider.name}`}
+                        className="provider-logo"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {providerGroups.rent.length > 0 && (
-              <div className="provider-group">
-                <h4>Rent</h4>
-                <div className="provider-grid">
-                  {providerGroups.rent.map((provider) => (
-                    <img
-                      key={`rent-${provider.id}`}
-                      src={getPosterUrl(provider.logoPath, 'w92')}
-                      alt={provider.name}
-                      title={`Rent on ${provider.name}`}
-                      className="provider-logo"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ))}
+              )}
+              {providerGroups.rent.length > 0 && (
+                <div className="provider-group">
+                  <h4>Rent</h4>
+                  <div className="provider-grid">
+                    {providerGroups.rent.map((provider) => (
+                      <img
+                        key={`rent-${provider.id}`}
+                        src={getPosterUrl(provider.logoPath, 'w92')}
+                        alt={provider.name}
+                        title={`Rent on ${provider.name}`}
+                        className="provider-logo"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {providerGroups.buy.length > 0 && (
-              <div className="provider-group">
-                <h4>Buy</h4>
-                <div className="provider-grid">
-                  {providerGroups.buy.map((provider) => (
-                    <img
-                      key={`buy-${provider.id}`}
-                      src={getPosterUrl(provider.logoPath, 'w92')}
-                      alt={provider.name}
-                      title={`Buy on ${provider.name}`}
-                      className="provider-logo"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ))}
+              )}
+              {providerGroups.buy.length > 0 && (
+                <div className="provider-group">
+                  <h4>Buy</h4>
+                  <div className="provider-grid">
+                    {providerGroups.buy.map((provider) => (
+                      <img
+                        key={`buy-${provider.id}`}
+                        src={getPosterUrl(provider.logoPath, 'w92')}
+                        alt={provider.name}
+                        title={`Buy on ${provider.name}`}
+                        className="provider-logo"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="providers-empty">No provider data available for this title.</p>
-        )}
-      </section>
+              )}
+            </div>
+          ) : (
+            <p className="providers-empty">No provider data available for this title.</p>
+          )}
+        </section>
 
         {/* Similar Content */}
         {similar.length > 0 && (

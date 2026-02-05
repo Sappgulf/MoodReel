@@ -2,6 +2,7 @@ import React, { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProviderBadges from './ProviderBadges';
 import { getDisplayTitle, getPosterUrl, getReleaseYear } from '../utils/mediaUtils';
+import { useSounds } from '../hooks/useSounds';
 
 /**
  * Premium movie card component with poster, info, watchlist button, and 3D parallax effect
@@ -19,8 +20,10 @@ const MovieCard = memo(function MovieCard({
     providerBadges = [],
     onLike,
     onDislike,
-    tasteStatus = 'neutral'
+    tasteStatus = 'neutral',
+    index = 0
 }) {
+    const { playSound } = useSounds();
     const title = getDisplayTitle(movie);
     const year = getReleaseYear(movie);
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
@@ -64,28 +67,34 @@ const MovieCard = memo(function MovieCard({
         e.stopPropagation();
         if (navigator.vibrate) navigator.vibrate(5);
         onToggleWatchlist(movie);
-    }, [movie, onToggleWatchlist]);
+        playSound('click');
+    }, [movie, onToggleWatchlist, playSound]);
 
     const handleWatchedClick = useCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (onToggleWatched) {
-            if (navigator.vibrate) navigator.vibrate(5);
-            onToggleWatched(movie.id);
-        }
-    }, [movie.id, onToggleWatched]);
+        if (navigator.vibrate) navigator.vibrate(5);
+        onToggleWatched(movie.id);
+        playSound('click');
+    }, [movie.id, onToggleWatched, playSound]);
 
     const handleLike = useCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (onLike) onLike(movie, mediaType);
-    }, [movie, mediaType, onLike]);
+        if (onLike) {
+            onLike(movie, mediaType);
+            playSound('pop');
+        }
+    }, [movie, mediaType, onLike, playSound]);
 
     const handleDislike = useCallback((e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (onDislike) onDislike(movie, mediaType);
-    }, [movie, mediaType, onDislike]);
+        if (onDislike) {
+            onDislike(movie, mediaType);
+            playSound('swipe');
+        }
+    }, [movie, mediaType, onDislike, playSound]);
 
     // 3D parallax tilt on mouse move
     const applyTilt = useCallback((x, y) => {
@@ -172,7 +181,7 @@ const MovieCard = memo(function MovieCard({
     return (
         <div
             ref={cardRef}
-            className="recommendation fade-in parallax-card"
+            className={`recommendation fade-in parallax-card stagger-${(index % 5) + 1}`}
             style={cardStyle}
             onMouseEnter={handleMouseEnter}
             onMouseMove={handleMouseMove}
