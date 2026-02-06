@@ -1,5 +1,5 @@
-export const FALLBACK_POSTER = 'https://via.placeholder.com/500x750?text=No+Poster';
-export const FALLBACK_BACKDROP = 'https://via.placeholder.com/1280x720?text=No+Backdrop';
+export const FALLBACK_POSTER = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750"><rect fill="#1a1a2e" width="500" height="750"/><text fill="#555" font-family="sans-serif" font-size="24" text-anchor="middle" x="250" y="375">No Poster</text></svg>');
+export const FALLBACK_BACKDROP = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect fill="#1a1a2e" width="1280" height="720"/><text fill="#555" font-family="sans-serif" font-size="32" text-anchor="middle" x="640" y="360">No Backdrop</text></svg>');
 export const FALLBACK_TITLE = 'Untitled';
 export const FALLBACK_OVERVIEW = 'No description available.';
 

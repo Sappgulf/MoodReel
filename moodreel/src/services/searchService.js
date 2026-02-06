@@ -386,7 +386,7 @@ export async function search(params, signal) {
             // ATTEMPT TO RECOVER FROM STALE CACHE
             const staleData = getCached(cacheKey, true); // true = ignoreTTL
             if (staleData) {
-                console.log('Returning stale cache data due to network error');
+                console.debug('Returning stale cache data due to network error');
                 return {
                     ...staleData,
                     isStale: true, // Marker for UI

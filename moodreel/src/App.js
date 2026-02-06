@@ -120,8 +120,6 @@ function AppContent() {
       )}
 
       {/* Keyboard Shortcuts Modal */}
-
-      {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
