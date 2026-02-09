@@ -846,3 +846,76 @@
 .trailer-empty {
     color: var(--color-text-muted);
 }
+
+/* Streaming Filter */
+.streaming-filter {
+    margin-bottom: var(--spacing-lg);
+}
+
+.streaming-filter h4 {
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.streaming-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.streaming-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    transition: all var(--transition-base);
+    cursor: pointer;
+}
+
+.streaming-btn:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+    transform: translateY(-2px);
+}
+
+.streaming-btn.active {
+    background: var(--gradient-gold-soft);
+    border-color: var(--color-border-gold);
+    color: var(--color-gold);
+    font-weight: 600;
+}
+
+.streaming-logo {
+    font-size: 1rem;
+}
+
+.streaming-name {
+    white-space: nowrap;
+}
+
+.show-more-btn {
+    display: block;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.show-more-btn:hover {
+    border-color: var(--color-border-gold);
+    color: var(--color-text-gold);
+}

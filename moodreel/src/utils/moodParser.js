@@ -15,11 +15,11 @@ export const moodMap = {
 
     // Adventure/Action
     adventurous: 12, adventure: 12, exciting: 28, action: 28, adrenaline: 28,
-    epic: 28, explosive: 28,
+    epic: 28, explosive: 28, superhero: 28, superheroes: 28, marvel: 28, dc: 28,
 
     // Scary/Horror
     scared: 27, scary: 27, horror: 27, spooky: 27, creepy: 27, terrifying: 27,
-    halloween: 27, nightmare: 27,
+    halloween: 27, nightmare: 27, zombie: 27, zombies: 27,
 
     // Romance
     romantic: 10749, love: 10749, romance: 10749, lovely: 10749,
@@ -36,6 +36,7 @@ export const moodMap = {
     // Relaxed/Animated
     relaxed: 16, chill: 16, animated: 16, family: 10751, kids: 10751,
     cozy: 16, 'rainy day': 18, comfort: 35, wholesome: 10751, heartwarming: 10751,
+    cartoon: 16, anime: 16,
 
     // Documentary/Learning
     curious: 99, documentary: 99, learning: 99, educational: 99,
