@@ -383,10 +383,7 @@ export async function search(params, signal) {
 
             const staleData = getCached(cacheKey, true);
             if (staleData) {
-<<<<<<< HEAD
                 console.debug('Returning stale cache data due to network error');
-=======
->>>>>>> 7fb0f61 (Fix streaming provider filter overflow and clean up UI)
                 return {
                     ...staleData,
                     isStale: true,
