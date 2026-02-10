@@ -85,7 +85,7 @@
 
 .calendar-cell {
     aspect-ratio: 1;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--color-bg-card);
     border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-md);
     padding: 10px;
@@ -97,8 +97,8 @@
 }
 
 .calendar-cell.active {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--color-bg-glass);
+    border-color: var(--color-border);
 }
 
 .calendar-cell:hover {
@@ -115,7 +115,7 @@
 }
 
 .calendar-cell.active .day-number {
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 .mood-dots {
@@ -145,7 +145,7 @@
 .calendar-legend h4 {
     margin-bottom: var(--spacing-md);
     font-size: 1rem;
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 .legend-items {
@@ -171,7 +171,7 @@
 .recent-searches h4 {
     margin-bottom: var(--spacing-md);
     font-size: 1rem;
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 .search-chips {
@@ -182,7 +182,7 @@
 
 .search-chip {
     padding: 4px 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--color-bg-glass);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
     font-size: 0.85rem;
@@ -192,8 +192,8 @@
 
 .search-chip:hover {
     border-color: var(--color-gold);
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-text-primary);
+    background: var(--color-bg-glass-hover);
 }
 
 .view-stats-link {
@@ -228,7 +228,7 @@
     font-family: var(--font-display);
     font-size: 1.8rem;
     margin-bottom: var(--spacing-md);
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 .empty-state p {
@@ -262,7 +262,7 @@
 .shared-by-text h3 {
     margin: 0;
     font-size: 1.2rem;
-    color: #fff;
+    color: var(--color-text-primary);
 }
 
 .shared-by-text p {

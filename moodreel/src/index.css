@@ -8,6 +8,8 @@
    CSS Custom Properties (Design Tokens)
    ===================================================== */
 :root {
+  color-scheme: dark;
+
   /* Cinema Noir Color Palette */
   --color-bg-primary: #09090b;
   --color-bg-secondary: #0f0f12;
@@ -17,6 +19,10 @@
   --color-bg-glass-hover: rgba(255, 255, 255, 0.08);
   --color-bg-elevated: rgba(255, 255, 255, 0.06);
   --color-bg-elevated-2: rgba(255, 255, 255, 0.1);
+
+  /* App Chrome (header/nav surfaces) */
+  --color-bg-chrome: rgba(9, 9, 11, 0.8);
+  --color-bg-chrome-strong: rgba(9, 9, 11, 0.95);
 
   /* Premium Gold/Amber Accents */
   --color-gold: #ffd700;
@@ -34,11 +40,17 @@
   --gradient-hero: linear-gradient(180deg, rgba(9, 9, 11, 0) 0%, rgba(9, 9, 11, 0.8) 50%, #09090b 100%);
   --gradient-card-overlay: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.95) 100%);
 
+  /* Background Effects */
+  --bg-body-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 255, 255, 0.03), transparent 50%);
+  --bg-backdrop-overlay: linear-gradient(to bottom, rgba(9, 9, 11, 0.6) 0%, var(--color-bg-primary) 100%);
+
   /* Text Colors */
   --color-text-primary: #fafafa;
   --color-text-secondary: #a1a1aa;
   --color-text-muted: #71717a;
   --color-text-gold: #ffd700;
+  --color-text-on-dark: #fafafa;
+  --color-text-on-dark-muted: #a1a1aa;
 
   /* Border Colors */
   --color-border: rgba(255, 255, 255, 0.06);
@@ -114,6 +126,46 @@
   --z-popover: 500;
   --z-toast: 600;
   --z-tooltip: 700;
+
+  /* Layout helpers */
+  --toast-bottom-offset: var(--spacing-xl);
+}
+
+:root.light-theme {
+  color-scheme: light;
+
+  --color-bg-primary: #f7f5f0;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f1ede7;
+  --color-bg-card: rgba(17, 24, 39, 0.03);
+  --color-bg-glass: rgba(17, 24, 39, 0.04);
+  --color-bg-glass-hover: rgba(17, 24, 39, 0.06);
+  --color-bg-elevated: rgba(17, 24, 39, 0.04);
+  --color-bg-elevated-2: rgba(17, 24, 39, 0.08);
+
+  --color-text-primary: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-gold: #8a5f00;
+
+  --color-border: rgba(17, 24, 39, 0.12);
+  --color-border-hover: rgba(199, 139, 26, 0.35);
+  --color-border-gold: rgba(199, 139, 26, 0.45);
+  --color-border-strong: rgba(17, 24, 39, 0.22);
+  --color-border-subtle: rgba(17, 24, 39, 0.06);
+
+  --color-bg-chrome: rgba(247, 245, 240, 0.86);
+  --color-bg-chrome-strong: rgba(247, 245, 240, 0.96);
+
+  --gradient-hero: linear-gradient(180deg, rgba(247, 245, 240, 0) 0%, rgba(247, 245, 240, 0.85) 50%, #f7f5f0 100%);
+  --bg-body-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 0, 0, 0.06), transparent 50%);
+  --bg-backdrop-overlay: linear-gradient(to bottom, rgba(247, 245, 240, 0.75) 0%, var(--color-bg-primary) 100%);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --toast-bottom-offset: calc(80px + var(--spacing-md));
+  }
 }
 
 @import url('./styles/layout.css');
@@ -157,7 +209,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 255, 255, 0.03), transparent 50%);
+  background: var(--bg-body-glow);
   pointer-events: none;
   z-index: -1;
 }
@@ -196,7 +248,7 @@ input {
 /* Selection */
 ::selection {
   background: var(--color-gold);
-  color: var(--color-bg-primary);
+  color: #09090b;
 }
 
 /* Premium Scrollbar */

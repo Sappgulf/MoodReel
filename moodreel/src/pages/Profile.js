@@ -7,7 +7,9 @@ import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
+import { useToasts } from '../context/ToastContext';
 import { calculatePersona } from '../utils/personaUtils';
+import { copyToClipboard } from '../utils/clipboard';
 
 const AVATARS = ['🎬', '🍿', '⭐', '🎭', '🎥', '🎞️', '🎟️', '📺', '🎧', '🎮', '💡', '✨'];
 
@@ -37,6 +39,7 @@ function Profile() {
     const { history: watchHistory } = useWatchHistory();
     const { region, setRegion } = useProviderSettings();
     const { resetProfile, tasteCounts } = useTasteProfile();
+    const { pushToast } = useToasts();
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState(profile);
 
@@ -71,30 +74,33 @@ function Profile() {
                 <div className="profile-header">
                     <div className="avatar-container big-avatar">
                         <span className="avatar-emoji">{profile.avatar}</span>
-                        {isEditing && (
-                            <div className="avatar-picker glass-card">
-                                {AVATARS.map(a => (
-                                    <button
-                                        key={a}
-                                        className={editForm.avatar === a ? 'active' : ''}
-                                        onClick={() => setEditForm(prev => ({ ...prev, avatar: a }))}
-                                    >
-                                        {a}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+	                        {isEditing && (
+	                            <div className="avatar-picker glass-card">
+	                                {AVATARS.map(a => (
+	                                    <button
+	                                        key={a}
+	                                        className={editForm.avatar === a ? 'active' : ''}
+	                                        onClick={() => setEditForm(prev => ({ ...prev, avatar: a }))}
+	                                        aria-label={`Select avatar ${a}`}
+	                                        aria-pressed={editForm.avatar === a}
+	                                    >
+	                                        {a}
+	                                    </button>
+	                                ))}
+	                            </div>
+	                        )}
                     </div>
                     <div className="profile-info">
-                        {isEditing ? (
-                            <input
-                                className="edit-username-input"
-                                value={editForm.username}
-                                onChange={e => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                            />
-                        ) : (
-                            <h1>{profile.username}</h1>
-                        )}
+	                        {isEditing ? (
+	                            <input
+	                                className="edit-username-input"
+	                                value={editForm.username}
+	                                onChange={e => setEditForm(prev => ({ ...prev, username: e.target.value }))}
+	                                aria-label="Username"
+	                            />
+	                        ) : (
+	                            <h1>{profile.username}</h1>
+	                        )}
                         <p className="join-date">Member since {new Date(profile.joinDate).toLocaleDateString()}</p>
                         <div className="level-badge">Level {level}</div>
                     </div>
@@ -128,14 +134,15 @@ function Profile() {
 
                 <div className="bio-card glass-card">
                     <h3>📝 Bio</h3>
-                    {isEditing ? (
-                        <textarea
-                            value={editForm.bio}
-                            onChange={e => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                        />
-                    ) : (
-                        <p>{profile.bio}</p>
-                    )}
+	                    {isEditing ? (
+	                        <textarea
+	                            value={editForm.bio}
+	                            onChange={e => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+	                            aria-label="Bio"
+	                        />
+	                    ) : (
+	                        <p>{profile.bio}</p>
+	                    )}
                 </div>
 
                 <div className="stats-preview glass-card">
@@ -203,14 +210,33 @@ function Profile() {
                 </div>
             </div>
 
-            <button className="share-profile-btn" onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Profile link copied to clipboard!');
-            }}>
-                🔗 Share My Vibe
-            </button>
-        </div>
-    );
+	            <button
+	                className="share-profile-btn"
+	                onClick={async () => {
+	                    try {
+	                        await copyToClipboard(window.location.href);
+	                        pushToast({
+	                            icon: '🔗',
+	                            title: 'Link copied',
+	                            message: 'Profile link copied to clipboard.',
+	                            duration: 2600
+	                        });
+	                    } catch (err) {
+	                        console.error('Copy profile link failed:', err);
+	                        pushToast({
+	                            icon: '⚠️',
+	                            title: 'Copy failed',
+	                            message: 'Your browser blocked clipboard access.',
+	                            variant: 'error',
+	                            duration: 4000
+	                        });
+	                    }
+	                }}
+	            >
+	                🔗 Share My Vibe
+	            </button>
+	        </div>
+	    );
 }
 
 export default Profile;

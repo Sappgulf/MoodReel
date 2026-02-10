@@ -21,9 +21,11 @@ import { useMovieDiscovery } from '../hooks/useMovieDiscovery';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
+import { useToasts } from '../context/ToastContext';
 import searchService from '../services/searchService';
 import { fetchProviderCatalog, fetchTitleProviders, getCachedTitleProviders } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
+import { copyToClipboard } from '../utils/clipboard';
 
 function Home() {
   const currentYear = new Date().getFullYear();
@@ -36,6 +38,7 @@ function Home() {
   const { savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } = useTasteProfile();
+  const { pushToast } = useToasts();
 
   const {
     mood, setMood,
@@ -354,9 +357,14 @@ function Home() {
     if (name) {
       savePlaylist(name, { mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters });
       playSound('save');
-      alert(`Vibe "${name}" saved!`);
+      pushToast({
+        icon: '✨',
+        title: 'Vibe saved',
+        message: `"${name}" added to your playlists.`,
+        duration: 3000
+      });
     }
-  }, [mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters, savePlaylist, playSound]);
+  }, [mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters, savePlaylist, playSound, pushToast]);
 
   const handleClearFilters = useCallback(() => {
     setSelectedGenres([]);
@@ -674,9 +682,25 @@ function Home() {
         <button
           className="secondary-button"
           aria-label="Copy shareable link"
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href);
-            alert('Shareable link copied!');
+          onClick={async () => {
+            try {
+              await copyToClipboard(window.location.href);
+              pushToast({
+                icon: '🔗',
+                title: 'Link copied',
+                message: 'Shareable link copied to clipboard.',
+                duration: 2600
+              });
+            } catch (err) {
+              console.error('Copy link failed:', err);
+              pushToast({
+                icon: '⚠️',
+                title: 'Copy failed',
+                message: 'Your browser blocked clipboard access.',
+                variant: 'error',
+                duration: 4000
+              });
+            }
           }}
         >
           🔗 Copy Link

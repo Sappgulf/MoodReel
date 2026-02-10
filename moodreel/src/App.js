@@ -6,13 +6,14 @@ import { SkeletonGrid } from './components/Skeleton';
 import { useTheme } from './hooks/useTheme';
 import { useSounds } from './hooks/useSounds';
 import { useAchievements } from './hooks/useAchievements';
-import AchievementToast from './components/AchievementToast';
 import InstallPrompt from './components/InstallPrompt';
 import Confetti from './components/Confetti';
 import OnboardingModal from './components/OnboardingModal';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
 import { TrailerProvider, useTrailer } from './context/TrailerContext';
+import { ToastProvider, useToasts } from './context/ToastContext';
 import TrailerPiP from './components/TrailerPiP';
+import ToastStack from './components/ToastStack';
 import { useUserProfile } from './hooks/useUserProfile';
 import './App.css';
 
@@ -29,8 +30,9 @@ function AppContent() {
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const { isSoundEnabled, toggleSounds } = useSounds();
-  const { newUnlock, dismissToast, unlockedCount, totalCount } = useAchievements();
+  const { newUnlock, unlockedCount, totalCount } = useAchievements();
   const { activeTrailer, closeTrailer } = useTrailer();
+  const { pushToast } = useToasts();
   const { profile } = useUserProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -63,7 +65,8 @@ function AppContent() {
 
   // Scroll to top on page navigation
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   }, [location.pathname]);
 
   // Global keyboard shortcuts
@@ -97,6 +100,19 @@ function AppContent() {
     }
   }, [newUnlock]);
 
+  // Show achievement toast in global toast stack
+  useEffect(() => {
+    if (!newUnlock) return;
+    pushToast({
+      icon: newUnlock.icon,
+      label: 'Achievement Unlocked',
+      title: newUnlock.title,
+      message: newUnlock.description,
+      variant: 'achievement',
+      duration: 4000
+    });
+  }, [newUnlock, pushToast]);
+
   return (
     <div className="App">
       {/* Confetti celebration */}
@@ -107,8 +123,7 @@ function AppContent() {
 
       {/* Onboarding for first-time users */}
       <OnboardingModal />
-
-      <AchievementToast achievement={newUnlock} onDismiss={dismissToast} />
+      <ToastStack />
 
       {/* Global Trailer PiP */}
       {activeTrailer && (
@@ -140,6 +155,7 @@ function AppContent() {
               className="shortcuts-btn"
               onClick={() => setShowShortcuts(true)}
               title="Keyboard shortcuts (?)"
+              aria-label="Keyboard shortcuts"
             >
               ⌨️
             </button>
@@ -266,7 +282,9 @@ function AppContent() {
 export default function App() {
   return (
     <TrailerProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </TrailerProvider>
   );
 }
