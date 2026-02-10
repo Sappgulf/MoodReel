@@ -341,9 +341,19 @@
     transition: all var(--transition-base);
 }
 
-.recommendation:hover .card-content {
+.recommendation:hover .card-content,
+.recommendation:focus-within .card-content {
     transform: translateY(0);
     opacity: 1;
+}
+
+/* On mobile, show content partially by default */
+@media (max-width: 768px) {
+    .recommendation .card-content {
+        transform: translateY(0);
+        opacity: 1;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+    }
 }
 
 .recommendation h2 {
@@ -383,9 +393,18 @@
     transition: all var(--transition-base);
 }
 
-.recommendation:hover .card-actions {
+.recommendation:hover .card-actions,
+.recommendation:focus-within .card-actions {
     opacity: 1;
     transform: translateX(0);
+}
+
+/* Always visible on mobile */
+@media (max-width: 768px) {
+    .card-actions {
+        opacity: 1 !important;
+        transform: translateX(0) !important;
+    }
 }
 
 .watchlist-btn,

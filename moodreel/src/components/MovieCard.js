@@ -27,7 +27,8 @@ const MovieCard = memo(function MovieCard({
     const title = getDisplayTitle(movie);
     const year = getReleaseYear(movie);
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
-    const detailPath = mediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
+    const resolvedMediaType = movie.media_type || mediaType;
+    const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
 
     const cardRef = useRef(null);
     const touchStartX = useRef(null);
@@ -228,7 +229,8 @@ const MovieCard = memo(function MovieCard({
                         <button
                             className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
                             onClick={handleLike}
-                            aria-label="Thumbs up"
+                            aria-label="Like this title"
+                            title="Like"
                             aria-pressed={tasteStatus === 'liked'}
                         >
                             👍
@@ -236,7 +238,8 @@ const MovieCard = memo(function MovieCard({
                         <button
                             className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
                             onClick={handleDislike}
-                            aria-label="Thumbs down"
+                            aria-label="Dislike this title"
+                            title="Dislike"
                             aria-pressed={tasteStatus === 'disliked'}
                         >
                             👎

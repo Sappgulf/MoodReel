@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
 import EmojiPicker from '../components/EmojiPicker';
@@ -358,6 +358,20 @@ function Home() {
     }
   }, [mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters, savePlaylist, playSound]);
 
+  const handleClearFilters = useCallback(() => {
+    setSelectedGenres([]);
+    setMinRating(0);
+    setAdvancedFilters({
+      yearMin: 1900,
+      yearMax: currentYear,
+      sortBy: 'popularity.desc',
+      matchType: 'all',
+      runtime: 'any',
+      region: 'US'
+    });
+    playSound('pop');
+  }, [setSelectedGenres, setMinRating, setAdvancedFilters, currentYear, playSound]);
+
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return { greeting: 'Good morning!', suggestion: 'uplifting', emoji: '☀️' };
@@ -467,7 +481,7 @@ function Home() {
             <p>Surprise Pick!</p>
             <h3>{surpriseMovie.title || surpriseMovie.name}</h3>
           </div>
-          <a href={`/${surpriseMovie.media_type}/${surpriseMovie.id}`} className="surprise-link">View →</a>
+          <Link to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`} className="surprise-link">View →</Link>
         </div>
       )}
 
@@ -617,6 +631,11 @@ function Home() {
           />
           <RatingFilter minRating={minRating} onRatingChange={setMinRating} />
           <AdvancedFilters filters={advancedFilters} onFiltersChange={setAdvancedFilters} />
+          <div className="filter-actions" style={{ gridColumn: 'span 2', textAlign: 'center' }}>
+            <button className="text-button" onClick={handleClearFilters}>
+              🧹 Clear All Filters
+            </button>
+          </div>
         </div>
       )}
 

@@ -5,7 +5,8 @@ Maintain and improve MoodReel: mood-based discovery + search for movies/TV with 
 
 ## Non-Negotiables
 - No invented facts: inspect the repo before claiming anything.
-- No secret leakage: API keys only via env vars; never log secrets; never commit `.env`.
+- No secret leakage: API keys only via env vars OR explicitly hardcoded as per user instruction; never log secrets; never commit `.env`.
+- **LOCKED API**: Never modify `src/services/apiClient.js` or the hardcoded TMDB API key. This is a locked configuration.
 - No breaking core flows:
   1) Mood flow → results grid
   2) Search → results

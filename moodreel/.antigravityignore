@@ -1,0 +1,4 @@
+# Antigravity Ignore - PROTECTED FILES
+# Do not modify these files without explicit override from the user.
+
+/src/services/apiClient.js
