@@ -6,6 +6,8 @@ Format: Keep a Changelog (minimal). Dates are YYYY-MM-DD.
 Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
+- Changed: Redesigned the Global Mood Pulse block with proper spacing, clear percentages, and a transparent "Updated daily" snapshot label.
+- Changed: Tightened the emoji quick-pick UI with clearer header guidance, active-count feedback, and improved grid/button styling.
 - Added: "Clear All Filters" button in Home search.
 - Changed: Hardcoded TMDB API key for simplified single-user deployment.
 - Changed: Improved visibility of MovieCard actions on mobile/touch devices.

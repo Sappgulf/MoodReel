@@ -1004,29 +1004,221 @@
 }
 
 /* =====================================================
+   Mood Pulse
+   ===================================================== */
+.mood-pulse-container {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    padding: clamp(1rem, 2vw, 1.5rem);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.pulse-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.pulse-eyebrow {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.pulse-header h3 {
+    font-size: clamp(1.2rem, 2.4vw, 1.55rem);
+    line-height: 1.2;
+}
+
+.pulse-live {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 0.3rem 0.65rem;
+    white-space: nowrap;
+}
+
+.pulse-track {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+.pulse-item {
+    border: 1px solid var(--color-border-subtle);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    padding: 0.65rem 0.8rem;
+}
+
+.pulse-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--spacing-sm);
+}
+
+.mood-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.mood-percentage {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pulse-bar-wrapper {
+    margin-top: 0.45rem;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-elevated);
+    overflow: hidden;
+}
+
+.pulse-bar {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--mood-color) 55%, white), var(--mood-color));
+}
+
+.pulse-trend {
+    margin-top: 0.4rem;
+    display: inline-block;
+    font-size: 0.73rem;
+    color: var(--color-text-muted);
+}
+
+.pulse-trend-up {
+    color: #22c55e;
+}
+
+.pulse-trend-down {
+    color: #f97316;
+}
+
+.pulse-info {
+    margin-top: var(--spacing-md);
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+}
+
+/* =====================================================
    Emoji Picker
    ===================================================== */
+.emoji-picker {
+    position: relative;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    padding: clamp(1rem, 2vw, 1.3rem);
+    margin-bottom: var(--spacing-xl);
+}
+
+.emoji-picker-header {
+    margin-bottom: var(--spacing-md);
+}
+
+.emoji-picker-header h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.emoji-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 0.55rem;
+}
+
 .emoji-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: var(--spacing-sm);
+    justify-content: center;
+    gap: 0.18rem;
+    min-height: 72px;
+    padding: 0.45rem;
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 
-.emoji-btn:hover {
+.emoji {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.emoji-label {
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.emoji-btn:hover,
+.emoji-btn:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--color-border-hover);
     background: var(--color-bg-elevated-2);
-    transform: translateY(-2px);
+    outline: none;
 }
 
 .emoji-btn.active {
-    border-color: var(--color-text-primary);
-    background: var(--color-bg-elevated-2);
+    border-color: var(--color-border-gold);
+    background: var(--gradient-gold-soft);
+}
+
+.emoji-btn.active .emoji-label {
+    color: var(--color-text-primary);
+}
+
+.particle-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: var(--z-overlay);
+}
+
+.emoji-particle {
+    position: fixed;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    animation: emojiParticleBurst 500ms ease-out forwards;
+}
+
+@keyframes emojiParticleBurst {
+    from {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.95;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(0.1);
+        opacity: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .emoji-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .pulse-live {
+        font-size: 0.66rem;
+    }
 }
 
 /* =====================================================
