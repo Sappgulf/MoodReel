@@ -50,6 +50,17 @@ function normalizeMediaItem(item, mediaType) {
     };
 }
 
+
+function dedupeByMediaId(items) {
+    const seen = new Set();
+    return items.filter((item) => {
+        const key = `${item.media_type}:${item.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 function getTieBreakers(a, b) {
     const aPopularity = ensureNumber(a.popularity, 0);
     const bPopularity = ensureNumber(b.popularity, 0);
@@ -342,7 +353,8 @@ export async function search(params, signal) {
                 }
             }
 
-            const rankedResults = applySearchRanking(results, normalizedQuery, getTieBreakers);
+            const dedupedResults = dedupeByMediaId(results);
+            const rankedResults = applySearchRanking(dedupedResults, normalizedQuery, getTieBreakers);
 
             const result = {
                 results: rankedResults,

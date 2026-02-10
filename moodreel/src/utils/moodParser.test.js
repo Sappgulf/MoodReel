@@ -33,6 +33,11 @@ describe('moodParser', () => {
             expect(parseMoodToGenres('feeling sad today')).toContain(18);
         });
 
+        it('should normalize punctuation and avoid substring false positives', () => {
+            expect(parseMoodToGenres('Need SCI-FI!!!')).toContain(878);
+            expect(parseMoodToGenres('happiness overload')).toEqual([]);
+        });
+
         it('should return multiple genres for compound moods', () => {
             const genres = parseMoodToGenres('action adventure');
             expect(genres).toContain(28); // Action
