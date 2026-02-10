@@ -55,6 +55,21 @@ export const moodMap = {
     'sleep': 99, 'background': 35,
 };
 
+const normalizedMoodEntries = Object.entries(moodMap).map(([phrase, genreId]) => ({
+    phrase: phrase.toLowerCase(),
+    genreId
+}));
+
+const exactMoodMap = new Map(normalizedMoodEntries.map(({ phrase, genreId }) => [phrase, genreId]));
+
+function normalizeMoodText(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 // TMDB Genre ID to name mapping
 export const genreNames = {
     12: 'Adventure',
@@ -82,22 +97,30 @@ export function parseMoodToGenres(text) {
         return [];
     }
 
-    const lower = text.toLowerCase().trim();
-    if (!lower) {
+    const normalizedInput = normalizeMoodText(text);
+    if (!normalizedInput) {
         return [];
     }
 
     const genres = new Set();
-
-    // Check for exact matches first
-    if (moodMap[lower]) {
-        genres.add(moodMap[lower]);
-        return Array.from(genres);
+    const direct = exactMoodMap.get(normalizedInput);
+    if (direct) {
+        return [direct];
     }
 
-    // Check for partial matches / phrases
-    for (const [phrase, genreId] of Object.entries(moodMap)) {
-        if (lower.includes(phrase) || phrase.includes(lower)) {
+    const paddedInput = ` ${normalizedInput} `;
+    const inputTokens = new Set(normalizedInput.split(' '));
+
+    // Check for phrase/token matches while avoiding broad reverse-substring false positives
+    for (const { phrase, genreId } of normalizedMoodEntries) {
+        if (phrase.includes(' ')) {
+            if (paddedInput.includes(` ${phrase} `)) {
+                genres.add(genreId);
+            }
+            continue;
+        }
+
+        if (inputTokens.has(phrase)) {
             genres.add(genreId);
         }
     }

@@ -1,28 +1,48 @@
 import { getDisplayTitle } from './mediaUtils';
 
-function getRankScore(title, query) {
-    const normalizedTitle = title.toLowerCase();
-    const normalizedQuery = query.toLowerCase();
+function normalize(text) {
+    return (text || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function getRankScore(title, queryTokens, normalizedQuery) {
+    const normalizedTitle = normalize(title);
+    if (!normalizedTitle) return 999;
 
     if (normalizedTitle === normalizedQuery) return 0;
-    if (normalizedTitle.startsWith(normalizedQuery)) return 1;
-    if (normalizedTitle.includes(normalizedQuery)) return 2;
-    return 3;
+    if (normalizedTitle.startsWith(`${normalizedQuery} `) || normalizedTitle.startsWith(normalizedQuery)) return 1;
+
+    const titleTokens = normalizedTitle.split(' ');
+    const tokenMatches = queryTokens.reduce((count, token) => (titleTokens.includes(token) ? count + 1 : count), 0);
+
+    if (tokenMatches === queryTokens.length && queryTokens.length > 0) return 2;
+    if (normalizedTitle.includes(normalizedQuery)) return 3;
+    if (tokenMatches > 0) return 4;
+
+    return 5;
 }
 
 export function applySearchRanking(results, query, getTieBreakers) {
     if (!query) return results;
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = normalize(query);
     if (!normalizedQuery) return results;
 
-    return [...results].sort((a, b) => {
-        const aScore = getRankScore(getDisplayTitle(a), normalizedQuery);
-        const bScore = getRankScore(getDisplayTitle(b), normalizedQuery);
-        if (aScore !== bScore) return aScore - bScore;
+    const queryTokens = normalizedQuery.split(' ');
+    const ranked = results.map((item) => ({
+        item,
+        score: getRankScore(getDisplayTitle(item), queryTokens, normalizedQuery)
+    }));
 
-        if (getTieBreakers) return getTieBreakers(a, b);
+    ranked.sort((a, b) => {
+        if (a.score !== b.score) return a.score - b.score;
+        if (getTieBreakers) return getTieBreakers(a.item, b.item);
         return 0;
     });
+
+    return ranked.map(({ item }) => item);
 }
 
 const searchRanking = {
