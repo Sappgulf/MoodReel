@@ -32,7 +32,7 @@ function Home() {
   const { playSound } = useSounds();
   const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { trackSave } = useAchievements();
-  const { addToHistory } = useMoodHistory();
+  const { history: recentMoods, addToHistory } = useMoodHistory();
   const { savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } = useTasteProfile();
@@ -380,6 +380,19 @@ function Home() {
     return { greeting: 'Late night vibes', suggestion: 'thriller', emoji: '🌙' };
   }, []);
 
+  // Count active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedGenres.length > 0) count++;
+    if (myServices.length > 0) count++;
+    if (minRating > 0) count++;
+    if (advancedFilters.yearMin > 1900) count++;
+    if (advancedFilters.yearMax < currentYear) count++;
+    if (advancedFilters.runtime && advancedFilters.runtime !== 'any') count++;
+    if (advancedFilters.sortBy && advancedFilters.sortBy !== 'popularity.desc') count++;
+    return count;
+  }, [selectedGenres, myServices, minRating, advancedFilters, currentYear]);
+
   const filteredRecommendations = useMemo(() => {
     if (minRating <= 0) return recommendations;
     return recommendations.filter(m => m.vote_average >= minRating);
@@ -551,8 +564,22 @@ function Home() {
             placeholder="What's your mood tonight?"
             aria-label="Mood search"
           />
-          {mood && <button className="mood-clear-btn" onClick={() => setMood('')}>✕</button>}
+          {mood && <button className="mood-clear-btn" onClick={() => setMood('')} aria-label="Clear mood">✕</button>}
         </div>
+        {recentMoods.length > 0 && !mood && (
+          <div className="recent-moods">
+            <span className="recent-moods-label">Recent:</span>
+            {recentMoods.slice(0, 5).map((recentMood, idx) => (
+              <button
+                key={idx}
+                className="recent-mood-chip"
+                onClick={() => { setMood(recentMood); playSound('pop'); }}
+              >
+                {recentMood}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="title-search">
@@ -602,13 +629,14 @@ function Home() {
       )}
 
       {isMobile && (
-        <button className="primary-button" onClick={() => setShowFilters(!showFilters)} style={{ marginBottom: '20px' }}>
-          {showFilters ? 'Hide Filters' : 'Filter & Sort'}
+        <button className="filters-toggle" onClick={() => setShowFilters(!showFilters)}>
+          {showFilters ? '✕ Hide Filters' : '⚙️ Filter & Sort'}
+          {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
         </button>
       )}
 
       {(showFilters || !isMobile) && (
-        <div className="filters-wrapper">
+        <div className={`filters-wrapper ${activeFilterCount > 0 ? 'has-filters' : ''}`}>
           <div className="genre-filters">
             <h3>Genres:</h3>
             <div className="genre-buttons">
@@ -746,8 +774,15 @@ function Home() {
         )}
 
         {hasMore && !isMobile && searchScope !== 'all' && (
-          <div ref={loadMoreRef} style={{ textAlign: 'center', padding: '40px' }}>
-            {isLoading ? <SkeletonGrid count={4} /> : <button className="primary-button" onClick={loadMoreResults}>Load More</button>}
+          <div ref={loadMoreRef} className="load-more-indicator">
+            {isLoading ? (
+              <>
+                <span className="loading-spinner lg"></span>
+                <span>Loading more...</span>
+              </>
+            ) : (
+              <button className="btn-secondary" onClick={loadMoreResults}>Load More</button>
+            )}
           </div>
         )}
       </div>
