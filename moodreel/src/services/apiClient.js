@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
-const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
+const API_KEY = 'f2b1a353af51ccd27736c209f7ea0ca6';
 
 function getApiKey() {
     if (API_KEY) return API_KEY;
