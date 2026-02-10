@@ -1,108 +1,115 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-// Emoji to genre mapping
 const emojiMoods = [
-    { emoji: '😊', label: 'Happy', genres: [35], keyword: 'happy' },
-    { emoji: '😢', label: 'Sad', genres: [18], keyword: 'sad' },
-    { emoji: '😱', label: 'Scary', genres: [27], keyword: 'horror' },
-    { emoji: '💕', label: 'Romance', genres: [10749], keyword: 'romantic' },
-    { emoji: '🚀', label: 'Sci-Fi', genres: [878], keyword: 'sci-fi' },
-    { emoji: '⚔️', label: 'Action', genres: [28], keyword: 'action' },
-    { emoji: '🧙', label: 'Fantasy', genres: [14], keyword: 'fantasy' },
-    { emoji: '🔍', label: 'Mystery', genres: [9648], keyword: 'mystery' },
-    { emoji: '😂', label: 'Comedy', genres: [35], keyword: 'funny' },
-    { emoji: '👨‍👩‍👧', label: 'Family', genres: [10751], keyword: 'family' },
-    { emoji: '🎭', label: 'Drama', genres: [18], keyword: 'dramatic' },
-    { emoji: '📚', label: 'Documentary', genres: [99], keyword: 'documentary' },
+  { emoji: '😊', label: 'Happy', genres: [35], keyword: 'happy', color: '#f59e0b' },
+  { emoji: '😢', label: 'Sad', genres: [18], keyword: 'sad', color: '#60a5fa' },
+  { emoji: '😱', label: 'Scary', genres: [27], keyword: 'horror', color: '#ef4444' },
+  { emoji: '💕', label: 'Romance', genres: [10749], keyword: 'romantic', color: '#f472b6' },
+  { emoji: '🚀', label: 'Sci-Fi', genres: [878], keyword: 'sci-fi', color: '#06b6d4' },
+  { emoji: '⚔️', label: 'Action', genres: [28], keyword: 'action', color: '#fb7185' },
+  { emoji: '🧙', label: 'Fantasy', genres: [14], keyword: 'fantasy', color: '#a855f7' },
+  { emoji: '🔍', label: 'Mystery', genres: [9648], keyword: 'mystery', color: '#94a3b8' },
+  { emoji: '😂', label: 'Comedy', genres: [35], keyword: 'funny', color: '#facc15' },
+  { emoji: '👨‍👩‍👧', label: 'Family', genres: [10751], keyword: 'family', color: '#4ade80' },
+  { emoji: '🎭', label: 'Drama', genres: [18], keyword: 'dramatic', color: '#93c5fd' },
+  { emoji: '📚', label: 'Documentary', genres: [99], keyword: 'documentary', color: '#34d399' }
 ];
 
-// Particle component for burst animation
 function Particle({ style }) {
-    return <span className="emoji-particle" style={style} />;
+  return <span className="emoji-particle" style={style} />;
 }
 
 function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
-    const [particles, setParticles] = useState([]);
-    const particleIdRef = useRef(0);
+  const [particles, setParticles] = useState([]);
+  const particleIdRef = useRef(0);
 
-    const createParticleBurst = useCallback((e, color) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+  const activeCount = useMemo(
+    () => emojiMoods.filter((mood) => mood.genres.some((g) => selectedGenres.includes(g))).length,
+    [selectedGenres]
+  );
 
-        const newParticles = [];
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const velocity = 40 + Math.random() * 30;
-            const id = particleIdRef.current++;
+  const createParticleBurst = useCallback((e, color) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-            newParticles.push({
-                id,
-                x: centerX + Math.cos(angle) * velocity,
-                y: centerY + Math.sin(angle) * velocity,
-                color
-            });
-        }
+    const newParticles = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const velocity = 34 + Math.random() * 24;
+      const id = particleIdRef.current++;
 
-        setParticles(prev => [...prev, ...newParticles]);
+      newParticles.push({
+        id,
+        x: centerX + Math.cos(angle) * velocity,
+        y: centerY + Math.sin(angle) * velocity,
+        color
+      });
+    }
 
-        // Clean up particles after animation
-        setTimeout(() => {
-            setParticles(prev => prev.filter(p => !newParticles.some(np => np.id === p.id)));
-        }, 600);
-    }, []);
+    setParticles((prev) => [...prev, ...newParticles]);
 
-    const handleClick = useCallback((mood, e) => {
-        // Create particle burst
-        const colors = {
-            happy: '#FFD700', sad: '#6B8DD6', horror: '#DC143C',
-            romantic: '#FF69B4', 'sci-fi': '#00CED1', action: '#FF6B6B',
-            fantasy: '#9C27B0', mystery: '#607D8B', funny: '#FFD700',
-            family: '#4CAF50', dramatic: '#6B8DD6', documentary: '#4CAF50'
-        };
-        createParticleBurst(e, colors[mood.keyword] || '#FFD700');
-        if (navigator.vibrate) navigator.vibrate(15);
+    setTimeout(() => {
+      setParticles((prev) => prev.filter((p) => !newParticles.some((np) => np.id === p.id)));
+    }, 500);
+  }, []);
 
-        onSelect(mood);
-    }, [onSelect, createParticleBurst]);
+  const handleClick = useCallback(
+    (mood, e) => {
+      createParticleBurst(e, mood.color);
+      if (navigator.vibrate) navigator.vibrate(15);
+      onSelect(mood);
+    },
+    [onSelect, createParticleBurst]
+  );
 
-    return (
-        <div className="emoji-picker" role="group" aria-label="Quick mood selection">
-            <h4>Quick pick: {allowMultiple && <span className="multi-hint">(select multiple)</span>}</h4>
-            <div className="emoji-grid">
-                {emojiMoods.map((mood) => {
-                    const isActive = mood.genres.some(g => selectedGenres.includes(g));
-                    return (
-                        <button
-                            key={mood.emoji}
-                            className={`emoji-btn ${isActive ? 'active' : ''}`}
-                            onClick={(e) => handleClick(mood, e)}
-                            title={mood.label}
-                            aria-label={mood.label}
-                            aria-pressed={isActive}
-                        >
-                            <span className="emoji" aria-hidden="true">{mood.emoji}</span>
-                            <span className="emoji-label">{mood.label}</span>
-                        </button>
-                    );
-                })}
-            </div>
+  return (
+    <section className="emoji-picker" role="group" aria-label="Quick mood selection">
+      <div className="emoji-picker-header">
+        <h4>Quick Mood Picks</h4>
+        {allowMultiple ? (
+          <p className="emoji-hint">Choose one or more moods · {activeCount} selected</p>
+        ) : (
+          <p className="emoji-hint">Choose one mood</p>
+        )}
+      </div>
 
-            {/* Particle container */}
-            <div className="particle-container">
-                {particles.map((particle) => (
-                    <Particle
-                        key={particle.id}
-                        style={{
-                            left: particle.x,
-                            top: particle.y,
-                            background: particle.color
-                        }}
-                    />
-                ))}
-            </div>
-        </div>
-    );
+      <div className="emoji-grid">
+        {emojiMoods.map((mood) => {
+          const isActive = mood.genres.some((g) => selectedGenres.includes(g));
+
+          return (
+            <button
+              key={mood.emoji}
+              className={`emoji-btn ${isActive ? 'active' : ''}`}
+              onClick={(e) => handleClick(mood, e)}
+              title={mood.label}
+              aria-label={mood.label}
+              aria-pressed={isActive}
+            >
+              <span className="emoji" aria-hidden="true">
+                {mood.emoji}
+              </span>
+              <span className="emoji-label">{mood.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="particle-container" aria-hidden="true">
+        {particles.map((particle) => (
+          <Particle
+            key={particle.id}
+            style={{
+              left: particle.x,
+              top: particle.y,
+              background: particle.color
+            }}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default React.memo(EmojiPicker);
