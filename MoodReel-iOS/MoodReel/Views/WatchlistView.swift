@@ -1,0 +1,264 @@
+import SwiftUI
+
+struct WatchlistView: View {
+    enum Filter: String, CaseIterable, Identifiable {
+        case all = "All"
+        case unwatched = "Unwatched"
+        case watched = "Watched"
+
+        var id: String { rawValue }
+    }
+
+    @EnvironmentObject private var watchlistStore: WatchlistStore
+    @State private var randomMessage: String?
+    @State private var filter: Filter = .all
+    @State private var searchQuery = ""
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                LinearGradient(
+                    colors: [Color.bgPrimary, Color.bgSecondary],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
+                if watchlistStore.items.isEmpty {
+                    emptyState
+                } else {
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: AppSpacing.md) {
+                            statsHeader
+                            filterBar
+
+                            ForEach(filteredItems) { item in
+                                WatchlistRow(
+                                    item: item,
+                                    onToggleWatched: {
+                                        watchlistStore.setWatched(!item.isWatched, for: item.id)
+                                    },
+                                    onRemove: {
+                                        watchlistStore.remove(id: item.id)
+                                    }
+                                )
+                            }
+
+                            if filteredItems.isEmpty {
+                                Text("No titles match this filter.")
+                                    .font(AppFont.body())
+                                    .foregroundStyle(Color.textSecondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, AppSpacing.lg)
+                            }
+                        }
+                        .padding(AppSpacing.md)
+                    }
+                }
+            }
+            .navigationTitle("Watchlist")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        if let random = watchlistStore.randomUnwatched() {
+                            randomMessage = "Watch \(random.title) tonight."
+                        } else {
+                            randomMessage = "Everything here is marked as watched."
+                        }
+                    } label: {
+                        Label("Pick", systemImage: "shuffle")
+                            .font(AppFont.caption())
+                    }
+                    .tint(.gold)
+                }
+            }
+        }
+        .alert(
+            "Random Pick",
+            isPresented: Binding(
+                get: { randomMessage != nil },
+                set: { isPresented in
+                    if !isPresented { randomMessage = nil }
+                }
+            )
+        ) {
+            Button("Done") { randomMessage = nil }
+        } message: {
+            Text(randomMessage ?? "")
+        }
+    }
+
+    private var filteredItems: [WatchlistItem] {
+        let base: [WatchlistItem]
+        switch filter {
+        case .all:
+            base = watchlistStore.sortedItems
+        case .unwatched:
+            base = watchlistStore.sortedItems.filter { !$0.isWatched }
+        case .watched:
+            base = watchlistStore.sortedItems.filter { $0.isWatched }
+        }
+
+        let trimmed = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return base }
+        return base.filter { $0.title.localizedCaseInsensitiveContains(trimmed) }
+    }
+
+    private var statsHeader: some View {
+        HStack(spacing: AppSpacing.sm) {
+            statPill(title: "Saved", value: "\(watchlistStore.items.count)")
+            statPill(title: "Unwatched", value: "\(watchlistStore.unwatchedItems.count)")
+            statPill(title: "Watched", value: "\(watchlistStore.items.count - watchlistStore.unwatchedItems.count)")
+        }
+    }
+
+    private var filterBar: some View {
+        VStack(spacing: AppSpacing.sm) {
+            TextField("Search watchlist", text: $searchQuery)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.vertical, 12)
+                .background(Color.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                        .stroke(Color.borderDefault, lineWidth: 1)
+                )
+
+            HStack(spacing: AppSpacing.sm) {
+                ForEach(Filter.allCases) { entry in
+                    Button {
+                        filter = entry
+                    } label: {
+                        Text(entry.rawValue)
+                            .font(AppFont.caption())
+                            .foregroundStyle(filter == entry ? Color.black : Color.textSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(filter == entry ? AppGradients.gold : LinearGradient(colors: [Color.bgTertiary], startPoint: .top, endPoint: .bottom))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+        }
+    }
+
+    private func statPill(title: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(AppFont.subheadline())
+                .foregroundStyle(Color.gold)
+            Text(title)
+                .font(AppFont.caption())
+                .foregroundStyle(Color.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(Color.bgTertiary)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: AppSpacing.md) {
+            Image(systemName: "bookmark.slash")
+                .font(.system(size: 42))
+                .foregroundStyle(Color.textMuted)
+
+            Text("No saved titles yet")
+                .font(AppFont.headline())
+                .foregroundStyle(Color.textPrimary)
+
+            Text("Save movies or shows from Discover to build your watchlist.")
+                .font(AppFont.body())
+                .foregroundStyle(Color.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, AppSpacing.lg)
+        }
+        .padding(AppSpacing.lg)
+        .glassCard(cornerRadius: AppRadius.xl, backgroundOpacity: 1)
+        .padding(.horizontal, AppSpacing.md)
+    }
+}
+
+private struct WatchlistRow: View {
+    let item: WatchlistItem
+    let onToggleWatched: () -> Void
+    let onRemove: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: AppSpacing.md) {
+            poster
+
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(item.title)
+                    .font(AppFont.subheadline())
+                    .foregroundStyle(Color.textPrimary)
+                    .lineLimit(2)
+
+                HStack(spacing: AppSpacing.sm) {
+                    Text(item.mediaType.displayName)
+                    if let year = item.releaseYear { Text(year) }
+                    Text("★ \(String(format: "%.1f", item.voteAverage))")
+                }
+                .font(AppFont.caption())
+                .foregroundStyle(Color.textSecondary)
+
+                if item.isWatched {
+                    Label("Watched", systemImage: "checkmark.circle.fill")
+                        .font(AppFont.caption())
+                        .foregroundStyle(Color.success)
+                } else {
+                    Label("To Watch", systemImage: "clock")
+                        .font(AppFont.caption())
+                        .foregroundStyle(Color.gold)
+                }
+
+                HStack(spacing: AppSpacing.md) {
+                    Button(item.isWatched ? "Mark Unwatched" : "Mark Watched", action: onToggleWatched)
+                        .font(AppFont.caption())
+                        .foregroundStyle(Color.gold)
+
+                    Button("Remove", action: onRemove)
+                        .font(AppFont.caption())
+                        .foregroundStyle(Color.error)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(AppSpacing.md)
+        .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
+    }
+
+    private var poster: some View {
+        AsyncImage(url: item.posterURL) { phase in
+            switch phase {
+            case .success(let image):
+                image.resizable().scaledToFill()
+            case .failure:
+                placeholderPoster
+            case .empty:
+                placeholderPoster.shimmerEffect()
+            @unknown default:
+                placeholderPoster
+            }
+        }
+        .frame(width: 76, height: 114)
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
+    }
+
+    private var placeholderPoster: some View {
+        RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
+            .fill(Color.bgTertiary)
+            .overlay(
+                Image(systemName: "film")
+                    .foregroundStyle(Color.textMuted)
+            )
+    }
+}

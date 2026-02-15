@@ -1,0 +1,474 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		08568088B348945BAEA53AF8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488644054F8249131C630EF2 /* SettingsView.swift */; };
+		200BBDD5103916F8C74D5F4F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA4DF8C276F322BA10747CF /* RootView.swift */; };
+		284AADC64A3F8856D8EB4E08 /* WatchlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */; };
+		296F9263972459E7E300AD9C /* APIKeyEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950A606672A209499B19F74E /* APIKeyEntryView.swift */; };
+		48BC4AEF7AE9076B3F6AB40C /* MediaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */; };
+		516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */; };
+		7FE842967E2C9276CAAB4158 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1E97789AFA3B75A8C21A20 /* AppModels.swift */; };
+		808DAA8FA8228F27F31BA962 /* TMDBConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0787C91DDE7E6F0E38ADD3C3 /* TMDBConfig.swift */; };
+		83770E1616217002D2A9D04A /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798F21EEA5D53E49AAB453FC /* DiscoverView.swift */; };
+		92D166AD3C86B96409842140 /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */; };
+		9BBB97F237B36A98DFE3D395 /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176E42CA88E4FC28F4AAA3A4 /* Movie.swift */; };
+		B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E482C07B60A067B50F672D /* Theme.swift */; };
+		B86001651F53833059C70623 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */; };
+		BDA9292CD0650F733ABDADE6 /* MoodReelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */; };
+		EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2536D00C4BA4F422998FD9 /* TMDBService.swift */; };
+		ECE5C170E8584E880E6CA504 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD15519799D5462834EA29A /* MainTabView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0787C91DDE7E6F0E38ADD3C3 /* TMDBConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBConfig.swift; sourceTree = "<group>"; };
+		0AD15519799D5462834EA29A /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		12A55C25E69ADE38978FBC20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		176E42CA88E4FC28F4AAA3A4 /* Movie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movie.swift; sourceTree = "<group>"; };
+		20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCardView.swift; sourceTree = "<group>"; };
+		287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistStore.swift; sourceTree = "<group>"; };
+		2C2536D00C4BA4F422998FD9 /* TMDBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBService.swift; sourceTree = "<group>"; };
+		3982E848F4A4DC5A778DAC99 /* MoodReel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MoodReel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		488644054F8249131C630EF2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodReelApp.swift; sourceTree = "<group>"; };
+		70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
+		798F21EEA5D53E49AAB453FC /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
+		7AA4DF8C276F322BA10747CF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		950A606672A209499B19F74E /* APIKeyEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyEntryView.swift; sourceTree = "<group>"; };
+		DF1E97789AFA3B75A8C21A20 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		F2E482C07B60A067B50F672D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1E9215E0B53DD15900DC0BEE /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		20E98506E82CE71F3917A218 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				0787C91DDE7E6F0E38ADD3C3 /* TMDBConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		20F4466FE7737DFEDB49277B /* MoodReel */ = {
+			isa = PBXGroup;
+			children = (
+				12A55C25E69ADE38978FBC20 /* Info.plist */,
+				66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */,
+				20E98506E82CE71F3917A218 /* Config */,
+				37172B7DB3653E431B1EC42E /* Design */,
+				62E12099F07CA0BA68C73DAC /* Models */,
+				45072F10029BD8989AF25204 /* Services */,
+				3F78BF0105ACD9BD5D0325A0 /* ViewModels */,
+				4C2EB40D9E23C6F3B48ADE9C /* Views */,
+			);
+			path = MoodReel;
+			sourceTree = "<group>";
+		};
+		303AFF9078AE4CF6B6318927 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		37172B7DB3653E431B1EC42E /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				F2E482C07B60A067B50F672D /* Theme.swift */,
+				4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		3F78BF0105ACD9BD5D0325A0 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */,
+				287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		45072F10029BD8989AF25204 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				2C2536D00C4BA4F422998FD9 /* TMDBService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		4C2EB40D9E23C6F3B48ADE9C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				950A606672A209499B19F74E /* APIKeyEntryView.swift */,
+				798F21EEA5D53E49AAB453FC /* DiscoverView.swift */,
+				0AD15519799D5462834EA29A /* MainTabView.swift */,
+				20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */,
+				7AA4DF8C276F322BA10747CF /* RootView.swift */,
+				488644054F8249131C630EF2 /* SettingsView.swift */,
+				FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */,
+				5756C3BA57E324D7BFE9E5B8 /* Achievements */,
+				9472897626382405CE2139BB /* Calendar */,
+				70B1E3C33138AD7C83F9E217 /* Components */,
+				303AFF9078AE4CF6B6318927 /* Home */,
+				AA898CDFCE42B060EA808F30 /* MovieDetail */,
+				1E9215E0B53DD15900DC0BEE /* Profile */,
+				734AB8D71FE46424DA79971B /* Stats */,
+				DCCB037D7B437FB8479A840B /* Watchlist */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5756C3BA57E324D7BFE9E5B8 /* Achievements */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Achievements;
+			sourceTree = "<group>";
+		};
+		62E12099F07CA0BA68C73DAC /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				DF1E97789AFA3B75A8C21A20 /* AppModels.swift */,
+				176E42CA88E4FC28F4AAA3A4 /* Movie.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		70B1E3C33138AD7C83F9E217 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		734AB8D71FE46424DA79971B /* Stats */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Stats;
+			sourceTree = "<group>";
+		};
+		9472897626382405CE2139BB /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Calendar;
+			sourceTree = "<group>";
+		};
+		AA898CDFCE42B060EA808F30 /* MovieDetail */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = MovieDetail;
+			sourceTree = "<group>";
+		};
+		BF837499363CCF13B2935A15 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3982E848F4A4DC5A778DAC99 /* MoodReel.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C4230BF920127ECB2A060ECC = {
+			isa = PBXGroup;
+			children = (
+				20F4466FE7737DFEDB49277B /* MoodReel */,
+				BF837499363CCF13B2935A15 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DCCB037D7B437FB8479A840B /* Watchlist */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Watchlist;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6DA0017C4D4E2E1C372B246F /* MoodReel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D00035005818B04959DAF41 /* Build configuration list for PBXNativeTarget "MoodReel" */;
+			buildPhases = (
+				B0FBB90D8E07F54DA0E2F096 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoodReel;
+			packageProductDependencies = (
+			);
+			productName = MoodReel;
+			productReference = 3982E848F4A4DC5A778DAC99 /* MoodReel.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6DE4930B1C9D4828FC9DCF50 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					6DA0017C4D4E2E1C372B246F = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = E699A0B4265A6E13DFD166F2 /* Build configuration list for PBXProject "MoodReel" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C4230BF920127ECB2A060ECC;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6DA0017C4D4E2E1C372B246F /* MoodReel */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B0FBB90D8E07F54DA0E2F096 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				296F9263972459E7E300AD9C /* APIKeyEntryView.swift in Sources */,
+				7FE842967E2C9276CAAB4158 /* AppModels.swift in Sources */,
+				83770E1616217002D2A9D04A /* DiscoverView.swift in Sources */,
+				92D166AD3C86B96409842140 /* DiscoverViewModel.swift in Sources */,
+				ECE5C170E8584E880E6CA504 /* MainTabView.swift in Sources */,
+				48BC4AEF7AE9076B3F6AB40C /* MediaCardView.swift in Sources */,
+				BDA9292CD0650F733ABDADE6 /* MoodReelApp.swift in Sources */,
+				9BBB97F237B36A98DFE3D395 /* Movie.swift in Sources */,
+				200BBDD5103916F8C74D5F4F /* RootView.swift in Sources */,
+				08568088B348945BAEA53AF8 /* SettingsView.swift in Sources */,
+				808DAA8FA8228F27F31BA962 /* TMDBConfig.swift in Sources */,
+				EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */,
+				B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */,
+				B86001651F53833059C70623 /* ViewModifiers.swift in Sources */,
+				516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */,
+				284AADC64A3F8856D8EB4E08 /* WatchlistView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0FDFBCC5D6682BA3C8FDB4F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = MoodReel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.moodreel.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		17C61D343B29F85873ECA09A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_BITCODE = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		30D7C00C4C34D98DCB6238F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		35A08F91CBA3BE8A0CF9ACC1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = MoodReel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.moodreel.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9D00035005818B04959DAF41 /* Build configuration list for PBXNativeTarget "MoodReel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FDFBCC5D6682BA3C8FDB4F1 /* Debug */,
+				35A08F91CBA3BE8A0CF9ACC1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E699A0B4265A6E13DFD166F2 /* Build configuration list for PBXProject "MoodReel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30D7C00C4C34D98DCB6238F9 /* Debug */,
+				17C61D343B29F85873ECA09A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6DE4930B1C9D4828FC9DCF50 /* Project object */;
+}
