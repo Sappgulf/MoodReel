@@ -1,4 +1,5 @@
 import Foundation
+import Security
 
 // MARK: - TMDB Configuration
 
@@ -40,19 +41,116 @@ struct TMDBConfig {
 
 final class APIKeyStore {
     static let shared = APIKeyStore()
-    private let key = "moodreel-tmdb-api-key"
-    private init() {}
+    private let account = "moodreel-tmdb-api-key"
+    private let service = "com.moodreel.app.securekey"
 
-    var apiKey: String {
-        get { UserDefaults.standard.string(forKey: key) ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: key) }
+    private init() {
+        // Keep the operational key in Keychain when possible.
+        if readKeychainKey() == nil, let embedded = EmbeddedTMDBKey.decode() {
+            _ = writeKeychainKey(embedded)
+        }
     }
 
-    var isSet: Bool { !apiKey.trimmingCharacters(in: .whitespaces).isEmpty }
+    var apiKey: String {
+        get {
+            if let custom = readKeychainKey(), !custom.isEmpty {
+                return custom
+            }
+            return EmbeddedTMDBKey.decode() ?? ""
+        }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                _ = deleteKeychainKey()
+            } else {
+                _ = writeKeychainKey(trimmed)
+            }
+        }
+    }
+
+    var isSet: Bool { !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    var isUsingEmbeddedKey: Bool { readKeychainKey() == nil }
+    var maskedKey: String {
+        let current = apiKey
+        guard current.count > 8 else { return "••••••••" }
+        let suffix = current.suffix(4)
+        return "••••••••••••••••••••••••••••\(suffix)"
+    }
 
     func addAPIKey(to params: [String: String]) -> [String: String] {
         var p = params
         p["api_key"] = apiKey
         return p
+    }
+
+    private func readKeychainKey() -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        guard status == errSecSuccess,
+              let data = item as? Data,
+              let value = String(data: data, encoding: .utf8),
+              !value.isEmpty else {
+            return nil
+        }
+        return value
+    }
+
+    @discardableResult
+    private func writeKeychainKey(_ key: String) -> Bool {
+        let data = Data(key.utf8)
+        let attributes: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+        SecItemDelete(query as CFDictionary)
+        return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
+    }
+
+    @discardableResult
+    private func deleteKeychainKey() -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+        let status = SecItemDelete(query as CFDictionary)
+        return status == errSecSuccess || status == errSecItemNotFound
+    }
+}
+
+private enum EmbeddedTMDBKey {
+    // XOR-obfuscated key bytes; decrypted at runtime.
+    static let payload: [UInt8] = [
+        43, 93, 13, 85, 51, 86, 80, 95,
+        34, 15, 69, 89, 6, 17, 41, 93,
+        88, 83, 97, 83, 6, 94, 115, 80,
+        22, 95, 0, 19, 125, 12, 14, 82
+    ]
+
+    static let salt = Array("MoodReelCipher".utf8)
+
+    static func decode() -> String? {
+        guard !payload.isEmpty, !salt.isEmpty else { return nil }
+        let decoded = payload.enumerated().map { index, value in
+            value ^ salt[index % salt.count]
+        }
+        return String(bytes: decoded, encoding: .utf8)
     }
 }

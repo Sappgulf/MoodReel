@@ -7,6 +7,7 @@ struct MoodReelApp: App {
 
     init() {
         configureAppearance()
+        configureNetworkingCache()
     }
 
     var body: some Scene {
@@ -35,5 +36,13 @@ struct MoodReelApp: App {
         tabAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.textMuted)]
         UITabBar.appearance().standardAppearance = tabAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+    }
+
+    private func configureNetworkingCache() {
+        URLCache.shared = URLCache(
+            memoryCapacity: 64 * 1024 * 1024,
+            diskCapacity: 256 * 1024 * 1024,
+            diskPath: "moodreel-url-cache"
+        )
     }
 }

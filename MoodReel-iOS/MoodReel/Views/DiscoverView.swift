@@ -1,9 +1,11 @@
 import SwiftUI
+import UIKit
 
 struct DiscoverView: View {
     @EnvironmentObject private var watchlistStore: WatchlistStore
     @StateObject private var viewModel = DiscoverViewModel()
     @State private var surpriseMessage: String?
+    @State private var feedbackBanner: String?
 
     var body: some View {
         NavigationStack {
@@ -28,6 +30,23 @@ struct DiscoverView: View {
                 }
                 .refreshable {
                     await viewModel.loadForSelectedMood()
+                }
+
+                if let feedbackBanner {
+                    VStack {
+                        Text(feedbackBanner)
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.black)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(AppGradients.gold)
+                            .clipShape(Capsule())
+                            .shadow(color: Color.gold.opacity(0.3), radius: 10, x: 0, y: 4)
+                        Spacer()
+                    }
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(2)
                 }
             }
             .navigationBarHidden(true)
@@ -253,7 +272,10 @@ struct DiscoverView: View {
                     item: item,
                     isSaved: watchlistStore.contains(item)
                 ) {
+                    let wasSaved = watchlistStore.contains(item)
                     watchlistStore.toggle(item, mood: viewModel.selectedMood)
+                    UINotificationFeedbackGenerator().notificationOccurred(wasSaved ? .warning : .success)
+                    showFeedback(wasSaved ? "Removed from watchlist" : "Saved to watchlist")
                 }
                 .onAppear {
                     Task {
@@ -271,6 +293,20 @@ struct DiscoverView: View {
                         .font(AppFont.caption())
                         .foregroundStyle(Color.textSecondary)
                     Spacer()
+                }
+            }
+        }
+    }
+
+    private func showFeedback(_ message: String) {
+        withAnimation(AppAnimation.snappy) {
+            feedbackBanner = message
+        }
+        Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await MainActor.run {
+                withAnimation(AppAnimation.snappy) {
+                    feedbackBanner = nil
                 }
             }
         }

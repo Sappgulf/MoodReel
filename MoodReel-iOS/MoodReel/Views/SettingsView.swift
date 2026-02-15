@@ -2,10 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var watchlistStore: WatchlistStore
-    @State private var apiKeyInput = APIKeyStore.shared.apiKey
+    @State private var apiKeyInput = ""
     @State private var statusMessage: String?
-
-    let onClearAPIKey: () -> Void
 
     private var trimmedAPIKey: String {
         apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -36,7 +34,27 @@ struct SettingsView: View {
                 .font(AppFont.headline())
                 .foregroundStyle(Color.textPrimary)
 
-            TextField("Enter TMDB API key", text: $apiKeyInput)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Active key")
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.textMuted)
+                Text(APIKeyStore.shared.maskedKey)
+                    .font(AppFont.mono())
+                    .foregroundStyle(Color.textSecondary)
+                Text(APIKeyStore.shared.isUsingEmbeddedKey ? "Source: Embedded + Keychain" : "Source: Custom + Keychain")
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.gold)
+            }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, 12)
+            .background(Color.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
+                    .stroke(Color.borderDefault, lineWidth: 1)
+            )
+
+            SecureField("Enter custom TMDB key (optional)", text: $apiKeyInput)
                 .font(AppFont.body())
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -50,12 +68,13 @@ struct SettingsView: View {
                 )
 
             HStack(spacing: AppSpacing.sm) {
-                Button("Save Key") {
+                Button("Save Custom Key") {
                     guard !trimmedAPIKey.isEmpty else {
-                        statusMessage = "API key cannot be empty."
+                        statusMessage = "Enter a key before saving."
                         return
                     }
                     APIKeyStore.shared.apiKey = trimmedAPIKey
+                    apiKeyInput = ""
                     statusMessage = "API key saved."
                 }
                 .font(AppFont.caption())
@@ -66,14 +85,13 @@ struct SettingsView: View {
                 .clipShape(Capsule())
                 .buttonStyle(.plain)
 
-                Button("Clear Key") {
+                Button("Use Embedded Key") {
                     APIKeyStore.shared.apiKey = ""
                     apiKeyInput = ""
-                    statusMessage = "API key cleared."
-                    onClearAPIKey()
+                    statusMessage = "Switched to embedded key."
                 }
                 .font(AppFont.caption())
-                .foregroundStyle(Color.error)
+                .foregroundStyle(Color.textSecondary)
                 .buttonStyle(.plain)
             }
 

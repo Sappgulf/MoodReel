@@ -1,25 +1,21 @@
 import SwiftUI
 
 struct RootView: View {
-    @State private var apiKey: String = APIKeyStore.shared.apiKey
-
-    private var hasAPIKey: Bool {
-        !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
+    @State private var hasAPIKey = APIKeyStore.shared.isSet
 
     var body: some View {
         Group {
             if hasAPIKey {
-                MainTabView {
-                    APIKeyStore.shared.apiKey = ""
-                    apiKey = ""
-                }
+                MainTabView()
             } else {
                 APIKeyEntryView { key in
                     APIKeyStore.shared.apiKey = key
-                    apiKey = key
+                    hasAPIKey = APIKeyStore.shared.isSet
                 }
             }
+        }
+        .onAppear {
+            hasAPIKey = APIKeyStore.shared.isSet
         }
         .background(Color.bgPrimary.ignoresSafeArea())
     }

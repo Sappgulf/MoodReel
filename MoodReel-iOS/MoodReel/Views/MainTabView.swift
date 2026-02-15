@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct MainTabView: View {
-    let onClearAPIKey: () -> Void
-
     var body: some View {
         TabView {
             DiscoverView()
@@ -15,7 +13,7 @@ struct MainTabView: View {
                     Label("Watchlist", systemImage: "bookmark.fill")
                 }
 
-            SettingsView(onClearAPIKey: onClearAPIKey)
+            SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }

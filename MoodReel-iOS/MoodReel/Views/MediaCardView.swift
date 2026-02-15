@@ -45,7 +45,19 @@ struct MediaCardView: View {
                         systemImage: isSaved ? "checkmark.circle.fill" : "plus.circle.fill"
                     )
                     .font(AppFont.caption())
-                    .foregroundStyle(isSaved ? Color.success : Color.gold)
+                    .foregroundStyle(isSaved ? Color.success : Color.black)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(
+                        Group {
+                            if isSaved {
+                                Color.success.opacity(0.14)
+                            } else {
+                                AppGradients.gold
+                            }
+                        }
+                    )
+                    .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 2)
