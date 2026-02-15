@@ -240,17 +240,6 @@ private struct WatchlistRow: View {
                             .foregroundStyle(Color.gold)
                     }
                 }
-
-                HStack(spacing: AppSpacing.md) {
-                    Button(item.isWatched ? "Mark Unwatched" : "Mark Watched", action: onToggleWatched)
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.gold)
-
-                    Button("Remove", action: onRemove)
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.error)
-                }
-                .buttonStyle(.plain)
                 .padding(.top, 4)
             }
 
@@ -273,6 +262,25 @@ private struct WatchlistRow: View {
                 .onChanged { _ in isPressed = true }
                 .onEnded { _ in isPressed = false }
         )
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                withAnimation {
+                    onRemove()
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            .tint(.red)
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            Button {
+                onToggleWatched()
+            } label: {
+                Label(item.isWatched ? "Unwatched" : "Watched", 
+                      systemImage: item.isWatched ? "xmark.circle" : "checkmark.circle")
+            }
+            .tint(item.isWatched ? .orange : .green)
+        }
     }
 
     private var poster: some View {
