@@ -98,6 +98,8 @@ struct DiscoverView: View {
         }
     }
 
+    @State private var heroCardScale: CGFloat = 1.0
+
     private var heroCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack {
@@ -110,6 +112,12 @@ struct DiscoverView: View {
                 Text("\(viewModel.items.count) picks")
                     .font(AppFont.caption())
                     .foregroundStyle(Color.gold)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(Color.black.opacity(0.3))
+                    )
             }
 
             Text(viewModel.selectedMood.description)
@@ -123,12 +131,47 @@ struct DiscoverView: View {
             }
         }
         .padding(AppSpacing.md)
-        .background(viewModel.selectedMood.gradient.opacity(0.35))
+        .background(
+            ZStack {
+                viewModel.selectedMood.gradient.opacity(0.35)
+
+                // Animated floating orbs
+                Circle()
+                    .fill(viewModel.selectedMood.color.opacity(0.2))
+                    .frame(width: 100, height: 100)
+                    .offset(x: 120, y: -20)
+                    .blur(radius: 30)
+
+                Circle()
+                    .fill(viewModel.selectedMood.secondaryColor.opacity(0.15))
+                    .frame(width: 80, height: 80)
+                    .offset(x: -100, y: 30)
+                    .blur(radius: 25)
+            }
+        )
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .stroke(Color.borderGold, lineWidth: 1)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.3), Color.white.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
+        .scaleEffect(heroCardScale)
+        .onChange(of: viewModel.selectedMood) { _, _ in
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                heroCardScale = 0.97
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    heroCardScale = 1.0
+                }
+            }
+        }
     }
 
     private var searchRow: some View {
@@ -209,34 +252,12 @@ struct DiscoverView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: AppSpacing.sm) {
                 ForEach(MoodType.allCases) { mood in
-                    let isSelected = mood == viewModel.selectedMood
-                    Button {
+                    MoodButton(
+                        mood: mood,
+                        isSelected: mood == viewModel.selectedMood
+                    ) {
                         Task { await viewModel.selectMood(mood) }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(mood.emoji)
-                            Text(mood.displayName)
-                                .font(AppFont.caption())
-                        }
-                        .foregroundStyle(isSelected ? Color.black : Color.textPrimary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            Group {
-                                if isSelected {
-                                    mood.gradient
-                                } else {
-                                    Color.bgTertiary
-                                }
-                            }
-                        )
-                        .clipShape(Capsule())
-                        .overlay(
-                            Capsule()
-                                .stroke(isSelected ? Color.clear : Color.borderDefault, lineWidth: 1)
-                        )
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
@@ -442,5 +463,83 @@ struct DiscoverView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Mood Button Component
+
+struct MoodButton: View {
+    let mood: MoodType
+    let isSelected: Bool
+    let action: () -> Void
+    
+    @State private var isPressed = false
+    @State private var emojiBounce = false
+    
+    var body: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                isPressed = true
+            }
+            
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.5)) {
+                emojiBounce = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.3)) {
+                    isPressed = false
+                }
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation {
+                    emojiBounce = false
+                }
+            }
+            
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        }) {
+            HStack(spacing: 6) {
+                Text(mood.emoji)
+                    .font(.system(size: isSelected ? 18 : 16))
+                    .scaleEffect(emojiBounce ? 1.4 : 1.0)
+                    .rotationEffect(.degrees(emojiBounce ? 10 : 0))
+                
+                Text(mood.displayName)
+                    .font(AppFont.caption())
+            }
+            .foregroundStyle(isSelected ? Color.black : Color.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                Group {
+                    if isSelected {
+                        mood.gradient
+                    } else {
+                        Color.bgTertiary
+                    }
+                }
+            )
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(
+                        isSelected 
+                            ? Color.clear 
+                            : Color.white.opacity(0.1),
+                        lineWidth: 1
+                    )
+            )
+            .scaleEffect(isPressed ? 0.9 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .shadow(
+            color: isSelected ? mood.color.opacity(0.4) : Color.clear,
+            radius: isSelected ? 8 : 0,
+            x: 0,
+            y: isSelected ? 2 : 0
+        )
     }
 }
