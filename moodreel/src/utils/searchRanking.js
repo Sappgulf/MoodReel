@@ -8,25 +8,41 @@ function normalize(text) {
         .trim();
 }
 
-function getRankScore(title, queryTokens, normalizedQuery) {
+function getRankScore(title, queryTokens, normalizedQuery, genres = [], moodGenres = []) {
     const normalizedTitle = normalize(title);
     if (!normalizedTitle) return 999;
 
-    if (normalizedTitle === normalizedQuery) return 0; // Perfect match
-    if (normalizedTitle.startsWith(`${normalizedQuery} `)) return 1; // Starts with query word
-    if (normalizedTitle.startsWith(normalizedQuery)) return 2; // Starts with query chars
+    let score = 5;
 
-    const titleTokens = normalizedTitle.split(' ');
-    const tokenMatches = queryTokens.reduce((count, token) => (titleTokens.includes(token) ? count + 1 : count), 0);
+    if (normalizedTitle === normalizedQuery) {
+        score = 0;
+    } else if (normalizedTitle.startsWith(`${normalizedQuery} `)) {
+        score = 1;
+    } else if (normalizedTitle.startsWith(normalizedQuery)) {
+        score = 2;
+    } else {
+        const titleTokens = normalizedTitle.split(' ');
+        const tokenMatches = queryTokens.reduce((count, token) => (titleTokens.includes(token) ? count + 1 : count), 0);
 
-    if (tokenMatches === queryTokens.length && queryTokens.length > 0) return 2;
-    if (normalizedTitle.includes(normalizedQuery)) return 3;
-    if (tokenMatches > 0) return 4;
+        if (tokenMatches === queryTokens.length && queryTokens.length > 0) {
+            score = 2;
+        } else if (normalizedTitle.includes(normalizedQuery)) {
+            score = 3;
+        } else if (tokenMatches > 0) {
+            score = 4;
+        }
+    }
 
-    return 5;
+    // Mood Affinity Bonus: Subtract from score (lower is better)
+    if (moodGenres.length > 0 && genres.length > 0) {
+        const hasAffinity = genres.some(gId => moodGenres.includes(gId));
+        if (hasAffinity) score -= 0.5; // Subtle boost for matching mood
+    }
+
+    return score;
 }
 
-export function applySearchRanking(results, query, getTieBreakers) {
+export function applySearchRanking(results, query, getTieBreakers, moodGenres = []) {
     if (!query) return results;
     const normalizedQuery = normalize(query);
     if (!normalizedQuery) return results;
@@ -34,7 +50,7 @@ export function applySearchRanking(results, query, getTieBreakers) {
     const queryTokens = normalizedQuery.split(' ');
     const ranked = results.map((item) => ({
         item,
-        score: getRankScore(getDisplayTitle(item), queryTokens, normalizedQuery)
+        score: getRankScore(getDisplayTitle(item), queryTokens, normalizedQuery, item.genre_ids || [], moodGenres)
     }));
 
     ranked.sort((a, b) => {
@@ -43,7 +59,14 @@ export function applySearchRanking(results, query, getTieBreakers) {
         // Secondary sort: Popularity (heavy weight)
         const aPop = a.item.popularity || 0;
         const bPop = b.item.popularity || 0;
-        if (Math.abs(aPop - bPop) > 10) return bPop - aPop; // Significant popularity difference
+
+        // Recency Bonus: Boost newer films slightly within popularity tie-break
+        const aYear = parseInt((a.item.release_date || a.item.first_air_date || '').split('-')[0]) || 0;
+        const bYear = parseInt((b.item.release_date || b.item.first_air_date || '').split('-')[0]) || 0;
+
+        if (Math.abs(aPop - bPop) > 10) return bPop - aPop;
+
+        if (aYear !== bYear) return bYear - aYear;
 
         if (getTieBreakers) return getTieBreakers(a.item, b.item);
         return 0;

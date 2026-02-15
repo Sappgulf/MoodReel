@@ -10,20 +10,21 @@ const ShuffleOverlay = ({ isActive, results = [], isWinner = false, winnerItem =
         : Array(10).fill({ id: 'dummy', title: 'Loading...' });
 
     return (
-        <div className="shuffle-overlay page-enter">
-            <div className={`shuffle-container ${isWinner ? 'winner' : ''}`}>
+        <div className={`shuffle-overlay page-enter ${isWinner ? 'winner' : ''}`}>
+            {isWinner && <div className="cinema-scanlines" />}
+            <div className="shuffle-container">
                 {isWinner && <div className="winner-pulse" />}
+                {isWinner && <div className="winner-shine" />}
                 <div className="shuffle-reel" style={isWinner ? { transform: 'translateY(0)' } : {}}>
                     {isWinner && winnerItem ? (
-                        <div className="shuffle-item">
+                        <div className="shuffle-item winner-floating">
                             <img
                                 src={`https://image.tmdb.org/t/p/w500${winnerItem.poster_path}`}
                                 alt={winnerItem.title || winnerItem.name}
                                 className="shuffle-poster"
                             />
                             <div className="shuffle-info">
-                                <span className="shuffle-title">🎉 WINNER! 🎉</span>
-                                <h3 style={{ marginTop: '0.5rem', fontSize: '1.5rem' }}>{winnerItem.title || winnerItem.name}</h3>
+                                <span className="shuffle-title">{winnerItem.title || winnerItem.name}</span>
                             </div>
                         </div>
                     ) : (
@@ -38,15 +39,12 @@ const ShuffleOverlay = ({ isActive, results = [], isWinner = false, winnerItem =
                                 ) : (
                                     <div className="shuffle-poster-placeholder" />
                                 )}
-                                <div className="shuffle-info">
-                                    <span className="shuffle-title">{item.title || item.name}</span>
-                                </div>
                             </div>
                         ))
                     )}
                 </div>
             </div>
-            <div className="shuffle-scanner" />
+            {!isWinner && <div className="shuffle-scanner" />}
         </div>
     );
 };

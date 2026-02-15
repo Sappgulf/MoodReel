@@ -140,3 +140,76 @@
         opacity: 0;
     }
 }
+
+/* Reveal 2.0 Enhancements */
+.cinema-scanlines {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            transparent 50%,
+            rgba(0, 0, 0, 0.1) 50%);
+    background-size: 100% 4px;
+    z-index: 1002;
+    pointer-events: none;
+    animation: scanMove 10s linear infinite;
+}
+
+@keyframes scanMove {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 0 100%;
+    }
+}
+
+.winner-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+    z-index: 1;
+    animation: rotateShine 5s linear infinite;
+}
+
+@keyframes rotateShine {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.winner-floating {
+    animation: floatWinner 3s ease-in-out infinite alternate;
+}
+
+@keyframes floatWinner {
+    0% {
+        transform: translateY(0) scale(1.05);
+    }
+
+    100% {
+        transform: translateY(-10px) scale(1.08);
+    }
+}
+
+.shuffle-overlay.winner::before {
+    content: 'WINNER';
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--color-gold);
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: 0.5em;
+    opacity: 0.2;
+    z-index: 0;
+}

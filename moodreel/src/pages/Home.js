@@ -318,6 +318,7 @@ function Home() {
 
   const handleEmojiSelect = useCallback((emojiMood) => {
     setMood(emojiMood.keyword);
+    if (navigator.vibrate) navigator.vibrate(15);
     setSelectedGenres((prev) => {
       const next = new Set(prev);
       emojiMood.genres.forEach((genreId) => next.add(genreId));
@@ -440,13 +441,13 @@ function Home() {
         const title = (item.title || item.name || '').toLowerCase();
         return title.includes(debouncedQuery.toLowerCase());
       });
-      return applySearchRanking(filtered, debouncedQuery, tieBreakers);
+      return applySearchRanking(filtered, debouncedQuery, tieBreakers, selectedGenres);
     }
     if (debouncedQuery && searchScope === 'all') {
-      return applySearchRanking(searchResults, debouncedQuery, tieBreakers);
+      return applySearchRanking(searchResults, debouncedQuery, tieBreakers, selectedGenres);
     }
     return filteredRecommendations;
-  }, [filteredRecommendations, searchResults, debouncedQuery, searchScope, tieBreakers]);
+  }, [filteredRecommendations, searchResults, debouncedQuery, searchScope, tieBreakers, selectedGenres]);
 
   const tasteAdjustedResults = useMemo(() => {
     let results = scopedResults;
