@@ -14,6 +14,9 @@ final class DiscoverViewModel: ObservableObject {
     @Published var isLoadingMore = false
     @Published var errorMessage: String?
     @Published var hasMorePages = true
+    @Published var searchHistory: [SearchHistoryItem] = []
+    @Published var moodHistory: [MoodEntry] = []
+    @Published var lastResultUpdatedAt: Date?
 
     private(set) var mode: FeedMode = .mood
     private var currentPage = 1
@@ -21,9 +24,23 @@ final class DiscoverViewModel: ObservableObject {
     private var debouncedSearchTask: Task<Void, Never>?
 
     private let service: TMDBService
+    private let searchHistoryStorageKey = "moodreel-search-history-v1"
+    private let moodHistoryStorageKey = "moodreel-mood-history-v1"
 
     init(service: TMDBService = TMDBService()) {
         self.service = service
+        loadPersistedInsights()
+    }
+
+    var topMoodCounts: [(MoodType, Int)] {
+        let grouped = Dictionary(grouping: moodHistory, by: { $0.mood })
+        return grouped
+            .map { ($0.key, $0.value.count) }
+            .sorted { $0.1 > $1.1 }
+    }
+
+    var distinctMoodsUsed: Int {
+        Set(moodHistory.map(\.mood)).count
     }
 
     func loadForSelectedMood() async {
@@ -55,6 +72,16 @@ final class DiscoverViewModel: ObservableObject {
         guard mood != selectedMood else { return }
         selectedMood = mood
         await loadForSelectedMood()
+    }
+
+    func useSearchHistory(_ item: SearchHistoryItem) async {
+        query = item.query
+        await loadForSelectedMood()
+    }
+
+    func clearSearchHistory() {
+        searchHistory = []
+        saveInsights()
     }
 
     func loadNextPageIfNeeded(currentItem item: MediaResult) async {
@@ -107,6 +134,11 @@ final class DiscoverViewModel: ObservableObject {
             guard requestID == latestRequestID else { return }
             items = firstPageItems
             hasMorePages = !firstPageItems.isEmpty
+            lastResultUpdatedAt = Date()
+
+            if mode == .mood {
+                recordDiscovery(resultCount: firstPageItems.count)
+            }
         } catch {
             guard requestID == latestRequestID else { return }
             errorMessage = error.localizedDescription
@@ -126,6 +158,78 @@ final class DiscoverViewModel: ObservableObject {
     private func beginRequest() -> Int {
         latestRequestID += 1
         return latestRequestID
+    }
+
+    private func recordDiscovery(resultCount: Int) {
+        let now = Date()
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Avoid noisy duplicate entries for near-identical refreshes.
+        if let last = moodHistory.last,
+           last.mood == selectedMood,
+           (last.note ?? "") == trimmedQuery,
+           now.timeIntervalSince(last.date) < 120 {
+            return
+        }
+
+        moodHistory.append(
+            MoodEntry(
+                mood: selectedMood,
+                date: now,
+                intensity: min(1.0, max(0.35, Double(resultCount) / 20.0)),
+                note: trimmedQuery.isEmpty ? nil : trimmedQuery
+            )
+        )
+
+        if moodHistory.count > 180 {
+            moodHistory.removeFirst(moodHistory.count - 180)
+        }
+
+        if !trimmedQuery.isEmpty {
+            if let existingIndex = searchHistory.firstIndex(where: { $0.query.caseInsensitiveCompare(trimmedQuery) == .orderedSame }) {
+                searchHistory[existingIndex] = SearchHistoryItem(
+                    id: searchHistory[existingIndex].id,
+                    query: trimmedQuery,
+                    date: now,
+                    resultCount: resultCount
+                )
+            } else {
+                searchHistory.append(
+                    SearchHistoryItem(query: trimmedQuery, date: now, resultCount: resultCount)
+                )
+            }
+
+            searchHistory.sort { $0.date > $1.date }
+            if searchHistory.count > 15 {
+                searchHistory.removeLast(searchHistory.count - 15)
+            }
+        }
+
+        saveInsights()
+    }
+
+    private func loadPersistedInsights() {
+        let defaults = UserDefaults.standard
+
+        if let moodData = defaults.data(forKey: moodHistoryStorageKey),
+           let decodedMoods = try? JSONDecoder().decode([MoodEntry].self, from: moodData) {
+            moodHistory = decodedMoods
+        }
+
+        if let searchData = defaults.data(forKey: searchHistoryStorageKey),
+           let decodedSearch = try? JSONDecoder().decode([SearchHistoryItem].self, from: searchData) {
+            searchHistory = decodedSearch
+        }
+    }
+
+    private func saveInsights() {
+        let defaults = UserDefaults.standard
+        if let moodsData = try? JSONEncoder().encode(moodHistory) {
+            defaults.set(moodsData, forKey: moodHistoryStorageKey)
+        }
+        if let searchData = try? JSONEncoder().encode(searchHistory) {
+            defaults.set(searchData, forKey: searchHistoryStorageKey)
+        }
     }
 }
 

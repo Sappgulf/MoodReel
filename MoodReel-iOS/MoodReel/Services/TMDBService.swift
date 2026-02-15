@@ -42,6 +42,16 @@ actor TMDBResponseCache {
     }
 }
 
+struct MediaDetailsBundle {
+    let route: MediaRoute
+    let movieDetail: MovieDetail?
+    let tvDetail: TVShowDetail?
+    let credits: Credits?
+    let videos: [Video]
+    let watchProviders: RegionProviders?
+    let similar: [MediaResult]
+}
+
 struct TMDBService {
     private static let cache = TMDBResponseCache()
     private static let cacheTTL: TimeInterval = 300
@@ -122,6 +132,91 @@ struct TMDBService {
         let combined = try await movies.results.map(MediaResult.movie)
             + shows.results.map(MediaResult.tvShow)
         return dedupeAndSort(combined)
+    }
+
+    func mediaDetails(for route: MediaRoute) async throws -> MediaDetailsBundle {
+        guard APIKeyStore.shared.isSet else {
+            throw TMDBServiceError.missingAPIKey
+        }
+
+        let pathPrefix = mediaPathPrefix(for: route.mediaType)
+
+        async let creditsTask: Credits? = try? request(
+            endpoint: "/\(pathPrefix)/\(route.mediaId)/credits",
+            params: [:]
+        )
+
+        async let videosTask: VideoResult? = try? request(
+            endpoint: "/\(pathPrefix)/\(route.mediaId)/videos",
+            params: [:]
+        )
+
+        async let providersTask: WatchProvidersResponse? = try? request(
+            endpoint: "/\(pathPrefix)/\(route.mediaId)/watch/providers",
+            params: [:]
+        )
+
+        let similar = try await similarTitles(for: route)
+
+        let movieDetail: MovieDetail?
+        let tvDetail: TVShowDetail?
+        switch route.mediaType {
+        case .movie:
+            movieDetail = try await request(
+                endpoint: "/movie/\(route.mediaId)",
+                params: ["append_to_response": "release_dates"]
+            )
+            tvDetail = nil
+        case .tv:
+            tvDetail = try await request(
+                endpoint: "/tv/\(route.mediaId)",
+                params: ["append_to_response": "content_ratings"]
+            )
+            movieDetail = nil
+        default:
+            movieDetail = nil
+            tvDetail = nil
+        }
+
+        let providersResponse = await providersTask
+        let providers = providersResponse?.results["US"] ?? providersResponse?.results.first?.value
+
+        return MediaDetailsBundle(
+            route: route,
+            movieDetail: movieDetail,
+            tvDetail: tvDetail,
+            credits: await creditsTask,
+            videos: await videosTask?.results ?? [],
+            watchProviders: providers,
+            similar: similar
+        )
+    }
+
+    private func similarTitles(for route: MediaRoute) async throws -> [MediaResult] {
+        switch route.mediaType {
+        case .movie:
+            let response: PaginatedResponse<Movie> = try await request(
+                endpoint: "/movie/\(route.mediaId)/similar",
+                params: ["page": "1"]
+            )
+            return response.results.map(MediaResult.movie)
+        case .tv:
+            let response: PaginatedResponse<TVShow> = try await request(
+                endpoint: "/tv/\(route.mediaId)/similar",
+                params: ["page": "1"]
+            )
+            return response.results.map(MediaResult.tvShow)
+        default:
+            return []
+        }
+    }
+
+    private func mediaPathPrefix(for mediaType: MediaType) -> String {
+        switch mediaType {
+        case .movie: return "movie"
+        case .tv: return "tv"
+        case .person: return "person"
+        }
     }
 
     private func request<T: Decodable>(endpoint: String, params: [String: String]) async throws -> T {

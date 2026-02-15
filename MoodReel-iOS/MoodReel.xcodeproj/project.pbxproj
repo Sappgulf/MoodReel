@@ -11,8 +11,11 @@
 		200BBDD5103916F8C74D5F4F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA4DF8C276F322BA10747CF /* RootView.swift */; };
 		284AADC64A3F8856D8EB4E08 /* WatchlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */; };
 		296F9263972459E7E300AD9C /* APIKeyEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950A606672A209499B19F74E /* APIKeyEntryView.swift */; };
+		2D9B58E95EC171B25027856E /* MediaDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213BEF41155E24382B2CCC26 /* MediaDetailViewModel.swift */; };
+		326CC90D3866DB6E94388415 /* MediaRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA7B5F43B2A3523C7AAE366 /* MediaRoute.swift */; };
 		48BC4AEF7AE9076B3F6AB40C /* MediaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */; };
 		516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */; };
+		5391B06D13F8D76573964246 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */; };
 		7FE842967E2C9276CAAB4158 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1E97789AFA3B75A8C21A20 /* AppModels.swift */; };
 		808DAA8FA8228F27F31BA962 /* TMDBConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0787C91DDE7E6F0E38ADD3C3 /* TMDBConfig.swift */; };
 		83770E1616217002D2A9D04A /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798F21EEA5D53E49AAB453FC /* DiscoverView.swift */; };
@@ -21,6 +24,8 @@
 		B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E482C07B60A067B50F672D /* Theme.swift */; };
 		B86001651F53833059C70623 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */; };
 		BDA9292CD0650F733ABDADE6 /* MoodReelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */; };
+		DA96987D1482B38518FA4FDB /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */; };
+		E40326A5753EB7A5EE67A227 /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */; };
 		EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2536D00C4BA4F422998FD9 /* TMDBService.swift */; };
 		ECE5C170E8584E880E6CA504 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD15519799D5462834EA29A /* MainTabView.swift */; };
 /* End PBXBuildFile section */
@@ -31,17 +36,22 @@
 		12A55C25E69ADE38978FBC20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		176E42CA88E4FC28F4AAA3A4 /* Movie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movie.swift; sourceTree = "<group>"; };
 		20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCardView.swift; sourceTree = "<group>"; };
+		213BEF41155E24382B2CCC26 /* MediaDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailViewModel.swift; sourceTree = "<group>"; };
 		287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistStore.swift; sourceTree = "<group>"; };
 		2C2536D00C4BA4F422998FD9 /* TMDBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBService.swift; sourceTree = "<group>"; };
 		3982E848F4A4DC5A778DAC99 /* MoodReel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MoodReel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		488644054F8249131C630EF2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		4AA7B5F43B2A3523C7AAE366 /* MediaRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRoute.swift; sourceTree = "<group>"; };
 		4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModifiers.swift; sourceTree = "<group>"; };
+		5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailView.swift; sourceTree = "<group>"; };
 		66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodReelApp.swift; sourceTree = "<group>"; };
 		70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
 		798F21EEA5D53E49AAB453FC /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		7AA4DF8C276F322BA10747CF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		950A606672A209499B19F74E /* APIKeyEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyEntryView.swift; sourceTree = "<group>"; };
 		DF1E97789AFA3B75A8C21A20 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		F2E482C07B60A067B50F672D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -97,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */,
+				213BEF41155E24382B2CCC26 /* MediaDetailViewModel.swift */,
 				287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */,
 			);
 			path = ViewModels;
@@ -113,10 +124,13 @@
 		4C2EB40D9E23C6F3B48ADE9C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */,
 				950A606672A209499B19F74E /* APIKeyEntryView.swift */,
 				798F21EEA5D53E49AAB453FC /* DiscoverView.swift */,
+				7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */,
 				0AD15519799D5462834EA29A /* MainTabView.swift */,
 				20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */,
+				5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */,
 				7AA4DF8C276F322BA10747CF /* RootView.swift */,
 				488644054F8249131C630EF2 /* SettingsView.swift */,
 				FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */,
@@ -143,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				DF1E97789AFA3B75A8C21A20 /* AppModels.swift */,
+				4AA7B5F43B2A3523C7AAE366 /* MediaRoute.swift */,
 				176E42CA88E4FC28F4AAA3A4 /* Movie.swift */,
 			);
 			path = Models;
@@ -259,11 +274,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				296F9263972459E7E300AD9C /* APIKeyEntryView.swift in Sources */,
+				DA96987D1482B38518FA4FDB /* AchievementsView.swift in Sources */,
 				7FE842967E2C9276CAAB4158 /* AppModels.swift in Sources */,
 				83770E1616217002D2A9D04A /* DiscoverView.swift in Sources */,
 				92D166AD3C86B96409842140 /* DiscoverViewModel.swift in Sources */,
+				5391B06D13F8D76573964246 /* InsightsView.swift in Sources */,
 				ECE5C170E8584E880E6CA504 /* MainTabView.swift in Sources */,
 				48BC4AEF7AE9076B3F6AB40C /* MediaCardView.swift in Sources */,
+				E40326A5753EB7A5EE67A227 /* MediaDetailView.swift in Sources */,
+				2D9B58E95EC171B25027856E /* MediaDetailViewModel.swift in Sources */,
+				326CC90D3866DB6E94388415 /* MediaRoute.swift in Sources */,
 				BDA9292CD0650F733ABDADE6 /* MoodReelApp.swift in Sources */,
 				9BBB97F237B36A98DFE3D395 /* Movie.swift in Sources */,
 				200BBDD5103916F8C74D5F4F /* RootView.swift in Sources */,

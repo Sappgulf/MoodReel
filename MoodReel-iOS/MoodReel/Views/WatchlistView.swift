@@ -10,12 +10,13 @@ struct WatchlistView: View {
     }
 
     @EnvironmentObject private var watchlistStore: WatchlistStore
+    @State private var navigationPath: [MediaRoute] = []
     @State private var randomMessage: String?
     @State private var filter: Filter = .all
     @State private var searchQuery = ""
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack {
                 LinearGradient(
                     colors: [Color.bgPrimary, Color.bgSecondary],
@@ -35,6 +36,9 @@ struct WatchlistView: View {
                             ForEach(filteredItems) { item in
                                 WatchlistRow(
                                     item: item,
+                                    onTap: {
+                                        navigationPath.append(item.route)
+                                    },
                                     onToggleWatched: {
                                         watchlistStore.setWatched(!item.isWatched, for: item.id)
                                     },
@@ -63,6 +67,7 @@ struct WatchlistView: View {
                     Button {
                         if let random = watchlistStore.randomUnwatched() {
                             randomMessage = "Watch \(random.title) tonight."
+                            navigationPath.append(random.route)
                         } else {
                             randomMessage = "Everything here is marked as watched."
                         }
@@ -72,6 +77,9 @@ struct WatchlistView: View {
                     }
                     .tint(.gold)
                 }
+            }
+            .navigationDestination(for: MediaRoute.self) { route in
+                MediaDetailView(route: route)
             }
         }
         .alert(
@@ -109,7 +117,7 @@ struct WatchlistView: View {
         HStack(spacing: AppSpacing.sm) {
             statPill(title: "Saved", value: "\(watchlistStore.items.count)")
             statPill(title: "Unwatched", value: "\(watchlistStore.unwatchedItems.count)")
-            statPill(title: "Watched", value: "\(watchlistStore.items.count - watchlistStore.unwatchedItems.count)")
+            statPill(title: "Watched", value: "\(watchlistStore.watchedItems.count)")
         }
     }
 
@@ -137,7 +145,7 @@ struct WatchlistView: View {
                             .foregroundStyle(filter == entry ? Color.black : Color.textSecondary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .background(filter == entry ? AppGradients.gold : LinearGradient(colors: [Color.bgTertiary], startPoint: .top, endPoint: .bottom))
+                            .background(filter == entry ? AnyShapeStyle(AppGradients.gold) : AnyShapeStyle(Color.bgTertiary))
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -186,6 +194,7 @@ struct WatchlistView: View {
 
 private struct WatchlistRow: View {
     let item: WatchlistItem
+    let onTap: () -> Void
     let onToggleWatched: () -> Void
     let onRemove: () -> Void
 
@@ -207,14 +216,28 @@ private struct WatchlistRow: View {
                 .font(AppFont.caption())
                 .foregroundStyle(Color.textSecondary)
 
-                if item.isWatched {
-                    Label("Watched", systemImage: "checkmark.circle.fill")
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.success)
-                } else {
-                    Label("To Watch", systemImage: "clock")
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.gold)
+                HStack(spacing: AppSpacing.sm) {
+                    if item.isWatched {
+                        Label("Watched", systemImage: "checkmark.circle.fill")
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.success)
+                    } else {
+                        Label("To Watch", systemImage: "clock")
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.gold)
+                    }
+
+                    if item.isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.crimson)
+                    }
+
+                    if let rating = item.userRating {
+                        Text("Your \(String(format: "%.1f", rating))")
+                            .font(AppFont.captionSmall())
+                            .foregroundStyle(Color.gold)
+                    }
                 }
 
                 HStack(spacing: AppSpacing.md) {
@@ -231,7 +254,14 @@ private struct WatchlistRow: View {
             }
 
             Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.textMuted)
+                .padding(.top, 6)
         }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
     }

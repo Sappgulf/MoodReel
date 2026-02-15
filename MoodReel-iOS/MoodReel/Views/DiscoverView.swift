@@ -3,12 +3,13 @@ import UIKit
 
 struct DiscoverView: View {
     @EnvironmentObject private var watchlistStore: WatchlistStore
-    @StateObject private var viewModel = DiscoverViewModel()
+    @EnvironmentObject private var viewModel: DiscoverViewModel
+    @State private var navigationPath: [MediaRoute] = []
     @State private var surpriseMessage: String?
     @State private var feedbackBanner: String?
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack {
                 LinearGradient(
                     colors: [Color.bgPrimary, Color.bgSecondary],
@@ -22,6 +23,11 @@ struct DiscoverView: View {
                         header
                         heroCard
                         searchRow
+
+                        if !viewModel.searchHistory.isEmpty {
+                            recentSearches
+                        }
+
                         moodScroller
                         controlsRow
                         resultsSection
@@ -50,6 +56,9 @@ struct DiscoverView: View {
                 }
             }
             .navigationBarHidden(true)
+            .navigationDestination(for: MediaRoute.self) { route in
+                MediaDetailView(route: route)
+            }
         }
         .task {
             if viewModel.items.isEmpty {
@@ -105,6 +114,12 @@ struct DiscoverView: View {
             Text(viewModel.selectedMood.description)
                 .font(AppFont.body())
                 .foregroundStyle(Color.textSecondary)
+
+            if let updatedAt = viewModel.lastResultUpdatedAt {
+                Text("Updated \(updatedAt.formatted(date: .omitted, time: .shortened))")
+                    .font(AppFont.captionSmall())
+                    .foregroundStyle(Color.textMuted)
+            }
         }
         .padding(AppSpacing.md)
         .background(viewModel.selectedMood.gradient.opacity(0.35))
@@ -144,6 +159,48 @@ struct DiscoverView: View {
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
             .buttonStyle(.plain)
             .pressEffect()
+        }
+    }
+
+    private var recentSearches: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Recent Searches")
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.textMuted)
+
+                Spacer()
+
+                Button("Clear") {
+                    viewModel.clearSearchHistory()
+                }
+                .font(AppFont.caption())
+                .foregroundStyle(Color.textSecondary)
+                .buttonStyle(.plain)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(viewModel.searchHistory.prefix(10)) { entry in
+                        Button {
+                            Task { await viewModel.useSearchHistory(entry) }
+                        } label: {
+                            Text(entry.query)
+                                .font(AppFont.caption())
+                                .foregroundStyle(Color.textPrimary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .background(Color.bgTertiary)
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .stroke(Color.borderDefault, lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 
@@ -246,7 +303,7 @@ struct DiscoverView: View {
                     ForEach(0..<3, id: \.self) { _ in
                         RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                             .fill(Color.bgTertiary)
-                            .frame(height: 160)
+                            .frame(height: 180)
                             .shimmerEffect()
                     }
                 }
@@ -270,7 +327,10 @@ struct DiscoverView: View {
             ForEach(viewModel.items, id: \.stableIdentifier) { item in
                 MediaCardView(
                     item: item,
-                    isSaved: watchlistStore.contains(item)
+                    isSaved: watchlistStore.contains(item),
+                    onTap: {
+                        navigationPath.append(item.route)
+                    }
                 ) {
                     let wasSaved = watchlistStore.contains(item)
                     watchlistStore.toggle(item, mood: viewModel.selectedMood)

@@ -3,67 +3,76 @@ import SwiftUI
 struct MediaCardView: View {
     let item: MediaResult
     let isSaved: Bool
+    let onTap: () -> Void
     let onToggleSave: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: AppSpacing.md) {
-            poster
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(alignment: .top, spacing: AppSpacing.md) {
+                poster
 
-            VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                Text(item.displayTitle)
-                    .font(AppFont.headline())
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    Text(item.displayTitle)
+                        .font(AppFont.headline())
+                        .foregroundStyle(Color.textPrimary)
+                        .lineLimit(2)
 
-                HStack(spacing: AppSpacing.sm) {
-                    pill(text: item.mediaType.displayName, color: .amber)
+                    HStack(spacing: AppSpacing.sm) {
+                        pill(text: item.mediaType.displayName, color: .amber)
 
-                    if let year = item.releaseYear {
-                        pill(text: year, color: .textMuted)
+                        if let year = item.releaseYear {
+                            pill(text: year, color: .textMuted)
+                        }
+
+                        pill(text: "★ \(item.ratingFormatted)", color: .gold)
                     }
 
-                    pill(text: "★ \(item.ratingFormatted)", color: .gold)
+                    if let overview = item.overview, !overview.isEmpty {
+                        Text(overview)
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.textSecondary)
+                            .lineLimit(3)
+                    }
+
+                    if !item.genreNames.isEmpty {
+                        Text(item.genreNames.joined(separator: " • "))
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.textMuted)
+                            .lineLimit(1)
+                    }
                 }
 
-                if let overview = item.overview, !overview.isEmpty {
-                    Text(overview)
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.textSecondary)
-                        .lineLimit(3)
-                }
+                Spacer(minLength: 0)
 
-                if !item.genreNames.isEmpty {
-                    Text(item.genreNames.joined(separator: " • "))
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.textMuted)
-                        .lineLimit(1)
-                }
-
-                Button(action: onToggleSave) {
-                    Label(
-                        isSaved ? "Saved" : "Save to Watchlist",
-                        systemImage: isSaved ? "checkmark.circle.fill" : "plus.circle.fill"
-                    )
-                    .font(AppFont.caption())
-                    .foregroundStyle(isSaved ? Color.success : Color.black)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(
-                        Group {
-                            if isSaved {
-                                Color.success.opacity(0.14)
-                            } else {
-                                AppGradients.gold
-                            }
-                        }
-                    )
-                    .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 2)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.textMuted)
+                    .padding(.top, 8)
             }
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onTap)
 
-            Spacer(minLength: 0)
+            Button(action: onToggleSave) {
+                Label(
+                    isSaved ? "Saved" : "Save to Watchlist",
+                    systemImage: isSaved ? "checkmark.circle.fill" : "plus.circle.fill"
+                )
+                .font(AppFont.caption())
+                .foregroundStyle(isSaved ? Color.success : Color.black)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    Group {
+                        if isSaved {
+                            Color.success.opacity(0.14)
+                        } else {
+                            AppGradients.gold
+                        }
+                    }
+                )
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
