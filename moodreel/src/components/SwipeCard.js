@@ -76,6 +76,7 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
         if (!isDragging) return;
         const currentX = e.touches[0].clientX;
         const diff = currentX - startX.current;
+        if (navigator.vibrate && Math.abs(diff) % 50 < 5) navigator.vibrate(5); // Subtle drag feedback
         setOffset(diff);
     }, [isDragging]);
 
@@ -101,6 +102,7 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
         opacity: isExiting ? 0 : opacity,
         transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease',
         cursor: isDragging ? 'grabbing' : 'grab',
+        willChange: 'transform, opacity'
     };
 
     return (

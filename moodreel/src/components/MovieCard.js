@@ -176,6 +176,7 @@ const MovieCard = memo(function MovieCard({
         '--swipe-x': `${swipeOffset}px`,
         '--swipe-rot': `${swipeOffset * 0.05}deg`,
         opacity: swipeOpacity,
+        willChange: 'transform',
         ...(swipeOffset !== 0 ? { transition: 'none' } : {})
     };
 

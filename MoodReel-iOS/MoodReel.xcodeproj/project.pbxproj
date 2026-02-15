@@ -16,6 +16,7 @@
 		48BC4AEF7AE9076B3F6AB40C /* MediaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */; };
 		516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */; };
 		5391B06D13F8D76573964246 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */; };
+		667DC67E4E4DC394EDAA60BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D6CC07A7C9C88A91B9D082F /* Assets.xcassets */; };
 		7FE842967E2C9276CAAB4158 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1E97789AFA3B75A8C21A20 /* AppModels.swift */; };
 		808DAA8FA8228F27F31BA962 /* TMDBConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0787C91DDE7E6F0E38ADD3C3 /* TMDBConfig.swift */; };
 		83770E1616217002D2A9D04A /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798F21EEA5D53E49AAB453FC /* DiscoverView.swift */; };
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		0787C91DDE7E6F0E38ADD3C3 /* TMDBConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBConfig.swift; sourceTree = "<group>"; };
 		0AD15519799D5462834EA29A /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		0D6CC07A7C9C88A91B9D082F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		12A55C25E69ADE38978FBC20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		176E42CA88E4FC28F4AAA3A4 /* Movie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movie.swift; sourceTree = "<group>"; };
 		20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCardView.swift; sourceTree = "<group>"; };
@@ -75,6 +77,7 @@
 		20F4466FE7737DFEDB49277B /* MoodReel */ = {
 			isa = PBXGroup;
 			children = (
+				0D6CC07A7C9C88A91B9D082F /* Assets.xcassets */,
 				12A55C25E69ADE38978FBC20 /* Info.plist */,
 				66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */,
 				20E98506E82CE71F3917A218 /* Config */,
@@ -222,6 +225,7 @@
 			buildConfigurationList = 9D00035005818B04959DAF41 /* Build configuration list for PBXNativeTarget "MoodReel" */;
 			buildPhases = (
 				B0FBB90D8E07F54DA0E2F096 /* Sources */,
+				14A0A1C59C57DDBE5E9AD8D7 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -267,6 +271,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		14A0A1C59C57DDBE5E9AD8D7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				667DC67E4E4DC394EDAA60BA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B0FBB90D8E07F54DA0E2F096 /* Sources */ = {

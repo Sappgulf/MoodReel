@@ -327,6 +327,7 @@ function Home() {
   const handleSurpriseMe = useCallback(async () => {
     if (isSurpriseLoading) return;
     playSound('click');
+    if (navigator.vibrate) navigator.vibrate(20);
     setIsSurpriseLoading(true);
     // Shuffle duration
     await new Promise(resolve => setTimeout(resolve, 1500));
