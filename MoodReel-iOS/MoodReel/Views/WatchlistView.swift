@@ -197,6 +197,7 @@ private struct WatchlistRow: View {
     let onTap: () -> Void
     let onToggleWatched: () -> Void
     let onRemove: () -> Void
+    @State private var isPressed = false
 
     var body: some View {
         HStack(alignment: .top, spacing: AppSpacing.md) {
@@ -264,13 +265,30 @@ private struct WatchlistRow: View {
         .onTapGesture(perform: onTap)
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .opacity(isPressed ? 0.9 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
 
     private var poster: some View {
         AsyncImage(url: item.posterURL) { phase in
             switch phase {
             case .success(let image):
-                image.resizable().scaledToFill()
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .overlay(
+                        LinearGradient(
+                            colors: [.clear, Color.black.opacity(0.2)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
             case .failure:
                 placeholderPoster
             case .empty:
@@ -281,6 +299,7 @@ private struct WatchlistRow: View {
         }
         .frame(width: 76, height: 114)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
+        .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
     }
 
     private var placeholderPoster: some View {

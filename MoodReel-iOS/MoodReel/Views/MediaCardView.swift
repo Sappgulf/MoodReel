@@ -5,6 +5,8 @@ struct MediaCardView: View {
     let isSaved: Bool
     let onTap: () -> Void
     let onToggleSave: () -> Void
+    @State private var isPressed = false
+    @State private var showSaveAnimation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -76,7 +78,37 @@ struct MediaCardView: View {
         }
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
-        .goldBorder(cornerRadius: AppRadius.lg, opacity: 0.25)
+        .goldBorder(cornerRadius: AppRadius.lg, opacity: isSaved ? 0.5 : 0.25, animated: isSaved)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .opacity(isPressed ? 0.9 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+        .overlay(
+            Group {
+                if showSaveAnimation {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(Color.gold)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+        )
+        .onChange(of: isSaved) { oldValue, newValue in
+            if newValue && !oldValue {
+                withAnimation(.spring(response: 0.3)) {
+                    showSaveAnimation = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    withAnimation {
+                        showSaveAnimation = false
+                    }
+                }
+            }
+        }
     }
 
     private var poster: some View {
@@ -86,6 +118,13 @@ struct MediaCardView: View {
                 image
                     .resizable()
                     .scaledToFill()
+                    .overlay(
+                        LinearGradient(
+                            colors: [.clear, Color.black.opacity(0.3)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
             case .failure:
                 placeholderPoster
             case .empty:
@@ -96,6 +135,7 @@ struct MediaCardView: View {
         }
         .frame(width: 92, height: 138)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
     }
 
     private var placeholderPoster: some View {

@@ -318,13 +318,26 @@ struct DiscoverView: View {
             }
 
             if !viewModel.isLoading && viewModel.items.isEmpty {
-                Text("No matches found. Try another mood or broader search.")
-                    .font(AppFont.body())
-                    .foregroundStyle(Color.textSecondary)
-                    .padding(.vertical, AppSpacing.md)
+                VStack(spacing: AppSpacing.md) {
+                    Image(systemName: "film.slash")
+                        .font(.system(size: 48))
+                        .foregroundStyle(Color.textMuted)
+                    
+                    Text("No matches found")
+                        .font(AppFont.headline())
+                        .foregroundStyle(Color.textPrimary)
+                    
+                    Text("Try another mood or broader search.")
+                        .font(AppFont.body())
+                        .foregroundStyle(Color.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(AppSpacing.xl)
+                .glassCard(cornerRadius: AppRadius.xl, backgroundOpacity: 1)
+                .revealOnAppear()
             }
 
-            ForEach(viewModel.items, id: \.stableIdentifier) { item in
+            ForEach(Array(viewModel.items.enumerated()), id: \.element.stableIdentifier) { index, item in
                 MediaCardView(
                     item: item,
                     isSaved: watchlistStore.contains(item),
@@ -342,6 +355,7 @@ struct DiscoverView: View {
                         await viewModel.loadNextPageIfNeeded(currentItem: item)
                     }
                 }
+                .revealOnAppear(delay: Double(index) * 0.05)
             }
 
             if viewModel.isLoadingMore {
