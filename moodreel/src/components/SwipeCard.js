@@ -91,15 +91,16 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
         }
     }, [offset, triggerSwipe]);
 
-    const rotation = offset * 0.05;
-    const opacity = 1 - Math.abs(offset) / 300;
+    const rotation = offset * 0.08;
+    const opacity = 1 - Math.abs(offset) / 400;
 
     const style = {
         transform: isExiting
-            ? `translateX(${isExiting === 'right' ? '150%' : '-150%'}) rotate(${isExiting === 'right' ? 15 : -15}deg)`
-            : `translateX(${offset}px) rotate(${rotation}deg)`,
+            ? `translateX(${isExiting === 'right' ? '150%' : '-150%'}) rotate(${isExiting === 'right' ? 20 : -20}deg)`
+            : `translateX(${offset}px) rotate(${rotation}deg) scale(${isDragging ? 1.05 : 1})`,
         opacity: isExiting ? 0 : opacity,
-        transition: isDragging ? 'none' : 'all 0.3s ease-out',
+        transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease',
+        cursor: isDragging ? 'grabbing' : 'grab',
     };
 
     return (

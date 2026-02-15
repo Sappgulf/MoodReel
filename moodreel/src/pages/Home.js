@@ -59,6 +59,8 @@ function Home() {
     loadMore: loadMoreResults
   } = useMovieDiscovery(currentYear, region);
 
+  const [visibleCount, setVisibleCount] = useState(8);
+
   const [genres, setGenres] = useState([]);
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(!isMobile);
@@ -79,6 +81,7 @@ function Home() {
 
   const handleSearch = useCallback(() => {
     if (mood) addToHistory(mood);
+    setVisibleCount(8); // Reset staggered visibility
     getRecommendations();
   }, [mood, addToHistory, getRecommendations]);
 
@@ -290,7 +293,10 @@ function Home() {
     if (!loadMoreRef.current || !hasMore || isLoading) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) loadMoreResults();
+        if (entries[0].isIntersecting) {
+          setVisibleCount(prev => prev + 12);
+          loadMoreResults();
+        }
       },
       { threshold: 0.1 }
     );
@@ -321,7 +327,8 @@ function Home() {
     if (isSurpriseLoading) return;
     playSound('click');
     setIsSurpriseLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Shuffle duration
+    await new Promise(resolve => setTimeout(resolve, 1500));
     try {
       const randomPick = await searchService.fetchRandomDiscovery();
       if (randomPick) {
@@ -517,8 +524,8 @@ function Home() {
           </div>
         </div>
         <div className="hero-actions">
-          <button className="surprise-pill" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
-            {isSurpriseLoading ? '🎲 Rolling...' : '🔥 Surprise Me'}
+          <button className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`} onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
+            {isSurpriseLoading ? '🎲 Shuffling...' : '🔥 Surprise Me'}
           </button>
         </div>
       </div>
@@ -768,7 +775,7 @@ function Home() {
               </div>
             )}
             <div className="recommendations">
-              {filteredByServices.map((rec, idx) => (
+              {filteredByServices.slice(0, visibleCount).map((rec, idx) => (
                 <MovieCard
                   key={rec.id}
                   movie={rec}

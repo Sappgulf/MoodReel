@@ -115,6 +115,10 @@ function AppContent() {
 
   return (
     <div className="App">
+      {/* Cinematic Overlays */}
+      <div className="film-grain" aria-hidden="true" />
+      <div className="vignette" aria-hidden="true" />
+
       {/* Confetti celebration */}
       <Confetti active={showConfetti} />
 

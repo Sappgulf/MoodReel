@@ -6,150 +6,99 @@
 @keyframes pageEnter {
     from {
         opacity: 0;
-        transform: translateY(10px);
-        filter: blur(8px);
+        transform: translateY(12px) scale(0.99);
+        filter: blur(12px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         filter: blur(0);
     }
 }
 
 .page-enter {
-    animation: pageEnter var(--transition-slow) forwards;
+    animation: pageEnter 0.8s var(--ease-out) forwards;
 }
 
-/* Skeleton Loading */
-@keyframes shimmer {
+/* Card Glint Effect */
+@keyframes glint {
     0% {
-        background-position: -200% 0;
+        transform: translateX(-150%) skewX(-25deg);
     }
 
     100% {
-        background-position: 200% 0;
+        transform: translateX(150%) skewX(-25deg);
     }
 }
 
-.skeleton {
-    background: linear-gradient(90deg,
-            var(--color-bg-card) 25%,
-            var(--color-bg-glass) 50%,
-            var(--color-bg-card) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite var(--ease-in-out);
-    border-radius: var(--radius-md);
+.glint-container {
+    position: relative;
+    overflow: hidden;
 }
 
-/* Enhanced Fade In */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(24px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.glint::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 45%,
+            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0.1) 55%,
+            rgba(255, 255, 255, 0) 100%);
+    z-index: 2;
+    transform: translateX(-150%) skewX(-25deg);
+    pointer-events: none;
 }
 
-.fade-in {
-    animation: fadeInUp 0.8s var(--ease-out) forwards;
+.parallax-card:hover .glint::after {
+    animation: glint 1.2s var(--ease-out);
 }
 
-/* Pulse Grow for Accents */
-@keyframes pulseGrow {
-
-    0%,
-    100% {
-        transform: scale(1);
-        box-shadow: var(--shadow-gold-sm);
-    }
-
-    50% {
-        transform: scale(1.02);
-        box-shadow: var(--shadow-gold-md);
-    }
-}
-
-.pulse-grow {
-    animation: pulseGrow 3s var(--ease-in-out) infinite;
-}
-
-/* Floating Animation */
-@keyframes float {
-
-    0%,
-    100% {
+/* Reel Shuffle Animation */
+@keyframes reelShuffle {
+    0% {
         transform: translateY(0);
     }
 
-    50% {
-        transform: translateY(-12px);
+    10% {
+        transform: translateY(-5%);
+    }
+
+    90% {
+        transform: translateY(-95%);
+    }
+
+    100% {
+        transform: translateY(-100%);
     }
 }
 
-.float {
-    animation: float 4s var(--ease-in-out) infinite;
+.shuffle-anim {
+    animation: reelShuffle 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
-/* Staggered Delay Utilities */
-.stagger-1 {
-    animation-delay: 50ms;
-}
-
-.stagger-2 {
-    animation-delay: 100ms;
-}
-
-.stagger-3 {
-    animation-delay: 150ms;
-}
-
-.stagger-4 {
-    animation-delay: 200ms;
-}
-
-.stagger-5 {
-    animation-delay: 250ms;
-}
-
-/* Toast Entrance */
-@keyframes toastSlide {
+/* Pulse for Buttons */
+@keyframes buttonPulse {
     0% {
-        transform: translate(-50%, 100%) scale(0.9);
-        opacity: 0;
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
     }
 
     70% {
-        transform: translate(-50%, -20px) scale(1.02);
-        opacity: 1;
+        box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
     }
 
     100% {
-        transform: translate(-50%, 0) scale(1);
-        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
     }
 }
 
-@keyframes sparkle {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: scale(0);
-    }
-
-    50% {
-        opacity: 1;
-        transform: scale(1.2) rotate(45deg);
-    }
-}
-
-.animate-toast {
-    animation: toastSlide 0.6s var(--ease-out) forwards;
+.pulse-button {
+    animation: buttonPulse 2s infinite;
 }
 
 /* Reduced Motion Support */

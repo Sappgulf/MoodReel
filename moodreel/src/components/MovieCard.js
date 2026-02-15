@@ -182,7 +182,7 @@ const MovieCard = memo(function MovieCard({
     return (
         <div
             ref={cardRef}
-            className={`recommendation fade-in parallax-card stagger-${(index % 5) + 1}`}
+            className={`recommendation fade-in parallax-card glint stagger-${(index % 5) + 1}`}
             style={cardStyle}
             onMouseEnter={handleMouseEnter}
             onMouseMove={handleMouseMove}
