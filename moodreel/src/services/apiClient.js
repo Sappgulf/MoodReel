@@ -86,9 +86,12 @@ export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs 
     } catch (err) {
         if (!axios.isCancel(err)) {
             const errorMsg = err.response?.data?.status_message || err.message;
+            const fullUrl = err.config?.url ? `${err.config.url}` : API_BASE_URL + path;
             console.error(`TMDB API Error [${path}]: ${errorMsg}`, {
                 status: err.response?.status,
-                params: params
+                url: fullUrl,
+                params: normalizeParams(finalParams),
+                data: err.response?.data
             });
         }
         throw err;

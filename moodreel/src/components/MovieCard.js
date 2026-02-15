@@ -118,7 +118,7 @@ const MovieCard = memo(function MovieCard({
     const handleMouseMove = useCallback((e) => {
         if (!cardRef.current || reduceMotionRef.current) return;
 
-        const rect = rectRef.current || cardRef.current.getBoundingClientRect();
+        const rect = cardRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 

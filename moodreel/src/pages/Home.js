@@ -9,6 +9,7 @@ import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
 import MoodPulse from '../components/MoodPulse';
+import ShuffleOverlay from '../components/ShuffleOverlay';
 import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
@@ -474,24 +475,31 @@ function Home() {
     if (filteredByServices.length === 0) return;
     const controller = new AbortController();
     const itemsToFetch = filteredByServices.slice(0, 12);
+    let newSnapshot = {};
 
-    itemsToFetch.forEach((item) => {
+    const fetchAll = itemsToFetch.map(async (item) => {
       const mediaType = item.media_type || contentType;
       const key = getProviderKey(item);
       const cached = providerSnapshot[key] || getCachedTitleProviders(item.id, mediaType, region);
       if (cached) return;
-      fetchTitleProviders(item.id, mediaType, region, controller.signal)
-        .then((data) => {
-          setProviderSnapshot((prev) => ({
-            ...prev,
-            [key]: data
-          }));
-        })
-        .catch((err) => {
-          if (err.name !== 'AbortError') {
-            console.error('Provider lookup failed:', err);
-          }
-        });
+
+      try {
+        const data = await fetchTitleProviders(item.id, mediaType, region, controller.signal);
+        newSnapshot[key] = data;
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Provider lookup failed:', err);
+        }
+      }
+    });
+
+    Promise.all(fetchAll).then(() => {
+      if (Object.keys(newSnapshot).length > 0) {
+        setProviderSnapshot((prev) => ({
+          ...prev,
+          ...newSnapshot
+        }));
+      }
     });
 
     return () => controller.abort();
@@ -502,6 +510,11 @@ function Home() {
 
   return (
     <main className="page-enter">
+      <ShuffleOverlay
+        isActive={isSurpriseLoading}
+        results={trending.length > 0 ? trending : recommendations}
+      />
+
       {surpriseMovie && (
         <div className="surprise-banner">
           <span className="surprise-icon">🎲</span>
