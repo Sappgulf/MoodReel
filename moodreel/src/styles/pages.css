@@ -128,18 +128,27 @@
 
 /* Surprise Banner */
 .surprise-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(20, 20, 20, 0.95);
+    border-top: 2px solid var(--color-gold);
+    padding: var(--spacing-lg) var(--spacing-xl);
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    margin-bottom: var(--spacing-xl);
+    gap: var(--spacing-lg);
+    z-index: 1000;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+    animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* Safe area for iPhone home indicator */
+    padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
 }
 
 .surprise-icon {
-    font-size: 1.5rem;
+    font-size: 2rem;
+    animation: bounce 1s infinite alternate;
 }
 
 .surprise-content {
@@ -147,32 +156,52 @@
 }
 
 .surprise-content p {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    color: var(--color-text-gold);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin: 0;
+    letter-spacing: 0.1em;
+    margin: 0 0 0.25rem 0;
+    font-weight: 700;
 }
 
 .surprise-content h3 {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--color-text-primary);
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
 }
 
-.surprise-link {
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: 0.85rem;
+.surprise-actions {
+    margin-left: auto;
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.surprise-link.primary {
+    background: var(--color-gold);
+    color: black;
+    font-weight: bold;
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    transition: transform var(--transition-fast);
+}
+
+.surprise-link.primary:active {
+    transform: scale(0.95);
+}
+
+.surprise-link.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-text-primary);
-    background: var(--color-bg-elevated);
-    border-radius: var(--radius-lg);
-    transition: background var(--transition-fast);
-}
-
-.surprise-link:hover {
-    background: var(--color-bg-elevated-2);
 }
 
 /* Glass Panel */
@@ -829,7 +858,7 @@
     margin-bottom: var(--spacing-xl);
 }
 
-.profile-grid > div {
+.profile-grid>div {
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
@@ -966,6 +995,7 @@
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -976,8 +1006,22 @@
     animation: fadeIn 0.4s var(--ease-out) backwards;
 }
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+.stagger-1 {
+    animation-delay: 0.05s;
+}
+
+.stagger-2 {
+    animation-delay: 0.1s;
+}
+
+.stagger-3 {
+    animation-delay: 0.15s;
+}
+
+.stagger-4 {
+    animation-delay: 0.2s;
+}
+
+.stagger-5 {
+    animation-delay: 0.25s;
+}

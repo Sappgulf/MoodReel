@@ -66,6 +66,7 @@ function Home() {
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(!isMobile);
   const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
+  const [showWinnerInfo, setShowWinnerInfo] = useState(false);
   const [surpriseMovie, setSurpriseMovie] = useState(null);
   const [titleQuery, setTitleQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -335,14 +336,25 @@ function Home() {
       const randomPick = await searchService.fetchRandomDiscovery();
       if (randomPick) {
         setSurpriseMovie(randomPick);
-        setTimeout(() => setSurpriseMovie(null), 10000);
+        // Keep overlay open for "Winner" reveal
+        setTimeout(() => {
+          setIsSurpriseLoading(false);
+          setShowWinnerInfo(true);
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Victory buzz
+        }, 500);
+      } else {
+        setIsSurpriseLoading(false);
       }
     } catch (err) {
       console.error('Surprise me failed:', err);
-    } finally {
       setIsSurpriseLoading(false);
     }
   }, [isSurpriseLoading, playSound]);
+
+  const closeSurprise = useCallback(() => {
+    setSurpriseMovie(null);
+    setShowWinnerInfo(false);
+  }, []);
 
   const handleSwipeRight = useCallback((movie) => {
     setIsCardLoading(true);
@@ -513,17 +525,22 @@ function Home() {
     <main className="page-enter">
       <ShuffleOverlay
         isActive={isSurpriseLoading}
+        isWinner={showWinnerInfo}
+        winnerItem={surpriseMovie}
         results={trending.length > 0 ? trending : recommendations}
       />
 
-      {surpriseMovie && (
-        <div className="surprise-banner">
-          <span className="surprise-icon">🎲</span>
+      {showWinnerInfo && surpriseMovie && (
+        <div className="surprise-banner" onClick={closeSurprise}>
+          <span className="surprise-icon">🎉</span>
           <div className="surprise-content">
-            <p>Surprise Pick!</p>
+            <p>We found a gem for you!</p>
             <h3>{surpriseMovie.title || surpriseMovie.name}</h3>
           </div>
-          <Link to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`} className="surprise-link">View →</Link>
+          <div className="surprise-actions">
+            <Link to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`} className="surprise-link primary">Watch Now</Link>
+            <button className="surprise-link secondary" onClick={(e) => { e.stopPropagation(); closeSurprise(); }}>Close</button>
+          </div>
         </div>
       )}
 
