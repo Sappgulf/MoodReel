@@ -7,6 +7,7 @@ struct DiscoverView: View {
     @State private var navigationPath: [MediaRoute] = []
     @State private var surpriseMessage: String?
     @State private var feedbackBanner: String?
+    @State private var glowPulse = false
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -263,29 +264,86 @@ struct DiscoverView: View {
 
             Spacer()
 
-            Button {
-                if let pick = viewModel.randomPick() {
-                    surpriseMessage = "Try \(pick.displayTitle) (\(pick.mediaType.displayName))."
-                } else {
-                    Task {
-                        await viewModel.loadTrending()
-                        if let pick = viewModel.randomPick() {
-                            surpriseMessage = "Try \(pick.displayTitle) (\(pick.mediaType.displayName))."
-                        } else {
-                            surpriseMessage = "No titles available right now. Pull to refresh and try again."
-                        }
+            surpriseButton
+        }
+    }
+    
+    @State private var isSurprisePressed = false
+    @State private var sparklesRotation: Double = 0
+
+    private var surpriseButton: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                isSurprisePressed = true
+            }
+            
+            withAnimation(.linear(duration: 0.6).repeatCount(1)) {
+                sparklesRotation += 360
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.3)) {
+                    isSurprisePressed = false
+                }
+            }
+
+            if let pick = viewModel.randomPick() {
+                surpriseMessage = "🎬 Try watching: \(pick.displayTitle) (\(pick.mediaType.displayName))"
+            } else {
+                Task {
+                    await viewModel.loadTrending()
+                    if let pick = viewModel.randomPick() {
+                        surpriseMessage = "🎬 Try watching: \(pick.displayTitle) (\(pick.mediaType.displayName))"
+                    } else {
+                        surpriseMessage = "No titles available. Pull to refresh!"
                     }
                 }
-            } label: {
-                Label("Surprise Me", systemImage: "sparkles")
-                    .font(AppFont.caption())
-                    .foregroundStyle(Color.black)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(AppGradients.gold)
-                    .clipShape(Capsule())
             }
-            .buttonStyle(.plain)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14, weight: .bold))
+                    .rotationEffect(.degrees(sparklesRotation))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.goldLight, .amber, .gold],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                Text("Surprise Me")
+                    .font(AppFont.caption())
+                    .fontWeight(.bold)
+            }
+            .foregroundStyle(Color.black)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [.gold, .amber, .goldLight],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
+            )
+            .scaleEffect(isSurprisePressed ? 0.92 : 1.0)
+            .rotationEffect(.degrees(isSurprisePressed ? -2 : 0))
+        }
+        .buttonStyle(.plain)
+        .shadow(color: .gold.opacity(0.5), radius: glowPulse ? 12 : 6, x: 0, y: 3)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                glowPulse = true
+            }
         }
     }
 
