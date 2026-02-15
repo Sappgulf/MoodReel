@@ -27,7 +27,7 @@
 .shuffle-reel {
     display: flex;
     flex-direction: column;
-    animation: reelShuffle 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    animation: reelShuffle 1.2s cubic-bezier(0.5, 0, 0.2, 1) infinite;
 }
 
 .shuffle-item {
@@ -74,10 +74,10 @@
     width: 320px;
     height: 4px;
     background: var(--color-gold);
-    box-shadow: 0 0 20px var(--color-gold);
+    box-shadow: 0 0 25px var(--color-gold), 0 0 10px white;
     transform: translate(-50%, -50%);
     z-index: 2;
-    animation: scannerMove 1s ease-in-out infinite alternate;
+    animation: scannerMove 0.8s ease-in-out infinite alternate;
 }
 
 @keyframes scannerMove {
