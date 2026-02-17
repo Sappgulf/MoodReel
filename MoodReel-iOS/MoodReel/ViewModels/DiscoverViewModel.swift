@@ -7,6 +7,38 @@ final class DiscoverViewModel: ObservableObject {
         case trending
     }
 
+    enum ContentFilter: String, CaseIterable, Identifiable {
+        case all
+        case movies
+        case tvShows
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .all: return "All"
+            case .movies: return "Movies"
+            case .tvShows: return "TV Shows"
+            }
+        }
+    }
+
+    enum SortOption: String, CaseIterable, Identifiable {
+        case popularity
+        case rating
+        case newest
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .popularity: return "Trending"
+            case .rating: return "Top Rated"
+            case .newest: return "Newest"
+            }
+        }
+    }
+
     @Published var selectedMood: MoodType = .happy
     @Published var query: String = ""
     @Published var items: [MediaResult] = []
@@ -17,6 +49,9 @@ final class DiscoverViewModel: ObservableObject {
     @Published var searchHistory: [SearchHistoryItem] = []
     @Published var moodHistory: [MoodEntry] = []
     @Published var lastResultUpdatedAt: Date?
+    @Published var contentFilter: ContentFilter = .all
+    @Published var minRating: Double = 0
+    @Published var sortOption: SortOption = .popularity
 
     private(set) var mode: FeedMode = .mood
     private var currentPage = 1
@@ -41,6 +76,32 @@ final class DiscoverViewModel: ObservableObject {
 
     var distinctMoodsUsed: Int {
         Set(moodHistory.map(\.mood)).count
+    }
+
+    var filteredItems: [MediaResult] {
+        let contentFiltered = items.filter { item in
+            switch contentFilter {
+            case .all:
+                return true
+            case .movies:
+                return item.mediaType == .movie
+            case .tvShows:
+                return item.mediaType == .tv
+            }
+        }
+
+        let ratingFiltered = contentFiltered.filter { $0.voteAverage >= minRating }
+
+        switch sortOption {
+        case .popularity:
+            return ratingFiltered.sorted { $0.popularity > $1.popularity }
+        case .rating:
+            return ratingFiltered.sorted { $0.voteAverage > $1.voteAverage }
+        case .newest:
+            return ratingFiltered.sorted { lhs, rhs in
+                (lhs.releaseYear ?? "0000") > (rhs.releaseYear ?? "0000")
+            }
+        }
     }
 
     func loadForSelectedMood() async {
@@ -119,7 +180,7 @@ final class DiscoverViewModel: ObservableObject {
     }
 
     func randomPick() -> MediaResult? {
-        items.randomElement()
+        filteredItems.randomElement() ?? items.randomElement()
     }
 
     private func loadInitial(mode: FeedMode) async {
