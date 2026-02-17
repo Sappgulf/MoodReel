@@ -31,6 +31,7 @@ struct DiscoverView: View {
 
                         moodScroller
                         controlsRow
+                        quickFiltersRow
                         resultsSection
                     }
                     .padding(AppSpacing.md)
@@ -109,7 +110,7 @@ struct DiscoverView: View {
 
                 Spacer()
 
-                Text("\(viewModel.items.count) picks")
+                Text("\(viewModel.filteredItems.count) picks")
                     .font(AppFont.caption())
                     .foregroundStyle(Color.gold)
                     .padding(.horizontal, 10)
@@ -288,6 +289,62 @@ struct DiscoverView: View {
             surpriseButton
         }
     }
+
+    private var quickFiltersRow: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack {
+                Text("Refine Picks")
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.textMuted)
+
+                Spacer()
+
+                if viewModel.minRating > 0 || viewModel.contentFilter != .all || viewModel.sortOption != .popularity {
+                    Button("Reset") {
+                        viewModel.minRating = 0
+                        viewModel.contentFilter = .all
+                        viewModel.sortOption = .popularity
+                    }
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.textSecondary)
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Picker("Content", selection: $viewModel.contentFilter) {
+                ForEach(DiscoverViewModel.ContentFilter.allCases) { filter in
+                    Text(filter.title).tag(filter)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            HStack(spacing: AppSpacing.sm) {
+                Text("Minimum rating")
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.textSecondary)
+
+                Spacer()
+
+                Text(viewModel.minRating == 0 ? "Any" : String(format: "%.1f+", viewModel.minRating))
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.gold)
+                    .accessibilityLabel("Minimum rating \(viewModel.minRating)")
+            }
+
+            Slider(value: $viewModel.minRating, in: 0...9, step: 0.5)
+                .tint(.gold)
+
+            Picker("Sort", selection: $viewModel.sortOption) {
+                ForEach(DiscoverViewModel.SortOption.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.textSecondary)
+        }
+        .padding(AppSpacing.md)
+        .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
+    }
     
     @State private var isSurprisePressed = false
     @State private var sparklesRotation: Double = 0
@@ -396,17 +453,17 @@ struct DiscoverView: View {
                     .padding(.vertical, AppSpacing.sm)
             }
 
-            if !viewModel.isLoading && viewModel.items.isEmpty {
+            if !viewModel.isLoading && viewModel.filteredItems.isEmpty {
                 VStack(spacing: AppSpacing.md) {
-                    Image(systemName: "film.slash")
+                    Image(systemName: viewModel.items.isEmpty ? "film.slash" : "line.3.horizontal.decrease.circle")
                         .font(.system(size: 48))
                         .foregroundStyle(Color.textMuted)
                     
-                    Text("No matches found")
+                    Text(viewModel.items.isEmpty ? "No matches found" : "No picks match your filters")
                         .font(AppFont.headline())
                         .foregroundStyle(Color.textPrimary)
                     
-                    Text("Try another mood or broader search.")
+                    Text(viewModel.items.isEmpty ? "Try another mood or broader search." : "Lower the rating bar or switch content type.")
                         .font(AppFont.body())
                         .foregroundStyle(Color.textSecondary)
                         .multilineTextAlignment(.center)
@@ -416,7 +473,7 @@ struct DiscoverView: View {
                 .revealOnAppear()
             }
 
-            ForEach(Array(viewModel.items.enumerated()), id: \.element.stableIdentifier) { index, item in
+            ForEach(Array(viewModel.filteredItems.enumerated()), id: \.element.stableIdentifier) { index, item in
                 MediaCardView(
                     item: item,
                     isSaved: watchlistStore.contains(item),

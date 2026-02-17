@@ -32,3 +32,20 @@
   - Added full styling for both sections (cards, bars, labels, responsive grid, focus/active states, particle animation container), fixing missing layout/styling gaps.
 - **Why it changed:** Improve visual polish, readability, and trustworthiness while preserving existing mood-selection behavior.
 - **Verification performed:** Ran `npm run build` and `npm test -- --watchAll=false`; both passed.
+
+## 2026-02-17
+
+### Planned
+- **Scope:** iOS frontend
+- **What will change:** Polish discovery UX with richer controls (content-type and quality filters) and clearer browsing states so users can quickly tune recommendations.
+- **Why:** User requested App Store–ready polish and stronger features for the iOS app.
+- **Verification performed (baseline):** Ran `swift --version` (pass) and attempted `xcodebuild -list -project MoodReel-iOS/MoodReel.xcodeproj` (cannot run in this Linux environment because `xcodebuild` is unavailable).
+
+### Implemented
+- **Scope:** iOS frontend
+- **What changed:**
+  - Added discover feed refinement controls for content type (all/movies/TV), minimum TMDB rating threshold, and sort mode (trending/top rated/newest).
+  - Updated discover results rendering and empty-state messaging to account for active filters, so users can distinguish between no API results vs. over-constrained filters.
+  - Updated “Surprise Me” behavior and hero count to reflect refined (filtered/sorted) picks.
+- **Why it changed:** Gives users faster control over recommendation quality and browsing intent, improving perceived app polish and feature depth for App Store readiness.
+- **Verification performed:** Ran `git diff --check` (pass). Attempted `xcodebuild -list -project MoodReel-iOS/MoodReel.xcodeproj` (cannot run in this Linux environment because `xcodebuild` is unavailable).
