@@ -424,9 +424,6 @@ export function useAchievements() {
             if (hour >= 0 && hour < 5) nightIncrem = 1;
             else if (hour >= 5 && hour < 6) earlyIncrem = 1;
             
-            // Track unique moods
-            const moods = mood ? [mood] : [];
-            
             return {
                 ...prev,
                 lastSearchDate: today,
