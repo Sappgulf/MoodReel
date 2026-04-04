@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
-const API_KEY = 'f2b1a353af51ccd27736c209f7ea0ca6';
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 1000;
 
 function getApiKey() {
-    if (API_KEY) return API_KEY;
     if (typeof window === 'undefined') return null;
     if (window.__MOODREEL_TMDB_API_KEY__) {
         return window.__MOODREEL_TMDB_API_KEY__;
@@ -12,7 +12,7 @@ function getApiKey() {
     if (window.localStorage) {
         return window.localStorage.getItem('moodreel-tmdb-api-key');
     }
-    return null;
+    return process.env.REACT_APP_TMDB_API_KEY || null;
 }
 
 const memoryCache = new Map();
@@ -46,6 +46,16 @@ function setCached(key, data) {
     }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableError(err) {
+    if (axios.isCancel(err)) return false;
+    const status = err.response?.status;
+    return !status || status >= 500 || status === 429;
+}
+
 export function ensureString(value, fallback = '') {
     return typeof value === 'string' ? value : fallback;
 }
@@ -58,7 +68,7 @@ export function ensureArray(value) {
     return Array.isArray(value) ? value : [];
 }
 
-export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs = DEFAULT_TTL_MS } = {}) {
+export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs = DEFAULT_TTL_MS, retries = MAX_RETRIES } = {}) {
     const apiKey = getApiKey();
     if (!apiKey) {
         throw new Error('Missing TMDB API key. Set REACT_APP_TMDB_API_KEY or localStorage moodreel-tmdb-api-key.');
@@ -72,30 +82,42 @@ export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs 
         if (cached) return cached;
     }
 
-    try {
-        const response = await axios.get(`${API_BASE_URL}${path}`, {
-            params: finalParams,
-            signal
-        });
-
-        if (cache && cacheKey) {
-            setCached(cacheKey, response.data);
-        }
-
-        return response.data;
-    } catch (err) {
-        if (!axios.isCancel(err)) {
-            const errorMsg = err.response?.data?.status_message || err.message;
-            const fullUrl = err.config?.url ? `${err.config.url}` : API_BASE_URL + path;
-            console.error(`TMDB API Error [${path}]: ${errorMsg}`, {
-                status: err.response?.status,
-                url: fullUrl,
-                params: normalizeParams(finalParams),
-                data: err.response?.data
+    let lastError;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const response = await axios.get(`${API_BASE_URL}${path}`, {
+                params: finalParams,
+                signal
             });
+
+            if (cache && cacheKey) {
+                setCached(cacheKey, response.data);
+            }
+
+            return response.data;
+        } catch (err) {
+            lastError = err;
+            if (!axios.isCancel(err)) {
+                const errorMsg = err.response?.data?.status_message || err.message;
+                const fullUrl = err.config?.url ? `${err.config.url}` : API_BASE_URL + path;
+                console.error(`TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`, {
+                    status: err.response?.status,
+                    url: fullUrl,
+                    params: normalizeParams(finalParams),
+                    data: err.response?.data
+                });
+            }
+
+            if (attempt < retries && isRetryableError(err)) {
+                const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
+                console.debug(`Retrying in ${delay}ms...`);
+                await sleep(delay);
+                continue;
+            }
+            throw err;
         }
-        throw err;
     }
+    throw lastError;
 }
 
 const apiClient = {

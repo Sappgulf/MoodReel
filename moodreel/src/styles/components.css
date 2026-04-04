@@ -33,12 +33,25 @@
     background: var(--color-bg-secondary);
     border-radius: var(--radius-xl);
     overflow: hidden;
+    transform: translateX(var(--swipe-x, 0px)) rotate(var(--swipe-rot, 0deg));
     transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .recommendation:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
+}
+
+/* 3D Parallax Tilt */
+.parallax-card {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.parallax-card:hover {
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(-6px) scale(1.01);
+    box-shadow: var(--shadow-xl), 0 20px 40px rgba(0,0,0,0.4);
+    transition: box-shadow var(--transition-base);
 }
 
 .recommendation .poster-wrapper {
@@ -241,18 +254,38 @@
     border: none;
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before,
+.primary-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-gold);
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.btn-primary:hover:not(:disabled)::before,
+.primary-button:hover:not(:disabled)::before {
+    opacity: 0.12;
 }
 
 .btn-primary:hover:not(:disabled),
 .primary-button:hover:not(:disabled) {
-    opacity: 0.9;
     transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .btn-primary:active:not(:disabled),
 .primary-button:active:not(:disabled) {
     transform: translateY(0);
+    box-shadow: none;
 }
 
 /* Secondary Button */
@@ -374,14 +407,21 @@
     font-size: 1rem;
     color: var(--color-text-primary);
     background: var(--color-bg-elevated);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-xl);
-    transition: all var(--transition-fast);
+    transition: all var(--transition-base);
 }
 
 .mood-selector input:focus {
-    border-color: var(--color-text-muted);
+    border-color: var(--color-border-gold);
     background: var(--color-bg-elevated-2);
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08), var(--shadow-gold-sm);
+    outline: none;
+}
+
+.mood-selector input::placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
 }
 
 .mood-clear-btn {
@@ -450,6 +490,18 @@
     margin-bottom: var(--spacing-xl);
 }
 
+.content-toggle-tabs {
+    display: inline-flex;
+    padding: 3px;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    gap: 2px;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .content-tab {
     padding: var(--spacing-xs) var(--spacing-lg);
     font-size: 0.85rem;
@@ -457,28 +509,26 @@
     color: var(--color-text-secondary);
     background: transparent;
     border: none;
+    border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
+    white-space: nowrap;
 }
 
 .content-tab:hover {
     color: var(--color-text-primary);
+    background: var(--color-bg-elevated-2);
 }
 
 .content-tab.active {
     color: var(--color-text-primary);
+    background: var(--color-bg-primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--color-border);
 }
 
 .content-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: var(--spacing-lg);
-    right: var(--spacing-lg);
-    height: 2px;
-    background: var(--color-text-primary);
-    border-radius: var(--radius-full);
+    display: none;
 }
 
 /* =====================================================
@@ -734,24 +784,58 @@
 
 .results-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: var(--spacing-lg);
     flex-wrap: wrap;
     gap: var(--spacing-md);
 }
 
-.results-header h2 {
+.results-meta h2 {
     font-size: 1.125rem;
     font-weight: 600;
-    margin: 0;
+    margin: 0 0 var(--spacing-xs) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.results-count {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 2px 8px;
+    vertical-align: middle;
+}
+
+.results-meta-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .taste-summary {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     font-size: 0.8rem;
+}
+
+.taste-liked {
+    color: var(--color-success);
+    font-weight: 500;
+}
+
+.taste-disliked {
     color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.save-vibe-btn {
+    flex-shrink: 0;
 }
 
 .show-hidden-toggle {
@@ -767,15 +851,22 @@
    Loading States
    ===================================================== */
 .skeleton {
-    background: linear-gradient(90deg, var(--color-bg-elevated) 25%, var(--color-bg-elevated-2) 50%, var(--color-bg-elevated) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    background: linear-gradient(
+        105deg,
+        var(--color-bg-elevated) 20%,
+        rgba(255, 215, 0, 0.04) 40%,
+        var(--color-bg-elevated-2) 50%,
+        rgba(255, 215, 0, 0.04) 60%,
+        var(--color-bg-elevated) 80%
+    );
+    background-size: 300% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
     border-radius: var(--radius-md);
 }
 
 @keyframes shimmer {
     0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    100% { background-position: -100% 0; }
 }
 
 .skeleton-card {

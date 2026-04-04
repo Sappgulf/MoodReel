@@ -12,11 +12,12 @@ import searchService from '../services/searchService';
  */
 function Watchlist() {
     const {
-        watchlist, toggleWatchlist, isInWatchlist,
+        watchlist, favorites, toggleWatchlist, isInWatchlist, isFavorite, toggleFavorite,
         getNote, setNote, getRandomMovie,
         isWatched, toggleWatched, getWatchedCount,
         exportData, importData
     } = useWatchlist();
+    const [activeTab, setActiveTab] = useState('watchlist'); // 'watchlist' | 'favorites'
     const [exportStatus, setExportStatus] = useState('');
     const [importStatus, setImportStatus] = useState('');
     const [randomPick, setRandomPick] = useState(null);
@@ -37,8 +38,9 @@ function Watchlist() {
     const fileInputRef = useRef(null);
 
     // Sort and filter watchlist
-    const sortedWatchlist = useMemo(() => {
-        let list = [...watchlist];
+    const sortedList = useMemo(() => {
+        const sourceList = activeTab === 'favorites' ? favorites : watchlist;
+        let list = [...sourceList];
 
         // Apply search filter
         if (deferredSearchTerm.trim()) {
@@ -66,14 +68,14 @@ function Watchlist() {
                 list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
         }
 
-        // Apply filter
+        // Apply filter (only for watchlist tab really, but harmless for favorites)
         if (showWatched === 'watched') {
             list = list.filter(m => isWatched(m.id));
         } else if (showWatched === 'unwatched') {
             list = list.filter(m => !isWatched(m.id));
         }
         return list;
-    }, [watchlist, showWatched, isWatched, sortBy, deferredSearchTerm]);
+    }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
 
     const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
 
@@ -98,9 +100,9 @@ function Watchlist() {
 
     // Export watchlist to clipboard
     const handleExport = useCallback(async () => {
-        if (sortedWatchlist.length === 0) return;
+        if (sortedList.length === 0) return;
 
-        const exportText = sortedWatchlist.map(item => {
+        const exportText = sortedList.map(item => {
             const year = item.release_date
                 ? ` (${new Date(item.release_date).getFullYear()})`
                 : '';
@@ -124,14 +126,14 @@ function Watchlist() {
             setExportStatus('Copied!');
             setTimeout(() => setExportStatus(''), 3000);
         }
-    }, [sortedWatchlist]);
+    }, [sortedList]);
 
     // Generate shareable link
     const handleShareLink = useCallback(async () => {
         // Create minimal data for sharing (only essential fields)
         const shareData = {
             sharedBy: 'A Friend',
-            items: sortedWatchlist.slice(0, 20).map(item => ({
+            items: sortedList.slice(0, 20).map(item => ({
                 id: item.id,
                 title: item.title || item.name,
                 poster_path: item.poster_path,
@@ -163,7 +165,7 @@ function Watchlist() {
             setShareStatus('✓ Copied!');
             setTimeout(() => setShareStatus(''), 3000);
         }
-    }, [sortedWatchlist]);
+    }, [sortedList]);
 
     // Random picker
     const handleRandomPick = useCallback(() => {
@@ -180,7 +182,7 @@ function Watchlist() {
             .map(line => line.replace(/^[•\-*]\s*/, '').split('(')[0].trim().toLowerCase())
             .filter(Boolean);
 
-        const matches = sortedWatchlist.filter(movie => {
+        const matches = sortedList.filter(movie => {
             const movieTitle = (movie.title || movie.name || '').toLowerCase();
             return friendTitles.some(title =>
                 movieTitle.includes(title) ||
@@ -192,7 +194,7 @@ function Watchlist() {
             count: matches.length,
             movies: matches
         });
-    }, [matchInput, sortedWatchlist]);
+    }, [matchInput, sortedList]);
 
     // Notes editing
     const startEditNote = useCallback((movieId) => {
@@ -242,12 +244,41 @@ function Watchlist() {
         }
     }, [watchlist.length, personalizedRecs.length, fetchPersonalizedRecs]);
 
+    const [visibleCount, setVisibleCount] = useState(12);
+
+    // Reset pagination when list changes
+    useEffect(() => {
+        setVisibleCount(12);
+    }, [activeTab, sortBy, showWatched, deferredSearchTerm]);
+
+    const visibleItems = useMemo(() => {
+        return sortedList.slice(0, visibleCount);
+    }, [sortedList, visibleCount]);
+
+    const handleLoadMore = useCallback(() => {
+        setVisibleCount(prev => prev + 12);
+    }, []);
+
     return (
         <div className="watchlist-page">
             <div className="watchlist-header">
-                <h2 className="page-title">My Watchlist</h2>
+                <h2 className="page-title">
+                    <button
+                        className={`tab-btn ${activeTab === 'watchlist' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('watchlist')}
+                    >
+                        My Watchlist
+                    </button>
+                    <span className="tab-divider">|</span>
+                    <button
+                        className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('favorites')}
+                    >
+                        Favorites ❤️
+                    </button>
+                </h2>
                 <div className="watchlist-actions">
-                    {sortedWatchlist.length > 1 && (
+                    {sortedList.length > 1 && (
                         <>
                             <button className="action-btn spin-wheel-btn" onClick={() => setShowSpinWheel(true)} title="Spin the wheel!">
                                 🎡 Spin Wheel
@@ -257,7 +288,7 @@ function Watchlist() {
                             </button>
                         </>
                     )}
-                    {sortedWatchlist.length > 0 && (
+                    {sortedList.length > 0 && (
                         <>
                             <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
                                 👥 Matchmaker
@@ -287,7 +318,7 @@ function Watchlist() {
             </div>
 
             {/* Watchlist Search */}
-            {watchlist.length > 0 && (
+            {(watchlist.length > 0 || favorites.length > 0) && (
                 <div className="watchlist-search-wrapper">
                     <span className="search-icon-hint">🔍</span>
                     <input
@@ -312,7 +343,7 @@ function Watchlist() {
             )}
 
             {/* Watched Filter */}
-            {watchlist.length > 0 && (
+            {activeTab === 'watchlist' && watchlist.length > 0 && (
                 <div className="watched-filter">
                     <span>Show:</span>
                     <button
@@ -437,23 +468,25 @@ function Watchlist() {
                 </div>
             )}
 
-            {sortedWatchlist.length === 0 ? (
+            {sortedList.length === 0 ? (
                 <EmptyState
-                    icon={watchlist.length === 0 ? "🎬" : "🔍"}
-                    title={watchlist.length === 0 ? "Your watchlist is empty" : "No matches found"}
-                    description={watchlist.length === 0
-                        ? "Start adding movies and shows you want to watch!"
-                        : `We couldn't find any items matching "${searchTerm}" in your watchlist.`}
-                    actionLink={watchlist.length === 0 ? "/" : null}
-                    actionText={watchlist.length === 0 ? "Discover Movies" : null}
+                    icon={activeTab === 'favorites' ? "💔" : (watchlist.length === 0 ? "🎬" : "🔍")}
+                    title={activeTab === 'favorites' ? "No favorites yet" : (watchlist.length === 0 ? "Your watchlist is empty" : "No matches found")}
+                    description={activeTab === 'favorites'
+                        ? "Mark movies as favorite ❤️ to see them here!"
+                        : (watchlist.length === 0
+                            ? "Start adding movies and shows you want to watch!"
+                            : `We couldn't find any items matching "${searchTerm}" in your watchlist.`)}
+                    actionLink="/"
+                    actionText="Discover Movies"
                 />
             ) : (
                 <>
                     <p className="watchlist-count">
-                        {sortedWatchlist.length} {sortedWatchlist.length === 1 ? 'item' : 'items'} saved
+                        Showing {visibleItems.length} of {sortedList.length} saved
                     </p>
                     <div className="watchlist-grid">
-                        {sortedWatchlist.map((item) => {
+                        {visibleItems.map((item) => {
                             const note = getNote(item.id);
                             return (
                                 <div key={item.id} className="watchlist-item">
@@ -461,6 +494,8 @@ function Watchlist() {
                                         movie={item}
                                         isInWatchlist={isInWatchlist(item.id)}
                                         onToggleWatchlist={toggleWatchlist}
+                                        isFavorite={isFavorite(item.id)}
+                                        onToggleFavorite={toggleFavorite}
                                         isWatched={isWatched(item.id)}
                                         onToggleWatched={toggleWatched}
                                         mediaType={item.media_type}
@@ -498,6 +533,13 @@ function Watchlist() {
                             );
                         })}
                     </div>
+                    {visibleCount < sortedList.length && (
+                        <div className="load-more-container" style={{ textAlign: 'center', margin: '2rem 0' }}>
+                            <button className="primary-button" onClick={handleLoadMore}>
+                                Load More
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
 
@@ -508,7 +550,7 @@ function Watchlist() {
             {/* Spin the Wheel Modal */}
             {showSpinWheel && (
                 <SpinWheel
-                    movies={sortedWatchlist.filter(m => !isWatched(m.id))}
+                    movies={sortedList.filter(m => !isWatched(m.id))}
                     onSelect={(movie) => {
                         window.location.href = `/movie/${movie.id}?type=${movie.media_type || 'movie'}`;
                     }}

@@ -80,6 +80,7 @@ function Home() {
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
   const hasHydratedRef = useRef(false);
+  const isLoadMoreRef = useRef(false);
 
   const handleSearch = useCallback(() => {
     if (mood) addToHistory(mood);
@@ -292,12 +293,14 @@ function Home() {
 
   // Infinite scroll observer
   useEffect(() => {
-    if (!loadMoreRef.current || !hasMore || isLoading) return;
+    if (!loadMoreRef.current || !hasMore || isLoading || isLoadMoreRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && !isLoadMoreRef.current) {
+          isLoadMoreRef.current = true;
           setVisibleCount(prev => prev + 12);
           loadMoreResults();
+          setTimeout(() => { isLoadMoreRef.current = false; }, 500);
         }
       },
       { threshold: 0.1 }
@@ -787,23 +790,27 @@ function Home() {
         ) : (
           <div className="recommendations-container">
             {filteredByServices.length > 0 && (
-              <div className="results-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <div>
-                  <h2>Results</h2>
-                  <div className="taste-summary">
-                    <span>👍 {tasteCounts.liked}</span>
-                    <span>👎 {tasteCounts.disliked}</span>
+              <div className="results-header">
+                <div className="results-meta">
+                  <h2>Results <span className="results-count">{filteredByServices.length}</span></h2>
+                  <div className="results-meta-row">
+                    {(tasteCounts.liked > 0 || tasteCounts.disliked > 0) && (
+                      <div className="taste-summary">
+                        {tasteCounts.liked > 0 && <span className="taste-liked">👍 {tasteCounts.liked}</span>}
+                        {tasteCounts.disliked > 0 && <span className="taste-disliked">👎 {tasteCounts.disliked}</span>}
+                      </div>
+                    )}
+                    <label className="show-hidden-toggle">
+                      <input
+                        type="checkbox"
+                        checked={showHidden}
+                        onChange={(e) => setShowHidden(e.target.checked)}
+                      />
+                      Show hidden
+                    </label>
                   </div>
-                  <label className="show-hidden-toggle">
-                    <input
-                      type="checkbox"
-                      checked={showHidden}
-                      onChange={(e) => setShowHidden(e.target.checked)}
-                    />
-                    Show hidden
-                  </label>
                 </div>
-                <button className="primary-button" style={{ padding: '8px 16px', fontSize: '0.9rem' }} onClick={handleSaveVibe}>Save Vibe</button>
+                <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>✨ Save Vibe</button>
               </div>
             )}
             <div className="recommendations">

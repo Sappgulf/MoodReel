@@ -239,7 +239,7 @@ function MovieDetails() {
         />
       </div>
 
-      <Link to="/" className="back-button glass-card" style={{ position: 'relative', zIndex: 10, display: 'inline-block', marginBottom: '20px' }}>
+      <Link to="/" className="back-button">
         ← Back to Discover
       </Link>
 
@@ -258,7 +258,7 @@ function MovieDetails() {
                 }}
               />
             ) : (
-              <div className="no-poster" style={{ height: '450px' }}>No Poster</div>
+              <div className="no-poster">No Poster</div>
             )}
           </div>
 
@@ -283,8 +283,8 @@ function MovieDetails() {
                 </span>
               )}
               <div className="rating-large" aria-label={`Rating: ${content.vote_average?.toFixed(1)} out of 10`}>
-                <span className="stars" aria-hidden="true" style={{ color: 'var(--color-gold)' }}>{renderStars(content.vote_average)}</span>
-                <span style={{ marginLeft: '8px', fontWeight: 'bold' }}>{content.vote_average?.toFixed(1)}</span>
+                <span className="stars" aria-hidden="true">{renderStars(content.vote_average)}</span>
+                <span>{content.vote_average?.toFixed(1)}</span>
               </div>
             </div>
 

@@ -67,6 +67,18 @@ function AppContent() {
   useEffect(() => {
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+
+    // Update document title for accessibility
+    const path = location.pathname;
+    let title = 'MoodReel';
+    if (path === '/') title = 'Discover | MoodReel';
+    else if (path === '/watchlist') title = 'Watchlist & Favorites | MoodReel';
+    else if (path === '/achievements') title = 'Achievements | MoodReel';
+    else if (path === '/profile') title = 'Profile | MoodReel';
+    else if (path === '/stats') title = 'Your Stats | MoodReel';
+    else if (path === '/calendar') title = 'Mood Calendar | MoodReel';
+
+    document.title = title;
   }, [location.pathname]);
 
   // Global keyboard shortcuts

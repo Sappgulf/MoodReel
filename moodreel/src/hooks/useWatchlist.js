@@ -198,12 +198,67 @@ export function useWatchlist() {
         }
     }, []);
 
+    const [favorites, setFavorites] = useState(() => {
+        try {
+            const saved = localStorage.getItem('moodreel_favorites');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
+
+    // Persist favorites
+    useEffect(() => {
+        try {
+            localStorage.setItem('moodreel_favorites', JSON.stringify(favorites));
+        } catch (error) {
+            console.error('Failed to save favorites:', error);
+        }
+    }, [favorites]);
+
+    const addToFavorites = useCallback((item) => {
+        setFavorites((prev) => {
+            if (prev.some((i) => i.id === item.id)) return prev;
+            const newItem = {
+                id: item.id,
+                title: item.title || item.name,
+                poster_path: item.poster_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type || 'movie',
+                addedAt: Date.now(),
+            };
+            return [...prev, newItem];
+        });
+    }, []);
+
+    const removeFromFavorites = useCallback((id) => {
+        setFavorites((prev) => prev.filter((item) => item.id !== id));
+    }, []);
+
+    const isFavorite = useCallback((id) => {
+        return favorites.some((item) => item.id === id);
+    }, [favorites]);
+
+    const toggleFavorite = useCallback((item) => {
+        if (isFavorite(item.id)) {
+            removeFromFavorites(item.id);
+        } else {
+            addToFavorites(item);
+        }
+    }, [isFavorite, addToFavorites, removeFromFavorites]);
+
     return {
         watchlist,
+        favorites,
         addToWatchlist,
         removeFromWatchlist,
+        addToFavorites,
+        removeFromFavorites,
         isInWatchlist,
+        isFavorite,
         toggleWatchlist,
+        toggleFavorite,
         getNote,
         setNote,
         isWatched,

@@ -12,6 +12,8 @@ const MovieCard = memo(function MovieCard({
     movie,
     isInWatchlist,
     onToggleWatchlist,
+    isFavorite,
+    onToggleFavorite,
     isWatched,
     onToggleWatched,
     mediaType = 'movie',
@@ -70,6 +72,14 @@ const MovieCard = memo(function MovieCard({
         onToggleWatchlist(movie);
         playSound('click');
     }, [movie, onToggleWatchlist, playSound]);
+
+    const handleFavoriteClick = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (navigator.vibrate) navigator.vibrate(5);
+        onToggleFavorite(movie);
+        playSound('click');
+    }, [movie, onToggleFavorite, playSound]);
 
     const handleWatchedClick = useCallback((e) => {
         e.preventDefault();
@@ -210,9 +220,22 @@ const MovieCard = memo(function MovieCard({
                     onClick={handleWatchlistClick}
                     aria-label={isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
                     aria-pressed={isInWatchlist}
+                    title="Watchlist"
                 >
-                    {isInWatchlist ? '❤️' : '🤍'}
+                    {isInWatchlist ? '🔖' : '📑'}
                 </button>
+
+                {onToggleFavorite && (
+                    <button
+                        className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+                        onClick={handleFavoriteClick}
+                        aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                        aria-pressed={isFavorite}
+                        title="Favorites"
+                    >
+                        {isFavorite ? '❤️' : '🤍'}
+                    </button>
+                )}
 
                 {onToggleWatched && (
                     <button
