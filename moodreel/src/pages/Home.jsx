@@ -275,7 +275,7 @@ function Home() {
         const data = await searchService.fetchGenres(endpoint, controller.signal);
         setGenres(data);
       } catch (err) {
-        if (err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
+        if (!axios.isCancel(err) && err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
           console.error('Error fetching genres:', err);
         }
       }
@@ -300,7 +300,7 @@ function Home() {
         }, []);
         setProviderCatalog(merged);
       } catch (err) {
-        if (err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
+        if (!axios.isCancel(err) && err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
           console.error('Error fetching provider catalog:', err);
         }
       }
@@ -540,7 +540,7 @@ function Home() {
         const data = await fetchTitleProviders(item.id, mediaType, region, controller.signal);
         newSnapshot[key] = data;
       } catch (err) {
-        if (err.name !== 'AbortError') {
+        if (!axios.isCancel(err) && err.name !== 'AbortError') {
           console.error('Provider lookup failed:', err);
         }
       }
