@@ -484,33 +484,32 @@
    Content Type Tabs
    ===================================================== */
 .content-toggle-tabs {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--spacing-xl);
-}
-
-.content-toggle-tabs {
     display: inline-flex;
-    padding: 3px;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    gap: 2px;
+    border-radius: var(--radius-full);
+    gap: 0.25rem;
+    box-shadow: var(--shadow-xs);
     width: auto;
+    margin-bottom: var(--spacing-xl);
     margin-left: auto;
     margin-right: auto;
+    flex-wrap: wrap;
 }
 
 .content-tab {
-    padding: var(--spacing-xs) var(--spacing-lg);
+    padding: 0.6rem 1rem;
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--color-text-secondary);
     background: transparent;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     position: relative;
     white-space: nowrap;
 }
@@ -522,12 +521,8 @@
 
 .content-tab.active {
     color: var(--color-text-primary);
-    background: var(--color-bg-primary);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--color-border);
-}
-
-.content-tab.active::after {
-    display: none;
+    background: var(--color-bg-secondary);
+    box-shadow: inset 0 0 0 1px var(--color-border), 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 /* =====================================================

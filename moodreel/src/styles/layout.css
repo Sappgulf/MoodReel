@@ -83,30 +83,37 @@
 .nav-links {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: 0.25rem;
     margin-left: var(--spacing-xl);
+    padding: 0.35rem;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-xs);
+    flex-wrap: wrap;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-md);
+    padding: 0.55rem 0.9rem;
     color: var(--color-text-secondary);
     font-weight: 500;
     font-size: 0.875rem;
-    border-radius: var(--radius-lg);
-    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    border-radius: var(--radius-full);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .nav-link:hover {
     color: var(--color-text-primary);
-    background: var(--color-bg-elevated);
+    background: var(--color-bg-elevated-2);
 }
 
 .nav-link.active {
     color: var(--color-text-primary);
-    background: var(--color-bg-elevated-2);
+    background: var(--color-bg-secondary);
+    box-shadow: inset 0 0 0 1px var(--color-border), 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .nav-avatar {
@@ -186,10 +193,15 @@ main {
         text-decoration: none;
         font-size: 0.65rem;
         font-weight: 500;
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-full);
         transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
         min-width: 60px;
         position: relative;
+    }
+
+    .bottom-nav-item:hover {
+        background: var(--color-bg-elevated);
+        color: var(--color-text-primary);
     }
 
     .bottom-nav-item::after {
@@ -207,6 +219,8 @@ main {
 
     .bottom-nav-item.active {
         color: var(--color-text-primary);
+        background: var(--color-bg-secondary);
+        box-shadow: inset 0 0 0 1px var(--color-border);
     }
 
     .bottom-nav-item.active::after {

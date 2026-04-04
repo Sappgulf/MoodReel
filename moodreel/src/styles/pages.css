@@ -1048,16 +1048,45 @@
     flex-wrap: wrap;
 }
 
-.watchlist-header h2 {
+.watchlist-header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.watchlist-header .page-title {
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.watchlist-tabs {
+    max-width: fit-content;
 }
 
 .watchlist-actions {
     display: flex;
     gap: var(--spacing-xs);
     flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .watchlist-header {
+        align-items: flex-start;
+    }
+
+    .watchlist-tabs {
+        width: 100%;
+    }
+
+    .watchlist-tabs .tab-btn {
+        flex: 1 1 9rem;
+    }
+
+    .watchlist-actions {
+        width: 100%;
+    }
 }
 
 .action-btn,
@@ -1284,6 +1313,7 @@
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
+    letter-spacing: -0.02em;
 }
 
 /* Watchlist count label */

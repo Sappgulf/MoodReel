@@ -264,21 +264,27 @@ function Watchlist() {
     return (
         <div className="watchlist-page">
             <div className="watchlist-header">
-                <h2 className="page-title">
-                    <button
-                        className={`tab-btn ${activeTab === 'watchlist' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('watchlist')}
-                    >
-                        My Watchlist
-                    </button>
-                    <span className="tab-divider">|</span>
-                    <button
-                        className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('favorites')}
-                    >
-                        Favorites ❤️
-                    </button>
-                </h2>
+                <div className="watchlist-header-copy">
+                    <h2 className="page-title">Your Library</h2>
+                    <div className="watchlist-tabs" role="group" aria-label="Watchlist views">
+                        <button
+                            type="button"
+                            className={`tab-btn ${activeTab === 'watchlist' ? 'active' : ''}`}
+                            aria-pressed={activeTab === 'watchlist'}
+                            onClick={() => setActiveTab('watchlist')}
+                        >
+                            My Watchlist
+                        </button>
+                        <button
+                            type="button"
+                            className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
+                            aria-pressed={activeTab === 'favorites'}
+                            onClick={() => setActiveTab('favorites')}
+                        >
+                            Favorites ❤️
+                        </button>
+                    </div>
+                </div>
                 <div className="watchlist-actions">
                     {sortedList.length > 1 && (
                         <>

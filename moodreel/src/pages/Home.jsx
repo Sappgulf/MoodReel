@@ -593,11 +593,13 @@ function Home() {
         </section>
       )}
 
-      <div className="content-toggle-tabs">
+      <div className="content-toggle-tabs" role="group" aria-label="Content type">
         {['all', 'movie', 'tv'].map(type => (
           <button
             key={type}
+            type="button"
             className={`content-tab ${contentType === type ? 'active' : ''}`}
+            aria-pressed={contentType === type}
             onClick={() => { setContentType(type); setRecommendations([]); setHasSearched(false); }}
           >
             {type === 'all' ? '🎬 All' : type === 'movie' ? '🎥 Movies' : '📺 TV'}
