@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const shortcuts = [
-    { keys: ['←', '→'], description: 'Swipe left/right (mobile mode)' },
-    { keys: ['Enter'], description: 'Search with current mood' },
+    { keys: ['J', '↓'], description: 'Select next movie' },
+    { keys: ['K', '↑'], description: 'Select previous movie' },
+    { keys: ['Enter'], description: 'Open selected movie details' },
+    { keys: ['←', '→'], description: 'Swipe left/right (mobile)' },
     { keys: ['?'], description: 'Show this shortcuts modal' },
     { keys: ['Esc'], description: 'Close modals' },
     { keys: ['D'], description: 'Toggle dark/light theme' },

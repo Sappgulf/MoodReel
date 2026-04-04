@@ -22,6 +22,8 @@ const ShuffleOverlay = ({ isActive, results = [], isWinner = false, winnerItem =
                                 src={`https://image.tmdb.org/t/p/w500${winnerItem.poster_path}`}
                                 alt={winnerItem.title || winnerItem.name}
                                 className="shuffle-poster"
+                                loading="lazy"
+                                decoding="async"
                             />
                             <div className="shuffle-info">
                                 <span className="shuffle-title">{winnerItem.title || winnerItem.name}</span>
@@ -35,6 +37,8 @@ const ShuffleOverlay = ({ isActive, results = [], isWinner = false, winnerItem =
                                         src={`https://image.tmdb.org/t/p/w185${item.poster_path}`}
                                         alt=""
                                         className="shuffle-poster"
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                 ) : (
                                     <div className="shuffle-poster-placeholder" />

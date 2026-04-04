@@ -22,12 +22,28 @@ const ACHIEVEMENT_DEFS = [
         threshold: 10
     },
     {
+        id: 'cinema_hoarder',
+        icon: '🏠',
+        title: 'Cinema Hoarder',
+        description: 'Save 50 movies to your watchlist',
+        condition: (stats) => stats.totalSaved >= 50,
+        threshold: 50
+    },
+    {
         id: 'binge_watcher',
         icon: '📺',
         title: 'Binge Watcher',
         description: 'Save 5 TV shows',
         condition: (stats) => stats.tvSaved >= 5,
         threshold: 5
+    },
+    {
+        id: 'tv_collector',
+        icon: '📚',
+        title: 'TV Collector',
+        description: 'Save 20 TV shows',
+        condition: (stats) => stats.tvSaved >= 20,
+        threshold: 20
     },
     {
         id: 'horror_fan',
@@ -38,12 +54,28 @@ const ACHIEVEMENT_DEFS = [
         threshold: 3
     },
     {
+        id: 'scare_master',
+        icon: '💀',
+        title: 'Scare Master',
+        description: 'Save 10 horror movies',
+        condition: (stats) => stats.horrorSaved >= 10,
+        threshold: 10
+    },
+    {
         id: 'hopeless_romantic',
         icon: '💕',
         title: 'Hopeless Romantic',
         description: 'Save 3 romance movies',
         condition: (stats) => stats.romanceSaved >= 3,
         threshold: 3
+    },
+    {
+        id: 'love_is_war',
+        icon: '🥰',
+        title: 'Love is War',
+        description: 'Save 10 romance movies',
+        condition: (stats) => stats.romanceSaved >= 10,
+        threshold: 10
     },
     {
         id: 'adrenaline_junkie',
@@ -54,12 +86,28 @@ const ACHIEVEMENT_DEFS = [
         threshold: 3
     },
     {
+        id: 'action_hero',
+        icon: '💪',
+        title: 'Action Hero',
+        description: 'Save 10 action movies',
+        condition: (stats) => (stats.actionSaved || 0) >= 10,
+        threshold: 10
+    },
+    {
         id: 'laughter_best',
         icon: '😂',
         title: 'Laughter is Best',
         description: 'Save 3 comedy movies',
         condition: (stats) => (stats.comedySaved || 0) >= 3,
         threshold: 3
+    },
+    {
+        id: 'comedy_king',
+        icon: '👑',
+        title: 'Comedy King',
+        description: 'Save 10 comedy movies',
+        condition: (stats) => (stats.comedySaved || 0) >= 10,
+        threshold: 10
     },
     {
         id: 'deep_thinker',
@@ -70,12 +118,28 @@ const ACHIEVEMENT_DEFS = [
         threshold: 3
     },
     {
+        id: 'stargazer',
+        icon: '🚀',
+        title: 'Stargazer',
+        description: 'Save 10 sci-fi movies',
+        condition: (stats) => (stats.sciFiSaved || 0) >= 10,
+        threshold: 10
+    },
+    {
         id: 'family_first',
         icon: '👨‍👩‍👧‍👦',
         title: 'Family First',
         description: 'Save 3 family or animation movies',
         condition: (stats) => (stats.familySaved || 0) >= 3,
         threshold: 3
+    },
+    {
+        id: 'animation_fan',
+        icon: '🎨',
+        title: 'Animation Fan',
+        description: 'Save 5 animated films',
+        condition: (stats) => (stats.animationSaved || 0) >= 5,
+        threshold: 5
     },
     {
         id: 'trendsetter',
@@ -86,6 +150,14 @@ const ACHIEVEMENT_DEFS = [
         threshold: 3
     },
     {
+        id: 'wild_card',
+        icon: '🃏',
+        title: 'Wild Card',
+        description: 'Use Surprise Me 10 times',
+        condition: (stats) => stats.surpriseCount >= 10,
+        threshold: 10
+    },
+    {
         id: 'consistent',
         icon: '📅',
         title: 'Consistent',
@@ -94,20 +166,68 @@ const ACHIEVEMENT_DEFS = [
         threshold: 5
     },
     {
+        id: 'dedicated',
+        icon: '⭐',
+        title: 'Dedicated',
+        description: 'Search for movies 7 days in a row',
+        condition: (stats) => stats.searchStreak >= 7,
+        threshold: 7
+    },
+    {
         id: 'legendary_streak',
-        icon: '👑',
+        icon: '🏆',
         title: 'Legendary Streak',
         description: 'Maintain a 14-day search streak',
         condition: (stats) => stats.searchStreak >= 14,
         threshold: 14
     },
     {
+        id: 'streak_master',
+        icon: '💎',
+        title: 'Streak Master',
+        description: 'Maintain a 30-day search streak',
+        condition: (stats) => stats.searchStreak >= 30,
+        threshold: 30
+    },
+    {
         id: 'critic',
-        icon: '⭐',
+        icon: '🎭',
         title: 'Critic',
         description: 'Rate 5 movies',
         condition: (stats) => stats.ratingsGiven >= 5,
         threshold: 5
+    },
+    {
+        id: 'master_critic',
+        icon: '🌟',
+        title: 'Master Critic',
+        description: 'Rate 25 movies',
+        condition: (stats) => stats.ratingsGiven >= 25,
+        threshold: 25
+    },
+    {
+        id: 'night_owl',
+        icon: '🦉',
+        title: 'Night Owl',
+        description: 'Search for movies after midnight',
+        condition: (stats) => stats.nightSearches >= 1,
+        threshold: 1
+    },
+    {
+        id: 'early_bird',
+        icon: '🐦',
+        title: 'Early Bird',
+        description: 'Search for movies before 6 AM',
+        condition: (stats) => stats.earlySearches >= 1,
+        threshold: 1
+    },
+    {
+        id: 'explorer',
+        icon: '🔍',
+        title: 'Explorer',
+        description: 'Use 10 different mood searches',
+        condition: (stats) => (stats.uniqueMoods || 0) >= 10,
+        threshold: 10
     }
 ];
 
@@ -136,11 +256,17 @@ export function useAchievements() {
                 comedySaved: 0,
                 thoughtfulSaved: 0,
                 familySaved: 0,
+                sciFiSaved: 0,
+                animationSaved: 0,
                 surpriseCount: 0,
                 searchStreak: 0,
                 ratingsGiven: 0,
                 ratedMovieIds: [],
-                lastSearchDate: null
+                lastSearchDate: null,
+                nightSearches: 0,
+                earlySearches: 0,
+                uniqueMoods: [],
+                searchedMoods: []
             };
         } catch {
             return {
@@ -152,11 +278,17 @@ export function useAchievements() {
                 comedySaved: 0,
                 thoughtfulSaved: 0,
                 familySaved: 0,
+                sciFiSaved: 0,
+                animationSaved: 0,
                 surpriseCount: 0,
                 searchStreak: 0,
                 ratingsGiven: 0,
                 ratedMovieIds: [],
-                lastSearchDate: null
+                lastSearchDate: null,
+                nightSearches: 0,
+                earlySearches: 0,
+                uniqueMoods: [],
+                searchedMoods: []
             };
         }
     });
@@ -213,7 +345,9 @@ export function useAchievements() {
                 familySaved: prev.familySaved || 0,
                 horrorSaved: prev.horrorSaved || 0,
                 romanceSaved: prev.romanceSaved || 0,
-                tvSaved: prev.tvSaved || 0
+                tvSaved: prev.tvSaved || 0,
+                sciFiSaved: prev.sciFiSaved || 0,
+                animationSaved: prev.animationSaved || 0
             };
 
             // Check media type
@@ -235,10 +369,18 @@ export function useAchievements() {
             if (genreIds.includes(35)) { // Comedy
                 newStats.comedySaved += 1;
             }
-            if (genreIds.includes(878) || genreIds.includes(9648)) { // Sci-Fi or Mystery
+            if (genreIds.includes(878)) { // Sci-Fi
+                newStats.sciFiSaved += 1;
                 newStats.thoughtfulSaved += 1;
             }
-            if (genreIds.includes(10751) || genreIds.includes(16)) { // Family or Animation
+            if (genreIds.includes(9648)) { // Mystery
+                newStats.thoughtfulSaved += 1;
+            }
+            if (genreIds.includes(10751)) { // Family
+                newStats.familySaved += 1;
+            }
+            if (genreIds.includes(16)) { // Animation
+                newStats.animationSaved += 1;
                 newStats.familySaved += 1;
             }
 
@@ -252,20 +394,47 @@ export function useAchievements() {
     }, []);
 
     // Track search (for streak)
-    const trackSearch = useCallback(() => {
+    const trackSearch = useCallback((mood) => {
         const today = new Date().toDateString();
+        const hour = new Date().getHours();
+        
         setStats(prev => {
-            if (prev.lastSearchDate === today) return prev;
+            if (prev.lastSearchDate === today) {
+                // Update mood tracking even if already searched today
+                const moods = prev.searchedMoods || [];
+                if (mood && !moods.includes(mood)) {
+                    moods.push(mood);
+                }
+                return {
+                    ...prev,
+                    searchedMoods: moods,
+                    uniqueMoods: [...new Set(moods)]
+                };
+            }
 
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const wasYesterday = prev.lastSearchDate === yesterday.toDateString();
 
             const newStreak = wasYesterday ? (prev.searchStreak || 0) + 1 : 1;
+            
+            // Track time-of-day searches
+            let nightIncrem = 0;
+            let earlyIncrem = 0;
+            if (hour >= 0 && hour < 5) nightIncrem = 1;
+            else if (hour >= 5 && hour < 6) earlyIncrem = 1;
+            
+            // Track unique moods
+            const moods = mood ? [mood] : [];
+            
             return {
                 ...prev,
                 lastSearchDate: today,
-                searchStreak: newStreak
+                searchStreak: newStreak,
+                nightSearches: (prev.nightSearches || 0) + nightIncrem,
+                earlySearches: (prev.earlySearches || 0) + earlyIncrem,
+                searchedMoods: mood ? [...new Set([...(prev.searchedMoods || []), mood])] : prev.searchedMoods || [],
+                uniqueMoods: mood ? [...new Set([...(prev.uniqueMoods || []), mood])] : prev.uniqueMoods || []
             };
         });
     }, []);
@@ -322,29 +491,50 @@ export function useAchievements() {
 function getProgress(achievement, stats) {
     switch (achievement.id) {
         case 'first_save':
+            return Math.min(100, (stats.totalSaved / achievement.threshold) * 100);
         case 'movie_buff':
+        case 'cinema_hoarder':
             return Math.min(100, (stats.totalSaved / achievement.threshold) * 100);
         case 'binge_watcher':
+        case 'tv_collector':
             return Math.min(100, (stats.tvSaved / achievement.threshold) * 100);
         case 'horror_fan':
+        case 'scare_master':
             return Math.min(100, (stats.horrorSaved / achievement.threshold) * 100);
         case 'hopeless_romantic':
+        case 'love_is_war':
             return Math.min(100, (stats.romanceSaved / achievement.threshold) * 100);
         case 'adrenaline_junkie':
+        case 'action_hero':
             return Math.min(100, ((stats.actionSaved || 0) / achievement.threshold) * 100);
         case 'laughter_best':
+        case 'comedy_king':
             return Math.min(100, ((stats.comedySaved || 0) / achievement.threshold) * 100);
         case 'deep_thinker':
             return Math.min(100, ((stats.thoughtfulSaved || 0) / achievement.threshold) * 100);
+        case 'stargazer':
+            return Math.min(100, ((stats.sciFiSaved || 0) / achievement.threshold) * 100);
         case 'family_first':
             return Math.min(100, ((stats.familySaved || 0) / achievement.threshold) * 100);
+        case 'animation_fan':
+            return Math.min(100, ((stats.animationSaved || 0) / achievement.threshold) * 100);
         case 'trendsetter':
+        case 'wild_card':
             return Math.min(100, ((stats.surpriseCount || 0) / achievement.threshold) * 100);
         case 'consistent':
+        case 'dedicated':
         case 'legendary_streak':
+        case 'streak_master':
             return Math.min(100, ((stats.searchStreak || 0) / achievement.threshold) * 100);
         case 'critic':
+        case 'master_critic':
             return Math.min(100, ((stats.ratingsGiven || 0) / achievement.threshold) * 100);
+        case 'night_owl':
+            return Math.min(100, ((stats.nightSearches || 0) / achievement.threshold) * 100);
+        case 'early_bird':
+            return Math.min(100, ((stats.earlySearches || 0) / achievement.threshold) * 100);
+        case 'explorer':
+            return Math.min(100, ((stats.uniqueMoods || []).length / achievement.threshold) * 100);
         default:
             return 0;
     }
