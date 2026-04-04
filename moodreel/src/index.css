@@ -11,18 +11,18 @@
   color-scheme: dark;
 
   /* Cinema Noir Color Palette */
-  --color-bg-primary: #09090b;
-  --color-bg-secondary: #0f0f12;
-  --color-bg-tertiary: #18181b;
-  --color-bg-card: rgba(255, 255, 255, 0.02);
-  --color-bg-glass: rgba(255, 255, 255, 0.04);
-  --color-bg-glass-hover: rgba(255, 255, 255, 0.08);
-  --color-bg-elevated: rgba(255, 255, 255, 0.06);
-  --color-bg-elevated-2: rgba(255, 255, 255, 0.1);
+  --color-bg-primary: #0c1017;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: #182231;
+  --color-bg-card: rgba(255, 255, 255, 0.045);
+  --color-bg-glass: rgba(255, 255, 255, 0.065);
+  --color-bg-glass-hover: rgba(255, 255, 255, 0.095);
+  --color-bg-elevated: rgba(255, 255, 255, 0.075);
+  --color-bg-elevated-2: rgba(255, 255, 255, 0.12);
 
   /* App Chrome (header/nav surfaces) */
-  --color-bg-chrome: rgba(9, 9, 11, 0.8);
-  --color-bg-chrome-strong: rgba(9, 9, 11, 0.95);
+  --color-bg-chrome: rgba(12, 16, 23, 0.72);
+  --color-bg-chrome-strong: rgba(12, 16, 23, 0.9);
 
   /* Premium Gold/Amber Accents */
   --color-gold: #ffd700;
@@ -41,23 +41,27 @@
   --gradient-card-overlay: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.95) 100%);
 
   /* Background Effects */
-  --bg-body-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 255, 255, 0.03), transparent 50%);
-  --bg-backdrop-overlay: linear-gradient(to bottom, rgba(9, 9, 11, 0.6) 0%, var(--color-bg-primary) 100%);
+  --bg-body-glow:
+    radial-gradient(ellipse 75% 45% at 50% -12%, rgba(255, 215, 0, 0.14), transparent 50%),
+    radial-gradient(circle at 18% 8%, rgba(59, 130, 246, 0.1), transparent 26%),
+    radial-gradient(circle at 82% 10%, rgba(220, 20, 60, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 26%);
+  --bg-backdrop-overlay: linear-gradient(to bottom, rgba(12, 16, 23, 0.55) 0%, var(--color-bg-primary) 100%);
 
   /* Text Colors */
   --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
+  --color-text-secondary: #bcc3d3;
+  --color-text-muted: #8b93a4;
   --color-text-gold: #ffd700;
   --color-text-on-dark: #fafafa;
   --color-text-on-dark-muted: #a1a1aa;
 
   /* Border Colors */
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-hover: rgba(255, 215, 0, 0.3);
-  --color-border-gold: rgba(255, 215, 0, 0.5);
-  --color-border-strong: rgba(255, 255, 255, 0.14);
-  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 215, 0, 0.34);
+  --color-border-gold: rgba(255, 215, 0, 0.52);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
 
   /* Status Colors */
   --color-success: #22c55e;
@@ -190,7 +194,7 @@ body {
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text-primary);
-  background: var(--color-bg-primary);
+  background: linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
   min-height: 100vh;
   overflow-x: hidden;
 }
