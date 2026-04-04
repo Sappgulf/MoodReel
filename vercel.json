@@ -1,11 +1,12 @@
 {
-    "buildCommand": "cd moodreel && npm install && npm run build",
-    "outputDirectory": "moodreel/build",
-    "framework": null,
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/"
-        }
-    ]
+  "installCommand": "cd moodreel && npm ci",
+  "buildCommand": "cd moodreel && npm run build",
+  "outputDirectory": "moodreel/build",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }
