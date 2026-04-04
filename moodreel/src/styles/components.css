@@ -1068,6 +1068,12 @@
     animation: toastIn 0.28s var(--ease-out);
 }
 
+.toast:focus-visible,
+.achievement-toast:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+}
+
 .toast-achievement {
     border-color: var(--color-border-hover);
     box-shadow: var(--shadow-xl), var(--shadow-gold-sm);
@@ -1401,4 +1407,349 @@
 
 .swipe-feedback.swipe-left {
     left: var(--spacing-xl);
+}
+
+/* =====================================================
+   Discovery Hero + Quick Actions
+   ===================================================== */
+.hero-actions-skeleton {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.skeleton-kicker {
+    width: 8.5rem;
+    height: 0.8rem;
+}
+
+.skeleton-hero-title {
+    width: min(20rem, 90%);
+    height: clamp(2rem, 5vw, 4rem);
+}
+
+.skeleton-hero-copy-line {
+    width: 100%;
+    max-width: 34rem;
+    height: 1rem;
+}
+
+.skeleton-hero-copy-line.short {
+    max-width: 22rem;
+}
+
+.skeleton-button {
+    width: 10rem;
+    height: 2.5rem;
+    border-radius: var(--radius-lg);
+}
+
+.skeleton-button.secondary {
+    width: 8.5rem;
+}
+
+.skeleton-hero-eyebrow {
+    width: 7rem;
+    height: 0.75rem;
+}
+
+.skeleton-hero-card-title {
+    width: min(16rem, 88%);
+    height: 1.8rem;
+}
+
+.hero-featured-art-skeleton {
+    min-height: 260px;
+    border-radius: 0;
+}
+
+.quick-actions-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: clamp(1rem, 2vw, 2rem);
+    background: rgba(9, 9, 11, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.quick-actions-modal {
+    width: min(720px, 100%);
+    margin-top: clamp(2rem, 8vh, 5rem);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-2xl);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-xl);
+}
+
+.quick-actions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.quick-actions-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: 0.15rem;
+}
+
+.quick-actions-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2vw, 2rem);
+}
+
+.quick-actions-close {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.quick-actions-close:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-elevated-2);
+}
+
+.quick-actions-input {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--radius-xl);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    font-size: 0.95rem;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.quick-actions-input:focus-visible {
+    border-color: var(--color-border-gold);
+    background: var(--color-bg-elevated-2);
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
+}
+
+.quick-actions-list {
+    display: grid;
+    gap: 0.5rem;
+    max-height: min(50vh, 540px);
+    overflow: auto;
+    padding-right: 0.1rem;
+}
+
+.quick-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    width: 100%;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    text-align: left;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.quick-action-item:hover,
+.quick-action-item.active {
+    border-color: var(--color-border-strong);
+    background: var(--color-bg-elevated-2);
+    transform: translateY(-1px);
+}
+
+.quick-action-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.quick-action-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.quick-action-description {
+    color: var(--color-text-secondary);
+    font-size: 0.84rem;
+}
+
+.quick-action-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.quick-action-meta kbd {
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.45rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+}
+
+.quick-action-tone {
+    padding: 0.2rem 0.45rem;
+    border-radius: var(--radius-full);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.quick-action-tone-gold {
+    color: #09090b;
+    background: var(--gradient-gold);
+}
+
+.quick-actions-empty {
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-xl);
+    border: 1px dashed var(--color-border);
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+/* =====================================================
+   Movie Card Layout
+   ===================================================== */
+.swipe-card-link {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.recommendation {
+    position: relative;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transform: translateX(var(--swipe-x, 0px)) rotate(var(--swipe-rot, 0deg));
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.recommendation:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.recommendation .poster-wrapper {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--color-bg-tertiary);
+}
+
+.recommendation img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+}
+
+.recommendation:hover img {
+    transform: scale(1.04);
+}
+
+.recommendation .card-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: linear-gradient(180deg, rgba(12, 16, 23, 0.92), rgba(12, 16, 23, 1));
+    transform: none;
+    opacity: 1;
+    position: static;
+}
+
+.recommendation .card-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.recommendation h2 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text-on-dark);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.recommendation .release-date {
+    font-size: 0.8rem;
+    color: var(--color-text-on-dark-muted);
+}
+
+.recommendation .card-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+    min-width: 0;
+}
+
+.recommendation .rating {
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+.recommendation .provider-badges {
+    position: static;
+    padding: 0;
+    margin-left: auto;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.recommendation .provider-badge {
+    width: 22px;
+    height: 22px;
+}
+
+.recommendation .provider-badge.overflow {
+    width: auto;
+    min-width: 22px;
+    padding: 0 0.35rem;
+}
+
+@media (max-width: 768px) {
+    .hero-featured-art-skeleton {
+        min-height: 220px;
+    }
+
+    .quick-actions-modal {
+        margin-top: 1rem;
+        padding: var(--spacing-md);
+    }
+
+    .quick-action-item {
+        padding: var(--spacing-sm);
+    }
+
+    .recommendation .card-footer {
+        flex-wrap: wrap;
+    }
+
+    .recommendation .provider-badges {
+        margin-left: 0;
+    }
 }

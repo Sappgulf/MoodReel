@@ -10,7 +10,7 @@ import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
 import MoodPulse from '../components/MoodPulse';
 import ShuffleOverlay from '../components/ShuffleOverlay';
-import { SkeletonGrid, MovieCardSkeleton } from '../components/Skeleton';
+import { SkeletonGrid, MovieCardSkeleton, DiscoveryHeroSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -27,6 +27,7 @@ import searchService from '../services/searchService';
 import { fetchProviderCatalog, fetchTitleProviders, getCachedTitleProviders } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
 import { copyToClipboard } from '../utils/clipboard';
+import { getBackdropUrl, getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
 
 function Home() {
   const currentYear = new Date().getFullYear();
@@ -81,6 +82,8 @@ function Home() {
   const searchControllerRef = useRef(null);
   const hasHydratedRef = useRef(false);
   const isLoadMoreRef = useRef(false);
+  const moodInputRef = useRef(null);
+  const titleSearchRef = useRef(null);
 
   const handleSearch = useCallback(() => {
     if (mood) addToHistory(mood);
@@ -91,6 +94,19 @@ function Home() {
   useEffect(() => {
     setSelectedProviders(myServices);
   }, [myServices, setSelectedProviders]);
+
+  useEffect(() => {
+    const handleFocusMood = () => moodInputRef.current?.focus();
+    const handleFocusTitle = () => titleSearchRef.current?.focus();
+
+    window.addEventListener('moodreel:focus-mood-search', handleFocusMood);
+    window.addEventListener('moodreel:focus-title-search', handleFocusTitle);
+
+    return () => {
+      window.removeEventListener('moodreel:focus-mood-search', handleFocusMood);
+      window.removeEventListener('moodreel:focus-title-search', handleFocusTitle);
+    };
+  }, []);
 
   useEffect(() => {
     if (hasHydratedRef.current) return;
@@ -428,6 +444,24 @@ function Home() {
     return count;
   }, [selectedGenres, myServices, minRating, advancedFilters, currentYear]);
 
+  const featuredItem = useMemo(() => {
+    return recommendations[0] || trending[0] || null;
+  }, [recommendations, trending]);
+
+  const featuredLink = featuredItem
+    ? `/${featuredItem.media_type || contentType}/${featuredItem.id}`
+    : null;
+
+  const heroTitle = mood
+    ? `Tuned for “${mood}”`
+    : 'Find the film that fits tonight.';
+
+  const heroDescription = mood
+    ? 'Your current mood is already shaping the feed. Refine the service, rating, or genre mix, then lock in a pick.'
+    : 'Start with a feeling, narrow the field with filters, and keep the best option one tap away.';
+
+  const heroMoodLabel = mood || timeContext.suggestion;
+
   const filteredRecommendations = useMemo(() => {
     if (minRating <= 0) return recommendations;
     return recommendations.filter(m => m.vote_average >= minRating);
@@ -550,24 +584,130 @@ function Home() {
         </div>
       )}
 
-      <div className="hero-vibe-bar glass-panel">
-        <div className="vibe-greeting">
-          <span className="vibe-emoji">{timeContext.emoji}</span>
-          <div className="vibe-text">
-            <span className="vibe-label">{timeContext.greeting}</span>
-            <button className="vibe-suggestion" onClick={() => { setMood(timeContext.suggestion); playSound('pop'); }}>
-              Try <span className="text-gold">"{timeContext.suggestion}"</span>
+      {isLoading && !featuredItem ? (
+        <DiscoveryHeroSkeleton />
+      ) : (
+      <section className="discovery-hero">
+        <div className="discovery-hero-copy">
+          <span className="hero-kicker">MoodReel / discovery engine</span>
+          <h2>{heroTitle}</h2>
+          <p className="hero-description">{heroDescription}</p>
+          <div className="hero-proof-row">
+            <span className="hero-proof">Mood: {heroMoodLabel}</span>
+            <span className="hero-proof">{selectedGenres.length > 0 ? `${selectedGenres.length} genres` : 'All genres'}</span>
+            <span className="hero-proof">{myServices.length > 0 ? `${myServices.length} services` : 'Any service'}</span>
+            <span className="hero-proof">{activeFilterCount} filters</span>
+          </div>
+          <div className="hero-actions">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => {
+                if (!mood) {
+                  setMood(timeContext.suggestion);
+                  window.setTimeout(() => handleSearch(), 0);
+                  return;
+                }
+                handleSearch();
+              }}
+            >
+              {mood ? 'Search this mood' : `Try “${timeContext.suggestion}”`}
+            </button>
+            <button type="button" className="secondary-button" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
+              {isSurpriseLoading ? 'Shuffling…' : 'Surprise Me'}
+            </button>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'))}
+            >
+              Focus search
             </button>
           </div>
+          <p className="hero-hint">
+            Press <kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
+          </p>
         </div>
-        <div className="hero-actions">
-          <button className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`} onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
-            {isSurpriseLoading ? '🎲 Shuffling...' : '🔥 Surprise Me'}
-          </button>
-        </div>
-      </div>
 
-      {!hasAnySearch && <MoodPulse />}
+        <div className="discovery-hero-visual">
+          {featuredItem ? (
+            <Link to={featuredLink} className="hero-featured-card">
+              <div className="hero-featured-art">
+                <img
+                  src={getBackdropUrl(featuredItem.backdrop_path, 'w780')}
+                  alt={getDisplayTitle(featuredItem)}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+                <div className="hero-featured-overlay" />
+              </div>
+              <div className="hero-featured-copy">
+                <span className="hero-featured-eyebrow">{hasAnySearch ? 'Current spotlight' : 'Trending spotlight'}</span>
+                <h3>{getDisplayTitle(featuredItem)}</h3>
+                <p>{getDisplayOverview(featuredItem)}</p>
+                <div className="hero-featured-meta">
+                  {getReleaseYear(featuredItem) && <span>{getReleaseYear(featuredItem)}</span>}
+                  {featuredItem.vote_average ? <span>{featuredItem.vote_average.toFixed(1)} / 10</span> : null}
+                  <span>{featuredItem.media_type === 'tv' ? 'Series' : 'Film'}</span>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="hero-featured-card hero-featured-card-empty">
+              <span className="hero-featured-eyebrow">Loading spotlight</span>
+              <h3>MoodReel is finding a fit</h3>
+              <p>The featured pick will appear as soon as the discovery feed lands.</p>
+            </div>
+          )}
+        </div>
+      </section>
+      )}
+
+      <div className="discovery-support-grid">
+        <div className="discovery-support-column">
+          <div className="hero-vibe-bar glass-panel">
+            <div className="vibe-greeting">
+              <span className="vibe-emoji">{timeContext.emoji}</span>
+              <div className="vibe-text">
+                <span className="vibe-label">{timeContext.greeting}</span>
+                <button className="vibe-suggestion" type="button" onClick={() => { setMood(timeContext.suggestion); playSound('pop'); }}>
+                  Try <span className="text-gold">"{timeContext.suggestion}"</span>
+                </button>
+              </div>
+            </div>
+            <div className="hero-actions">
+              <button className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`} type="button" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
+                {isSurpriseLoading ? '🎲 Shuffling…' : '🔥 Surprise Me'}
+              </button>
+            </div>
+          </div>
+
+          <div className="discovery-insights glass-panel">
+            <span className="insight-kicker">Quick glance</span>
+            <div className="insight-grid">
+              <div className="insight-item">
+                <span>Current mood</span>
+                <strong>{mood || timeContext.suggestion}</strong>
+              </div>
+              <div className="insight-item">
+                <span>Recent mood</span>
+                <strong>{recentMoods[0] || 'None yet'}</strong>
+              </div>
+              <div className="insight-item">
+                <span>Services</span>
+                <strong>{myServices.length > 0 ? `${myServices.length} selected` : 'Any'}</strong>
+              </div>
+              <div className="insight-item">
+                <span>Filters</span>
+                <strong>{activeFilterCount}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {!hasAnySearch && <MoodPulse />}
+      </div>
 
       {trending.length > 0 && recommendations.length === 0 && !hasAnySearch && (
         <section className="trending-section">
@@ -593,165 +733,174 @@ function Home() {
         </section>
       )}
 
-      <div className="content-toggle-tabs" role="group" aria-label="Content type">
-        {['all', 'movie', 'tv'].map(type => (
-          <button
-            key={type}
-            type="button"
-            className={`content-tab ${contentType === type ? 'active' : ''}`}
-            aria-pressed={contentType === type}
-            onClick={() => { setContentType(type); setRecommendations([]); setHasSearched(false); }}
-          >
-            {type === 'all' ? '🎬 All' : type === 'movie' ? '🎥 Movies' : '📺 TV'}
-          </button>
-        ))}
-      </div>
-
-      <div className="mood-selector">
-        <div className="mood-input-wrapper">
-          <span className="mood-icon">✨</span>
-          <input
-            type="text"
-            value={mood}
-            onChange={(e) => setMood(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="What's your mood tonight?"
-            aria-label="Mood search"
-          />
-          {mood && <button className="mood-clear-btn" onClick={() => setMood('')} aria-label="Clear mood">✕</button>}
+      <section className="discovery-console">
+        <div className="content-toggle-tabs" role="group" aria-label="Content type">
+          {['all', 'movie', 'tv'].map(type => (
+            <button
+              key={type}
+              type="button"
+              className={`content-tab ${contentType === type ? 'active' : ''}`}
+              aria-pressed={contentType === type}
+              onClick={() => { setContentType(type); setRecommendations([]); setHasSearched(false); }}
+            >
+              {type === 'all' ? '🎬 All' : type === 'movie' ? '🎥 Movies' : '📺 TV'}
+            </button>
+          ))}
         </div>
-        {recentMoods.length > 0 && !mood && (
-          <div className="recent-moods">
-            <span className="recent-moods-label">Recent:</span>
-            {recentMoods.slice(0, 5).map((recentMood, idx) => (
-              <button
-                key={idx}
-                className="recent-mood-chip"
-                onClick={() => { setMood(recentMood); playSound('pop'); }}
-              >
-                {recentMood}
-              </button>
-            ))}
+
+        <div className="mood-selector">
+          <div className="mood-input-wrapper">
+            <span className="mood-icon">✨</span>
+            <input
+              ref={moodInputRef}
+              type="text"
+              value={mood}
+              onChange={(e) => setMood(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="What's your mood tonight?"
+              aria-label="Mood search"
+            />
+            {mood && <button type="button" className="mood-clear-btn" onClick={() => setMood('')} aria-label="Clear mood">✕</button>}
           </div>
-        )}
-      </div>
-
-      <div className="title-search">
-        <label htmlFor="title-search-input">Search titles</label>
-        <input
-          id="title-search-input"
-          type="text"
-          value={titleQuery}
-          onChange={(e) => setTitleQuery(e.target.value)}
-          placeholder="Search movies or TV"
-        />
-        <div className="search-scope-toggle" role="group" aria-label="Search scope">
-          <button
-            className={searchScope === 'within' ? 'active' : ''}
-            onClick={() => setSearchScope('within')}
-            aria-pressed={searchScope === 'within'}
-          >
-            Search within mood results
-          </button>
-          <button
-            className={searchScope === 'all' ? 'active' : ''}
-            onClick={() => setSearchScope('all')}
-            aria-pressed={searchScope === 'all'}
-          >
-            Search all
-          </button>
-        </div>
-      </div>
-
-      <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
-
-      {recommendations.length === 0 && !isLoading && (
-        <MoodPlaylists onSelectPlaylist={({ genres, name, customFilters }) => {
-          if (customFilters) {
-            setMood(customFilters.mood || '');
-            setContentType(customFilters.contentType || 'all');
-            setSelectedGenres(customFilters.selectedGenres || []);
-            setSelectedProviders(customFilters.selectedProviders || []);
-            setMinRating(customFilters.minRating || 0);
-            setAdvancedFilters(customFilters.advancedFilters || {});
-          } else {
-            setSelectedGenres(genres);
-            setMood(name);
-          }
-          setTimeout(() => handleSearch(), 0);
-        }} />
-      )}
-
-      {isMobile && (
-        <button className="filters-toggle" onClick={() => setShowFilters(!showFilters)}>
-          {showFilters ? '✕ Hide Filters' : '⚙️ Filter & Sort'}
-          {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
-        </button>
-      )}
-
-      {(showFilters || !isMobile) && (
-        <div className={`filters-wrapper ${activeFilterCount > 0 ? 'has-filters' : ''}`}>
-          <div className="genre-filters">
-            <h3>Genres:</h3>
-            <div className="genre-buttons">
-              {genres.map(genre => (
+          {recentMoods.length > 0 && !mood && (
+            <div className="recent-moods">
+              <span className="recent-moods-label">Recent:</span>
+              {recentMoods.slice(0, 5).map((recentMood, idx) => (
                 <button
-                  key={genre.id}
-                  className={selectedGenres.includes(genre.id) ? 'active' : ''}
-                  onClick={() => handleGenreClick(genre.id)}
+                  key={idx}
+                  type="button"
+                  className="recent-mood-chip"
+                  onClick={() => { setMood(recentMood); playSound('pop'); }}
                 >
-                  {genre.name}
+                  {recentMood}
                 </button>
               ))}
             </div>
-          </div>
-          <StreamingFilter
-            selectedProviders={selectedProviders}
-            onToggle={handleProviderToggle}
-            providers={providerCatalog.length > 0 ? providerCatalog : undefined}
-            label="My Services"
+          )}
+        </div>
+
+        <div className="title-search">
+          <label htmlFor="title-search-input">Search titles</label>
+          <input
+            ref={titleSearchRef}
+            id="title-search-input"
+            type="text"
+            value={titleQuery}
+            onChange={(e) => setTitleQuery(e.target.value)}
+            placeholder="Search movies or TV"
           />
-          <RatingFilter minRating={minRating} onRatingChange={setMinRating} />
-          <AdvancedFilters filters={advancedFilters} onFiltersChange={setAdvancedFilters} />
-          <div className="filter-actions" style={{ gridColumn: 'span 2', textAlign: 'center' }}>
-            <button className="text-button" onClick={handleClearFilters}>
-              🧹 Clear All Filters
+          <div className="search-scope-toggle" role="group" aria-label="Search scope">
+            <button
+              type="button"
+              className={searchScope === 'within' ? 'active' : ''}
+              onClick={() => setSearchScope('within')}
+              aria-pressed={searchScope === 'within'}
+            >
+              Search within mood results
+            </button>
+            <button
+              type="button"
+              className={searchScope === 'all' ? 'active' : ''}
+              onClick={() => setSearchScope('all')}
+              aria-pressed={searchScope === 'all'}
+            >
+              Search all
             </button>
           </div>
         </div>
-      )}
 
-      <div className="search-container">
-        <button className="primary-button" onClick={handleSearch} disabled={isBusy}>
-          {isBusy ? 'Searching...' : 'Get Recommendations'}
-        </button>
-        <button
-          className="secondary-button"
-          aria-label="Copy shareable link"
-          onClick={async () => {
-            try {
-              await copyToClipboard(window.location.href);
-              pushToast({
-                icon: '🔗',
-                title: 'Link copied',
-                message: 'Shareable link copied to clipboard.',
-                duration: 2600
-              });
-            } catch (err) {
-              console.error('Copy link failed:', err);
-              pushToast({
-                icon: '⚠️',
-                title: 'Copy failed',
-                message: 'Your browser blocked clipboard access.',
-                variant: 'error',
-                duration: 4000
-              });
+        <div className="search-container">
+          <button className="primary-button" type="button" onClick={handleSearch} disabled={isBusy}>
+            {isBusy ? 'Searching…' : 'Get Recommendations'}
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            aria-label="Copy shareable link"
+            onClick={async () => {
+              try {
+                await copyToClipboard(window.location.href);
+                pushToast({
+                  icon: '🔗',
+                  title: 'Link copied',
+                  message: 'Shareable link copied to clipboard.',
+                  duration: 2600
+                });
+              } catch (err) {
+                console.error('Copy link failed:', err);
+                pushToast({
+                  icon: '⚠️',
+                  title: 'Copy failed',
+                  message: 'Your browser blocked clipboard access.',
+                  variant: 'error',
+                  duration: 4000
+                });
+              }
+            }}
+          >
+            🔗 Copy Link
+          </button>
+        </div>
+
+        <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
+
+        {recommendations.length === 0 && !isLoading && (
+          <MoodPlaylists onSelectPlaylist={({ genres, name, customFilters }) => {
+            if (customFilters) {
+              setMood(customFilters.mood || '');
+              setContentType(customFilters.contentType || 'all');
+              setSelectedGenres(customFilters.selectedGenres || []);
+              setSelectedProviders(customFilters.selectedProviders || []);
+              setMinRating(customFilters.minRating || 0);
+              setAdvancedFilters(customFilters.advancedFilters || {});
+            } else {
+              setSelectedGenres(genres);
+              setMood(name);
             }
-          }}
-        >
-          🔗 Copy Link
-        </button>
-      </div>
+            setTimeout(() => handleSearch(), 0);
+          }} />
+        )}
+
+        {isMobile && (
+          <button className="filters-toggle" type="button" onClick={() => setShowFilters(!showFilters)}>
+            {showFilters ? '✕ Hide Filters' : '⚙️ Filter & Sort'}
+            {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
+          </button>
+        )}
+
+        {(showFilters || !isMobile) && (
+          <div className={`filters-wrapper ${activeFilterCount > 0 ? 'has-filters' : ''}`}>
+            <div className="genre-filters">
+              <h3>Genres:</h3>
+              <div className="genre-buttons">
+                {genres.map(genre => (
+                  <button
+                    key={genre.id}
+                    type="button"
+                    className={selectedGenres.includes(genre.id) ? 'active' : ''}
+                    onClick={() => handleGenreClick(genre.id)}
+                  >
+                    {genre.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <StreamingFilter
+              selectedProviders={selectedProviders}
+              onToggle={handleProviderToggle}
+              providers={providerCatalog.length > 0 ? providerCatalog : undefined}
+              label="My Services"
+            />
+            <RatingFilter minRating={minRating} onRatingChange={setMinRating} />
+            <AdvancedFilters filters={advancedFilters} onFiltersChange={setAdvancedFilters} />
+            <div className="filter-actions" style={{ gridColumn: 'span 2', textAlign: 'center' }}>
+              <button className="text-button" type="button" onClick={handleClearFilters}>
+                🧹 Clear All Filters
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
 
       {error && (
         <ErrorState

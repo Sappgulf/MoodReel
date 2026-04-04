@@ -19,7 +19,7 @@ function MoodPulse() {
     <section className="mood-pulse-container" aria-labelledby="mood-pulse-title">
       <div className="pulse-header">
         <div>
-          <p className="pulse-eyebrow">Community signal</p>
+          <p className="pulse-eyebrow">Live signal</p>
           <h3 id="mood-pulse-title">Global Mood Pulse</h3>
         </div>
         <span className="pulse-live" aria-label="Snapshot status">
@@ -44,7 +44,7 @@ function MoodPulse() {
         ))}
       </div>
 
-      <p className="pulse-info">An anonymized snapshot based on recent MoodReel mood searches.</p>
+      <p className="pulse-info">An anonymized snapshot of recent MoodReel mood searches. Use it as a hint, not a rule.</p>
     </section>
   );
 }

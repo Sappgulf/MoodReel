@@ -216,6 +216,7 @@ const MovieCard = memo(function MovieCard({
 
             <div className="card-actions">
                 <button
+                    type="button"
                     className={`watchlist-btn ${isInWatchlist ? 'active' : ''}`}
                     onClick={handleWatchlistClick}
                     aria-label={isInWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
@@ -227,6 +228,7 @@ const MovieCard = memo(function MovieCard({
 
                 {onToggleFavorite && (
                     <button
+                        type="button"
                         className={`favorite-btn ${isFavorite ? 'active' : ''}`}
                         onClick={handleFavoriteClick}
                         aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
@@ -239,6 +241,7 @@ const MovieCard = memo(function MovieCard({
 
                 {onToggleWatched && (
                     <button
+                        type="button"
                         className={`watched-card-btn ${isWatched ? 'active' : ''}`}
                         onClick={handleWatchedClick}
                         aria-label={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
@@ -251,6 +254,7 @@ const MovieCard = memo(function MovieCard({
                 {(onLike || onDislike) && (
                     <div className="taste-actions" role="group" aria-label="Taste profile">
                         <button
+                            type="button"
                             className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
                             onClick={handleLike}
                             aria-label="Like this title"
@@ -260,6 +264,7 @@ const MovieCard = memo(function MovieCard({
                             👍
                         </button>
                         <button
+                            type="button"
                             className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
                             onClick={handleDislike}
                             aria-label="Dislike this title"
@@ -272,7 +277,7 @@ const MovieCard = memo(function MovieCard({
                 )}
             </div>
 
-            <Link to={detailPath}>
+            <Link to={detailPath} className="swipe-card-link">
                 <div className="poster-wrapper">
                     <img
                         src={getPosterUrl(movie.poster_path)}
@@ -287,17 +292,20 @@ const MovieCard = memo(function MovieCard({
                 </div>
 
                 <div className="card-content">
-                    <h2>{title}</h2>
-                    <p className="release-date">{year}</p>
-                    {rating && (
-                        <div className="rating" aria-label={`Rating: ${rating} out of 10`}>
-                            <span aria-hidden="true">⭐</span>
-                            <span>{rating}</span>
-                        </div>
-                    )}
+                    <div className="card-copy">
+                        <h2>{title}</h2>
+                        <p className="release-date">{year}</p>
+                    </div>
+                    <div className="card-footer">
+                        {rating && (
+                            <div className="rating" aria-label={`Rating: ${rating} out of 10`}>
+                                <span aria-hidden="true">⭐</span>
+                                <span>{rating}</span>
+                            </div>
+                        )}
+                        <ProviderBadges providers={providerBadges} />
+                    </div>
                 </div>
-
-                <ProviderBadges providers={providerBadges} />
             </Link>
         </div>
     );

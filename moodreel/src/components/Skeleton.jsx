@@ -16,6 +16,37 @@ export function MovieCardSkeleton() {
 }
 
 /**
+ * Skeleton for the discovery hero surface
+ */
+export function DiscoveryHeroSkeleton() {
+    return (
+        <section className="discovery-hero discovery-hero-skeleton" aria-hidden="true">
+            <div className="discovery-hero-copy">
+                <div className="skeleton skeleton-kicker" />
+                <div className="skeleton skeleton-hero-title" />
+                <div className="skeleton skeleton-hero-copy-line" />
+                <div className="skeleton skeleton-hero-copy-line short" />
+                <div className="skeleton hero-proof-chip" />
+                <div className="hero-actions hero-actions-skeleton">
+                    <div className="skeleton skeleton-button" />
+                    <div className="skeleton skeleton-button secondary" />
+                </div>
+            </div>
+            <div className="discovery-hero-visual">
+                <div className="hero-featured-card hero-featured-card-skeleton">
+                    <div className="skeleton hero-featured-art-skeleton" />
+                    <div className="hero-featured-copy">
+                        <div className="skeleton skeleton-hero-eyebrow" />
+                        <div className="skeleton skeleton-hero-card-title" />
+                        <div className="skeleton skeleton-hero-copy-line" />
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+/**
  * Grid of skeleton cards for loading state
  */
 export function SkeletonGrid({ count = 8, layout = 'grid' }) {

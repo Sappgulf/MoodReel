@@ -98,7 +98,7 @@ function Profile() {
                         <p className="join-date">Member since {new Date(profile.joinDate).toLocaleDateString()}</p>
                         <div className="level-badge">Level {level}</div>
                     </div>
-                    <button className="edit-profile-btn" onClick={() => isEditing ? handleSave() : setIsEditing(true)}>
+                    <button type="button" className="edit-profile-btn" onClick={() => isEditing ? handleSave() : setIsEditing(true)}>
                         {isEditing ? '✅ Save' : '📂 Edit Profile'}
                     </button>
                 </div>
@@ -197,9 +197,9 @@ function Profile() {
                     <div className="taste-profile-summary">
                         <h4>🎯 Taste Profile</h4>
                         <p>Liked: {tasteCounts.liked} • Disliked: {tasteCounts.disliked}</p>
-                        <button className="secondary-button" onClick={resetProfile}>
+                    <button type="button" className="secondary-button" onClick={resetProfile}>
                             Reset taste profile
-                        </button>
+                    </button>
                     </div>
                 </div>
             </div>

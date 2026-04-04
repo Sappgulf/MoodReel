@@ -15,7 +15,15 @@ function ToastStack() {
                 <div
                     key={toast.id}
                     className={`toast ${toast.variant ? `toast-${toast.variant}` : ''}`}
-                    role="status"
+                    role="button"
+                    aria-label={`Dismiss ${toast.title || 'notification'}`}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            dismissToast(toast.id);
+                        }
+                    }}
                     onClick={() => dismissToast(toast.id)}
                 >
                     <div className="toast-icon" aria-hidden="true">{toast.icon || '✅'}</div>

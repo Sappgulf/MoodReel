@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import React, { Suspense, lazy, useState, useEffect, useMemo, useCallback } from 'react';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SkeletonGrid } from './components/Skeleton';
@@ -10,6 +10,7 @@ import InstallPrompt from './components/InstallPrompt';
 import Confetti from './components/Confetti';
 import OnboardingModal from './components/OnboardingModal';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
+import QuickActionsModal from './components/QuickActionsModal';
 import { TrailerProvider, useTrailer } from './context/TrailerContext';
 import { ToastProvider, useToasts } from './context/ToastContext';
 import TrailerPiP from './components/TrailerPiP';
@@ -28,16 +29,125 @@ const Profile = lazy(() => import('./pages/Profile'));
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const { isSoundEnabled, toggleSounds } = useSounds();
+  const soundEnabled = isSoundEnabled();
   const { newUnlock, unlockedCount, totalCount } = useAchievements();
   const { activeTrailer, closeTrailer } = useTrailer();
   const { pushToast } = useToasts();
   const { profile } = useUserProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const openQuickActions = useCallback(() => {
+    setShowQuickActions(true);
+  }, []);
+
+  const quickActions = useMemo(() => {
+    const focusMoodSearch = () => {
+      navigate('/');
+      window.setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'));
+      }, 75);
+    };
+
+    return [
+      {
+        id: 'discover',
+        label: 'Go to Discover',
+        description: 'Return to the main mood search surface.',
+        shortcut: 'G D',
+        onSelect: () => navigate('/')
+      },
+      {
+        id: 'watchlist',
+        label: 'Open Watchlist',
+        description: 'Review saved titles, notes, and watched items.',
+        shortcut: 'G W',
+        onSelect: () => navigate('/watchlist')
+      },
+      {
+        id: 'stats',
+        label: 'Open Stats',
+        description: 'Check taste trends, genres, and discovery patterns.',
+        shortcut: 'G S',
+        onSelect: () => navigate('/stats')
+      },
+      {
+        id: 'calendar',
+        label: 'Open Calendar',
+        description: 'See mood-search history across the last 30 days.',
+        shortcut: 'G C',
+        onSelect: () => navigate('/calendar')
+      },
+      {
+        id: 'profile',
+        label: 'Open Profile',
+        description: 'Update your persona, bio, and streaming region.',
+        shortcut: 'G P',
+        onSelect: () => navigate('/profile')
+      },
+      {
+        id: 'focus-mood',
+        label: 'Focus Mood Search',
+        description: 'Jump straight to the discovery input on Home.',
+        shortcut: 'S',
+        onSelect: focusMoodSearch
+      },
+      {
+        id: 'toggle-theme',
+        label: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+        description: 'Change the app chrome in one tap.',
+        shortcut: 'D',
+        tone: 'gold',
+        onSelect: toggleTheme
+      },
+      {
+        id: 'toggle-sound',
+        label: soundEnabled ? 'Mute Sounds' : 'Unmute Sounds',
+        description: 'Silence or restore feedback sounds.',
+        shortcut: 'M',
+        tone: 'gold',
+        onSelect: toggleSounds
+      },
+      {
+        id: 'shortcuts',
+        label: 'Show Keyboard Shortcuts',
+        description: 'Open the built-in help overlay.',
+        shortcut: '?',
+        onSelect: () => setShowShortcuts(true)
+      },
+      {
+        id: 'copy-link',
+        label: 'Copy Current Link',
+        description: 'Share the current MoodReel state.',
+        shortcut: '⌘ C',
+        onSelect: async () => {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            pushToast({
+              icon: '🔗',
+              title: 'Link copied',
+              message: 'Current view copied to clipboard.',
+              duration: 2600
+            });
+          } catch (err) {
+            pushToast({
+              icon: '⚠️',
+              title: 'Copy failed',
+              message: 'Clipboard access was blocked by the browser.',
+              variant: 'error',
+              duration: 4000
+            });
+          }
+        }
+      }
+    ];
+  }, [isDark, navigate, pushToast, soundEnabled, toggleSounds, toggleTheme]);
 
   // Monitor scroll for header polish
   useEffect(() => {
@@ -84,6 +194,11 @@ function AppContent() {
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openQuickActions();
+        return;
+      }
       // ? = show shortcuts
       if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
@@ -101,7 +216,7 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleTheme, toggleSounds]);
+  }, [openQuickActions, toggleTheme, toggleSounds]);
 
   // Trigger confetti on achievement unlock
   useEffect(() => {
@@ -158,6 +273,11 @@ function AppContent() {
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
       />
+      <QuickActionsModal
+        isOpen={showQuickActions}
+        onClose={() => setShowQuickActions(false)}
+        actions={quickActions}
+      />
 
       {/* Offline Indicator */}
       {isOffline && (
@@ -171,6 +291,15 @@ function AppContent() {
           <Link to="/" className="logo-link"><h1>🎬 MoodReel</h1></Link>
           <div className="header-controls">
             <button
+              className="quick-actions-btn"
+              type="button"
+              onClick={openQuickActions}
+              title="Quick actions (⌘K)"
+              aria-label="Open quick actions"
+            >
+              ⌘K
+            </button>
+            <button
               className="shortcuts-btn"
               type="button"
               onClick={() => setShowShortcuts(true)}
@@ -183,10 +312,10 @@ function AppContent() {
               className="sound-toggle"
               type="button"
               onClick={toggleSounds}
-              aria-label={`${isSoundEnabled() ? 'Mute' : 'Unmute'} sounds`}
-              title={`${isSoundEnabled() ? 'Mute' : 'Unmute'} sounds`}
+              aria-label={`${soundEnabled ? 'Mute' : 'Unmute'} sounds`}
+              title={`${soundEnabled ? 'Mute' : 'Unmute'} sounds`}
             >
-              {isSoundEnabled() ? '🔊' : '🔇'}
+              {soundEnabled ? '🔊' : '🔇'}
             </button>
             <button
               className="theme-toggle"

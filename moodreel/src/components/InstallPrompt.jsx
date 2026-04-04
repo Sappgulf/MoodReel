@@ -33,16 +33,17 @@ function InstallPrompt() {
             setShowPrompt(true);
         };
 
-        window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
-        // Track successful install
-        window.addEventListener('appinstalled', () => {
+        const handleAppInstalled = () => {
             setIsInstalled(true);
             setShowPrompt(false);
-        });
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+        window.addEventListener('appinstalled', handleAppInstalled);
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+            window.removeEventListener('appinstalled', handleAppInstalled);
         };
     }, []);
 

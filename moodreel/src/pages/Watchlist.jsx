@@ -520,8 +520,8 @@ function Watchlist() {
                                                     rows={2}
                                                 />
                                                 <div className="note-actions">
-                                                    <button onClick={saveNote}>Save</button>
-                                                    <button onClick={() => setEditingNote(null)}>Cancel</button>
+                                                    <button type="button" onClick={saveNote}>Save</button>
+                                                    <button type="button" onClick={() => setEditingNote(null)}>Cancel</button>
                                                 </div>
                                             </div>
                                         ) : note ? (
@@ -530,6 +530,7 @@ function Watchlist() {
                                             </div>
                                         ) : (
                                             <button
+                                                type="button"
                                                 className="add-note-btn"
                                                 onClick={() => startEditNote(item.id)}
                                             >

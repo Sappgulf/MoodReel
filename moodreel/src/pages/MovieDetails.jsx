@@ -369,19 +369,21 @@ function MovieDetails() {
                 size="large"
               />
 
-              {!showReviewForm && !userReview && (
-                <button
-                  className="review-toggle-btn"
-                  onClick={() => setShowReviewForm(true)}
-                >
-                  ✏️ Write a Review
-                </button>
+                {!showReviewForm && !userReview && (
+                  <button
+                    type="button"
+                    className="review-toggle-btn"
+                    onClick={() => setShowReviewForm(true)}
+                  >
+                    ✏️ Write a Review
+                  </button>
               )}
 
               {userReview && !showReviewForm && (
                 <div className="user-review">
                   <p>"{userReview}"</p>
                   <button
+                    type="button"
                     className="review-edit-btn"
                     onClick={() => setShowReviewForm(true)}
                   >
@@ -399,8 +401,8 @@ function MovieDetails() {
                     rows={3}
                   />
                   <div className="review-form-actions">
-                    <button onClick={handleReviewSubmit}>Save Review</button>
-                    <button onClick={() => setShowReviewForm(false)}>Cancel</button>
+                    <button type="button" onClick={handleReviewSubmit}>Save Review</button>
+                    <button type="button" onClick={() => setShowReviewForm(false)}>Cancel</button>
                   </div>
                 </div>
               )}

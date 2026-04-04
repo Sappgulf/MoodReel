@@ -8,14 +8,14 @@ export const EMPTY_STATE_PRESETS = {
     watchlist: {
         icon: '📋',
         title: 'Your watchlist is empty',
-        description: 'Start discovering movies and save your favorites here.',
+        description: 'Start discovering movies and save your favorites to build the list.',
         actionText: 'Discover Movies',
         actionLink: '/'
     },
     search: {
         icon: '🔍',
         title: 'No results found',
-        description: 'Try adjusting your search or explore different moods.',
+        description: 'Try another mood, clear a filter, or widen the search scope.',
         actionText: 'Explore Moods',
         actionLink: '/'
     },
@@ -36,14 +36,14 @@ export const EMPTY_STATE_PRESETS = {
     stats: {
         icon: '📊',
         title: 'No stats yet',
-        description: 'Start discovering and saving movies to see your stats.',
+        description: 'Start discovering and saving movies to unlock your stats dashboard.',
         actionText: 'Start Exploring',
         actionLink: '/'
     },
     calendar: {
         icon: '📅',
         title: 'No mood history',
-        description: 'Your mood searches will appear here.',
+        description: 'Your mood searches will appear here as soon as you start exploring.',
         actionText: 'Search by Mood',
         actionLink: '/'
     },
@@ -85,7 +85,7 @@ function EmptyState({
     const finalActionText = actionText || preset?.actionText || 'Get Started';
 
     return (
-        <div className="empty-state">
+        <div className="empty-state" role="status" aria-live="polite">
             <div className="empty-state-icon">{finalIcon}</div>
             <h3 className="empty-state-title">{finalTitle}</h3>
             <p className="empty-state-description">{finalDescription}</p>
@@ -101,7 +101,7 @@ function EmptyState({
                     </a>
                 )
             ) : onActionClick ? (
-                <button onClick={onActionClick} className="empty-state-action">
+                <button type="button" onClick={onActionClick} className="empty-state-action">
                     {finalActionText}
                 </button>
             ) : null}
