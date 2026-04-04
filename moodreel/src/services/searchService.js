@@ -383,13 +383,13 @@ export async function search(params, signal) {
             if (axios.isCancel(err)) {
                 throw err;
             }
-            if (err.message && err.message.includes('Missing TMDB API key')) {
+            if (err.message && err.message.includes('TMDB API unavailable')) {
                 return {
                     results: [],
                     page: 1,
                     totalPages: 0,
                     hasMore: false,
-                    error: 'Missing TMDB API key. Please add REACT_APP_TMDB_API_KEY or set localStorage moodreel-tmdb-api-key.'
+                    error: 'TMDB data is temporarily unavailable.'
                 };
             }
 

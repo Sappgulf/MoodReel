@@ -100,7 +100,7 @@ function MovieDetails() {
       } catch (err) {
         if (!axios.isCancel(err)) {
           setError('Error fetching details.');
-          if (!err?.message?.includes('Missing TMDB API key')) {
+          if (!err?.message?.includes('TMDB API unavailable')) {
             console.error(err);
           }
         }

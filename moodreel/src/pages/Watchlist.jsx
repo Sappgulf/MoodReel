@@ -230,7 +230,7 @@ function Watchlist() {
 
             setPersonalizedRecs(filtered);
         } catch (err) {
-            if (!err?.message?.includes('Missing TMDB API key')) {
+            if (!err?.message?.includes('TMDB API unavailable')) {
                 console.error('Error fetching recommendations:', err);
             }
             setPersonalizedRecs([]);

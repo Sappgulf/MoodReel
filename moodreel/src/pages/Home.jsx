@@ -275,7 +275,7 @@ function Home() {
         const data = await searchService.fetchGenres(endpoint, controller.signal);
         setGenres(data);
       } catch (err) {
-        if (err.name !== 'AbortError' && !err?.message?.includes('Missing TMDB API key')) {
+        if (err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
           console.error('Error fetching genres:', err);
         }
       }
@@ -300,7 +300,7 @@ function Home() {
         }, []);
         setProviderCatalog(merged);
       } catch (err) {
-        if (err.name !== 'AbortError' && !err?.message?.includes('Missing TMDB API key')) {
+        if (err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
           console.error('Error fetching provider catalog:', err);
         }
       }
@@ -638,7 +638,6 @@ function Home() {
                   alt={getDisplayTitle(featuredItem)}
                   loading="eager"
                   decoding="async"
-                  fetchPriority="high"
                 />
                 <div className="hero-featured-overlay" />
               </div>
