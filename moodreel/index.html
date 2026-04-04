@@ -33,12 +33,13 @@
   <title>MoodReel – Discover Movies & TV by Mood</title>
 </head>
 
-<body>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
-  <div id="root"></div>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
 
-  <!-- Register service worker for PWA -->
-  <script>
+    <!-- Register service worker for PWA -->
+    <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')

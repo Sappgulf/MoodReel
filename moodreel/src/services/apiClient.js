@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
+const env = typeof process !== 'undefined' ? process.env || {} : {};
+const API_BASE_URL = env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 1000;
 
@@ -12,7 +13,7 @@ function getApiKey() {
     if (window.localStorage) {
         return window.localStorage.getItem('moodreel-tmdb-api-key');
     }
-    return process.env.REACT_APP_TMDB_API_KEY || null;
+    return env.REACT_APP_TMDB_API_KEY || null;
 }
 
 const memoryCache = new Map();

@@ -1,9 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
 /* =====================================================
    MoodReel Design System - Cinema Noir Premium
    ===================================================== */
-
-@import './styles/glass-tabs.css';
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* =====================================================
    CSS Custom Properties (Design Tokens)
@@ -169,12 +168,6 @@
   }
 }
 
-@import url('./styles/layout.css');
-@import url('./styles/components.css');
-@import url('./styles/pages.css');
-@import url('./styles/pages-extra.css');
-@import url('./styles/animations.css');
-
 /* =====================================================
    Global Resets & Base Styles
    ===================================================== */
@@ -288,7 +281,7 @@ body::before {
   width: 0;
   height: 2px;
   background: var(--gradient-gold);
-  transition: all var(--transition-base);
+  transition: width var(--transition-base);
   transform: translateX(-50%);
   border-radius: var(--radius-full);
 }
@@ -325,6 +318,38 @@ input {
 
 /* Focus Styles for Accessibility */
 :focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: calc(var(--z-modal) + 1);
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-gold);
+  border-radius: var(--radius-full);
+  transform: translateY(-200%);
+  transition: transform var(--transition-fast);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--color-gold);
   outline-offset: 2px;
 }

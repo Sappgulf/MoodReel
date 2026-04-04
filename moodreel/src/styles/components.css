@@ -10,7 +10,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    transition: all var(--transition-base);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .card:hover {
@@ -81,7 +81,7 @@
     background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
     transform: translateY(100%);
     opacity: 0;
-    transition: all var(--transition-base);
+    transition: transform var(--transition-base), opacity var(--transition-base);
 }
 
 .recommendation:hover .card-content,
@@ -409,14 +409,13 @@
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-xl);
-    transition: all var(--transition-base);
+    transition: border-color var(--transition-base), background-color var(--transition-base), box-shadow var(--transition-base);
 }
 
-.mood-selector input:focus {
+.mood-selector input:focus-visible {
     border-color: var(--color-border-gold);
     background: var(--color-bg-elevated-2);
     box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08), var(--shadow-gold-sm);
-    outline: none;
 }
 
 .mood-selector input::placeholder {
@@ -440,7 +439,7 @@
     color: var(--color-text-muted);
     font-size: 0.8rem;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .mood-clear-btn:hover {
@@ -1300,7 +1299,7 @@
     transform: translateY(-1px);
     border-color: var(--color-border-hover);
     background: var(--color-bg-elevated-2);
-    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.16);
 }
 
 .emoji-btn.active {

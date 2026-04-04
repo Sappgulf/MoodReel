@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 
 const PUSH_PERMISSION_KEY = 'moodreel-push-permission';
 const PUSH_SUBSCRIPTION_KEY = 'moodreel-push-subscription';
+const env = typeof process !== 'undefined' ? process.env || {} : {};
 
 export function usePushNotifications() {
-    const [permission, setPermission] = useState(Notification?.permission || 'default');
+    const [permission, setPermission] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
     const [subscription, setSubscription] = useState(null);
     const [isSupported, setIsSupported] = useState(false);
 
@@ -52,7 +53,7 @@ export function usePushNotifications() {
             
             const sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: process.env.REACT_APP_VAPID_PUBLIC_KEY
+                applicationServerKey: env.REACT_APP_VAPID_PUBLIC_KEY
             });
 
             const subData = sub.toJSON();

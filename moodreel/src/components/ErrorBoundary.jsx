@@ -76,7 +76,7 @@ export class ErrorBoundary extends Component {
                                 </Link>
                             )}
                         </div>
-                        {process.env.NODE_ENV === 'development' && this.state.error && (
+                        {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && this.state.error && (
                             <details className="error-details">
                                 <summary>Error Details</summary>
                                 <pre>{this.state.error.toString()}</pre>

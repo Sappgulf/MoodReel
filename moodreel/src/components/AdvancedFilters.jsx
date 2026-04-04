@@ -31,6 +31,7 @@ function AdvancedFilters({ filters, onFiltersChange }) {
         <div className="advanced-filters">
             <button
                 className={`filters-toggle ${isExpanded ? 'expanded' : ''}`}
+                type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 aria-expanded={isExpanded}
             >
@@ -81,6 +82,7 @@ function AdvancedFilters({ filters, onFiltersChange }) {
                                 <button
                                     key={option.value}
                                     className={filters.sortBy === option.value ? 'active' : ''}
+                                    type="button"
                                     onClick={() => onFiltersChange({ ...filters, sortBy: option.value })}
                                 >
                                     {option.label}
@@ -102,6 +104,7 @@ function AdvancedFilters({ filters, onFiltersChange }) {
                                 <button
                                     key={option.value}
                                     className={filters.runtime === option.value ? 'active' : ''}
+                                    type="button"
                                     onClick={() => handleRuntimeChange(option.value)}
                                 >
                                     {option.icon} {option.label}
@@ -114,6 +117,7 @@ function AdvancedFilters({ filters, onFiltersChange }) {
                     {activeFilterCount > 0 && (
                         <button
                             className="reset-filters"
+                            type="button"
                             onClick={() => onFiltersChange({
                                 yearMin: 1900,
                                 yearMax: currentYear,

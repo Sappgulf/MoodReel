@@ -48,6 +48,7 @@ function StreamingFilter({ selectedProviders = [], onToggle, providers, label = 
                         <button
                             key={provider.id}
                             className={`streaming-btn ${isSelected ? 'active' : ''}`}
+                            type="button"
                             onClick={() => handleToggle(provider.id)}
                             aria-pressed={isSelected}
                             title={provider.name}
@@ -71,8 +72,8 @@ function StreamingFilter({ selectedProviders = [], onToggle, providers, label = 
             {hasMore && (
                 <button
                     className="show-more-btn"
-                    onClick={() => setShowAll(!showAll)}
                     type="button"
+                    onClick={() => setShowAll(!showAll)}
                 >
                     {showAll ? '▲ Show less' : `▼ Show ${displayProviders.length - INITIAL_SHOW_COUNT} more`}
                 </button>
@@ -82,4 +83,3 @@ function StreamingFilter({ selectedProviders = [], onToggle, providers, label = 
 }
 
 export default React.memo(StreamingFilter);
-

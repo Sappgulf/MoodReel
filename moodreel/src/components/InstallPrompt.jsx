@@ -75,10 +75,10 @@ function InstallPrompt() {
                 </div>
             </div>
             <div className="install-actions">
-                <button className="install-btn" onClick={handleInstall}>
+                <button type="button" className="install-btn" onClick={handleInstall}>
                     Install
                 </button>
-                <button className="install-dismiss" onClick={handleDismiss}>
+                <button type="button" className="install-dismiss" onClick={handleDismiss}>
                     Not now
                 </button>
             </div>

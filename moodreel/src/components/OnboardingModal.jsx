@@ -88,7 +88,7 @@ function OnboardingModal() {
     return (
         <div className="onboarding-backdrop" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             <div className="onboarding-modal">
-                <button className="onboarding-skip" onClick={handleClose}>
+                <button type="button" className="onboarding-skip" onClick={handleClose}>
                     Skip
                 </button>
 
@@ -103,12 +103,21 @@ function OnboardingModal() {
                         <span
                             key={i}
                             className={`dot ${i === currentSlide ? 'active' : ''}`}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Show onboarding slide ${i + 1}`}
                             onClick={() => setCurrentSlide(i)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setCurrentSlide(i);
+                                }
+                            }}
                         />
                     ))}
                 </div>
 
-                <button className="onboarding-next" onClick={handleNext}>
+                <button type="button" className="onboarding-next" onClick={handleNext}>
                     {currentSlide === slides.length - 1 ? "Let's Go! 🚀" : 'Next →'}
                 </button>
             </div>

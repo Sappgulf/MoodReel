@@ -71,7 +71,7 @@
     border: 1px solid transparent;
     color: var(--color-text-secondary);
     font-size: 1rem;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .header-controls button:hover {
@@ -96,7 +96,7 @@
     font-weight: 500;
     font-size: 0.875rem;
     border-radius: var(--radius-lg);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .nav-link:hover {
@@ -187,7 +187,7 @@ main {
         font-size: 0.65rem;
         font-weight: 500;
         border-radius: var(--radius-lg);
-        transition: all var(--transition-fast);
+        transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
         min-width: 60px;
         position: relative;
     }
@@ -248,7 +248,7 @@ main {
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
     white-space: nowrap;
 }
 

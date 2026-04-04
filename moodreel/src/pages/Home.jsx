@@ -259,7 +259,9 @@ function Home() {
         const data = await searchService.fetchGenres(endpoint, controller.signal);
         setGenres(data);
       } catch (err) {
-        if (err.name !== 'AbortError') console.error('Error fetching genres:', err);
+        if (err.name !== 'AbortError' && !err?.message?.includes('Missing TMDB API key')) {
+          console.error('Error fetching genres:', err);
+        }
       }
     };
     fetchGenres();
@@ -282,7 +284,7 @@ function Home() {
         }, []);
         setProviderCatalog(merged);
       } catch (err) {
-        if (err.name !== 'AbortError') {
+        if (err.name !== 'AbortError' && !err?.message?.includes('Missing TMDB API key')) {
           console.error('Error fetching provider catalog:', err);
         }
       }

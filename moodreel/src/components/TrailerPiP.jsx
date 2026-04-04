@@ -10,10 +10,10 @@ function TrailerPiP({ videoKey, title, onClose }) {
             <div className="pip-header">
                 <span className="pip-title">{title}</span>
                 <div className="pip-controls">
-                    <button onClick={() => setIsMinimized(!isMinimized)}>
+                    <button type="button" onClick={() => setIsMinimized(!isMinimized)} aria-label={isMinimized ? 'Expand trailer' : 'Minimize trailer'}>
                         {isMinimized ? '🔳' : '➖'}
                     </button>
-                    <button onClick={onClose}>✕</button>
+                    <button type="button" onClick={onClose} aria-label="Close trailer">✕</button>
                 </div>
             </div>
             {!isMinimized && (
@@ -28,9 +28,9 @@ function TrailerPiP({ videoKey, title, onClose }) {
                 </div>
             )}
             {isMinimized && (
-                <div className="pip-placeholder" onClick={() => setIsMinimized(false)}>
+                <button type="button" className="pip-placeholder" onClick={() => setIsMinimized(false)}>
                     <span>▶️ Resume Trailer</span>
-                </div>
+                </button>
             )}
         </div>
     );

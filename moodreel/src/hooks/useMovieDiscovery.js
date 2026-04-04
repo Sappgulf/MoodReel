@@ -55,7 +55,7 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
             const results = await searchService.fetchTrending('all', 'day', signal);
             setTrending(results);
         } catch (err) {
-            if (!axios.isCancel(err)) {
+            if (!axios.isCancel(err) && !err?.message?.includes('Missing TMDB API key')) {
                 console.error('Error fetching trending:', err);
             }
         }

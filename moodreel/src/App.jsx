@@ -127,6 +127,10 @@ function AppContent() {
 
   return (
     <div className="App">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+
       {/* Cinematic Overlays */}
       <div className="film-grain" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
@@ -170,6 +174,7 @@ function AppContent() {
           <div className="header-controls">
             <button
               className="shortcuts-btn"
+              type="button"
               onClick={() => setShowShortcuts(true)}
               title="Keyboard shortcuts (?)"
               aria-label="Keyboard shortcuts"
@@ -178,6 +183,7 @@ function AppContent() {
             </button>
             <button
               className="sound-toggle"
+              type="button"
               onClick={toggleSounds}
               aria-label={`${isSoundEnabled() ? 'Mute' : 'Unmute'} sounds`}
               title={`${isSoundEnabled() ? 'Mute' : 'Unmute'} sounds`}
@@ -186,6 +192,7 @@ function AppContent() {
             </button>
             <button
               className="theme-toggle"
+              type="button"
               onClick={toggleTheme}
               aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
               title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
@@ -277,7 +284,8 @@ function AppContent() {
       </nav>
 
       <ErrorBoundary>
-        <Suspense fallback={<main><SkeletonGrid count={8} /></main>}>
+        <main id="main-content" className="app-main">
+          <Suspense fallback={<SkeletonGrid count={8} />}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/movie/:id" element={<MovieDetails />} />
@@ -290,7 +298,8 @@ function AppContent() {
             <Route path="/stats" element={<Stats />} />
             <Route path="/calendar" element={<MoodCalendar />} />
           </Routes>
-        </Suspense>
+          </Suspense>
+        </main>
       </ErrorBoundary>
     </div>
   );

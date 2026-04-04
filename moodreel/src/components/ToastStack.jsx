@@ -26,6 +26,7 @@ function ToastStack() {
                     </div>
                     <button
                         className="toast-dismiss"
+                        type="button"
                         aria-label="Dismiss"
                         onClick={(e) => {
                             e.preventDefault();
@@ -42,4 +43,3 @@ function ToastStack() {
 }
 
 export default React.memo(ToastStack);
-
