@@ -87,6 +87,11 @@ npm run build
 npx vercel --prod
 ```
 
+Vercel is wired for both root and subdirectory deployments:
+- Repo root `vercel.json` builds `moodreel/` and outputs `moodreel/build`
+- `moodreel/vercel.json` supports setting the Vercel project root directly to `moodreel/`
+- Both configs use explicit install/build commands so Vercel stays on the Vite build path
+
 ### Netlify
 ```bash
 npm run build

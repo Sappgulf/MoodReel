@@ -219,7 +219,11 @@ npm run build
 npx vercel --prod
 ```
 
-The repo includes `vercel.json` with proper SPA routing config.
+Deployment is configured for both common Vercel layouts:
+- Repo root `vercel.json` points Vercel at `moodreel/` and publishes `moodreel/build`
+- `moodreel/vercel.json` supports a project root set directly to `moodreel/`
+
+Both configs use explicit `installCommand` and `buildCommand` settings so Vercel builds with Vite instead of falling back to the older CRA path.
 
 ### Other Platforms
 ```bash
