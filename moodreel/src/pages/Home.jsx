@@ -65,7 +65,7 @@ function Home() {
 
   const [genres, setGenres] = useState([]);
   const [isCardLoading, setIsCardLoading] = useState(false);
-  const [showFilters, setShowFilters] = useState(!isMobile);
+  const [showFilters, setShowFilters] = useState(false);
   const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
   const [showWinnerInfo, setShowWinnerInfo] = useState(false);
   const [surpriseMovie, setSurpriseMovie] = useState(null);
@@ -861,14 +861,12 @@ function Home() {
           }} />
         )}
 
-        {isMobile && (
-          <button className="filters-toggle" type="button" onClick={() => setShowFilters(!showFilters)}>
-            {showFilters ? '✕ Hide Filters' : '⚙️ Filter & Sort'}
-            {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
-          </button>
-        )}
+        <button className="filters-toggle" type="button" onClick={() => setShowFilters(!showFilters)}>
+          {showFilters ? '✕ Hide Filters' : '⚙️ Filter & Sort'}
+          {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
+        </button>
 
-        {(showFilters || !isMobile) && (
+        {showFilters && (
           <div className={`filters-wrapper ${activeFilterCount > 0 ? 'has-filters' : ''}`}>
             <div className="genre-filters">
               <h3>Genres:</h3>

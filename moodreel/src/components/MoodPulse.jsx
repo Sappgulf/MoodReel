@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 const COMMUNITY_MOOD_SNAPSHOT = [
   { name: 'Cozy', share: 22, color: '#f59e0b', trend: 'up' },
@@ -10,10 +10,13 @@ const COMMUNITY_MOOD_SNAPSHOT = [
 ];
 
 function MoodPulse() {
+  const [showAll, setShowAll] = useState(false);
   const pulseData = useMemo(
     () => [...COMMUNITY_MOOD_SNAPSHOT].sort((a, b) => b.share - a.share),
     []
   );
+  const visiblePulseData = showAll ? pulseData : pulseData.slice(0, 3);
+  const hiddenCount = pulseData.length - visiblePulseData.length;
 
   return (
     <section className="mood-pulse-container" aria-labelledby="mood-pulse-title">
@@ -28,7 +31,7 @@ function MoodPulse() {
       </div>
 
       <div className="pulse-track" role="list" aria-label="Top moods and share">
-        {pulseData.map((mood) => (
+        {visiblePulseData.map((mood) => (
           <article key={mood.name} className="pulse-item" style={{ '--mood-color': mood.color }} role="listitem">
             <div className="pulse-label">
               <span className="mood-name">{mood.name}</span>
@@ -43,6 +46,17 @@ function MoodPulse() {
           </article>
         ))}
       </div>
+
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          className="show-more-btn"
+          onClick={() => setShowAll((prev) => !prev)}
+          aria-expanded={showAll}
+        >
+          {showAll ? '▲ Show fewer moods' : `▼ Show ${hiddenCount} more moods`}
+        </button>
+      )}
 
       <p className="pulse-info">An anonymized snapshot of recent MoodReel mood searches. Use it as a hint, not a rule.</p>
     </section>

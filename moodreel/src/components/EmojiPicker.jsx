@@ -21,6 +21,7 @@ function Particle({ style }) {
 
 function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
   const [particles, setParticles] = useState([]);
+  const [showAllMoods, setShowAllMoods] = useState(false);
   const particleIdRef = useRef(0);
 
   const activeCount = useMemo(
@@ -63,6 +64,9 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
     [onSelect, createParticleBurst]
   );
 
+  const visibleMoods = showAllMoods ? emojiMoods : emojiMoods.slice(0, 6);
+  const hiddenMoodCount = emojiMoods.length - visibleMoods.length;
+
   return (
     <section className="emoji-picker" role="group" aria-label="Quick mood selection">
       <div className="emoji-picker-header">
@@ -75,7 +79,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
       </div>
 
       <div className="emoji-grid">
-        {emojiMoods.map((mood) => {
+        {visibleMoods.map((mood) => {
           const isActive = mood.genres.some((g) => selectedGenres.includes(g));
 
           return (
@@ -95,6 +99,17 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
           );
         })}
       </div>
+
+      {hiddenMoodCount > 0 && (
+        <button
+          type="button"
+          className="show-more-btn"
+          onClick={() => setShowAllMoods((prev) => !prev)}
+          aria-expanded={showAllMoods}
+        >
+          {showAllMoods ? '▲ Show fewer moods' : `▼ Show ${hiddenMoodCount} more moods`}
+        </button>
+      )}
 
       <div className="particle-container" aria-hidden="true">
         {particles.map((particle) => (

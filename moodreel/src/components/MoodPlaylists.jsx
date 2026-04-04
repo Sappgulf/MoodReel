@@ -77,6 +77,7 @@ const PLAYLISTS = [
 function MoodPlaylists({ onSelectPlaylist }) {
     const { playlists, deletePlaylist } = useCustomPlaylists();
     const [hoveredId, setHoveredId] = useState(null);
+    const [showAllPlaylists, setShowAllPlaylists] = useState(false);
 
     const handleSelect = useCallback((playlist, isCustom = false) => {
         if (isCustom) {
@@ -100,18 +101,31 @@ function MoodPlaylists({ onSelectPlaylist }) {
         }
     };
 
+    const allPlaylists = [
+        ...PLAYLISTS.map((playlist) => ({ ...playlist, isCustom: false })),
+        ...playlists.map((playlist) => ({
+            ...playlist,
+            id: `custom-${playlist.id}`,
+            originalId: playlist.id,
+            name: `✨ ${playlist.name}`,
+            description: playlist.desc,
+            isCustom: true
+        }))
+    ];
+    const visiblePlaylists = showAllPlaylists ? allPlaylists : allPlaylists.slice(0, 4);
+    const hiddenPlaylistCount = allPlaylists.length - visiblePlaylists.length;
+
     return (
         <div className="mood-playlists-section">
             <h3 className="playlists-title">🎬 Mood Playlists</h3>
-            <p className="playlists-subtitle">Curated collections for every vibe</p>
+            <p className="playlists-subtitle">Featured picks for fast browsing</p>
 
             <div className="playlists-grid">
-                {/* Curated Playlists */}
-                {PLAYLISTS.map(playlist => (
+                {visiblePlaylists.map(playlist => (
                     <button
                         key={playlist.id}
                         className={`playlist-card ${hoveredId === playlist.id ? 'hovered' : ''}`}
-                        onClick={() => handleSelect(playlist)}
+                        onClick={() => handleSelect(playlist, playlist.isCustom)}
                         onMouseEnter={() => setHoveredId(playlist.id)}
                         onMouseLeave={() => setHoveredId(null)}
                         style={{
@@ -120,33 +134,29 @@ function MoodPlaylists({ onSelectPlaylist }) {
                     >
                         <span className="playlist-name">{playlist.name}</span>
                         <span className="playlist-desc">{playlist.description}</span>
-                    </button>
-                ))}
-
-                {/* Custom Playlists */}
-                {playlists.map(playlist => (
-                    <button
-                        key={playlist.id}
-                        className="playlist-card custom-playlist"
-                        onClick={() => handleSelect(playlist, true)}
-                        onMouseEnter={() => setHoveredId(playlist.id)}
-                        onMouseLeave={() => setHoveredId(null)}
-                        style={{
-                            '--playlist-color': playlist.color
-                        }}
-                    >
-                        <span className="playlist-name">✨ {playlist.name}</span>
-                        <span className="playlist-desc">{playlist.desc}</span>
-                        <span
-                            className="delete-playlist"
-                            onClick={(e) => handleDelete(e, playlist.id)}
-                            title="Delete vibe"
-                        >
-                            ✕
-                        </span>
+                        {playlist.isCustom && (
+                            <span
+                                className="delete-playlist"
+                                onClick={(e) => handleDelete(e, playlist.originalId)}
+                                title="Delete vibe"
+                            >
+                                ✕
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>
+
+            {hiddenPlaylistCount > 0 && (
+                <button
+                    type="button"
+                    className="show-more-btn"
+                    onClick={() => setShowAllPlaylists((prev) => !prev)}
+                    aria-expanded={showAllPlaylists}
+                >
+                    {showAllPlaylists ? '▲ Show fewer playlists' : `▼ Show ${hiddenPlaylistCount} more playlists`}
+                </button>
+            )}
         </div>
     );
 }
