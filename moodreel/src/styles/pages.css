@@ -8,9 +8,9 @@
 .discovery-hero {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-    gap: var(--spacing-xl);
+    gap: var(--spacing-lg);
     align-items: stretch;
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
 }
 
 .discovery-hero-copy,
@@ -22,8 +22,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: var(--spacing-md);
-    padding: clamp(1.25rem, 2vw, 2rem);
+    gap: var(--spacing-sm);
+    padding: clamp(1rem, 1.8vw, 1.7rem);
     border-radius: var(--radius-2xl);
     background:
         radial-gradient(circle at top left, rgba(255, 215, 0, 0.08), transparent 36%),
@@ -48,17 +48,18 @@
 
 .discovery-hero-copy h2 {
     font-family: var(--font-display);
-    font-size: clamp(2.4rem, 5vw, 4.8rem);
-    line-height: 0.95;
+    font-size: clamp(2.15rem, 4.6vw, 4.2rem);
+    line-height: 0.92;
     letter-spacing: -0.05em;
     text-wrap: balance;
     max-width: 12ch;
 }
 
 .hero-description {
-    max-width: 56ch;
+    max-width: 52ch;
     color: var(--color-text-secondary);
-    font-size: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
 }
 
 .hero-proof-row {
@@ -71,17 +72,17 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.45rem 0.7rem;
+    padding: 0.35rem 0.65rem;
     border-radius: var(--radius-full);
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border);
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     color: var(--color-text-secondary);
 }
 
 .hero-hint {
     color: var(--color-text-muted);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
 }
 
 .hero-hint kbd {
@@ -146,8 +147,8 @@
 .hero-featured-copy {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    padding: var(--spacing-lg);
+    gap: 0.5rem;
+    padding: var(--spacing-md) var(--spacing-lg);
     background: linear-gradient(180deg, rgba(12, 16, 23, 0.95), rgba(12, 16, 23, 1));
 }
 
@@ -161,14 +162,15 @@
 
 .hero-featured-copy h3 {
     font-family: var(--font-display);
-    font-size: clamp(1.4rem, 2.6vw, 2.2rem);
-    line-height: 1;
+    font-size: clamp(1.25rem, 2.3vw, 1.95rem);
+    line-height: 0.98;
     text-wrap: balance;
 }
 
 .hero-featured-copy p {
     color: var(--color-text-secondary);
-    font-size: 0.92rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -184,12 +186,12 @@
 .hero-featured-meta span {
     display: inline-flex;
     align-items: center;
-    padding: 0.35rem 0.65rem;
+    padding: 0.3rem 0.6rem;
     border-radius: var(--radius-full);
     border: 1px solid var(--color-border);
     background: var(--color-bg-elevated);
     color: var(--color-text-secondary);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
 }
 
 .hero-featured-card-empty {
@@ -200,14 +202,14 @@
 .discovery-support-grid {
     display: grid;
     grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
     align-items: start;
 }
 
 .discovery-support-column {
     display: grid;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     align-self: start;
 }
 
@@ -223,7 +225,7 @@
 
 .discovery-insights {
     display: grid;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     align-self: start;
 }
 
@@ -245,28 +247,28 @@
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
-    padding: 0.75rem 0.85rem;
+    padding: 0.65rem 0.75rem;
     border-radius: var(--radius-xl);
     border: 1px solid var(--color-border);
     background: var(--color-bg-elevated);
 }
 
 .insight-item span {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--color-text-muted);
 }
 
 .insight-item strong {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     color: var(--color-text-primary);
 }
 
 .discovery-console {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
 }
 
 .discovery-library {
@@ -315,23 +317,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-md) var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
     background: linear-gradient(135deg, rgba(255,215,0,0.04) 0%, var(--color-bg-secondary) 50%, rgba(255,215,0,0.02) 100%);
     border: 1px solid var(--color-border-hover);
     border-radius: var(--radius-xl);
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     box-shadow: var(--shadow-gold-sm), inset 0 1px 0 rgba(255,215,0,0.05);
 }
 
 .vibe-greeting {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .vibe-emoji {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
 }
 
 .vibe-text {
@@ -340,7 +342,7 @@
 }
 
 .vibe-label {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--color-text-muted);
@@ -352,7 +354,7 @@
     border: none;
     padding: 0;
     color: var(--color-text-primary);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
     text-align: left;
     cursor: pointer;
@@ -371,12 +373,12 @@
 }
 
 .surprise-pill {
-    padding: var(--spacing-xs) var(--spacing-lg);
+    padding: 0.45rem 0.9rem;
     background: var(--gradient-gold);
     color: #09090b;
     border-radius: var(--radius-full);
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     border: none;
     cursor: pointer;
     transition: transform var(--transition-base), box-shadow var(--transition-base);

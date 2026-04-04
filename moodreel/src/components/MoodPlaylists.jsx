@@ -118,7 +118,7 @@ function MoodPlaylists({ onSelectPlaylist }) {
     return (
         <div className="mood-playlists-section">
             <h3 className="playlists-title">🎬 Mood Playlists</h3>
-            <p className="playlists-subtitle">Featured picks for fast browsing</p>
+            <p className="playlists-subtitle">A few starting points</p>
 
             <div className="playlists-grid">
                 {visiblePlaylists.map(playlist => (

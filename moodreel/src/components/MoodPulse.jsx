@@ -58,7 +58,7 @@ function MoodPulse() {
         </button>
       )}
 
-      <p className="pulse-info">An anonymized snapshot of recent MoodReel mood searches. Use it as a hint, not a rule.</p>
+      <p className="pulse-info">Recent mood searches, anonymized. Use it as a hint, not a rule.</p>
     </section>
   );
 }

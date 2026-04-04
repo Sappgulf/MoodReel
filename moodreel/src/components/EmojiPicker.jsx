@@ -72,7 +72,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
       <div className="emoji-picker-header">
         <h4>Quick Mood Picks</h4>
         {allowMultiple ? (
-          <p className="emoji-hint">Choose one or more moods · {activeCount} selected</p>
+          <p className="emoji-hint">Pick moods · {activeCount} selected</p>
         ) : (
           <p className="emoji-hint">Choose one mood</p>
         )}
