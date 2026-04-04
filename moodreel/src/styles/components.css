@@ -490,26 +490,31 @@
     padding: 0.35rem;
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-full);
-    gap: 0.25rem;
+    border-radius: 999px;
+    gap: 0.35rem;
     box-shadow: var(--shadow-xs);
     width: auto;
     margin-bottom: var(--spacing-xl);
     margin-left: auto;
     margin-right: auto;
     flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .content-tab {
-    padding: 0.6rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.6rem;
+    padding: 0.55rem 1rem;
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--color-text-secondary);
     background: transparent;
     border: none;
-    border-radius: var(--radius-full);
+    border-radius: 999px;
     cursor: pointer;
-    transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
     position: relative;
     white-space: nowrap;
 }
@@ -517,12 +522,18 @@
 .content-tab:hover {
     color: var(--color-text-primary);
     background: var(--color-bg-elevated-2);
+    transform: translateY(-1px);
 }
 
 .content-tab.active {
     color: var(--color-text-primary);
     background: var(--color-bg-secondary);
     box-shadow: inset 0 0 0 1px var(--color-border), 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.content-tab:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
 }
 
 /* =====================================================
@@ -682,19 +693,32 @@
 }
 
 .show-more-btn {
-    padding: 6px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.9rem;
     font-size: 0.75rem;
+    font-weight: 600;
     color: var(--color-text-muted);
-    background: transparent;
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius-full);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-xs);
     cursor: pointer;
-    transition: color var(--transition-fast), border-color var(--transition-fast);
+    transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .show-more-btn:hover {
     color: var(--color-text-primary);
+    background: var(--color-bg-elevated-2);
     border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+}
+
+.show-more-btn:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
 }
 
 /* =====================================================
@@ -732,26 +756,51 @@
 }
 
 .search-scope-toggle {
-    display: flex;
-    gap: var(--spacing-xs);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     margin-top: var(--spacing-sm);
+    padding: 0.3rem;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-xs);
+    flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .search-scope-toggle button {
-    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.35rem;
+    padding: 0.45rem 0.85rem;
     font-size: 0.8rem;
+    font-weight: 600;
     color: var(--color-text-secondary);
-    background: var(--color-bg-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
+    border-radius: 999px;
     cursor: pointer;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    white-space: nowrap;
+}
+
+.search-scope-toggle button:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-elevated-2);
+    transform: translateY(-1px);
 }
 
 .search-scope-toggle button.active {
     color: var(--color-text-primary);
-    background: var(--color-bg-elevated-2);
-    border-color: var(--color-border-strong);
+    background: var(--color-bg-secondary);
+    box-shadow: inset 0 0 0 1px var(--color-border), 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.search-scope-toggle button:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
 }
 
 /* =====================================================

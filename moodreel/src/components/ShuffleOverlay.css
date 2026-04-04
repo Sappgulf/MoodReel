@@ -10,6 +10,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: clamp(1rem, 2vw, 1.5rem);
     overflow: hidden;
 }
 
@@ -22,6 +23,37 @@
     overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-gold-lg);
+}
+
+.shuffle-dismiss-btn {
+    position: absolute;
+    top: clamp(1rem, 2vw, 1.5rem);
+    right: clamp(1rem, 2vw, 1.5rem);
+    z-index: 3;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-primary);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.shuffle-dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateY(-1px);
+}
+
+.shuffle-dismiss-btn:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
 }
 
 .shuffle-reel {
@@ -78,6 +110,35 @@
     transform: translate(-50%, -50%);
     z-index: 2;
     animation: scannerMove 0.8s ease-in-out infinite alternate;
+}
+
+.shuffle-overlay-footer {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1rem, 2vw, 1.4rem);
+    transform: translateX(-50%);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: min(92vw, 32rem);
+    pointer-events: none;
+}
+
+.shuffle-overlay-hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.8rem;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.72rem;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
 }
 
 @keyframes scannerMove {

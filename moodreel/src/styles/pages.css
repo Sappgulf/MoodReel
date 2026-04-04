@@ -1372,7 +1372,8 @@
 }
 
 .watchlist-tabs {
-    max-width: fit-content;
+    width: fit-content;
+    max-width: 100%;
 }
 
 .watchlist-actions {
