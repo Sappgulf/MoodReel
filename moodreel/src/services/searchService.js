@@ -20,22 +20,45 @@ import { getUserFacingMessage, isAbortError, shouldSkipLog } from './apiErrorUti
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
 const CACHE_KEY = 'moodreel-search-persistent-cache';
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
+const HAS_LOCAL_STORAGE = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
 // Initialize cache from localStorage
 const searchCache = new Map();
-try {
-    const saved = localStorage.getItem(CACHE_KEY);
-    if (saved) {
+function persistSearchCache() {
+    if (!HAS_LOCAL_STORAGE) return;
+
+    try {
+        const obj = Object.fromEntries(searchCache);
+        window.localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
+    } catch {
+        // Ignore localStorage failures in restricted environments.
+    }
+}
+
+function hydrateSearchCache() {
+    if (!HAS_LOCAL_STORAGE) return;
+
+    try {
+        const saved = window.localStorage.getItem(CACHE_KEY);
+        if (!saved) return;
+
         const parsed = JSON.parse(saved);
         Object.entries(parsed).forEach(([key, value]) => {
             if (Date.now() - value.timestamp < CACHE_TTL_MS) {
                 searchCache.set(key, value);
             }
         });
+    } catch (err) {
+        console.warn('Failed to load search cache from localStorage', err);
+        try {
+            window.localStorage.removeItem(CACHE_KEY);
+        } catch {
+            // Ignore cleanup failures.
+        }
     }
-} catch (e) {
-    console.warn('Failed to load search cache from localStorage');
 }
+
+hydrateSearchCache();
 
 const inflightRequests = new Map();
 
@@ -144,13 +167,7 @@ function setCache(key, data) {
         searchCache.delete(oldestKey);
     }
 
-    // Persist to localStorage
-    try {
-        const obj = Object.fromEntries(searchCache);
-        localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
-    } catch (e) {
-        // Silently fail if quota exceeded
-    }
+    persistSearchCache();
 }
 
 /**

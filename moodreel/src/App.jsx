@@ -271,6 +271,13 @@ function AppContent() {
       const isInDialog = target?.closest?.('[data-app-modal]') || target?.closest?.('[role="dialog"]') || target?.closest?.('[aria-modal="true"]');
       const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
+      if (key === 'escape' && (showShortcuts || showQuickActions)) {
+        e.preventDefault();
+        setShowShortcuts(false);
+        setShowQuickActions(false);
+        return;
+      }
+
       if (e.defaultPrevented || e.isComposing || isInDialog || isOverlayOpen) {
         return;
       }
@@ -297,7 +304,7 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOverlayOpen, openQuickActions, toggleSounds, toggleTheme]);
+  }, [isOverlayOpen, openQuickActions, showQuickActions, showShortcuts, toggleSounds, toggleTheme]);
 
   // Trigger confetti on achievement unlock
   useEffect(() => {
