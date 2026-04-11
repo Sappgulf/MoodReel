@@ -221,6 +221,7 @@ function AppContent() {
   }, []);
 
   const documentTitle = useMemo(() => setDocumentTitle(location.pathname), [location.pathname, setDocumentTitle]);
+  const routePath = location.pathname;
 
   const announceSearchFallback = useCallback((event) => {
     const detail = event?.detail || {};
@@ -292,8 +293,12 @@ function AppContent() {
     if (!HAS_WINDOW) return;
 
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
-    mainRef.current?.focus?.({ preventScroll: true });
+    requestAnimationFrame(() => {
+      mainRef.current?.focus?.({ preventScroll: true });
+    });
+  }, [routePath]);
 
+  useEffect(() => {
     document.title = documentTitle;
   }, [documentTitle]);
 
@@ -569,6 +574,8 @@ function AppContent() {
             <Route path="/share/:shareId" element={<SharedList />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/calendar" element={<MoodCalendar />} />
+            <Route path="/404" element={<NotFoundPage />} />
+            <Route path="/not-found" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </Suspense>
