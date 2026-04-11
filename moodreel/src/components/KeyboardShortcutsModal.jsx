@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
 const shortcuts = [
     { keys: ['J', '↓'], description: 'Select next movie' },
     { keys: ['K', '↑'], description: 'Select previous movie' },
@@ -16,23 +18,60 @@ const shortcuts = [
  */
 function KeyboardShortcutsModal({ isOpen, onClose }) {
     const [visible, setVisible] = useState(false);
+    const dialogRef = useRef(null);
+    const prevFocusRef = useRef(null);
 
     useEffect(() => {
         setVisible(isOpen);
     }, [isOpen]);
 
+    const moveFocus = useCallback(() => {
+        const dialogNode = dialogRef.current;
+        const focusables = dialogNode ? Array.from(dialogNode.querySelectorAll(FOCUSABLE_SELECTOR)) : [];
+        const target = focusables.find((el) => el.offsetParent !== null && !el.disabled) || dialogNode;
+        target?.focus?.();
+    }, []);
+
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape') {
             onClose();
+            return;
+        }
+        if (e.key !== 'Tab' || !dialogRef.current) return;
+        const nodes = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR));
+        if (!nodes.length) return;
+
+        const focusables = nodes.filter(node => node.offsetParent !== null && !node.disabled);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
         }
     }, [onClose]);
 
     useEffect(() => {
-        if (isOpen) {
-            window.addEventListener('keydown', handleKeyDown);
-            return () => window.removeEventListener('keydown', handleKeyDown);
+        if (!isOpen) {
+            return;
         }
-    }, [isOpen, handleKeyDown]);
+
+        prevFocusRef.current = document.activeElement;
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        moveFocus();
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = prevOverflow;
+            prevFocusRef.current?.focus?.();
+        };
+    }, [isOpen, handleKeyDown, moveFocus]);
 
     const touchStart = useRef(null);
     const handleTouchStart = (e) => {
@@ -54,10 +93,19 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
 
     return (
         <div className="shortcuts-backdrop" onClick={onClose} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-            <div className="shortcuts-modal" onClick={e => e.stopPropagation()}>
-                <button className="shortcuts-close" onClick={onClose}>✕</button>
+            <div
+                ref={dialogRef}
+                className="shortcuts-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="keyboard-shortcuts-title"
+                aria-describedby="keyboard-shortcuts-hint"
+                tabIndex={-1}
+                onClick={e => e.stopPropagation()}
+            >
+                <button type="button" className="shortcuts-close" onClick={onClose} aria-label="Close keyboard shortcuts">✕</button>
 
-                <h2>⌨️ Keyboard Shortcuts</h2>
+                <h2 id="keyboard-shortcuts-title">⌨️ Keyboard Shortcuts</h2>
 
                 <div className="shortcuts-list">
                     {shortcuts.map((shortcut, i) => (
@@ -72,7 +120,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
                     ))}
                 </div>
 
-                <p className="shortcuts-hint">
+                <p id="keyboard-shortcuts-hint" className="shortcuts-hint">
                     Press <kbd>?</kbd> anytime to show this modal
                 </p>
             </div>

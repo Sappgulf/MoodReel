@@ -1,9 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
 function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actions' }) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
+  const dialogRef = useRef(null);
+  const prevFocusRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -12,12 +16,54 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
       return;
     }
 
+    prevFocusRef.current = document.activeElement;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const timer = window.setTimeout(() => {
       inputRef.current?.focus();
     }, 0);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      prevFocusRef.current?.focus?.();
+      window.clearTimeout(timer);
+    };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDownWindow = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const nodes = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR));
+        const focusables = nodes.filter((node) => node.offsetParent !== null && !node.disabled);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDownWindow);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDownWindow);
+    };
+  }, [isOpen, onClose]);
 
   const filteredActions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -76,11 +122,20 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
 
   return (
     <div className="quick-actions-backdrop" role="presentation" onClick={onClose}>
-      <div className="quick-actions-modal" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        className="quick-actions-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-actions-title"
+        aria-describedby="quick-actions-description"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="quick-actions-header">
           <div>
             <p className="quick-actions-kicker">Command palette</p>
-            <h2>{title}</h2>
+            <h2 id="quick-actions-title">{title}</h2>
           </div>
           <button type="button" className="quick-actions-close" onClick={onClose} aria-label="Close quick actions">
             ✕
@@ -97,6 +152,10 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
           placeholder="Search actions, navigation, or shortcuts..."
           aria-label="Search quick actions"
         />
+
+        <div className="quick-actions-description" id="quick-actions-description">
+          Use the up and down arrow keys to highlight an action, and Enter to run it.
+        </div>
 
         <div className="quick-actions-list" role="list" aria-label="Available actions">
           {filteredActions.length > 0 ? (
