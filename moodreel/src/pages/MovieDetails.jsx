@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import ShareButtons from '../components/ShareButtons';
@@ -44,6 +44,8 @@ function MovieDetails() {
   const [selectedActor, setSelectedActor] = useState(null);
   const [actorFilmography, setActorFilmography] = useState([]);
   const [actorLoading, setActorLoading] = useState(false);
+  const actorRequestRef = useRef(null);
+  const actorRequestIdRef = useRef(0);
 
   const {
     isInWatchlist, toggleWatchlist,
@@ -138,6 +140,13 @@ function MovieDetails() {
     }
   }, [id, getReview]);
 
+  // Cancel any in-flight actor fetch on unmount.
+  useEffect(() => {
+    return () => {
+      actorRequestRef.current?.abort();
+    };
+  }, []);
+
   const renderStars = useCallback((rating) => {
     const stars = Math.round(rating / 2);
     return '★'.repeat(stars) + '☆'.repeat(5 - stars);
@@ -145,25 +154,42 @@ function MovieDetails() {
 
   // Fetch actor filmography
   const handleActorClick = useCallback(async (actor) => {
+    if (!actor?.id) return;
+
+    const currentRequestId = ++actorRequestIdRef.current;
+    actorRequestRef.current?.abort();
+    const controller = new AbortController();
+    actorRequestRef.current = controller;
+
     setSelectedActor(actor);
     setActorLoading(true);
     setActorFilmography([]);
 
-    const controller = new AbortController();
     try {
       const response = await searchService.fetchActorCredits(actor.id, controller.signal);
+      if (currentRequestId !== actorRequestIdRef.current || controller.signal.aborted) return;
+
       // Sort by popularity and filter out current movie
       const credits = response
         .filter(c => c.id !== parseInt(id) && (c.poster_path || c.backdrop_path))
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, 12);
-      setActorFilmography(credits);
+
+      if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+        setActorFilmography(credits);
+      }
     } catch (err) {
+      if (isAbortError(err)) {
+        return;
+      }
+
       if (!shouldSkipLog(err)) {
         console.error('Error fetching actor filmography:', err);
       }
     } finally {
-      setActorLoading(false);
+      if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+        setActorLoading(false);
+      }
     }
   }, [id]);
 
