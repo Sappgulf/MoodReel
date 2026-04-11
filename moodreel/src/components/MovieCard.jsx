@@ -23,7 +23,9 @@ const MovieCard = memo(function MovieCard({
     onLike,
     onDislike,
     tasteStatus = 'neutral',
-    index = 0
+    index = 0,
+    displayMode = 'poster',
+    className = ''
 }) {
     const { playSound } = useSounds();
     const title = getDisplayTitle(movie);
@@ -190,10 +192,14 @@ const MovieCard = memo(function MovieCard({
         ...(swipeOffset !== 0 ? { transition: 'none' } : {})
     };
 
+    const isRowMode = displayMode === 'row';
+    const linkClassName = `swipe-card-link ${isRowMode ? 'swipe-card-link-row' : ''}`;
+    const modeClassName = isRowMode ? 'recommendation-row-mode' : '';
+
     return (
         <div
             ref={cardRef}
-            className={`recommendation fade-in parallax-card glint stagger-${(index % 5) + 1}`}
+            className={`recommendation fade-in parallax-card glint ${modeClassName} stagger-${(index % 5) + 1} ${className}`}
             style={cardStyle}
             onMouseEnter={handleMouseEnter}
             onMouseMove={handleMouseMove}
@@ -277,7 +283,7 @@ const MovieCard = memo(function MovieCard({
                 )}
             </div>
 
-            <Link to={detailPath} className="swipe-card-link">
+            <Link to={detailPath} className={linkClassName}>
                 <div className="poster-wrapper">
                     <img
                         src={getPosterUrl(movie.poster_path)}
@@ -296,6 +302,9 @@ const MovieCard = memo(function MovieCard({
                         <h2>{title}</h2>
                         <p className="release-date">{year}</p>
                     </div>
+                    {isRowMode && movie.overview ? (
+                        <p className="card-overview">{movie.overview.slice(0, 120)}</p>
+                    ) : null}
                     <div className="card-footer">
                         {rating && (
                             <div className="rating" aria-label={`Rating: ${rating} out of 10`}>

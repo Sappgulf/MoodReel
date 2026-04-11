@@ -77,6 +77,7 @@ function Home() {
   const [isSearchingAll, setIsSearchingAll] = useState(false);
   const [providerSnapshot, setProviderSnapshot] = useState({});
   const [providerCatalog, setProviderCatalog] = useState([]);
+  const [resultLayout, setResultLayout] = useState('poster');
   const surpriseSessionRef = useRef(0);
   const surpriseRevealTimerRef = useRef(null);
 
@@ -781,6 +782,23 @@ function Home() {
           ))}
         </div>
 
+        <div className="result-layout-toggle" role="group" aria-label="Result layout">
+          <button
+            type="button"
+            className={`result-layout-btn ${resultLayout === 'poster' ? 'active' : ''}`}
+            onClick={() => setResultLayout('poster')}
+          >
+            🎞 Poster Grid
+          </button>
+          <button
+            type="button"
+            className={`result-layout-btn ${resultLayout === 'rows' ? 'active' : ''}`}
+            onClick={() => setResultLayout('rows')}
+          >
+            📜 Cinematic List
+          </button>
+        </div>
+
         <div className="mood-selector">
           <div className="mood-input-wrapper">
             <span className="mood-icon">✨</span>
@@ -997,11 +1015,12 @@ function Home() {
                 <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>✨ Save Vibe</button>
               </div>
             )}
-            <div className="recommendations">
+            <div className={`recommendations ${resultLayout === 'rows' ? 'recommendations-list-mode' : ''}`}>
               {filteredByServices.slice(0, visibleCount).map((rec, idx) => (
                 <MovieCard
                   key={rec.id}
                   movie={rec}
+                  displayMode={resultLayout === 'rows' ? 'row' : 'poster'}
                   isInWatchlist={isInWatchlist(rec.id)}
                   onToggleWatchlist={toggleWatchlist}
                   isWatched={isWatched(rec.id)}

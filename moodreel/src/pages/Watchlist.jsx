@@ -33,6 +33,7 @@ function Watchlist() {
     const [recsBasedOn, setRecsBasedOn] = useState(null);
     const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
     const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
+    const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' | 'rows'
     const [searchTerm, setSearchTerm] = useState('');
     const deferredSearchTerm = useDeferredValue(searchTerm);
     const [showSpinWheel, setShowSpinWheel] = useState(false);
@@ -338,6 +339,23 @@ function Watchlist() {
                 </div>
             )}
 
+            <div className="watchlist-layout-toggle" role="group" aria-label="Watchlist layout">
+                <button
+                    type="button"
+                    className={`watchlist-layout-btn ${layoutMode === 'grid' ? 'active' : ''}`}
+                    onClick={() => setLayoutMode('grid')}
+                >
+                    🖼️ Poster Board
+                </button>
+                <button
+                    type="button"
+                    className={`watchlist-layout-btn ${layoutMode === 'rows' ? 'active' : ''}`}
+                    onClick={() => setLayoutMode('rows')}
+                >
+                    🎬 Film Log
+                </button>
+            </div>
+
             {/* Watched Filter */}
             {activeTab === 'watchlist' && watchlist.length > 0 && (
                 <div className="watched-filter">
@@ -481,13 +499,14 @@ function Watchlist() {
                     <p className="watchlist-count">
                         Showing {visibleItems.length} of {sortedList.length} saved
                     </p>
-                    <div className="watchlist-grid">
+                    <div className={`watchlist-grid ${layoutMode === 'rows' ? 'watchlist-grid-rows' : ''}`}>
                         {visibleItems.map((item) => {
                             const note = getNote(item.id);
                             return (
-                                <div key={item.id} className="watchlist-item">
+                                <div key={item.id} className={`watchlist-item ${layoutMode === 'rows' ? 'watchlist-item-row' : ''}`}>
                                     <MovieCard
                                         movie={item}
+                                        displayMode={layoutMode === 'rows' ? 'row' : 'poster'}
                                         isInWatchlist={isInWatchlist(item.id)}
                                         onToggleWatchlist={toggleWatchlist}
                                         isFavorite={isFavorite(item.id)}
