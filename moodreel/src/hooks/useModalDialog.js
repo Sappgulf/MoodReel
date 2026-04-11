@@ -1,6 +1,25 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
 
+let modalOpenCount = 0;
+let modalBodyOverflow = '';
+
+function lockBodyScroll() {
+    if (modalOpenCount === 0) {
+        modalBodyOverflow = document.body.style.overflow;
+    }
+
+    modalOpenCount += 1;
+    document.body.style.overflow = 'hidden';
+}
+
+function unlockBodyScroll() {
+    modalOpenCount = Math.max(modalOpenCount - 1, 0);
+    if (modalOpenCount === 0) {
+        document.body.style.overflow = modalBodyOverflow;
+    }
+}
+
 export function useModalDialog({
     isOpen,
     onClose,
@@ -38,8 +57,7 @@ export function useModalDialog({
         }
 
         prevFocusRef.current = document.activeElement;
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
+        lockBodyScroll();
 
         const timer = window.setTimeout(() => {
             moveFocus();
@@ -49,7 +67,7 @@ export function useModalDialog({
 
         return () => {
             window.clearTimeout(timer);
-            document.body.style.overflow = prevOverflow;
+            unlockBodyScroll();
             prevFocusRef.current?.focus?.();
             window.removeEventListener('keydown', handleKeyDown);
         };
