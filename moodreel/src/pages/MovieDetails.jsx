@@ -23,6 +23,8 @@ function MovieDetails() {
   const location = useLocation();
   const isTV = location.pathname.startsWith('/tv');
   const mediaType = isTV ? 'tv' : 'movie';
+  const [requestNonce, setRequestNonce] = useState(0);
+  const isValidId = typeof id === 'string' && /^\d+$/.test(id);
 
   const { addToHistory } = useWatchHistory();
   const { playTrailer } = useTrailer();
@@ -69,6 +71,12 @@ function MovieDetails() {
       setTrailer(null);
       setCast([]);
 
+      if (!isValidId) {
+        setError('Invalid details URL. Please open a valid item.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
 
@@ -112,7 +120,7 @@ function MovieDetails() {
     fetchData();
 
     return () => controller.abort();
-  }, [id, mediaType, addToHistory]);
+    }, [id, mediaType, addToHistory, isValidId, requestNonce]);
 
   useEffect(() => {
     if (!allProviders) {
@@ -177,6 +185,10 @@ function MovieDetails() {
     playSound('save');
   }, [id, reviewText, setReview, playSound]);
 
+  const handleRetry = useCallback(() => {
+    setRequestNonce((count) => count + 1);
+  }, []);
+
   const providerGroups = useMemo(() => {
     if (!providers) return null;
     return {
@@ -193,7 +205,7 @@ function MovieDetails() {
         <ErrorState
           title="Couldn't load details"
           message={error}
-          onRetry={() => window.location.reload()}
+          onRetry={handleRetry}
         />
       </main>
     );

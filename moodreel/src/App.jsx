@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SkeletonGrid } from './components/Skeleton';
@@ -565,8 +565,12 @@ function AppContent() {
           <Suspense fallback={<SkeletonGrid count={8} />}>
         <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/movie" element={<Navigate to="/" replace />} />
+            <Route path="/tv" element={<Navigate to="/" replace />} />
             <Route path="/movie/:id" element={<MovieDetails />} />
             <Route path="/tv/:id" element={<MovieDetails />} />
+            <Route path="/movie/:id/" element={<MovieDetails />} />
+            <Route path="/tv/:id/" element={<MovieDetails />} />
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/shared" element={<SharedList />} />
             <Route path="/achievements" element={<Achievements />} />
