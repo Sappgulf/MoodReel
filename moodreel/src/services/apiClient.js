@@ -14,6 +14,7 @@ const resolveEnv = (keys) => {
 const API_BASE_URL = resolveEnv(['VITE_TMDB_BASE_URL', 'REACT_APP_TMDB_BASE_URL']) || 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 1000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 
 function getApiKey() {
     const envApiKey = resolveEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
@@ -161,7 +162,8 @@ export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs 
         try {
             const response = await axios.get(`${API_BASE_URL}${path}`, {
                 params: finalParams,
-                signal
+                signal,
+                timeout: DEFAULT_REQUEST_TIMEOUT_MS
             });
 
             if (cache && cacheKey) {
@@ -179,13 +181,15 @@ export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs 
 
             const errorMsg = normalized.message;
             const fullUrl = err?.config?.url ? `${err.config.url}` : API_BASE_URL + path;
-            console.error(`TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`, {
-                code: normalized.code,
-                status: normalized.status,
-                url: fullUrl,
-                params: normalizeParams(finalParams),
-                retryAfter: normalized.retryAfter
-            });
+            if (!shouldSkipLog(normalized)) {
+                console.error(`TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`, {
+                    code: normalized.code,
+                    status: normalized.status,
+                    url: fullUrl,
+                    params: normalizeParams(finalParams),
+                    retryAfter: normalized.retryAfter
+                });
+            }
 
             if (attempt < retries && isRetryableError(normalized)) {
                 const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);

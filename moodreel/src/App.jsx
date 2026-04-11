@@ -195,22 +195,25 @@ function AppContent() {
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const targetTag = e.target?.tagName;
+      const isEditable = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT' || e.target?.isContentEditable;
+
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         openQuickActions();
         return;
       }
       // ? = show shortcuts
-      if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+      if (!isEditable && e.key === '?' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         setShowShortcuts(true);
       }
       // D = toggle dark mode
-      if (e.key === 'd' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      if (!isEditable && e.key === 'd' && !e.ctrlKey && !e.metaKey) {
         toggleTheme();
       }
       // M = toggle sounds
-      if (e.key === 'm' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      if (!isEditable && e.key === 'm' && !e.ctrlKey && !e.metaKey) {
         toggleSounds();
       }
     };
