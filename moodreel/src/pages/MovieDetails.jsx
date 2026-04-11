@@ -483,17 +483,26 @@ function MovieDetails() {
 
         {/* Cast Section */}
         <section className="cast-section details-section" aria-labelledby="cast-heading">
-          <h3 id="cast-heading">🎭 Cast</h3>
+          <header className="details-section-head">
+            <p className="details-kicker">Chapter One</p>
+            <h3 id="cast-heading">Cast</h3>
+          </header>
           {cast.length > 0 ? (
-            <div className="cast-grid cast-grid-strip">
+            <div className="cast-grid cast-grid-strip" role="list" aria-label="Cast members">
               {cast.map((person) => (
                 <div
                   key={person.id}
                   className="cast-member clickable"
                   onClick={() => handleActorClick(person)}
                   role="button"
+                  aria-label={`${person.name} — ${person.character || 'Cast and crew member'}`}
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && handleActorClick(person)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleActorClick(person);
+                    }
+                  }}
                 >
                   {person.profile_path ? (
                     <img
@@ -520,7 +529,10 @@ function MovieDetails() {
 
         {/* Trailer Section */}
         <section className="trailer-section details-section" aria-labelledby="trailer-heading">
-          <h3 id="trailer-heading">🎬 Watch Trailer</h3>
+          <header className="details-section-head">
+            <p className="details-kicker">Chapter Two</p>
+            <h3 id="trailer-heading">Watch Trailer</h3>
+          </header>
           {trailer ? (
             <div className="trailer-container">
               <iframe
@@ -539,7 +551,10 @@ function MovieDetails() {
 
         {/* Streaming Providers */}
         <section className="streaming-section details-section" aria-labelledby="providers-heading">
-          <h3 id="providers-heading">Where to Watch ({region})</h3>
+          <header className="details-section-head">
+            <p className="details-kicker">Chapter Three</p>
+            <h3 id="providers-heading">Where to Watch ({region})</h3>
+          </header>
           {providerGroups && (providerGroups.stream.length > 0 || providerGroups.rent.length > 0 || providerGroups.buy.length > 0) ? (
             <div className="streaming-providers">
               {providerGroups.stream.length > 0 && (
@@ -604,7 +619,10 @@ function MovieDetails() {
 
         {/* Similar Content */}
         <section className="similar-movies details-section" aria-labelledby="similar-heading">
-          <h3 id="similar-heading">You Might Also Like</h3>
+          <header className="details-section-head">
+            <p className="details-kicker">Chapter Four</p>
+            <h3 id="similar-heading">You Might Also Like</h3>
+          </header>
           {similar.length > 0 ? (
             <div
               className="similar-movies-grid similar-movies-grid-strip filmstrip"
@@ -612,19 +630,20 @@ function MovieDetails() {
               aria-label="Similar titles to watch next"
             >
               {similar.map((item) => (
-                <MovieCard
-                  key={item.id}
-                  movie={{ ...item, media_type: mediaType }}
-                  isInWatchlist={isInWatchlist(item.id)}
-                  onToggleWatchlist={toggleWatchlist}
-                  isWatched={isWatched(item.id)}
-                  onToggleWatched={toggleWatched}
-                  displayMode="row"
-                  mediaType={mediaType}
-                  onLike={like}
-                  onDislike={dislike}
-                  tasteStatus={statusFor(item.id, mediaType)}
-                />
+                <article className="filmstrip-item" role="listitem" key={item.id}>
+                  <MovieCard
+                    movie={{ ...item, media_type: mediaType }}
+                    isInWatchlist={isInWatchlist(item.id)}
+                    onToggleWatchlist={toggleWatchlist}
+                    isWatched={isWatched(item.id)}
+                    onToggleWatched={toggleWatched}
+                    displayMode="row"
+                    mediaType={mediaType}
+                    onLike={like}
+                    onDislike={dislike}
+                    tasteStatus={statusFor(item.id, mediaType)}
+                  />
+                </article>
               ))}
             </div>
           ) : (

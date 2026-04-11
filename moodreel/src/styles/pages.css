@@ -1122,11 +1122,40 @@
     border-radius: 999px;
 }
 
-.filmstrip .recommendation {
-    flex: 0 0 430px;
-    max-width: 430px;
-    min-width: 340px;
+.filmstrip-item {
+    flex: 0 0 clamp(250px, 44vw, 460px);
+    min-width: 250px;
+    max-width: 460px;
+    width: clamp(250px, 44vw, 460px);
     scroll-snap-align: start;
+}
+
+.filmstrip-item .recommendation,
+.filmstrip-item .recommendation-row-mode {
+    width: 100%;
+}
+
+.filmstrip .recommendation {
+    width: 100%;
+}
+
+.filmstrip-item:hover {
+    transform: translateY(-4px);
+}
+
+@media (min-width: 769px) {
+    .filmstrip {
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 768px) {
+    .filmstrip-item {
+        flex-basis: 84vw;
+        min-width: 84vw;
+        max-width: 84vw;
+        width: 84vw;
+    }
 }
 
 /* Actor Filmography Modal */
@@ -1438,11 +1467,35 @@
 
 .details-section {
     margin-bottom: var(--spacing-2xl);
+    display: grid;
+    gap: var(--spacing-lg);
+    position: relative;
+}
+
+.details-section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.details-kicker {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.details-section-head h3 {
+    margin: 0;
+    font-size: clamp(1.35rem, 3vw, 1.6rem);
+    letter-spacing: -0.02em;
 }
 
 .details-section h3 {
     margin-top: 0;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 0;
 }
 
 .similar-movies-grid-strip {
