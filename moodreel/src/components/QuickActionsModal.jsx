@@ -1,54 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
+import { useModalDialog } from '../hooks/useModalDialog';
 
 function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actions' }) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
-  const dialogRef = useRef(null);
-  const prevFocusRef = useRef(null);
+  const { dialogRef } = useModalDialog({ isOpen, onClose, focusRef: inputRef });
 
   useEffect(() => {
     if (!isOpen) {
       setQuery('');
       setSelectedIndex(0);
-      return;
     }
-
-    prevFocusRef.current = document.activeElement;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const timer = window.setTimeout(() => {
-      focusFirstInDialog(dialogRef.current, inputRef);
-    }, 0);
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      prevFocusRef.current?.focus?.();
-      window.clearTimeout(timer);
-    };
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDownWindow = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      handleTabTrapping(e, dialogRef.current);
-    };
-
-    window.addEventListener('keydown', handleKeyDownWindow);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDownWindow);
-    };
-  }, [isOpen, onClose]);
 
   const filteredActions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

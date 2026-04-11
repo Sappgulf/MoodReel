@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useModalDialog } from '../hooks/useModalDialog';
 
 const ONBOARDING_KEY = 'moodreel-onboarded';
 
@@ -39,8 +39,6 @@ function OnboardingModal() {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const touchStart = useRef(null);
-    const dialogRef = useRef(null);
-    const prevFocusRef = useRef(null);
 
     useEffect(() => {
         const hasOnboarded = localStorage.getItem(ONBOARDING_KEY);
@@ -62,45 +60,24 @@ function OnboardingModal() {
         }
     };
 
-    useEffect(() => {
-        if (!show) return;
+    const handleModalKeyDown = useCallback((e) => {
+        if (e.key === 'ArrowLeft' && currentSlide > 0) {
+            e.preventDefault();
+            setCurrentSlide((prev) => prev - 1);
+            return;
+        }
 
-        prevFocusRef.current = document.activeElement;
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        const timer = window.setTimeout(() => {
-            focusFirstInDialog(dialogRef.current);
-        }, 0);
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            handleNext();
+        }
+    }, [currentSlide, handleClose]);
 
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                handleClose();
-                return;
-            }
-
-            if (e.key === 'ArrowLeft' && currentSlide > 0) {
-                e.preventDefault();
-                setCurrentSlide((prev) => prev - 1);
-                return;
-            }
-
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                handleNext();
-                return;
-            }
-
-            handleTabTrapping(e, dialogRef.current);
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.clearTimeout(timer);
-            document.body.style.overflow = prevOverflow;
-            prevFocusRef.current?.focus?.();
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [show, currentSlide, handleClose, handleNext]);
+    const { dialogRef } = useModalDialog({
+        isOpen: show,
+        onClose: handleClose,
+        onKeyDown: handleModalKeyDown,
+    });
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {

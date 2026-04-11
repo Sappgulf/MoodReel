@@ -1,39 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
+import React from 'react';
+import { useModalDialog } from '../hooks/useModalDialog';
 
 /**
  * Modal for playing YouTube trailers
  */
 function TrailerModal({ videoKey, onClose }) {
     if (!videoKey) return null;
-    const dialogRef = useRef(null);
-    const prevFocusRef = useRef(null);
 
-    useEffect(() => {
-        prevFocusRef.current = document.activeElement;
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        const timer = window.setTimeout(() => {
-            focusFirstInDialog(dialogRef.current);
-        }, 0);
-
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-
-            handleTabTrapping(e, dialogRef.current);
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.clearTimeout(timer);
-            document.body.style.overflow = prevOverflow;
-            prevFocusRef.current?.focus?.();
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [onClose]);
+    const { dialogRef } = useModalDialog({ isOpen: !!videoKey, onClose });
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {

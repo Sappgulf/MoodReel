@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
+import React, { useState, useEffect, useRef } from 'react';
+import { useModalDialog } from '../hooks/useModalDialog';
 
 const shortcuts = [
     { keys: ['J', '↓'], description: 'Select next movie' },
@@ -17,40 +17,13 @@ const shortcuts = [
  */
 function KeyboardShortcutsModal({ isOpen, onClose }) {
     const [visible, setVisible] = useState(false);
-    const dialogRef = useRef(null);
-    const prevFocusRef = useRef(null);
+    const { dialogRef } = useModalDialog({ isOpen, onClose });
+    const touchStart = useRef(null);
 
     useEffect(() => {
         setVisible(isOpen);
     }, [isOpen]);
 
-    const handleKeyDown = useCallback((e) => {
-        if (e.key === 'Escape') {
-            onClose();
-            return;
-        }
-        handleTabTrapping(e, dialogRef.current);
-    }, [onClose]);
-
-    useEffect(() => {
-        if (!isOpen) {
-            return;
-        }
-
-        prevFocusRef.current = document.activeElement;
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-        focusFirstInDialog(dialogRef.current);
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = prevOverflow;
-            prevFocusRef.current?.focus?.();
-        };
-    }, [isOpen, handleKeyDown]);
-
-    const touchStart = useRef(null);
     const handleTouchStart = (e) => {
         touchStart.current = e.targetTouches[0].clientX;
     };
@@ -78,7 +51,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
                 aria-labelledby="keyboard-shortcuts-title"
                 aria-describedby="keyboard-shortcuts-hint"
                 tabIndex={-1}
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
             >
                 <button type="button" className="shortcuts-close" onClick={onClose} aria-label="Close keyboard shortcuts">✕</button>
 
