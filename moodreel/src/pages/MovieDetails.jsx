@@ -120,7 +120,7 @@ function MovieDetails() {
     fetchData();
 
     return () => controller.abort();
-    }, [id, mediaType, addToHistory, isValidId, requestNonce]);
+  }, [id, mediaType, addToHistory, isValidId, requestNonce]);
 
   useEffect(() => {
     if (!allProviders) {
