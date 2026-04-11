@@ -930,6 +930,12 @@
     min-width: 130px;
     scroll-snap-align: start;
     text-align: center;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    width: 100%;
 }
 
 .cast-member {

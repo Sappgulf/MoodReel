@@ -490,19 +490,12 @@ function MovieDetails() {
           {cast.length > 0 ? (
             <div className="cast-grid cast-grid-strip" role="list" aria-label="Cast members">
               {cast.map((person) => (
-                <div
+                <button
                   key={person.id}
                   className="cast-member clickable"
+                  type="button"
                   onClick={() => handleActorClick(person)}
-                  role="button"
                   aria-label={`${person.name} — ${person.character || 'Cast and crew member'}`}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleActorClick(person);
-                    }
-                  }}
                 >
                   {person.profile_path ? (
                     <img
@@ -519,7 +512,7 @@ function MovieDetails() {
                     <p className="cast-name">{person.name}</p>
                     <p className="cast-character">{person.character}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (

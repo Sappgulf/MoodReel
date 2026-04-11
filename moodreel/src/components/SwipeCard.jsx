@@ -114,7 +114,7 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             tabIndex={0}
-            role="button"
+            role="group"
             aria-label={`${title}. Press left arrow to pass, right arrow to save.`}
         >
             {/* Swipe indicators */}
