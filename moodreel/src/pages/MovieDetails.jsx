@@ -176,9 +176,6 @@ function MovieDetails() {
         .slice(0, 12);
 
       if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-        if (credits.length === 0) {
-          setActorError('');
-        }
         setActorFilmography(credits);
       }
     } catch (err) {
