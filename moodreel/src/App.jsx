@@ -30,6 +30,8 @@ const Profile = lazy(() => import('./pages/Profile'));
 
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
 const SEARCH_FALLBACK_TOAST_COOLDOWN_MS = 12000;
+const HAS_WINDOW = typeof window !== 'undefined';
+const HAS_NAVIGATOR = typeof navigator !== 'undefined';
 const SEARCH_FALLBACK_TOASTS = {
   'search-stale-cache': {
     title: 'Using cached results',
@@ -51,6 +53,28 @@ const SEARCH_FALLBACK_TOASTS = {
   }
 };
 
+function NotFoundPage() {
+  const notFoundLinkRef = useRef(null);
+
+  useEffect(() => {
+    notFoundLinkRef.current?.focus();
+  }, []);
+
+  return (
+    <section className="page-enter" aria-label="Page not found">
+      <h2>Page not found</h2>
+      <p>We couldn&apos;t find the page you requested.</p>
+      <Link
+        ref={notFoundLinkRef}
+        to="/"
+        className="primary-button"
+      >
+        Return to Discover
+      </Link>
+    </section>
+  );
+}
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -64,7 +88,7 @@ function AppContent() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(() => (HAS_NAVIGATOR ? !navigator.onLine : false));
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = React.useRef(null);
   const lastSearchFallbackRef = useRef({ key: '', at: 0 });
@@ -76,7 +100,9 @@ function AppContent() {
   const quickActions = useMemo(() => {
     const focusMoodSearch = () => {
       navigate('/');
+      if (!HAS_WINDOW) return;
       window.setTimeout(() => {
+        if (!HAS_WINDOW) return;
         window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'));
       }, 75);
     };
@@ -153,8 +179,8 @@ function AppContent() {
         description: 'Share the current MoodReel state.',
         shortcut: '⌘ C',
         onSelect: async () => {
-          try {
-            await copyToClipboard(window.location.href);
+      try {
+            await copyToClipboard(HAS_WINDOW ? window.location.href : '');
             pushToast({
               icon: '🔗',
               title: 'Link copied',
@@ -184,7 +210,7 @@ function AppContent() {
     let title = 'MoodReel';
     if (path === '/') title = 'Discover | MoodReel';
     else if (path === '/watchlist') title = 'Watchlist & Favorites | MoodReel';
-    else if (path.startsWith('/movie/') || path.startsWith('/tv/')) title = 'Movie & TV Details | MoodReel';
+    else if (/^\/(movie|tv)\/[^/]+/.test(path)) title = 'Movie & TV Details | MoodReel';
     else if (path === '/shared' || path.startsWith('/share/')) title = 'Shared List | MoodReel';
     else if (path === '/achievements') title = 'Achievements | MoodReel';
     else if (path === '/profile') title = 'Profile | MoodReel';
@@ -223,6 +249,8 @@ function AppContent() {
 
   // Monitor scroll for header polish
   useEffect(() => {
+    if (!HAS_WINDOW) return;
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
@@ -233,6 +261,8 @@ function AppContent() {
 
   // Monitor online status
   useEffect(() => {
+    if (!HAS_WINDOW) return;
+
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
@@ -247,6 +277,8 @@ function AppContent() {
 
   // Report search fallback events from searchService
   useEffect(() => {
+    if (!HAS_WINDOW) return;
+
     window.addEventListener(SEARCH_FALLBACK_EVENT, announceSearchFallback);
 
     return () => {
@@ -256,7 +288,9 @@ function AppContent() {
 
   // Scroll to top on page navigation
   useEffect(() => {
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const reduceMotion = HAS_WINDOW ? window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches : false;
+    if (!HAS_WINDOW) return;
+
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     mainRef.current?.focus?.({ preventScroll: true });
 
@@ -265,6 +299,8 @@ function AppContent() {
 
   // Global keyboard shortcuts
   useEffect(() => {
+    if (!HAS_WINDOW) return;
+
     const handleKeyDown = (e) => {
       const target = e.target;
       const targetTag = target?.tagName;
@@ -522,7 +558,7 @@ function AppContent() {
           aria-label={documentTitle}
         >
           <Suspense fallback={<SkeletonGrid count={8} />}>
-          <Routes>
+        <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/movie/:id" element={<MovieDetails />} />
             <Route path="/tv/:id" element={<MovieDetails />} />
@@ -533,15 +569,7 @@ function AppContent() {
             <Route path="/share/:shareId" element={<SharedList />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/calendar" element={<MoodCalendar />} />
-            <Route path="*" element={
-              <section className="page-enter" aria-label="Page not found">
-                <h2>Page not found</h2>
-                <p>We couldn&apos;t find the page you requested.</p>
-                <Link to="/" className="primary-button">
-                  Return to Discover
-                </Link>
-              </section>
-            } />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </Suspense>
         </main>
