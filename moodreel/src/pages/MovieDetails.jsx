@@ -44,6 +44,7 @@ function MovieDetails() {
   const [selectedActor, setSelectedActor] = useState(null);
   const [actorFilmography, setActorFilmography] = useState([]);
   const [actorLoading, setActorLoading] = useState(false);
+  const [actorError, setActorError] = useState('');
   const actorRequestRef = useRef(null);
   const actorRequestIdRef = useRef(0);
 
@@ -135,9 +136,7 @@ function MovieDetails() {
   // Load saved review text (separate effect to avoid refetching on rating change)
   useEffect(() => {
     const savedReview = getReview(id);
-    if (savedReview) {
-      setReviewText(savedReview);
-    }
+    setReviewText(savedReview || '');
   }, [id, getReview]);
 
   // Cancel any in-flight actor fetch on unmount.
@@ -162,6 +161,7 @@ function MovieDetails() {
     actorRequestRef.current = controller;
 
     setSelectedActor(actor);
+    setActorError('');
     setActorLoading(true);
     setActorFilmography([]);
 
@@ -176,6 +176,9 @@ function MovieDetails() {
         .slice(0, 12);
 
       if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+        if (credits.length === 0) {
+          setActorError('');
+        }
         setActorFilmography(credits);
       }
     } catch (err) {
@@ -183,6 +186,10 @@ function MovieDetails() {
         return;
       }
 
+      if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+        setActorError(getUserFacingMessage(err) || 'Could not load actor filmography. Please try again.');
+        setActorFilmography([]);
+      }
       if (!shouldSkipLog(err)) {
         console.error('Error fetching actor filmography:', err);
       }
@@ -192,6 +199,14 @@ function MovieDetails() {
       }
     }
   }, [id]);
+
+  const closeActorModal = useCallback(() => {
+    actorRequestRef.current?.abort();
+    setSelectedActor(null);
+    setActorFilmography([]);
+    setActorLoading(false);
+    setActorError('');
+  }, []);
 
   const handleToggleWatchlist = useCallback(() => {
     if (content) {
@@ -449,9 +464,9 @@ function MovieDetails() {
         </div>
 
         {/* Cast Section */}
-        {cast.length > 0 && (
-          <section className="cast-section" aria-labelledby="cast-heading">
-            <h3 id="cast-heading">🎭 Cast</h3>
+        <section className="cast-section" aria-labelledby="cast-heading">
+          <h3 id="cast-heading">🎭 Cast</h3>
+          {cast.length > 0 ? (
             <div className="cast-grid">
               {cast.map((person) => (
                 <div
@@ -480,8 +495,10 @@ function MovieDetails() {
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="filmography-empty">Cast list is not available for this title yet.</p>
+          )}
+        </section>
 
         {/* Trailer Section */}
         <section className="trailer-section" aria-labelledby="trailer-heading">
@@ -568,9 +585,9 @@ function MovieDetails() {
         </section>
 
         {/* Similar Content */}
-        {similar.length > 0 && (
-          <section className="similar-movies" aria-labelledby="similar-heading">
-            <h3 id="similar-heading">You Might Also Like</h3>
+        <section className="similar-movies" aria-labelledby="similar-heading">
+          <h3 id="similar-heading">You Might Also Like</h3>
+          {similar.length > 0 ? (
             <div className="similar-movies-grid">
               {similar.map((item) => (
                 <MovieCard
@@ -587,8 +604,10 @@ function MovieDetails() {
                 />
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="filmography-empty">No similar titles are available for this title.</p>
+          )}
+        </section>
       </article>
 
       {/* Trailer Modal */}
@@ -601,9 +620,9 @@ function MovieDetails() {
 
       {/* Actor Filmography Modal */}
       {selectedActor && (
-        <div className="filmography-overlay" onClick={() => setSelectedActor(null)}>
+        <div className="filmography-overlay" onClick={closeActorModal}>
           <div className="filmography-modal" onClick={e => e.stopPropagation()}>
-            <button className="filmography-close" onClick={() => setSelectedActor(null)}>✕</button>
+            <button className="filmography-close" onClick={closeActorModal}>✕</button>
             <div className="filmography-header">
               {selectedActor.profile_path && (
                 <img
@@ -620,6 +639,13 @@ function MovieDetails() {
 
             {actorLoading ? (
               <div className="filmography-loading">Loading filmography...</div>
+            ) : actorError ? (
+              <div className="filmography-empty">
+                <p>{actorError}</p>
+                <button type="button" className="review-edit-btn" onClick={() => handleActorClick(selectedActor)}>
+                  Retry
+                </button>
+              </div>
             ) : actorFilmography.length > 0 ? (
               <div className="filmography-grid">
                 {actorFilmography.map(credit => (

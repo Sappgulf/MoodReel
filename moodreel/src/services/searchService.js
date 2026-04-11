@@ -18,6 +18,8 @@ import { getUserFacingMessage, isAbortError, shouldSkipLog } from './apiErrorUti
 
 // Cache settings
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
+const CONTENT_DETAILS_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const ACTOR_CREDITS_TTL_MS = 60 * 60 * 1000; // 1 hour
 const CACHE_KEY = 'moodreel-search-persistent-cache';
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
 const HAS_LOCAL_STORAGE = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -61,6 +63,10 @@ function hydrateSearchCache() {
 hydrateSearchCache();
 
 const inflightRequests = new Map();
+const contentDetailsCache = new Map();
+const actorCreditsCache = new Map();
+const contentDetailsInflight = new Map();
+const actorCreditsInflight = new Map();
 
 function normalizeMediaItem(item, mediaType) {
     const title = getDisplayTitle(item);
@@ -134,6 +140,24 @@ function getCached(key, ignoreTTL = false) {
         searchCache.delete(key);
     }
     return null;
+}
+
+function getCachedWithTtl(cache, key, ttlMs, ignoreTTL = false) {
+    const cached = cache.get(key);
+    if (!cached) return null;
+
+    if (ignoreTTL || Date.now() - cached.timestamp < ttlMs) {
+        return cached.data;
+    }
+
+    if (!ignoreTTL) {
+        cache.delete(key);
+    }
+    return null;
+}
+
+function setCachedWithTtl(cache, key, data) {
+    cache.set(key, { data, timestamp: Date.now() });
 }
 
 function emitSearchFallback(detail) {
@@ -520,18 +544,54 @@ export async function fetchTrending(type = 'all', timeWindow = 'day', signal) {
  * Fetch all details for a movie or TV show in parallel
  */
 export async function fetchContentDetails(id, mediaType = 'movie', signal) {
-    const data = await tmdbGet(`/${mediaType}/${id}`, {
-        signal,
-        params: { append_to_response: 'similar,videos,credits,watch/providers' }
-    });
+    const cacheKey = `${mediaType}:${id}`;
+    const cached = getCachedWithTtl(contentDetailsCache, cacheKey, CONTENT_DETAILS_TTL_MS);
+    if (cached) {
+        return cached;
+    }
 
-    return {
-        details: normalizeMediaItem(data, mediaType),
-        similar: ensureArray(data.similar?.results).map((item) => normalizeMediaItem(item, mediaType)),
-        providers: data['watch/providers']?.results || null,
-        videos: ensureArray(data.videos?.results),
-        credits: data.credits || { cast: [] }
-    };
+    if (contentDetailsInflight.has(cacheKey)) {
+        return contentDetailsInflight.get(cacheKey);
+    }
+
+    const requestPromise = (async () => {
+        try {
+            const data = await tmdbGet(`/${mediaType}/${id}`, {
+                signal,
+                params: { append_to_response: 'similar,videos,credits,watch/providers' }
+            });
+
+            const result = {
+                details: normalizeMediaItem(data, mediaType),
+                similar: ensureArray(data.similar?.results).map((item) => normalizeMediaItem(item, mediaType)),
+                providers: data['watch/providers']?.results || null,
+                videos: ensureArray(data.videos?.results),
+                credits: data.credits || { cast: [] }
+            };
+
+            setCachedWithTtl(contentDetailsCache, cacheKey, result);
+            return result;
+        } catch (err) {
+            if (isAbortError(err)) {
+                throw err;
+            }
+
+            const stale = getCachedWithTtl(contentDetailsCache, cacheKey, CONTENT_DETAILS_TTL_MS, true);
+            if (stale) {
+                if (!shouldSkipLog(err)) {
+                    console.debug('Returning stale content details due to network error');
+                }
+                return stale;
+            }
+
+            throw err;
+        } finally {
+            contentDetailsInflight.delete(cacheKey);
+        }
+    })();
+
+    contentDetailsInflight.set(cacheKey, requestPromise);
+    return requestPromise;
 }
 
 export async function fetchSimilar(id, mediaType = 'movie', signal) {
@@ -540,8 +600,43 @@ export async function fetchSimilar(id, mediaType = 'movie', signal) {
 }
 
 export async function fetchActorCredits(actorId, signal) {
-    const response = await tmdbGet(`/person/${actorId}/combined_credits`, { signal });
-    return ensureArray(response.cast);
+    const cacheKey = `${actorId}`;
+    const cached = getCachedWithTtl(actorCreditsCache, cacheKey, ACTOR_CREDITS_TTL_MS);
+    if (cached) {
+        return cached;
+    }
+
+    if (actorCreditsInflight.has(cacheKey)) {
+        return actorCreditsInflight.get(cacheKey);
+    }
+
+    const requestPromise = (async () => {
+        try {
+            const response = await tmdbGet(`/person/${actorId}/combined_credits`, { signal });
+            const credits = ensureArray(response.cast);
+            setCachedWithTtl(actorCreditsCache, cacheKey, credits);
+            return credits;
+        } catch (err) {
+            if (isAbortError(err)) {
+                throw err;
+            }
+
+            const stale = getCachedWithTtl(actorCreditsCache, cacheKey, ACTOR_CREDITS_TTL_MS, true);
+            if (stale) {
+                if (!shouldSkipLog(err)) {
+                    console.debug('Returning stale actor credits due to network error');
+                }
+                return stale;
+            }
+
+            throw err;
+        } finally {
+            actorCreditsInflight.delete(cacheKey);
+        }
+    })();
+
+    actorCreditsInflight.set(cacheKey, requestPromise);
+    return requestPromise;
 }
 
 /**
@@ -549,6 +644,8 @@ export async function fetchActorCredits(actorId, signal) {
  */
 export function clearCache() {
     searchCache.clear();
+    contentDetailsCache.clear();
+    actorCreditsCache.clear();
     localStorage.removeItem(CACHE_KEY);
 }
 
@@ -558,7 +655,11 @@ export function clearCache() {
 export function getCacheStats() {
     return {
         size: searchCache.size,
-        inflight: inflightRequests.size
+        inflight: inflightRequests.size,
+        contentDetailsCacheSize: contentDetailsCache.size,
+        actorCreditsCacheSize: actorCreditsCache.size,
+        contentDetailsInflight: contentDetailsInflight.size,
+        actorCreditsInflight: actorCreditsInflight.size
     };
 }
 
