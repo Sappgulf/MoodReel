@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import axios from 'axios';
 import { useLocation, Link } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import SwipeCard from '../components/SwipeCard';
@@ -28,6 +27,7 @@ import { fetchProviderCatalog, fetchTitleProviders, getCachedTitleProviders } fr
 import { applySearchRanking } from '../utils/searchRanking';
 import { copyToClipboard } from '../utils/clipboard';
 import { getBackdropUrl, getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
+import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
 
 function Home() {
   const currentYear = new Date().getFullYear();
@@ -243,8 +243,11 @@ function Home() {
       }
       setSearchResults(result.results || []);
     } catch (err) {
-      if (!axios.isCancel(err)) {
-        setSearchError('Search failed. Please try again.');
+      if (!shouldSkipLog(err)) {
+        console.error('Error performing title search:', err);
+      }
+      if (!isAbortError(err)) {
+        setSearchError(getUserFacingMessage(err));
       }
     } finally {
       setIsSearchingAll(false);
@@ -285,7 +288,7 @@ function Home() {
         const data = await searchService.fetchGenres(endpoint, controller.signal);
         setGenres(data);
       } catch (err) {
-        if (!axios.isCancel(err) && err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
+        if (!shouldSkipLog(err)) {
           console.error('Error fetching genres:', err);
         }
       }
@@ -310,7 +313,7 @@ function Home() {
         }, []);
         setProviderCatalog(merged);
       } catch (err) {
-        if (!axios.isCancel(err) && err.name !== 'AbortError' && !err?.message?.includes('TMDB API unavailable')) {
+        if (!shouldSkipLog(err)) {
           console.error('Error fetching provider catalog:', err);
         }
       }
@@ -570,7 +573,7 @@ function Home() {
         const data = await fetchTitleProviders(item.id, mediaType, region, controller.signal);
         newSnapshot[key] = data;
       } catch (err) {
-        if (!axios.isCancel(err) && err.name !== 'AbortError') {
+        if (!shouldSkipLog(err)) {
           console.error('Provider lookup failed:', err);
         }
       }

@@ -15,7 +15,8 @@ npm start
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `REACT_APP_TMDB_API_KEY` | ✅ | [Get one here](https://www.themoviedb.org/settings/api) |
+| `VITE_TMDB_API_KEY` | ✅ | [Get one here](https://www.themoviedb.org/settings/api) |
+| `REACT_APP_TMDB_API_KEY` | ✅ Legacy | [Get one here](https://www.themoviedb.org/settings/api) |
 
 ### Local Runtime Key (Optional)
 If you want to avoid editing `.env`, set a local-only key in the browser console:
@@ -30,10 +31,11 @@ Reload the page after setting it.
 
 | Command | Description |
 |---------|-------------|
-| `npm start` | Dev server at http://localhost:3000 |
+| `npm start` | Dev server at http://localhost:3000 (Vite) |
 | `npm run build` | Production build to `/build` |
 | `npm test` | Run test suite |
-| `npm run eject` | Eject from CRA (irreversible) |
+| `npm run test:unit` | Run unit tests once |
+| `npm run eject` | Eject from CRA (legacy only) |
 
 ## Architecture
 

@@ -1,13 +1,24 @@
 import axios from 'axios';
+import { isAbortError, getUserFacingMessage, isExpectedTmdbErrorForLogging, shouldSkipLog } from './apiErrorUtils';
 
-const env = typeof process !== 'undefined' ? process.env || {} : {};
-const API_BASE_URL = env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
-const API_KEY = 'f2b1a353af51ccd27736c209f7ea0ca6';
+const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env || {} : {};
+const processEnv = typeof process !== 'undefined' ? process.env || {} : {};
+const resolveEnv = (keys) => {
+    for (const key of keys) {
+        if (viteEnv[key] !== undefined) return viteEnv[key];
+        if (processEnv[key] !== undefined) return processEnv[key];
+    }
+    return undefined;
+};
+
+const API_BASE_URL = resolveEnv(['VITE_TMDB_BASE_URL', 'REACT_APP_TMDB_BASE_URL']) || 'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 1000;
 
 function getApiKey() {
-    if (API_KEY) return API_KEY;
+    const envApiKey = resolveEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
+    if (envApiKey) return envApiKey;
+
     if (typeof window === 'undefined') return null;
     if (window.__MOODREEL_TMDB_API_KEY__) {
         return window.__MOODREEL_TMDB_API_KEY__;
@@ -15,7 +26,22 @@ function getApiKey() {
     if (window.localStorage) {
         return window.localStorage.getItem('moodreel-tmdb-api-key');
     }
-    return env.REACT_APP_TMDB_API_KEY || null;
+    return null;
+}
+
+export class TmdbApiError extends Error {
+    constructor({ code, message, path, status = null, retryAfter = null, cause = null, retryable = false }) {
+        super(message);
+        this.name = 'TmdbApiError';
+        this.code = code;
+        this.path = path;
+        this.status = status;
+        this.retryAfter = retryAfter;
+        this.isRetryable = retryable;
+        if (cause) {
+            this.cause = cause;
+        }
+    }
 }
 
 const memoryCache = new Map();
@@ -54,9 +80,48 @@ function sleep(ms) {
 }
 
 function isRetryableError(err) {
-    if (axios.isCancel(err)) return false;
-    const status = err.response?.status;
+    if (err?.code === 'TMDB_REQUEST_CANCELLED') return false;
+    if (err?.isRetryable !== undefined) return err.isRetryable;
+    const status = err?.status || err?.response?.status;
     return !status || status >= 500 || status === 429;
+}
+
+function normalizeApiError(err, path) {
+    if (err instanceof TmdbApiError) return err;
+    if (isAbortError(err)) {
+        return new TmdbApiError({
+            code: 'TMDB_REQUEST_CANCELLED',
+            message: 'Request was canceled.',
+            path,
+            retryable: false
+        });
+    }
+
+    const status = err?.response?.status;
+    const body = err?.response?.data || {};
+    if (!status) {
+        return new TmdbApiError({
+            code: 'TMDB_NETWORK_ERROR',
+            message: 'TMDB API unavailable.',
+            path,
+            status,
+            isRetryable: true,
+            cause: err
+        });
+    }
+
+    const retryAfterHeader = err?.response?.headers?.['retry-after'];
+    const retryAfter = retryAfterHeader ? Number(retryAfterHeader) : null;
+
+    return new TmdbApiError({
+        code: `TMDB_HTTP_${status}`,
+        message: body?.status_message || toUserMessage({ code: `HTTP_${status}`, status }),
+        path,
+        status,
+        retryAfter,
+        retryable: status >= 500 || status === 429 || status === 408,
+        cause: err
+    });
 }
 
 export function ensureString(value, fallback = '') {
@@ -74,7 +139,13 @@ export function ensureArray(value) {
 export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs = DEFAULT_TTL_MS, retries = MAX_RETRIES } = {}) {
     const apiKey = getApiKey();
     if (!apiKey) {
-        throw new Error('TMDB API unavailable.');
+        throw new TmdbApiError({
+            code: 'TMDB_API_KEY_MISSING',
+            message: 'TMDB API unavailable. Configure your API key.',
+            path,
+            status: 401,
+            retryable: false
+        });
     }
 
     const finalParams = { ...params, api_key: apiKey };
@@ -99,25 +170,30 @@ export async function tmdbGet(path, { params = {}, signal, cache = false, ttlMs 
 
             return response.data;
         } catch (err) {
-            lastError = err;
-            if (!axios.isCancel(err)) {
-                const errorMsg = err.response?.data?.status_message || err.message;
-                const fullUrl = err.config?.url ? `${err.config.url}` : API_BASE_URL + path;
-                console.error(`TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`, {
-                    status: err.response?.status,
-                    url: fullUrl,
-                    params: normalizeParams(finalParams),
-                    data: err.response?.data
-                });
+            if (isAbortError(err)) {
+                throw err;
             }
 
-            if (attempt < retries && isRetryableError(err)) {
+            const normalized = normalizeApiError(err, path);
+            lastError = normalized;
+
+            const errorMsg = normalized.message;
+            const fullUrl = err?.config?.url ? `${err.config.url}` : API_BASE_URL + path;
+            console.error(`TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`, {
+                code: normalized.code,
+                status: normalized.status,
+                url: fullUrl,
+                params: normalizeParams(finalParams),
+                retryAfter: normalized.retryAfter
+            });
+
+            if (attempt < retries && isRetryableError(normalized)) {
                 const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
                 console.debug(`Retrying in ${delay}ms...`);
                 await sleep(delay);
                 continue;
             }
-            throw err;
+            throw normalized;
         }
     }
     throw lastError;
@@ -127,7 +203,10 @@ const apiClient = {
     tmdbGet,
     ensureArray,
     ensureNumber,
-    ensureString
+    ensureString,
+    isAbortError,
+    isExpectedTmdbErrorForLogging,
+    shouldSkipLog
 };
 
 export default apiClient;

@@ -76,7 +76,7 @@ cp .env.example .env
 # Edit .env and add your TMDB API key
 
 # Start development server
-npm start
+npm run dev
 ```
 
 The app will open at http://localhost:3000
@@ -85,8 +85,10 @@ The app will open at http://localhost:3000
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `REACT_APP_TMDB_API_KEY` | ✅ Required | Your TMDB API key. |
-| `REACT_APP_TMDB_BASE_URL` | ❌ Optional | Override TMDB base URL (default: https://api.themoviedb.org/3). |
+| `VITE_TMDB_API_KEY` | ✅ Required | Your TMDB API key. |
+| `REACT_APP_TMDB_API_KEY` | ✅ Legacy | Legacy CRA alias for API key (if still needed). |
+| `VITE_TMDB_BASE_URL` | ❌ Optional | Override TMDB base URL (default: https://api.themoviedb.org/3). |
+| `REACT_APP_TMDB_BASE_URL` | ❌ Optional | Legacy CRA alias for base URL. |
 
 ### Local Runtime Key (Optional)
 If you prefer not to edit `.env`, you can set a local-only key in the browser:
@@ -124,9 +126,10 @@ localStorage.removeItem('moodreel-admin')
 
 | Command | Description |
 |---------|-------------|
-| `npm start` | Start dev server at http://localhost:3000 |
+| `npm start` | Start dev server (Vite) at http://localhost:3000 |
 | `npm run build` | Create production build in `/build` |
-| `npm test` | Run Jest test suite (26 tests) |
+| `npm test` | Run React test suite |
+| `npm run test:unit` | Run unit tests once (watch disabled) |
 | `npm run eject` | Eject from CRA (irreversible) |
 
 ---
@@ -237,7 +240,7 @@ npm run build
 
 ### "No movies loading" / Blank recommendations
 - **Cause**: Missing or invalid TMDB API key
-- **Fix**: Ensure `REACT_APP_TMDB_API_KEY` is set in `.env` file
+- **Fix**: Ensure `VITE_TMDB_API_KEY` is set in `.env` file
 - **Verify**: Check browser console for API errors
 
 ### "Tests failing with localStorage errors"

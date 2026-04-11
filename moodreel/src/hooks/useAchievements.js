@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const ACHIEVEMENTS_KEY = 'moodreel-achievements';
 const STATS_KEY = 'moodreel-achievement-stats';
@@ -470,6 +470,40 @@ export function useAchievements() {
         checkAchievements();
     }, [stats, checkAchievements]);
 
+    const { level, exp, currentLevelExp, nextLevelExp, progressToNextLevel } = useMemo(() => {
+        const totalXp = Math.max(
+            0,
+            (stats.totalSaved || 0) * 8 +
+            (stats.ratingsGiven || 0) * 6 +
+            (stats.searchStreak || 0) * 4 +
+            (stats.uniqueMoods?.length || 0) * 3 +
+            (stats.surpriseCount || 0) * 2
+        );
+
+        if (totalXp === 0) {
+            return {
+                level: 1,
+                exp: 0,
+                currentLevelExp: 0,
+                nextLevelExp: 100,
+                progressToNextLevel: 0
+            };
+        }
+
+        const level = Math.floor(Math.sqrt(totalXp / 100)) + 1;
+        const currentLevelExp = (level - 1) * (level - 1) * 100;
+        const nextLevelExp = level * level * 100;
+        const progressToNextLevel = Math.min(100, ((totalXp - currentLevelExp) / (nextLevelExp - currentLevelExp)) * 100);
+
+        return {
+            level,
+            exp: totalXp - currentLevelExp,
+            currentLevelExp,
+            nextLevelExp,
+            progressToNextLevel
+        };
+    }, [stats]);
+
     return {
         achievements: getAchievements(),
         unlockedCount: unlockedIds.length,
@@ -480,7 +514,12 @@ export function useAchievements() {
         trackSurprise,
         trackSearch,
         trackRating,
-        stats
+        stats,
+        level,
+        exp,
+        currentLevelExp,
+        nextLevelExp,
+        progressToNextLevel
     };
 }
 

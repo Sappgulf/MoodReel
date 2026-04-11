@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import axios from 'axios';
 import searchService from '../services/searchService';
+import { getUserFacingMessage, shouldSkipLog } from '../services/apiErrorUtils';
 
 export function useMovieDiscovery(currentYear, region = 'US', initialProviders = []) {
     const [mood, setMood] = useState('');
@@ -55,7 +55,7 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
             const results = await searchService.fetchTrending('all', 'day', signal);
             setTrending(results);
         } catch (err) {
-            if (!axios.isCancel(err) && !err?.message?.includes('TMDB API unavailable')) {
+            if (!shouldSkipLog(err)) {
                 console.error('Error fetching trending:', err);
             }
         }
@@ -105,9 +105,9 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
                 setHasMore(false);
             }
         } catch (err) {
-            if (!axios.isCancel(err)) {
-                setError('Network error. Please check your connection.');
-                console.error(err);
+            if (!shouldSkipLog(err)) {
+                console.error('Error searching titles:', err);
+                setError(getUserFacingMessage(err));
             }
         } finally {
             setIsLoading(false);
@@ -148,7 +148,7 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
                 setHasMore(false);
             }
         } catch (err) {
-            if (!axios.isCancel(err)) {
+            if (!shouldSkipLog(err)) {
                 console.error('Error loading more:', err);
             }
         } finally {

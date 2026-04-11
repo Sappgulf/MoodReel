@@ -16,6 +16,7 @@ import { ToastProvider, useToasts } from './context/ToastContext';
 import TrailerPiP from './components/TrailerPiP';
 import ToastStack from './components/ToastStack';
 import { useUserProfile } from './hooks/useUserProfile';
+import { copyToClipboard } from './utils/clipboard';
 import './App.css';
 
 // Lazy load secondary routes for code-splitting
@@ -128,7 +129,7 @@ function AppContent() {
         shortcut: '⌘ C',
         onSelect: async () => {
           try {
-            await navigator.clipboard.writeText(window.location.href);
+            await copyToClipboard(window.location.href);
             pushToast({
               icon: '🔗',
               title: 'Link copied',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import { useWatchlist } from '../hooks/useWatchlist';
+import { decodeSharePayload } from '../utils/clipboard';
 
 /**
  * Shared Watchlist View
@@ -22,12 +23,7 @@ function SharedList() {
         }
 
         try {
-            // Use robust base64 decoding for Unicode support
-            // First, replace URL-safe characters back to standard base64
-            const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
-            // Then, decode base64, escape for Unicode, and decode URI component
-            const decodedString = decodeURIComponent(escape(atob(base64)));
-            const decodedList = JSON.parse(decodedString);
+            const decodedList = decodeSharePayload(data);
 
             if (decodedList.items && Array.isArray(decodedList.items)) {
                 setSharedItems(decodedList.items);

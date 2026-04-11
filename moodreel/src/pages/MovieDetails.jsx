@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
-import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import ShareButtons from '../components/ShareButtons';
 import StarRating from '../components/StarRating';
@@ -16,6 +15,7 @@ import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
+import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
 import { getBackdropUrl, getDisplayOverview, getDisplayTitle, getPosterUrl, normalizeProviderList } from '../utils/mediaUtils';
 
 function MovieDetails() {
@@ -98,11 +98,11 @@ function MovieDetails() {
         addToHistory({ ...data.details, media_type: mediaType }, data.credits);
 
       } catch (err) {
-        if (!axios.isCancel(err)) {
-          setError('Error fetching details.');
-          if (!err?.message?.includes('TMDB API unavailable')) {
-            console.error(err);
-          }
+        if (!isAbortError(err)) {
+          setError(getUserFacingMessage(err) || 'Error fetching details.');
+        }
+        if (!shouldSkipLog(err)) {
+          console.error(err);
         }
       } finally {
         setIsLoading(false);
@@ -151,7 +151,7 @@ function MovieDetails() {
         .slice(0, 12);
       setActorFilmography(credits);
     } catch (err) {
-      if (!axios.isCancel(err)) {
+      if (!shouldSkipLog(err)) {
         console.error('Error fetching actor filmography:', err);
       }
     } finally {

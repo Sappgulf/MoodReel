@@ -9,12 +9,12 @@
  * - Unified Movies + TV search
  */
 
-import axios from 'axios';
 import { parseMoodToGenres } from '../utils/moodParser';
 import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
 import { tmdbGet, ensureArray, ensureNumber } from './apiClient';
 import { getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
 import { applySearchRanking } from '../utils/searchRanking';
+import { getUserFacingMessage, isAbortError, shouldSkipLog } from './apiErrorUtils';
 
 // Cache settings
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
@@ -110,6 +110,14 @@ function getCached(key, ignoreTTL = false) {
         searchCache.delete(key);
     }
     return null;
+}
+
+function getSearchErrorMessage(err) {
+    return getUserFacingMessage(err);
+}
+
+function isUnreachableTmdbError(err) {
+    return shouldSkipLog(err);
 }
 
 /**
@@ -380,10 +388,11 @@ export async function search(params, signal) {
 
             return result;
         } catch (err) {
-            if (axios.isCancel(err)) {
+            if (isAbortError(err)) {
                 throw err;
             }
-            if (err.message && err.message.includes('TMDB API unavailable')) {
+            const errorMessage = getSearchErrorMessage(err);
+            if (isUnreachableTmdbError(err)) {
                 return {
                     results: [],
                     page: 1,
@@ -408,7 +417,7 @@ export async function search(params, signal) {
                 page: 1,
                 totalPages: 0,
                 hasMore: false,
-                error: 'Network error. Please check your connection.'
+                error: errorMessage
             };
         } finally {
             inflightRequests.delete(cacheKey);

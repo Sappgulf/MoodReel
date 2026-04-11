@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { copyToClipboard } from '../utils/clipboard';
 
 function ShareButtons({ title, url }) {
     const [copied, setCopied] = useState(false);
@@ -18,11 +19,12 @@ function ShareButtons({ title, url }) {
 
     const handleCopyLink = useCallback(async () => {
         try {
-            await navigator.clipboard.writeText(shareUrl);
+            await copyToClipboard(shareUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
             console.error('Failed to copy:', err);
+            setCopied(false);
         }
     }, [shareUrl]);
 

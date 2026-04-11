@@ -56,6 +56,7 @@ function Profile() {
     }, [watchlist, watchHistory]);
 
     const persona = useMemo(() => calculatePersona(stats), [stats]);
+    const safeLevelProgress = Math.max(0, Math.min(100, Number(progressToNextLevel) || 0));
 
     const handleSave = () => {
         updateProfile(editForm);
@@ -109,7 +110,7 @@ function Profile() {
                         <span>Next Level: {Math.ceil(progressToNextLevel)}%</span>
                     </div>
                     <div className="exp-bar-container">
-                        <div className="exp-bar-fill" style={{ width: `${progressToNextLevel}%` }}></div>
+                        <div className="exp-bar-fill" style={{ width: `${safeLevelProgress}%` }}></div>
                     </div>
                 </div>
             </div>
