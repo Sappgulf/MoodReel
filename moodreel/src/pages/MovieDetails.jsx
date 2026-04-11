@@ -278,6 +278,13 @@ function MovieDetails() {
   const runtime = content.runtime || (content.episode_run_time?.[0]);
   const overview = getDisplayOverview(content);
   const tasteStatus = statusFor(content.id, mediaType);
+  const tagline = content.tagline ? `“${content.tagline}”` : '';
+  const runtimeLabel = runtime ? `${runtime} min` : '';
+  const genresText = content.genres?.map((genre) => genre.name).join(' • ') || '';
+  const ratingText = content.vote_average ? content.vote_average.toFixed(1) : '';
+  const seasonLabel = isTV && content.number_of_seasons
+    ? `${content.number_of_seasons} season${content.number_of_seasons > 1 ? 's' : ''}`
+    : '';
 
   return (
     <main role="main" className="immersive-main">
@@ -296,7 +303,8 @@ function MovieDetails() {
       </Link>
 
       <article className="movie-details">
-        <div className="movie-details-header">
+        <section className="movie-details-hero-panel glass-panel">
+          <div className="movie-details-header">
           {/* Poster */}
           <div className="poster-container">
             {content.poster_path ? (
@@ -316,42 +324,54 @@ function MovieDetails() {
 
           {/* Info */}
           <div className="movie-info">
+            <p className="movie-details-eyebrow">{isTV ? 'TV Title' : 'Movie'}</p>
             <h1>{title}</h1>
-
-            <div className="meta-row">
-              {year && (
-                <span className="meta-item">
-                  <span aria-hidden="true">📅</span> {year}
-                </span>
-              )}
-              {runtime && (
-                <span className="meta-item">
-                  <span aria-hidden="true">⏱️</span> {runtime} min
-                </span>
-              )}
-              {director && (
-                <span className="meta-item">
-                  <span aria-hidden="true">🎬</span> Dir. {director.name}
-                </span>
-              )}
-              <div className="rating-large" aria-label={`Rating: ${content.vote_average?.toFixed(1)} out of 10`}>
-                <span className="stars" aria-hidden="true">{renderStars(content.vote_average)}</span>
-                <span>{content.vote_average?.toFixed(1)}</span>
-              </div>
-            </div>
-
+            {tagline && <p className="movie-tagline">{tagline}</p>}
             <p className="overview">{overview}</p>
 
-            {/* Genres */}
-            {content.genres && content.genres.length > 0 && (
-              <div className="genres-list" role="list" aria-label="Genres">
-                {content.genres.map((genre) => (
-                  <span key={genre.id} className="genre-tag" role="listitem">
-                    {genre.name}
-                  </span>
-                ))}
-              </div>
-            )}
+            <dl className="movie-facts-strip" aria-label="Quick facts">
+              {year && (
+                <div role="listitem">
+                  <dt>Year</dt>
+                  <dd>{year}</dd>
+                </div>
+              )}
+              {runtimeLabel && (
+                <div role="listitem">
+                  <dt>Runtime</dt>
+                  <dd>{runtimeLabel}</dd>
+                </div>
+              )}
+              {seasonLabel && (
+                <div role="listitem">
+                  <dt>Seasons</dt>
+                  <dd>{seasonLabel}</dd>
+                </div>
+              )}
+              {director && (
+                <div role="listitem">
+                  <dt>Director</dt>
+                  <dd>{director.name}</dd>
+                </div>
+              )}
+              {genresText && (
+                <div role="listitem">
+                  <dt>Genres</dt>
+                  <dd>{genresText}</dd>
+                </div>
+              )}
+              {ratingText && (
+                <div role="listitem">
+                  <dt>TMDB</dt>
+                  <dd>
+                    <span className="rating-large" aria-label={`Rating: ${ratingText} out of 10`}>
+                      <span className="stars" aria-hidden="true">{renderStars(content.vote_average)}</span>
+                      <span>{ratingText}</span>
+                    </span>
+                  </dd>
+                </div>
+              )}
+            </dl>
 
             {/* Action Buttons Row */}
             <div className="action-buttons">
@@ -419,14 +439,14 @@ function MovieDetails() {
                 size="large"
               />
 
-                {!showReviewForm && !userReview && (
-                  <button
-                    type="button"
-                    className="review-toggle-btn"
-                    onClick={() => setShowReviewForm(true)}
-                  >
-                    ✏️ Write a Review
-                  </button>
+              {!showReviewForm && !userReview && (
+                <button
+                  type="button"
+                  className="review-toggle-btn"
+                  onClick={() => setShowReviewForm(true)}
+                >
+                  ✏️ Write a Review
+                </button>
               )}
 
               {userReview && !showReviewForm && (
@@ -459,9 +479,10 @@ function MovieDetails() {
             </div>
           </div>
         </div>
+        </section>
 
         {/* Cast Section */}
-        <section className="cast-section" aria-labelledby="cast-heading">
+        <section className="cast-section details-section" aria-labelledby="cast-heading">
           <h3 id="cast-heading">🎭 Cast</h3>
           {cast.length > 0 ? (
             <div className="cast-grid">
@@ -498,7 +519,7 @@ function MovieDetails() {
         </section>
 
         {/* Trailer Section */}
-        <section className="trailer-section" aria-labelledby="trailer-heading">
+        <section className="trailer-section details-section" aria-labelledby="trailer-heading">
           <h3 id="trailer-heading">🎬 Watch Trailer</h3>
           {trailer ? (
             <div className="trailer-container">
@@ -517,7 +538,7 @@ function MovieDetails() {
         </section>
 
         {/* Streaming Providers */}
-        <section className="streaming-section" aria-labelledby="providers-heading">
+        <section className="streaming-section details-section" aria-labelledby="providers-heading">
           <h3 id="providers-heading">Where to Watch ({region})</h3>
           {providerGroups && (providerGroups.stream.length > 0 || providerGroups.rent.length > 0 || providerGroups.buy.length > 0) ? (
             <div className="streaming-providers">
@@ -582,10 +603,10 @@ function MovieDetails() {
         </section>
 
         {/* Similar Content */}
-        <section className="similar-movies" aria-labelledby="similar-heading">
+        <section className="similar-movies details-section" aria-labelledby="similar-heading">
           <h3 id="similar-heading">You Might Also Like</h3>
           {similar.length > 0 ? (
-            <div className="similar-movies-grid">
+            <div className="similar-movies-grid similar-movies-grid-strip">
               {similar.map((item) => (
                 <MovieCard
                   key={item.id}
@@ -594,6 +615,7 @@ function MovieDetails() {
                   onToggleWatchlist={toggleWatchlist}
                   isWatched={isWatched(item.id)}
                   onToggleWatched={toggleWatched}
+                  displayMode="row"
                   mediaType={mediaType}
                   onLike={like}
                   onDislike={dislike}
