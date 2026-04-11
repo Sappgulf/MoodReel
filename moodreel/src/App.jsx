@@ -525,6 +525,15 @@ function AppContent() {
             <Route path="/share/:shareId" element={<SharedList />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/calendar" element={<MoodCalendar />} />
+            <Route path="*" element={
+              <section className="page-enter" aria-label="Page not found">
+                <h2>Page not found</h2>
+                <p>We couldn&apos;t find the page you requested.</p>
+                <Link to="/" className="primary-button">
+                  Return to Discover
+                </Link>
+              </section>
+            } />
           </Routes>
           </Suspense>
         </main>
