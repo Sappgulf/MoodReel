@@ -485,7 +485,7 @@ function MovieDetails() {
         <section className="cast-section details-section" aria-labelledby="cast-heading">
           <h3 id="cast-heading">🎭 Cast</h3>
           {cast.length > 0 ? (
-            <div className="cast-grid">
+            <div className="cast-grid cast-grid-strip">
               {cast.map((person) => (
                 <div
                   key={person.id}
@@ -606,7 +606,11 @@ function MovieDetails() {
         <section className="similar-movies details-section" aria-labelledby="similar-heading">
           <h3 id="similar-heading">You Might Also Like</h3>
           {similar.length > 0 ? (
-            <div className="similar-movies-grid similar-movies-grid-strip">
+            <div
+              className="similar-movies-grid similar-movies-grid-strip filmstrip"
+              role="list"
+              aria-label="Similar titles to watch next"
+            >
               {similar.map((item) => (
                 <MovieCard
                   key={item.id}

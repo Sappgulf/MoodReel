@@ -907,6 +907,31 @@
     gap: var(--spacing-md);
 }
 
+.cast-grid-strip {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+}
+
+.cast-grid-strip::-webkit-scrollbar {
+    height: 6px;
+}
+
+.cast-grid-strip::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+}
+
+.cast-member {
+    min-width: 130px;
+    scroll-snap-align: start;
+    text-align: center;
+}
+
 .cast-member {
     display: flex;
     flex-direction: column;
@@ -1076,6 +1101,32 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: var(--spacing-md);
+}
+
+.filmstrip {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+}
+
+.filmstrip::-webkit-scrollbar {
+    height: 6px;
+}
+
+.filmstrip::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+}
+
+.filmstrip .recommendation {
+    flex: 0 0 430px;
+    max-width: 430px;
+    min-width: 340px;
+    scroll-snap-align: start;
 }
 
 /* Actor Filmography Modal */
