@@ -19,6 +19,7 @@ import { getUserFacingMessage, isAbortError, shouldSkipLog } from './apiErrorUti
 // Cache settings
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
 const CACHE_KEY = 'moodreel-search-persistent-cache';
+const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
 
 // Initialize cache from localStorage
 const searchCache = new Map();
@@ -110,6 +111,17 @@ function getCached(key, ignoreTTL = false) {
         searchCache.delete(key);
     }
     return null;
+}
+
+function emitSearchFallback(detail) {
+    if (typeof window === 'undefined' || !window.dispatchEvent) return;
+
+    try {
+        const event = new CustomEvent(SEARCH_FALLBACK_EVENT, { detail });
+        window.dispatchEvent(event);
+    } catch {
+        // Ignore telemetry dispatch failures for robust offline behavior.
+    }
 }
 
 function getSearchErrorMessage(err) {
@@ -378,6 +390,12 @@ export async function search(params, signal) {
                     result.results = trendingResults;
                     result.isFallback = true;
                     result.error = "We couldn't find exact matches for that mood, but here's what's trending!";
+                    emitSearchFallback({
+                        type: 'search-no-match-fallback',
+                        query: normalizedQuery,
+                        requestedType: type,
+                        resultsReturned: trendingResults.length
+                    });
                 } catch (e) {
                     // Ignore fallback failure
                 }
@@ -393,6 +411,12 @@ export async function search(params, signal) {
             }
             const errorMessage = getSearchErrorMessage(err);
             if (isUnreachableTmdbError(err)) {
+                emitSearchFallback({
+                    type: 'search-service-unavailable',
+                    query: normalizedQuery,
+                    requestedType: params.type || 'all',
+                    reason: 'tmdb_unreachable'
+                });
                 return {
                     results: [],
                     page: 1,
@@ -405,6 +429,12 @@ export async function search(params, signal) {
             const staleData = getCached(cacheKey, true);
             if (staleData) {
                 console.debug('Returning stale cache data due to network error');
+                emitSearchFallback({
+                    type: 'search-stale-cache',
+                    query: normalizedQuery,
+                    requestedType: params.type || 'all',
+                    resultsReturned: staleData.results?.length || 0
+                });
                 return {
                     ...staleData,
                     isStale: true,

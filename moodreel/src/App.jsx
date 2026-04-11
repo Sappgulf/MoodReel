@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -6,11 +6,7 @@ import { SkeletonGrid } from './components/Skeleton';
 import { useTheme } from './hooks/useTheme';
 import { useSounds } from './hooks/useSounds';
 import { useAchievements } from './hooks/useAchievements';
-import InstallPrompt from './components/InstallPrompt';
 import Confetti from './components/Confetti';
-import OnboardingModal from './components/OnboardingModal';
-import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
-import QuickActionsModal from './components/QuickActionsModal';
 import { TrailerProvider, useTrailer } from './context/TrailerContext';
 import { ToastProvider, useToasts } from './context/ToastContext';
 import TrailerPiP from './components/TrailerPiP';
@@ -20,6 +16,10 @@ import { copyToClipboard } from './utils/clipboard';
 import './App.css';
 
 // Lazy load secondary routes for code-splitting
+const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
+const OnboardingModal = lazy(() => import('./components/OnboardingModal'));
+const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal'));
+const QuickActionsModal = lazy(() => import('./components/QuickActionsModal'));
 const MovieDetails = lazy(() => import('./pages/MovieDetails'));
 const Watchlist = lazy(() => import('./pages/Watchlist'));
 const Stats = lazy(() => import('./pages/Stats'));
@@ -27,6 +27,29 @@ const MoodCalendar = lazy(() => import('./pages/MoodCalendar'));
 const Achievements = lazy(() => import('./pages/Achievements'));
 const SharedList = lazy(() => import('./pages/SharedList'));
 const Profile = lazy(() => import('./pages/Profile'));
+
+const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
+const SEARCH_FALLBACK_TOAST_COOLDOWN_MS = 12000;
+const SEARCH_FALLBACK_TOASTS = {
+  'search-stale-cache': {
+    title: 'Using cached results',
+    message: 'Search results are coming from cached data until connectivity returns.',
+    icon: '🛰️',
+    variant: 'info'
+  },
+  'search-service-unavailable': {
+    title: 'Search service unavailable',
+    message: 'Live search could not be reached. Showing cached/offline behavior where possible.',
+    icon: '⚠️',
+    variant: 'error'
+  },
+  'search-no-match-fallback': {
+    title: 'No exact mood match found',
+    message: 'Showing trending content as a fallback for this search.',
+    icon: '🔎',
+    variant: 'info'
+  }
+};
 
 function AppContent() {
   const location = useLocation();
@@ -44,6 +67,7 @@ function AppContent() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = React.useRef(null);
+  const lastSearchFallbackRef = useRef({ key: '', at: 0 });
 
   const openQuickActions = useCallback(() => {
     setShowQuickActions(true);
@@ -169,6 +193,33 @@ function AppContent() {
     return title;
   }, []);
 
+  const documentTitle = useMemo(() => setDocumentTitle(location.pathname), [location.pathname, setDocumentTitle]);
+
+  const announceSearchFallback = useCallback((event) => {
+    const detail = event?.detail || {};
+    const type = detail.type;
+    const template = SEARCH_FALLBACK_TOASTS[type];
+    const query = (detail.query || '').trim();
+    const now = Date.now();
+    const key = `${type}|${query}`;
+
+    if (!template) return;
+    if (lastSearchFallbackRef.current.key === key && now - lastSearchFallbackRef.current.at < SEARCH_FALLBACK_TOAST_COOLDOWN_MS) return;
+
+    lastSearchFallbackRef.current = { key, at: now };
+
+    const hasQuery = query.length > 0;
+    const message = hasQuery ? `${template.message} (“${query}”)` : template.message;
+
+    pushToast({
+      icon: template.icon,
+      title: template.title,
+      message,
+      variant: template.variant,
+      duration: 5000
+    });
+  }, [pushToast]);
+
   // Monitor scroll for header polish
   useEffect(() => {
     const handleScroll = () => {
@@ -193,15 +244,23 @@ function AppContent() {
     };
   }, []);
 
+  // Report search fallback events from searchService
+  useEffect(() => {
+    window.addEventListener(SEARCH_FALLBACK_EVENT, announceSearchFallback);
+
+    return () => {
+      window.removeEventListener(SEARCH_FALLBACK_EVENT, announceSearchFallback);
+    };
+  }, [announceSearchFallback]);
+
   // Scroll to top on page navigation
   useEffect(() => {
-    const path = location.pathname;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     mainRef.current?.focus?.({ preventScroll: true });
 
-    document.title = setDocumentTitle(path);
-  }, [location.pathname, setDocumentTitle]);
+    document.title = documentTitle;
+  }, [documentTitle]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -238,7 +297,7 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOverlayOpen, openQuickActions, setDocumentTitle, toggleSounds, toggleTheme]);
+  }, [isOverlayOpen, openQuickActions, toggleSounds, toggleTheme]);
 
   // Trigger confetti on achievement unlock
   useEffect(() => {
@@ -274,11 +333,24 @@ function AppContent() {
       {/* Confetti celebration */}
       <Confetti active={showConfetti} />
 
-      {/* PWA Install Prompt */}
-      <InstallPrompt />
+      <Suspense fallback={null}>
+        {/* PWA Install Prompt */}
+        <InstallPrompt />
 
-      {/* Onboarding for first-time users */}
-      <OnboardingModal />
+        {/* Onboarding for first-time users */}
+        <OnboardingModal />
+
+        {/* Keyboard Shortcuts Modal */}
+        <KeyboardShortcutsModal
+          isOpen={showShortcuts}
+          onClose={() => setShowShortcuts(false)}
+        />
+        <QuickActionsModal
+          isOpen={showQuickActions}
+          onClose={() => setShowQuickActions(false)}
+          actions={quickActions}
+        />
+      </Suspense>
       <ToastStack />
 
       {/* Global Trailer PiP */}
@@ -290,17 +362,6 @@ function AppContent() {
         />
       )}
 
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal
-        isOpen={showShortcuts}
-        onClose={() => setShowShortcuts(false)}
-      />
-      <QuickActionsModal
-        isOpen={showQuickActions}
-        onClose={() => setShowQuickActions(false)}
-        actions={quickActions}
-      />
-
       {/* Offline Indicator */}
       {isOffline && (
         <div className="offline-banner" role="alert">
@@ -308,7 +369,7 @@ function AppContent() {
         </div>
       )}
 
-      <header className={`App-header ${isScrolled ? 'scrolled' : ''}`}>
+      <header className={`App-header ${isScrolled ? 'scrolled' : ''}`} aria-label="Main navigation and controls">
         <div className="header-top">
           <Link to="/" className="logo-link"><h1>🎬 MoodReel</h1></Link>
           <div className="header-controls">
@@ -352,7 +413,7 @@ function AppContent() {
         </div>
         <p>Discover films that match your mood</p>
 
-        <nav className="nav-links desktop-nav">
+        <nav className="nav-links desktop-nav" aria-label="Primary navigation">
           <Link
             to="/"
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
@@ -400,7 +461,7 @@ function AppContent() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="mobile-bottom-nav">
+      <nav className="mobile-bottom-nav" aria-label="Primary navigation">
         <Link
           to="/"
           className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}
@@ -444,7 +505,14 @@ function AppContent() {
       </nav>
 
       <ErrorBoundary>
-        <main id="main-content" ref={mainRef} className="app-main" tabIndex={-1}>
+        <main
+          id="main-content"
+          ref={mainRef}
+          className="app-main"
+          tabIndex={-1}
+          role="main"
+          aria-label={documentTitle}
+        >
           <Suspense fallback={<SkeletonGrid count={8} />}>
           <Routes>
             <Route path="/" element={<Home />} />
