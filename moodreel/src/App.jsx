@@ -190,6 +190,7 @@ function AppContent() {
     else if (path === '/profile') title = 'Profile | MoodReel';
     else if (path === '/stats') title = 'Your Stats | MoodReel';
     else if (path === '/calendar') title = 'Mood Calendar | MoodReel';
+    else if (path === '/not-found' || path === '/404') title = 'Page not found | MoodReel';
     return title;
   }, []);
 
@@ -371,7 +372,7 @@ function AppContent() {
 
       {/* Offline Indicator */}
       {isOffline && (
-        <div className="offline-banner" role="alert">
+        <div className="offline-banner" role="status" aria-live="polite">
           📡 You are offline. Showing cached results.
         </div>
       )}

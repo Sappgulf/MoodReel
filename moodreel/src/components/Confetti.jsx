@@ -6,9 +6,10 @@ import React, { useEffect, useRef } from 'react';
 function Confetti({ active, duration = 2000 }) {
     const canvasRef = useRef(null);
     const animationRef = useRef(null);
+    const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
     useEffect(() => {
-        if (!active || !canvasRef.current) return;
+        if (!active || !canvasRef.current || reduceMotion) return;
 
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -70,7 +71,7 @@ function Confetti({ active, duration = 2000 }) {
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [active, duration]);
+    }, [active, duration, reduceMotion]);
 
     if (!active) return null;
 

@@ -340,6 +340,16 @@ select:focus-visible {
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
+
+  .film-grain {
+    display: none;
+  }
+
+  .skip-link,
+  .confetti-canvas {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Gold Text Gradient */
