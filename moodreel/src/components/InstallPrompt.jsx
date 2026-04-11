@@ -9,6 +9,23 @@ function InstallPrompt() {
     const [showPrompt, setShowPrompt] = useState(false);
     const [isInstalled, setIsInstalled] = useState(false);
 
+    const readDismissPreference = () => {
+        try {
+            const dismissed = localStorage.getItem('moodreel-install-dismissed');
+            return dismissed ? parseInt(dismissed, 10) : null;
+        } catch {
+            return null;
+        }
+    };
+
+    const persistDismissPreference = (value) => {
+        try {
+            localStorage.setItem('moodreel-install-dismissed', String(value));
+        } catch {
+            // Ignore environments where localStorage is blocked.
+        }
+    };
+
     useEffect(() => {
         // Check if already installed
         if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -17,11 +34,10 @@ function InstallPrompt() {
         }
 
         // Check if dismissed recently
-        const dismissed = localStorage.getItem('moodreel-install-dismissed');
+        const dismissed = readDismissPreference();
         if (dismissed) {
-            const dismissedTime = parseInt(dismissed, 10);
             // Don't show for 7 days after dismiss
-            if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
+            if (Date.now() - dismissed < 7 * 24 * 60 * 60 * 1000) {
                 return;
             }
         }
@@ -57,11 +73,12 @@ function InstallPrompt() {
             setShowPrompt(false);
         }
         setDeferredPrompt(null);
+        persistDismissPreference(Date.now());
     };
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        localStorage.setItem('moodreel-install-dismissed', Date.now().toString());
+        persistDismissPreference(Date.now());
     };
 
     if (!showPrompt || isInstalled) return null;

@@ -112,7 +112,13 @@ function OnboardingModal() {
     };
 
     return (
-        <div className="onboarding-backdrop" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onClick={handleBackdropClick}>
+        <div
+            className="onboarding-backdrop"
+            data-app-modal="true"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onClick={handleBackdropClick}
+        >
             <div
                 ref={dialogRef}
                 className="onboarding-modal"

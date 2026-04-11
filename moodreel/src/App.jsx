@@ -43,6 +43,7 @@ function AppContent() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isScrolled, setIsScrolled] = useState(false);
+  const mainRef = React.useRef(null);
 
   const openQuickActions = useCallback(() => {
     setShowQuickActions(true);
@@ -150,6 +151,24 @@ function AppContent() {
     ];
   }, [isDark, navigate, pushToast, soundEnabled, toggleSounds, toggleTheme]);
 
+  const isOverlayOpen = useMemo(
+    () => showShortcuts || showQuickActions,
+    [showShortcuts, showQuickActions]
+  );
+
+  const setDocumentTitle = useCallback((path) => {
+    let title = 'MoodReel';
+    if (path === '/') title = 'Discover | MoodReel';
+    else if (path === '/watchlist') title = 'Watchlist & Favorites | MoodReel';
+    else if (path.startsWith('/movie/') || path.startsWith('/tv/')) title = 'Movie & TV Details | MoodReel';
+    else if (path === '/shared' || path.startsWith('/share/')) title = 'Shared List | MoodReel';
+    else if (path === '/achievements') title = 'Achievements | MoodReel';
+    else if (path === '/profile') title = 'Profile | MoodReel';
+    else if (path === '/stats') title = 'Your Stats | MoodReel';
+    else if (path === '/calendar') title = 'Mood Calendar | MoodReel';
+    return title;
+  }, []);
+
   // Monitor scroll for header polish
   useEffect(() => {
     const handleScroll = () => {
@@ -176,51 +195,50 @@ function AppContent() {
 
   // Scroll to top on page navigation
   useEffect(() => {
+    const path = location.pathname;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    mainRef.current?.focus?.({ preventScroll: true });
 
-    // Update document title for accessibility
-    const path = location.pathname;
-    let title = 'MoodReel';
-    if (path === '/') title = 'Discover | MoodReel';
-    else if (path === '/watchlist') title = 'Watchlist & Favorites | MoodReel';
-    else if (path === '/achievements') title = 'Achievements | MoodReel';
-    else if (path === '/profile') title = 'Profile | MoodReel';
-    else if (path === '/stats') title = 'Your Stats | MoodReel';
-    else if (path === '/calendar') title = 'Mood Calendar | MoodReel';
-
-    document.title = title;
-  }, [location.pathname]);
+    document.title = setDocumentTitle(path);
+  }, [location.pathname, setDocumentTitle]);
 
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      const targetTag = e.target?.tagName;
-      const isEditable = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT' || e.target?.isContentEditable;
+      const target = e.target;
+      const targetTag = target?.tagName;
+      const isEditable = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT' || target?.isContentEditable;
+      const isInDialog = target?.closest?.('[data-app-modal]') || target?.closest?.('[role="dialog"]') || target?.closest?.('[aria-modal="true"]');
+      const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      if (e.defaultPrevented || e.isComposing || isInDialog || isOverlayOpen) {
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && key === 'k') {
         e.preventDefault();
         openQuickActions();
         return;
       }
       // ? = show shortcuts
-      if (!isEditable && e.key === '?' && !e.ctrlKey && !e.metaKey) {
+      if (!isEditable && !isOverlayOpen && !e.ctrlKey && !e.metaKey && !e.altKey && key === '?') {
         e.preventDefault();
         setShowShortcuts(true);
       }
       // D = toggle dark mode
-      if (!isEditable && e.key === 'd' && !e.ctrlKey && !e.metaKey) {
+      if (!isEditable && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && key === 'd') {
         toggleTheme();
       }
       // M = toggle sounds
-      if (!isEditable && e.key === 'm' && !e.ctrlKey && !e.metaKey) {
+      if (!isEditable && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && key === 'm') {
         toggleSounds();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openQuickActions, toggleTheme, toggleSounds]);
+  }, [isOverlayOpen, openQuickActions, setDocumentTitle, toggleSounds, toggleTheme]);
 
   // Trigger confetti on achievement unlock
   useEffect(() => {
@@ -246,9 +264,9 @@ function AppContent() {
 
   return (
     <div className="App">
-      <a className="skip-link" href="#main-content">
-        Skip to main content
-      </a>
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
 
       {/* Keep the atmosphere lightweight; avoid full-screen dimming layers. */}
       <div className="film-grain" aria-hidden="true" />
@@ -338,18 +356,21 @@ function AppContent() {
           <Link
             to="/"
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+            aria-current={location.pathname === '/' ? 'page' : undefined}
           >
             🎬 Discover
           </Link>
           <Link
             to="/watchlist"
             className={`nav-link ${location.pathname === '/watchlist' ? 'active' : ''}`}
+            aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
           >
             ❤️ Watchlist
           </Link>
           <Link
             to="/achievements"
             className={`nav-link ${location.pathname === '/achievements' ? 'active' : ''}`}
+            aria-current={location.pathname === '/achievements' ? 'page' : undefined}
           >
             🏆 {unlockedCount}/{totalCount}
           </Link>
@@ -357,18 +378,21 @@ function AppContent() {
             to="/profile"
             className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}
             title="My Profile"
+            aria-current={location.pathname === '/profile' ? 'page' : undefined}
           >
             <span className="nav-avatar">{profile.avatar}</span> Profile
           </Link>
           <Link
             to="/stats"
             className={`nav-link ${location.pathname === '/stats' ? 'active' : ''}`}
+            aria-current={location.pathname === '/stats' ? 'page' : undefined}
           >
             📊 Stats
           </Link>
           <Link
             to="/calendar"
             className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}
+            aria-current={location.pathname === '/calendar' ? 'page' : undefined}
           >
             📅 Calendar
           </Link>
@@ -380,6 +404,7 @@ function AppContent() {
         <Link
           to="/"
           className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}
+          aria-current={location.pathname === '/' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">🎬</span>
           <span className="bottom-nav-label">Discover</span>
@@ -387,6 +412,7 @@ function AppContent() {
         <Link
           to="/watchlist"
           className={`bottom-nav-item ${location.pathname === '/watchlist' ? 'active' : ''}`}
+          aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">❤️</span>
           <span className="bottom-nav-label">Watchlist</span>
@@ -394,6 +420,7 @@ function AppContent() {
         <Link
           to="/profile"
           className={`bottom-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
+          aria-current={location.pathname === '/profile' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">{profile.avatar}</span>
           <span className="bottom-nav-label">Profile</span>
@@ -401,6 +428,7 @@ function AppContent() {
         <Link
           to="/stats"
           className={`bottom-nav-item ${location.pathname === '/stats' ? 'active' : ''}`}
+          aria-current={location.pathname === '/stats' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">📊</span>
           <span className="bottom-nav-label">Stats</span>
@@ -408,6 +436,7 @@ function AppContent() {
         <Link
           to="/calendar"
           className={`bottom-nav-item ${location.pathname === '/calendar' ? 'active' : ''}`}
+          aria-current={location.pathname === '/calendar' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">📅</span>
           <span className="bottom-nav-label">Calendar</span>
@@ -415,7 +444,7 @@ function AppContent() {
       </nav>
 
       <ErrorBoundary>
-        <main id="main-content" className="app-main">
+        <main id="main-content" ref={mainRef} className="app-main" tabIndex={-1}>
           <Suspense fallback={<SkeletonGrid count={8} />}>
           <Routes>
             <Route path="/" element={<Home />} />

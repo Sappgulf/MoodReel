@@ -18,6 +18,7 @@ function TrailerModal({ videoKey, onClose }) {
     return (
         <div
             className="trailer-modal-backdrop"
+            data-app-modal="true"
             onClick={handleBackdropClick}
             role="presentation"
         >

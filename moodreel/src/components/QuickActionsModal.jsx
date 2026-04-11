@@ -70,11 +70,17 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
   };
 
   return (
-    <div className="quick-actions-backdrop" role="presentation" onClick={onClose}>
       <div
-        ref={dialogRef}
-        className="quick-actions-modal"
-        role="dialog"
+        className="quick-actions-backdrop"
+        role="presentation"
+        data-app-modal="true"
+        onClick={onClose}
+      >
+        <div
+          ref={dialogRef}
+          data-app-modal="true"
+          className="quick-actions-modal"
+          role="dialog"
         aria-modal="true"
         aria-labelledby="quick-actions-title"
         aria-describedby="quick-actions-description"

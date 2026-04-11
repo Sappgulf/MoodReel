@@ -42,7 +42,13 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
     if (!visible) return null;
 
     return (
-        <div className="shortcuts-backdrop" onClick={onClose} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+        <div
+            className="shortcuts-backdrop"
+            data-app-modal="true"
+            onClick={onClose}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+        >
             <div
                 ref={dialogRef}
                 className="shortcuts-modal"
