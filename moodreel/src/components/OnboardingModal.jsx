@@ -141,23 +141,16 @@ function OnboardingModal() {
 
                 <div className="onboarding-dots" role="tablist" aria-label="Onboarding progress">
                     {slides.map((_, i) => (
-                        <span
+                        <button
+                            type="button"
                             key={i}
                             className={`dot ${i === currentSlide ? 'active' : ''}`}
-                            role="button"
-                            tabIndex={0}
                             aria-current={i === currentSlide ? 'true' : 'false'}
                             aria-label={`Show onboarding slide ${i + 1}`}
                             onClick={() => setCurrentSlide(i)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    setCurrentSlide(i);
-                                }
-                            }}
                         />
-                    ))}
-                </div>
+            ))}
+        </div>
 
                 <button type="button" className="onboarding-next" onClick={handleNext}>
                     {currentSlide === slides.length - 1 ? "Let's Go! 🚀" : 'Next →'}
