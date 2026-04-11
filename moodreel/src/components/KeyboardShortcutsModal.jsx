@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
 
 const shortcuts = [
     { keys: ['J', '↓'], description: 'Select next movie' },
@@ -25,34 +24,12 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
         setVisible(isOpen);
     }, [isOpen]);
 
-    const moveFocus = useCallback(() => {
-        const dialogNode = dialogRef.current;
-        const focusables = dialogNode ? Array.from(dialogNode.querySelectorAll(FOCUSABLE_SELECTOR)) : [];
-        const target = focusables.find((el) => el.offsetParent !== null && !el.disabled) || dialogNode;
-        target?.focus?.();
-    }, []);
-
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape') {
             onClose();
             return;
         }
-        if (e.key !== 'Tab' || !dialogRef.current) return;
-        const nodes = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR));
-        if (!nodes.length) return;
-
-        const focusables = nodes.filter(node => node.offsetParent !== null && !node.disabled);
-        if (!focusables.length) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-
-        if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-        }
+        handleTabTrapping(e, dialogRef.current);
     }, [onClose]);
 
     useEffect(() => {
@@ -63,7 +40,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
         prevFocusRef.current = document.activeElement;
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-        moveFocus();
+        focusFirstInDialog(dialogRef.current);
         window.addEventListener('keydown', handleKeyDown);
 
         return () => {
@@ -71,7 +48,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
             document.body.style.overflow = prevOverflow;
             prevFocusRef.current?.focus?.();
         };
-    }, [isOpen, handleKeyDown, moveFocus]);
+    }, [isOpen, handleKeyDown]);
 
     const touchStart = useRef(null);
     const handleTouchStart = (e) => {

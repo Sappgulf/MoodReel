@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
 
 function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actions' }) {
   const [query, setQuery] = useState('');
@@ -21,7 +20,7 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
     document.body.style.overflow = 'hidden';
 
     const timer = window.setTimeout(() => {
-      inputRef.current?.focus();
+      focusFirstInDialog(dialogRef.current, inputRef);
     }, 0);
 
     return () => {
@@ -41,21 +40,7 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
         return;
       }
 
-      if (e.key === 'Tab' && dialogRef.current) {
-        const nodes = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR));
-        const focusables = nodes.filter((node) => node.offsetParent !== null && !node.disabled);
-        if (!focusables.length) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
+      handleTabTrapping(e, dialogRef.current);
     };
 
     window.addEventListener('keydown', handleKeyDownWindow);

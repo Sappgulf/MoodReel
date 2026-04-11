@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+import { focusFirstInDialog, handleTabTrapping } from '../utils/modalFocus';
 
 /**
  * Modal for playing YouTube trailers
@@ -15,7 +14,7 @@ function TrailerModal({ videoKey, onClose }) {
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         const timer = window.setTimeout(() => {
-            dialogRef.current?.focus?.();
+            focusFirstInDialog(dialogRef.current);
         }, 0);
 
         const handleKeyDown = (e) => {
@@ -23,21 +22,7 @@ function TrailerModal({ videoKey, onClose }) {
                 onClose();
             }
 
-            if (e.key === 'Tab' && dialogRef.current) {
-                const nodes = Array.from(dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR));
-                const focusables = nodes.filter((node) => node.offsetParent !== null && !node.disabled);
-                if (!focusables.length) return;
-                const first = focusables[0];
-                const last = focusables[focusables.length - 1];
-
-                if (e.shiftKey && document.activeElement === first) {
-                    e.preventDefault();
-                    last.focus();
-                } else if (!e.shiftKey && document.activeElement === last) {
-                    e.preventDefault();
-                    first.focus();
-                }
-            }
+            handleTabTrapping(e, dialogRef.current);
         };
 
         window.addEventListener('keydown', handleKeyDown);
