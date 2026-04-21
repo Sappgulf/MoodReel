@@ -192,6 +192,11 @@ struct WatchlistView: View {
     }
 }
 
+#Preview("Watchlist") {
+    WatchlistView()
+        .environmentObject(WatchlistStore())
+}
+
 private struct WatchlistRow: View {
     let item: WatchlistItem
     let onTap: () -> Void

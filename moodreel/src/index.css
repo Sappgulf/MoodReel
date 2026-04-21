@@ -35,9 +35,18 @@
 
   /* Gradients */
   --gradient-gold: linear-gradient(135deg, #ffd700 0%, #f5a623 50%, #c78b1a 100%);
-  --gradient-gold-soft: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(245, 166, 35, 0.1) 100%);
+  --gradient-gold-soft: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(245, 166, 35, 0.1) 100%
+  );
   --gradient-crimson: linear-gradient(135deg, #dc143c 0%, #8b0a1c 100%);
-  --gradient-hero: linear-gradient(180deg, rgba(9, 9, 11, 0) 0%, rgba(9, 9, 11, 0.8) 50%, #09090b 100%);
+  --gradient-hero: linear-gradient(
+    180deg,
+    rgba(9, 9, 11, 0) 0%,
+    rgba(9, 9, 11, 0.8) 50%,
+    #09090b 100%
+  );
   --gradient-card-overlay: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.95) 100%);
 
   /* Background Effects */
@@ -45,7 +54,11 @@
     radial-gradient(ellipse 72% 42% at 50% -10%, rgba(255, 215, 0, 0.12), transparent 52%),
     radial-gradient(circle at 20% 8%, rgba(255, 255, 255, 0.03), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 26%);
-  --bg-backdrop-overlay: linear-gradient(to bottom, rgba(12, 16, 23, 0.55) 0%, var(--color-bg-primary) 100%);
+  --bg-backdrop-overlay: linear-gradient(
+    to bottom,
+    rgba(12, 16, 23, 0.55) 0%,
+    var(--color-bg-primary) 100%
+  );
 
   /* Text Colors */
   --color-text-primary: #fafafa;
@@ -160,14 +173,27 @@
   --color-bg-chrome: rgba(247, 245, 240, 0.86);
   --color-bg-chrome-strong: rgba(247, 245, 240, 0.96);
 
-  --gradient-hero: linear-gradient(180deg, rgba(247, 245, 240, 0) 0%, rgba(247, 245, 240, 0.85) 50%, #f7f5f0 100%);
-  --bg-body-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 0, 0, 0.06), transparent 50%);
-  --bg-backdrop-overlay: linear-gradient(to bottom, rgba(247, 245, 240, 0.75) 0%, var(--color-bg-primary) 100%);
+  --gradient-hero: linear-gradient(
+    180deg,
+    rgba(247, 245, 240, 0) 0%,
+    rgba(247, 245, 240, 0.85) 50%,
+    #f7f5f0 100%
+  );
+  --bg-body-glow: radial-gradient(
+    ellipse 80% 50% at 50% -20%,
+    rgba(0, 0, 0, 0.06),
+    transparent 50%
+  );
+  --bg-backdrop-overlay: linear-gradient(
+    to bottom,
+    rgba(247, 245, 240, 0.75) 0%,
+    var(--color-bg-primary) 100%
+  );
 }
 
 @media (max-width: 768px) {
   :root {
-    --toast-bottom-offset: calc(80px + var(--spacing-md));
+    --toast-bottom-offset: calc(80px + var(--spacing-md) + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -333,7 +359,9 @@ select:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

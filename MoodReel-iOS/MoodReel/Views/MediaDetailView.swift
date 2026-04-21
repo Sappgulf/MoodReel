@@ -422,6 +422,22 @@ struct MediaDetailView: View {
             .clipShape(Capsule())
     }
 
+#Preview("Media Detail") {
+    NavigationStack {
+        MediaDetailView(route: MediaRoute(
+            mediaId: 550,
+            mediaType: .movie,
+            title: "Fight Club",
+            posterPath: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+            backdropPath: "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg",
+            overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
+            releaseYear: "1999",
+            voteAverage: 8.4
+        ))
+        .environmentObject(WatchlistStore())
+    }
+}
+
     private func syncEditorState() {
         guard let item = savedItem else {
             hasRating = false

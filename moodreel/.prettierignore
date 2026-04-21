@@ -1,0 +1,6 @@
+build
+coverage
+node_modules
+e2e/test-results
+e2e/report
+public

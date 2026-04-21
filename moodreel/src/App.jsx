@@ -13,7 +13,6 @@ import TrailerPiP from './components/TrailerPiP';
 import ToastStack from './components/ToastStack';
 import { useUserProfile } from './hooks/useUserProfile';
 import { copyToClipboard } from './utils/clipboard';
-import './App.css';
 
 // Lazy load secondary routes for code-splitting
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
@@ -37,20 +36,20 @@ const SEARCH_FALLBACK_TOASTS = {
     title: 'Using cached results',
     message: 'Search results are coming from cached data until connectivity returns.',
     icon: '🛰️',
-    variant: 'info'
+    variant: 'info',
   },
   'search-service-unavailable': {
     title: 'Search service unavailable',
     message: 'Live search could not be reached. Showing cached/offline behavior where possible.',
     icon: '⚠️',
-    variant: 'error'
+    variant: 'error',
   },
   'search-no-match-fallback': {
     title: 'No exact mood match found',
     message: 'Showing trending content as a fallback for this search.',
     icon: '🔎',
-    variant: 'info'
-  }
+    variant: 'info',
+  },
 };
 
 function NotFoundPage() {
@@ -64,11 +63,7 @@ function NotFoundPage() {
     <section className="page-enter" aria-label="Page not found">
       <h2>Page not found</h2>
       <p>We couldn&apos;t find the page you requested.</p>
-      <Link
-        ref={notFoundLinkRef}
-        to="/"
-        className="primary-button"
-      >
+      <Link ref={notFoundLinkRef} to="/" className="primary-button">
         Return to Discover
       </Link>
     </section>
@@ -113,42 +108,42 @@ function AppContent() {
         label: 'Go to Discover',
         description: 'Return to the main mood search surface.',
         shortcut: 'G D',
-        onSelect: () => navigate('/')
+        onSelect: () => navigate('/'),
       },
       {
         id: 'watchlist',
         label: 'Open Watchlist',
         description: 'Review saved titles, notes, and watched items.',
         shortcut: 'G W',
-        onSelect: () => navigate('/watchlist')
+        onSelect: () => navigate('/watchlist'),
       },
       {
         id: 'stats',
         label: 'Open Stats',
         description: 'Check taste trends, genres, and discovery patterns.',
         shortcut: 'G S',
-        onSelect: () => navigate('/stats')
+        onSelect: () => navigate('/stats'),
       },
       {
         id: 'calendar',
         label: 'Open Calendar',
         description: 'See mood-search history across the last 30 days.',
         shortcut: 'G C',
-        onSelect: () => navigate('/calendar')
+        onSelect: () => navigate('/calendar'),
       },
       {
         id: 'profile',
         label: 'Open Profile',
         description: 'Update your persona, bio, and streaming region.',
         shortcut: 'G P',
-        onSelect: () => navigate('/profile')
+        onSelect: () => navigate('/profile'),
       },
       {
         id: 'focus-mood',
         label: 'Focus Mood Search',
         description: 'Jump straight to the discovery input on Home.',
         shortcut: 'S',
-        onSelect: focusMoodSearch
+        onSelect: focusMoodSearch,
       },
       {
         id: 'toggle-theme',
@@ -156,7 +151,7 @@ function AppContent() {
         description: 'Change the app chrome in one tap.',
         shortcut: 'D',
         tone: 'gold',
-        onSelect: toggleTheme
+        onSelect: toggleTheme,
       },
       {
         id: 'toggle-sound',
@@ -164,14 +159,14 @@ function AppContent() {
         description: 'Silence or restore feedback sounds.',
         shortcut: 'M',
         tone: 'gold',
-        onSelect: toggleSounds
+        onSelect: toggleSounds,
       },
       {
         id: 'shortcuts',
         label: 'Show Keyboard Shortcuts',
         description: 'Open the built-in help overlay.',
         shortcut: '?',
-        onSelect: () => setShowShortcuts(true)
+        onSelect: () => setShowShortcuts(true),
       },
       {
         id: 'copy-link',
@@ -179,13 +174,13 @@ function AppContent() {
         description: 'Share the current MoodReel state.',
         shortcut: '⌘ C',
         onSelect: async () => {
-      try {
+          try {
             await copyToClipboard(HAS_WINDOW ? window.location.href : '');
             pushToast({
               icon: '🔗',
               title: 'Link copied',
               message: 'Current view copied to clipboard.',
-              duration: 2600
+              duration: 2600,
             });
           } catch (err) {
             pushToast({
@@ -193,11 +188,11 @@ function AppContent() {
               title: 'Copy failed',
               message: 'Clipboard access was blocked by the browser.',
               variant: 'error',
-              duration: 4000
+              duration: 4000,
             });
           }
-        }
-      }
+        },
+      },
     ];
   }, [isDark, navigate, pushToast, soundEnabled, toggleSounds, toggleTheme]);
 
@@ -206,7 +201,7 @@ function AppContent() {
     [showShortcuts, showQuickActions]
   );
 
-  const setDocumentTitle = useCallback((path) => {
+  const setDocumentTitle = useCallback(path => {
     let title = 'MoodReel';
     if (path === '/') title = 'Discover | MoodReel';
     else if (path === '/watchlist') title = 'Watchlist & Favorites | MoodReel';
@@ -220,33 +215,43 @@ function AppContent() {
     return title;
   }, []);
 
-  const documentTitle = useMemo(() => setDocumentTitle(location.pathname), [location.pathname, setDocumentTitle]);
+  const documentTitle = useMemo(
+    () => setDocumentTitle(location.pathname),
+    [location.pathname, setDocumentTitle]
+  );
   const routePath = location.pathname;
 
-  const announceSearchFallback = useCallback((event) => {
-    const detail = event?.detail || {};
-    const type = detail.type;
-    const template = SEARCH_FALLBACK_TOASTS[type];
-    const query = (detail.query || '').trim();
-    const now = Date.now();
-    const key = `${type}|${query}`;
+  const announceSearchFallback = useCallback(
+    event => {
+      const detail = event?.detail || {};
+      const type = detail.type;
+      const template = SEARCH_FALLBACK_TOASTS[type];
+      const query = (detail.query || '').trim();
+      const now = Date.now();
+      const key = `${type}|${query}`;
 
-    if (!template) return;
-    if (lastSearchFallbackRef.current.key === key && now - lastSearchFallbackRef.current.at < SEARCH_FALLBACK_TOAST_COOLDOWN_MS) return;
+      if (!template) return;
+      if (
+        lastSearchFallbackRef.current.key === key &&
+        now - lastSearchFallbackRef.current.at < SEARCH_FALLBACK_TOAST_COOLDOWN_MS
+      )
+        return;
 
-    lastSearchFallbackRef.current = { key, at: now };
+      lastSearchFallbackRef.current = { key, at: now };
 
-    const hasQuery = query.length > 0;
-    const message = hasQuery ? `${template.message} (“${query}”)` : template.message;
+      const hasQuery = query.length > 0;
+      const message = hasQuery ? `${template.message} (“${query}”)` : template.message;
 
-    pushToast({
-      icon: template.icon,
-      title: template.title,
-      message,
-      variant: template.variant,
-      duration: 5000
-    });
-  }, [pushToast]);
+      pushToast({
+        icon: template.icon,
+        title: template.title,
+        message,
+        variant: template.variant,
+        duration: 5000,
+      });
+    },
+    [pushToast]
+  );
 
   // Monitor scroll for header polish
   useEffect(() => {
@@ -289,7 +294,9 @@ function AppContent() {
 
   // Scroll to top on page navigation
   useEffect(() => {
-    const reduceMotion = HAS_WINDOW ? window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches : false;
+    const reduceMotion = HAS_WINDOW
+      ? window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      : false;
     if (!HAS_WINDOW) return;
 
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -306,11 +313,18 @@ function AppContent() {
   useEffect(() => {
     if (!HAS_WINDOW) return;
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       const target = e.target;
       const targetTag = target?.tagName;
-      const isEditable = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT' || target?.isContentEditable;
-      const isInDialog = target?.closest?.('[data-app-modal]') || target?.closest?.('[role="dialog"]') || target?.closest?.('[aria-modal="true"]');
+      const isEditable =
+        targetTag === 'INPUT' ||
+        targetTag === 'TEXTAREA' ||
+        targetTag === 'SELECT' ||
+        target?.isContentEditable;
+      const isInDialog =
+        target?.closest?.('[data-app-modal]') ||
+        target?.closest?.('[role="dialog"]') ||
+        target?.closest?.('[aria-modal="true"]');
       const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
       if (key === 'escape' && (showShortcuts || showQuickActions)) {
@@ -366,15 +380,15 @@ function AppContent() {
       title: newUnlock.title,
       message: newUnlock.description,
       variant: 'achievement',
-      duration: 4000
+      duration: 4000,
     });
   }, [newUnlock, pushToast]);
 
   return (
     <div className="App">
-        <a className="skip-link" href="#main-content">
-          Skip to main content
-        </a>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
 
       {/* Keep the atmosphere lightweight; avoid full-screen dimming layers. */}
       <div className="film-grain" aria-hidden="true" />
@@ -390,10 +404,7 @@ function AppContent() {
         <OnboardingModal />
 
         {/* Keyboard Shortcuts Modal */}
-        <KeyboardShortcutsModal
-          isOpen={showShortcuts}
-          onClose={() => setShowShortcuts(false)}
-        />
+        <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
         <QuickActionsModal
           isOpen={showQuickActions}
           onClose={() => setShowQuickActions(false)}
@@ -418,9 +429,14 @@ function AppContent() {
         </div>
       )}
 
-      <header className={`App-header ${isScrolled ? 'scrolled' : ''}`} aria-label="Main navigation and controls">
+      <header
+        className={`App-header ${isScrolled ? 'scrolled' : ''}`}
+        aria-label="Main navigation and controls"
+      >
         <div className="header-top">
-          <Link to="/" className="logo-link"><h1>🎬 MoodReel</h1></Link>
+          <Link to="/" className="logo-link">
+            <h1>🎬 MoodReel</h1>
+          </Link>
           <div className="header-controls">
             <button
               className="quick-actions-btn"
@@ -563,25 +579,25 @@ function AppContent() {
           aria-label={documentTitle}
         >
           <Suspense fallback={<SkeletonGrid count={8} />}>
-        <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/movie" element={<Navigate to="/" replace />} />
-            <Route path="/tv" element={<Navigate to="/" replace />} />
-            <Route path="/movie/:id" element={<MovieDetails />} />
-            <Route path="/tv/:id" element={<MovieDetails />} />
-            <Route path="/movie/:id/" element={<MovieDetails />} />
-            <Route path="/tv/:id/" element={<MovieDetails />} />
-            <Route path="/watchlist" element={<Watchlist />} />
-            <Route path="/shared" element={<SharedList />} />
-            <Route path="/achievements" element={<Achievements />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/share/:shareId" element={<SharedList />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/calendar" element={<MoodCalendar />} />
-            <Route path="/404" element={<NotFoundPage />} />
-            <Route path="/not-found" element={<NotFoundPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/movie" element={<Navigate to="/" replace />} />
+              <Route path="/tv" element={<Navigate to="/" replace />} />
+              <Route path="/movie/:id" element={<MovieDetails />} />
+              <Route path="/tv/:id" element={<MovieDetails />} />
+              <Route path="/movie/:id/" element={<MovieDetails />} />
+              <Route path="/tv/:id/" element={<MovieDetails />} />
+              <Route path="/watchlist" element={<Watchlist />} />
+              <Route path="/shared" element={<SharedList />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/share/:shareId" element={<SharedList />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/calendar" element={<MoodCalendar />} />
+              <Route path="/404" element={<NotFoundPage />} />
+              <Route path="/not-found" element={<NotFoundPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
           </Suspense>
         </main>
       </ErrorBoundary>

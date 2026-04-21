@@ -523,6 +523,12 @@ struct DiscoverView: View {
     }
 }
 
+#Preview("Discover") {
+    DiscoverView()
+        .environmentObject(WatchlistStore())
+        .environmentObject(DiscoverViewModel())
+}
+
 // MARK: - Mood Button Component
 
 struct MoodButton: View {
