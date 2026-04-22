@@ -6,6 +6,9 @@ Format: Keep a Changelog (minimal). Dates are YYYY-MM-DD.
 Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
+
+- Performance: Hardened persistent search caching by pruning stale entries, enforcing recency-based cache caps, and writing cache cleanups back to localStorage.
+- Fixed: Guarded search cache cleanup for non-browser environments to avoid localStorage reference errors.
 - Changed: Redesigned the Global Mood Pulse block with proper spacing, clear percentages, and a transparent "Updated daily" snapshot label.
 - Changed: Tightened the emoji quick-pick UI with clearer header guidance, active-count feedback, and improved grid/button styling.
 - Added: "Clear All Filters" button in Home search.
@@ -20,6 +23,7 @@ Types: Added, Changed, Fixed, Performance, Security.
 - Security: "Locked" API configuration in `agent.md` and `.antigravityignore`.
 
 ## [0.1.0] - 2026-02-04
+
 - Added: Initial MoodReel app with mood-based discovery, search, details, trailers, and watchlist.
 - Added: Achievement system and cinematic DNA analytics.
 - Added: PWA support with install prompt and offline caching.
