@@ -192,6 +192,7 @@ struct DiscoverView: View {
                     RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
                         .stroke(Color.borderDefault, lineWidth: 1)
                 )
+                .accessibilityLabel("Search titles")
 
             Button("Go") {
                 Task { await viewModel.loadForSelectedMood() }
@@ -204,6 +205,7 @@ struct DiscoverView: View {
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
             .buttonStyle(.plain)
             .pressEffect()
+            .accessibilityLabel("Search")
         }
     }
 
@@ -417,6 +419,7 @@ struct DiscoverView: View {
             .rotationEffect(.degrees(isSurprisePressed ? -2 : 0))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Surprise me: pick a random movie")
         .shadow(color: .gold.opacity(0.5), radius: glowPulse ? 12 : 6, x: 0, y: 3)
         .onAppear {
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
@@ -598,6 +601,8 @@ struct MoodButton: View {
             .scaleEffect(isPressed ? 0.9 : 1.0)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(mood.displayName) mood")
+        .accessibilityHint(isSelected ? "Currently selected" : "Double tap to select")
         .shadow(
             color: isSelected ? mood.color.opacity(0.4) : Color.clear,
             radius: isSelected ? 8 : 0,

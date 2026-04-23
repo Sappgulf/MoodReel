@@ -16,7 +16,13 @@ import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
-import { getBackdropUrl, getDisplayOverview, getDisplayTitle, getPosterUrl, normalizeProviderList } from '../utils/mediaUtils';
+import {
+  getBackdropUrl,
+  getDisplayOverview,
+  getDisplayTitle,
+  getPosterUrl,
+  normalizeProviderList,
+} from '../utils/mediaUtils';
 
 function MovieDetails() {
   const { id } = useParams();
@@ -48,10 +54,7 @@ function MovieDetails() {
   const actorRequestRef = useRef(null);
   const actorRequestIdRef = useRef(0);
 
-  const {
-    isInWatchlist, toggleWatchlist,
-    isWatched, toggleWatched
-  } = useWatchlist();
+  const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
   const { trackRating } = useAchievements();
   const { like, dislike, statusFor } = useTasteProfile();
@@ -63,6 +66,7 @@ function MovieDetails() {
 
   useEffect(() => {
     const controller = new AbortController();
+    let mounted = true;
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -82,19 +86,20 @@ function MovieDetails() {
 
       try {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
+        if (!mounted || controller.signal.aborted) return;
 
         setContent(data.details);
         setSimilar(data.similar.slice(0, 6));
 
-        // Get US providers or first available region
+        // Get region providers or first available region
         const results = data.providers;
         setAllProviders(results || null);
 
         // Find YouTube trailer
         const videos = data.videos || [];
-        const trailerVideo = videos.find(v =>
-          v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
-        ) || videos.find(v => v.site === 'YouTube');
+        const trailerVideo =
+          videos.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')) ||
+          videos.find(v => v.site === 'YouTube');
         setTrailer(trailerVideo || null);
 
         // Get top 6 cast members and director
@@ -107,22 +112,28 @@ function MovieDetails() {
 
         // Track this view in history with credits for DNA feature
         addToHistory({ ...data.details, media_type: mediaType }, data.credits);
-
       } catch (err) {
+        if (!mounted || controller.signal.aborted) return;
         if (!isAbortError(err)) {
           setError(getUserFacingMessage(err) || 'Error fetching details.');
         }
         if (!shouldSkipLog(err)) {
+          // eslint-disable-next-line no-console
           console.error(err);
         }
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchData();
 
-    return () => controller.abort();
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
   }, [id, mediaType, addToHistory, isValidId, requestNonce]);
 
   useEffect(() => {
@@ -130,7 +141,12 @@ function MovieDetails() {
       setProviders(null);
       return;
     }
-    setProviders(allProviders?.[region] || allProviders?.US || allProviders?.[Object.keys(allProviders || {})[0]] || null);
+    setProviders(
+      allProviders?.[region] ||
+        allProviders?.US ||
+        allProviders?.[Object.keys(allProviders || {})[0]] ||
+        null
+    );
   }, [allProviders, region]);
 
   // Load saved review text (separate effect to avoid refetching on rating change)
@@ -146,56 +162,61 @@ function MovieDetails() {
     };
   }, []);
 
-  const renderStars = useCallback((rating) => {
+  const renderStars = useCallback(rating => {
     const stars = Math.round(rating / 2);
     return '★'.repeat(stars) + '☆'.repeat(5 - stars);
   }, []);
 
   // Fetch actor filmography
-  const handleActorClick = useCallback(async (actor) => {
-    if (!actor?.id) return;
+  const handleActorClick = useCallback(
+    async actor => {
+      if (!actor?.id) return;
 
-    const currentRequestId = ++actorRequestIdRef.current;
-    actorRequestRef.current?.abort();
-    const controller = new AbortController();
-    actorRequestRef.current = controller;
+      const currentRequestId = ++actorRequestIdRef.current;
+      actorRequestRef.current?.abort();
+      const controller = new AbortController();
+      actorRequestRef.current = controller;
 
-    setSelectedActor(actor);
-    setActorError('');
-    setActorLoading(true);
-    setActorFilmography([]);
+      setSelectedActor(actor);
+      setActorError('');
+      setActorLoading(true);
+      setActorFilmography([]);
 
-    try {
-      const response = await searchService.fetchActorCredits(actor.id, controller.signal);
-      if (currentRequestId !== actorRequestIdRef.current || controller.signal.aborted) return;
+      try {
+        const response = await searchService.fetchActorCredits(actor.id, controller.signal);
+        if (currentRequestId !== actorRequestIdRef.current || controller.signal.aborted) return;
 
-      // Sort by popularity and filter out current movie
-      const credits = response
-        .filter(c => c.id !== parseInt(id) && (c.poster_path || c.backdrop_path))
-        .sort((a, b) => b.popularity - a.popularity)
-        .slice(0, 12);
+        // Sort by popularity and filter out current movie
+        const credits = response
+          .filter(c => c.id !== parseInt(id) && (c.poster_path || c.backdrop_path))
+          .sort((a, b) => b.popularity - a.popularity)
+          .slice(0, 12);
 
-      if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-        setActorFilmography(credits);
+        if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+          setActorFilmography(credits);
+        }
+      } catch (err) {
+        if (isAbortError(err)) {
+          return;
+        }
+
+        if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+          setActorError(
+            getUserFacingMessage(err) || 'Could not load actor filmography. Please try again.'
+          );
+          setActorFilmography([]);
+        }
+        if (!shouldSkipLog(err)) {
+          console.error('Error fetching actor filmography:', err);
+        }
+      } finally {
+        if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
+          setActorLoading(false);
+        }
       }
-    } catch (err) {
-      if (isAbortError(err)) {
-        return;
-      }
-
-      if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-        setActorError(getUserFacingMessage(err) || 'Could not load actor filmography. Please try again.');
-        setActorFilmography([]);
-      }
-      if (!shouldSkipLog(err)) {
-        console.error('Error fetching actor filmography:', err);
-      }
-    } finally {
-      if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-        setActorLoading(false);
-      }
-    }
-  }, [id]);
+    },
+    [id]
+  );
 
   const closeActorModal = useCallback(() => {
     actorRequestRef.current?.abort();
@@ -211,11 +232,14 @@ function MovieDetails() {
     }
   }, [content, mediaType, toggleWatchlist]);
 
-  const handleRatingChange = useCallback((rating) => {
-    setRating(id, rating);
-    trackRating(id); // Track for achievement system (unique movies only)
-    playSound('pop');
-  }, [id, setRating, trackRating, playSound]);
+  const handleRatingChange = useCallback(
+    rating => {
+      setRating(id, rating);
+      trackRating(id); // Track for achievement system (unique movies only)
+      playSound('pop');
+    },
+    [id, setRating, trackRating, playSound]
+  );
 
   const handleReviewSubmit = useCallback(() => {
     setReview(id, reviewText);
@@ -224,7 +248,7 @@ function MovieDetails() {
   }, [id, reviewText, setReview, playSound]);
 
   const handleRetry = useCallback(() => {
-    setRequestNonce((count) => count + 1);
+    setRequestNonce(count => count + 1);
   }, []);
 
   const providerGroups = useMemo(() => {
@@ -232,19 +256,17 @@ function MovieDetails() {
     return {
       stream: normalizeProviderList(providers.flatrate || []),
       rent: normalizeProviderList(providers.rent || []),
-      buy: normalizeProviderList(providers.buy || [])
+      buy: normalizeProviderList(providers.buy || []),
     };
   }, [providers]);
 
   if (error) {
     return (
       <main role="main">
-        <Link to="/" className="back-button">← Back to Discover</Link>
-        <ErrorState
-          title="Couldn't load details"
-          message={error}
-          onRetry={handleRetry}
-        />
+        <Link to="/" className="back-button">
+          ← Back to Discover
+        </Link>
+        <ErrorState title="Couldn't load details" message={error} onRetry={handleRetry} />
       </main>
     );
   }
@@ -275,16 +297,17 @@ function MovieDetails() {
   const title = getDisplayTitle(content);
   const date = content.release_date || content.first_air_date;
   const year = date ? new Date(date).getFullYear() : '';
-  const runtime = content.runtime || (content.episode_run_time?.[0]);
+  const runtime = content.runtime || content.episode_run_time?.[0];
   const overview = getDisplayOverview(content);
   const tasteStatus = statusFor(content.id, mediaType);
   const tagline = content.tagline ? `“${content.tagline}”` : '';
   const runtimeLabel = runtime ? `${runtime} min` : '';
-  const genresText = content.genres?.map((genre) => genre.name).join(' • ') || '';
+  const genresText = content.genres?.map(genre => genre.name).join(' • ') || '';
   const ratingText = content.vote_average ? content.vote_average.toFixed(1) : '';
-  const seasonLabel = isTV && content.number_of_seasons
-    ? `${content.number_of_seasons} season${content.number_of_seasons > 1 ? 's' : ''}`
-    : '';
+  const seasonLabel =
+    isTV && content.number_of_seasons
+      ? `${content.number_of_seasons} season${content.number_of_seasons > 1 ? 's' : ''}`
+      : '';
 
   return (
     <main role="main" className="immersive-main">
@@ -294,7 +317,7 @@ function MovieDetails() {
           alt=""
           className="backdrop-img"
           decoding="async"
-          onError={(e) => e.target.style.display = 'none'}
+          onError={e => (e.target.style.display = 'none')}
         />
       </div>
 
@@ -305,180 +328,179 @@ function MovieDetails() {
       <article className="movie-details">
         <section className="movie-details-hero-panel glass-panel">
           <div className="movie-details-header">
-          {/* Poster */}
-          <div className="poster-container">
-            {content.poster_path ? (
-              <img
-                src={getPosterUrl(content.poster_path)}
-                alt={`${title} poster`}
-                decoding="async"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = getPosterUrl();
-                }}
-              />
-            ) : (
-              <div className="no-poster">No Poster</div>
-            )}
-          </div>
-
-          {/* Info */}
-          <div className="movie-info">
-            <p className="movie-details-eyebrow">{isTV ? 'TV Title' : 'Movie'}</p>
-            <h1>{title}</h1>
-            {tagline && <p className="movie-tagline">{tagline}</p>}
-            <p className="overview">{overview}</p>
-
-            <dl className="movie-facts-strip" aria-label="Quick facts">
-              {year && (
-                <div role="listitem">
-                  <dt>Year</dt>
-                  <dd>{year}</dd>
-                </div>
+            {/* Poster */}
+            <div className="poster-container">
+              {content.poster_path ? (
+                <img
+                  src={getPosterUrl(content.poster_path)}
+                  alt={`${title} poster`}
+                  decoding="async"
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = getPosterUrl();
+                  }}
+                />
+              ) : (
+                <div className="no-poster">No Poster</div>
               )}
-              {runtimeLabel && (
-                <div role="listitem">
-                  <dt>Runtime</dt>
-                  <dd>{runtimeLabel}</dd>
-                </div>
-              )}
-              {seasonLabel && (
-                <div role="listitem">
-                  <dt>Seasons</dt>
-                  <dd>{seasonLabel}</dd>
-                </div>
-              )}
-              {director && (
-                <div role="listitem">
-                  <dt>Director</dt>
-                  <dd>{director.name}</dd>
-                </div>
-              )}
-              {genresText && (
-                <div role="listitem">
-                  <dt>Genres</dt>
-                  <dd>{genresText}</dd>
-                </div>
-              )}
-              {ratingText && (
-                <div role="listitem">
-                  <dt>TMDB</dt>
-                  <dd>
-                    <span className="rating-large" aria-label={`Rating: ${ratingText} out of 10`}>
-                      <span className="stars" aria-hidden="true">{renderStars(content.vote_average)}</span>
-                      <span>{ratingText}</span>
-                    </span>
-                  </dd>
-                </div>
-              )}
-            </dl>
-
-            {/* Action Buttons Row */}
-            <div className="action-buttons">
-              <button
-                className="primary-button"
-                onClick={handleToggleWatchlist}
-                aria-pressed={isInWatchlist(content.id)}
-              >
-                {isInWatchlist(content.id) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
-              </button>
-
-              {isInWatchlist(content.id) && (
-                <button
-                  className={`watched-btn ${isWatched(content.id) ? 'watched' : ''}`}
-                  onClick={() => toggleWatched(content.id)}
-                >
-                  {isWatched(content.id) ? '✅ Watched' : '👁️ Mark as Watched'}
-                </button>
-              )}
-
-              {trailer && (
-                <div className="trailer-actions">
-                  <button
-                    className="trailer-btn"
-                    onClick={() => setShowTrailerModal(true)}
-                  >
-                    ▶️ Watch Trailer
-                  </button>
-                  <button
-                    className="pip-button"
-                    onClick={() => playTrailer(trailer.key, title)}
-                    title="Watch in Picture-in-Picture"
-                  >
-                    📍 PiP Mode
-                  </button>
-                </div>
-              )}
-
-              <ShareButtons title={title} />
             </div>
 
-            <div className="taste-profile-actions" role="group" aria-label="Taste profile">
-              <button
-                className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
-                onClick={() => like(content, mediaType)}
-                aria-pressed={tasteStatus === 'liked'}
-              >
-                👍 Like
-              </button>
-              <button
-                className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
-                onClick={() => dislike(content, mediaType)}
-                aria-pressed={tasteStatus === 'disliked'}
-              >
-                👎 Dislike
-              </button>
-            </div>
+            {/* Info */}
+            <div className="movie-info">
+              <p className="movie-details-eyebrow">{isTV ? 'TV Title' : 'Movie'}</p>
+              <h1>{title}</h1>
+              {tagline && <p className="movie-tagline">{tagline}</p>}
+              <p className="overview">{overview}</p>
 
-            {/* User Rating */}
-            <div className="user-rating-section">
-              <h4>Your Rating:</h4>
-              <StarRating
-                rating={userRating}
-                onRate={handleRatingChange}
-                size="large"
-              />
+              <dl className="movie-facts-strip" aria-label="Quick facts">
+                {year && (
+                  <>
+                    <dt>Year</dt>
+                    <dd>{year}</dd>
+                  </>
+                )}
+                {runtimeLabel && (
+                  <>
+                    <dt>Runtime</dt>
+                    <dd>{runtimeLabel}</dd>
+                  </>
+                )}
+                {seasonLabel && (
+                  <>
+                    <dt>Seasons</dt>
+                    <dd>{seasonLabel}</dd>
+                  </>
+                )}
+                {director && (
+                  <>
+                    <dt>Director</dt>
+                    <dd>{director.name}</dd>
+                  </>
+                )}
+                {genresText && (
+                  <>
+                    <dt>Genres</dt>
+                    <dd>{genresText}</dd>
+                  </>
+                )}
+                {ratingText && (
+                  <>
+                    <dt>TMDB</dt>
+                    <dd>
+                      <span className="rating-large" aria-label={`Rating: ${ratingText} out of 10`}>
+                        <span className="stars" aria-hidden="true">
+                          {renderStars(content.vote_average)}
+                        </span>
+                        <span>{ratingText}</span>
+                      </span>
+                    </dd>
+                  </>
+                )}
+              </dl>
 
-              {!showReviewForm && !userReview && (
+              {/* Action Buttons Row */}
+              <div className="action-buttons">
                 <button
-                  type="button"
-                  className="review-toggle-btn"
-                  onClick={() => setShowReviewForm(true)}
+                  className="primary-button"
+                  onClick={handleToggleWatchlist}
+                  aria-pressed={isInWatchlist(content.id)}
                 >
-                  ✏️ Write a Review
+                  {isInWatchlist(content.id) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
                 </button>
-              )}
 
-              {userReview && !showReviewForm && (
-                <div className="user-review">
-                  <p>"{userReview}"</p>
+                {isInWatchlist(content.id) && (
+                  <button
+                    className={`watched-btn ${isWatched(content.id) ? 'watched' : ''}`}
+                    onClick={() => toggleWatched(content.id)}
+                  >
+                    {isWatched(content.id) ? '✅ Watched' : '👁️ Mark as Watched'}
+                  </button>
+                )}
+
+                {trailer && (
+                  <div className="trailer-actions">
+                    <button className="trailer-btn" onClick={() => setShowTrailerModal(true)}>
+                      ▶️ Watch Trailer
+                    </button>
+                    <button
+                      className="pip-button"
+                      onClick={() => playTrailer(trailer.key, title)}
+                      title="Watch in Picture-in-Picture"
+                    >
+                      📍 PiP Mode
+                    </button>
+                  </div>
+                )}
+
+                <ShareButtons title={title} />
+              </div>
+
+              <div className="taste-profile-actions" role="group" aria-label="Taste profile">
+                <button
+                  className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
+                  onClick={() => like(content, mediaType)}
+                  aria-pressed={tasteStatus === 'liked'}
+                >
+                  👍 Like
+                </button>
+                <button
+                  className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
+                  onClick={() => dislike(content, mediaType)}
+                  aria-pressed={tasteStatus === 'disliked'}
+                >
+                  👎 Dislike
+                </button>
+              </div>
+
+              {/* User Rating */}
+              <div className="user-rating-section">
+                <h4>Your Rating:</h4>
+                <StarRating rating={userRating} onRate={handleRatingChange} size="large" />
+
+                {!showReviewForm && !userReview && (
                   <button
                     type="button"
-                    className="review-edit-btn"
+                    className="review-toggle-btn"
                     onClick={() => setShowReviewForm(true)}
                   >
-                    Edit
+                    ✏️ Write a Review
                   </button>
-                </div>
-              )}
+                )}
 
-              {showReviewForm && (
-                <div className="review-form">
-                  <textarea
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    placeholder="What did you think of this movie?"
-                    rows={3}
-                  />
-                  <div className="review-form-actions">
-                    <button type="button" onClick={handleReviewSubmit}>Save Review</button>
-                    <button type="button" onClick={() => setShowReviewForm(false)}>Cancel</button>
+                {userReview && !showReviewForm && (
+                  <div className="user-review">
+                    <p>"{userReview}"</p>
+                    <button
+                      type="button"
+                      className="review-edit-btn"
+                      onClick={() => setShowReviewForm(true)}
+                    >
+                      Edit
+                    </button>
                   </div>
-                </div>
-              )}
+                )}
+
+                {showReviewForm && (
+                  <div className="review-form">
+                    <textarea
+                      value={reviewText}
+                      onChange={e => setReviewText(e.target.value)}
+                      placeholder="What did you think of this movie?"
+                      rows={3}
+                    />
+                    <div className="review-form-actions">
+                      <button type="button" onClick={handleReviewSubmit}>
+                        Save Review
+                      </button>
+                      <button type="button" onClick={() => setShowReviewForm(false)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
         </section>
 
         {/* Cast Section */}
@@ -489,7 +511,7 @@ function MovieDetails() {
           </header>
           {cast.length > 0 ? (
             <div className="cast-grid cast-grid-strip" role="list" aria-label="Cast members">
-              {cast.map((person) => (
+              {cast.map(person => (
                 <button
                   key={person.id}
                   className="cast-member clickable"
@@ -548,13 +570,16 @@ function MovieDetails() {
             <p className="details-kicker">Chapter Three</p>
             <h3 id="providers-heading">Where to Watch ({region})</h3>
           </header>
-          {providerGroups && (providerGroups.stream.length > 0 || providerGroups.rent.length > 0 || providerGroups.buy.length > 0) ? (
+          {providerGroups &&
+          (providerGroups.stream.length > 0 ||
+            providerGroups.rent.length > 0 ||
+            providerGroups.buy.length > 0) ? (
             <div className="streaming-providers">
               {providerGroups.stream.length > 0 && (
                 <div className="provider-group">
                   <h4>Stream</h4>
                   <div className="provider-grid">
-                    {providerGroups.stream.map((provider) => (
+                    {providerGroups.stream.map(provider => (
                       <img
                         key={`stream-${provider.id}`}
                         src={getPosterUrl(provider.logoPath, 'w92')}
@@ -572,7 +597,7 @@ function MovieDetails() {
                 <div className="provider-group">
                   <h4>Rent</h4>
                   <div className="provider-grid">
-                    {providerGroups.rent.map((provider) => (
+                    {providerGroups.rent.map(provider => (
                       <img
                         key={`rent-${provider.id}`}
                         src={getPosterUrl(provider.logoPath, 'w92')}
@@ -590,7 +615,7 @@ function MovieDetails() {
                 <div className="provider-group">
                   <h4>Buy</h4>
                   <div className="provider-grid">
-                    {providerGroups.buy.map((provider) => (
+                    {providerGroups.buy.map(provider => (
                       <img
                         key={`buy-${provider.id}`}
                         src={getPosterUrl(provider.logoPath, 'w92')}
@@ -622,7 +647,7 @@ function MovieDetails() {
               role="list"
               aria-label="Similar titles to watch next"
             >
-              {similar.map((item) => (
+              {similar.map(item => (
                 <article className="filmstrip-item" role="listitem" key={item.id}>
                   <MovieCard
                     movie={{ ...item, media_type: mediaType }}
@@ -647,17 +672,16 @@ function MovieDetails() {
 
       {/* Trailer Modal */}
       {showTrailerModal && trailer && (
-        <TrailerModal
-          videoKey={trailer.key}
-          onClose={() => setShowTrailerModal(false)}
-        />
+        <TrailerModal videoKey={trailer.key} onClose={() => setShowTrailerModal(false)} />
       )}
 
       {/* Actor Filmography Modal */}
       {selectedActor && (
         <div className="filmography-overlay" onClick={closeActorModal}>
           <div className="filmography-modal" onClick={e => e.stopPropagation()}>
-            <button className="filmography-close" onClick={closeActorModal}>✕</button>
+            <button className="filmography-close" onClick={closeActorModal}>
+              ✕
+            </button>
             <div className="filmography-header">
               {selectedActor.profile_path && (
                 <img
@@ -677,7 +701,11 @@ function MovieDetails() {
             ) : actorError ? (
               <div className="filmography-empty">
                 <p>{actorError}</p>
-                <button type="button" className="review-edit-btn" onClick={() => handleActorClick(selectedActor)}>
+                <button
+                  type="button"
+                  className="review-edit-btn"
+                  onClick={() => handleActorClick(selectedActor)}
+                >
                   Retry
                 </button>
               </div>

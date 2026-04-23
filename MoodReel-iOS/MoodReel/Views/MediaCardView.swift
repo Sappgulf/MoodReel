@@ -12,6 +12,7 @@ struct MediaCardView: View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack(alignment: .top, spacing: AppSpacing.md) {
                 poster
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text(item.displayTitle)
@@ -50,9 +51,14 @@ struct MediaCardView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color.textMuted)
                     .padding(.top, 8)
+                    .accessibilityHidden(true)
             }
             .contentShape(Rectangle())
             .onTapGesture(perform: onTap)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(item.displayTitle), \(item.mediaType.displayName), rated \(item.ratingFormatted)")
+            .accessibilityHint("Double tap to open details.")
+            .accessibilityAddTraits(.isButton)
 
             Button(action: onToggleSave) {
                 Label(
@@ -75,6 +81,7 @@ struct MediaCardView: View {
                 .clipShape(Capsule())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(isSaved ? "Remove from watchlist" : "Add to watchlist")
         }
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)

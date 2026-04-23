@@ -141,17 +141,17 @@ struct TMDBService {
 
         let pathPrefix = mediaPathPrefix(for: route.mediaType)
 
-        async let creditsTask: Credits? = try? request(
+        async let creditsTask: Credits? = requestOptional(
             endpoint: "/\(pathPrefix)/\(route.mediaId)/credits",
             params: [:]
         )
 
-        async let videosTask: VideoResult? = try? request(
+        async let videosTask: VideoResult? = requestOptional(
             endpoint: "/\(pathPrefix)/\(route.mediaId)/videos",
             params: [:]
         )
 
-        async let providersTask: WatchProvidersResponse? = try? request(
+        async let providersTask: WatchProvidersResponse? = requestOptional(
             endpoint: "/\(pathPrefix)/\(route.mediaId)/watch/providers",
             params: [:]
         )
@@ -179,7 +179,8 @@ struct TMDBService {
         }
 
         let providersResponse = await providersTask
-        let providers = providersResponse?.results["US"] ?? providersResponse?.results.first?.value
+        let region = Locale.current.region?.identifier ?? "US"
+        let providers = providersResponse?.results[region] ?? providersResponse?.results.first?.value
 
         return MediaDetailsBundle(
             route: route,
@@ -216,6 +217,17 @@ struct TMDBService {
         case .movie: return "movie"
         case .tv: return "tv"
         case .person: return "person"
+        }
+    }
+
+    private func requestOptional<T: Decodable>(endpoint: String, params: [String: String]) async -> T? {
+        do {
+            return try await request(endpoint: endpoint, params: params)
+        } catch {
+            #if DEBUG
+            print("[TMDBService] Optional request failed: \(endpoint) - \(error.localizedDescription)")
+            #endif
+            return nil
         }
     }
 

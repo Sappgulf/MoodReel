@@ -133,9 +133,11 @@ struct SettingsView: View {
                 .font(AppFont.body())
                 .foregroundStyle(Color.textSecondary)
 
-            Link("TMDB Terms", destination: URL(string: "https://www.themoviedb.org/terms-of-use")!)
-                .font(AppFont.caption())
-                .foregroundStyle(Color.gold)
+            if let termsURL = URL(string: "https://www.themoviedb.org/terms-of-use") {
+                Link("TMDB Terms", destination: termsURL)
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.gold)
+            }
         }
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)

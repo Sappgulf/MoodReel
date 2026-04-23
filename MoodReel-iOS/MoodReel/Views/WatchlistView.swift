@@ -28,36 +28,45 @@ struct WatchlistView: View {
                 if watchlistStore.items.isEmpty {
                     emptyState
                 } else {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: AppSpacing.md) {
+                    List {
+                        Section {
                             statsHeader
                             filterBar
-
-                            ForEach(filteredItems) { item in
-                                WatchlistRow(
-                                    item: item,
-                                    onTap: {
-                                        navigationPath.append(item.route)
-                                    },
-                                    onToggleWatched: {
-                                        watchlistStore.setWatched(!item.isWatched, for: item.id)
-                                    },
-                                    onRemove: {
-                                        watchlistStore.remove(id: item.id)
-                                    }
-                                )
-                            }
-
-                            if filteredItems.isEmpty {
-                                Text("No titles match this filter.")
-                                    .font(AppFont.body())
-                                    .foregroundStyle(Color.textSecondary)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(.vertical, AppSpacing.lg)
-                            }
                         }
-                        .padding(AppSpacing.md)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
+
+                        ForEach(filteredItems) { item in
+                            WatchlistRow(
+                                item: item,
+                                onTap: {
+                                    navigationPath.append(item.route)
+                                },
+                                onToggleWatched: {
+                                    watchlistStore.setWatched(!item.isWatched, for: item.id)
+                                },
+                                onRemove: {
+                                    watchlistStore.remove(id: item.id)
+                                }
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.md, trailing: AppSpacing.md))
+                        }
+
+                        if filteredItems.isEmpty {
+                            Text("No titles match this filter.")
+                                .font(AppFont.body())
+                                .foregroundStyle(Color.textSecondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.vertical, AppSpacing.lg)
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                        }
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
             }
             .navigationTitle("Watchlist")
@@ -66,7 +75,6 @@ struct WatchlistView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         if let random = watchlistStore.randomUnwatched() {
-                            randomMessage = "Watch \(random.title) tonight."
                             navigationPath.append(random.route)
                         } else {
                             randomMessage = "Everything here is marked as watched."

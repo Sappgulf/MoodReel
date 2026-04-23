@@ -44,19 +44,11 @@ final class APIKeyStore {
     private let account = "moodreel-tmdb-api-key"
     private let service = "com.moodreel.app.securekey"
 
-    private init() {
-        // Keep the operational key in Keychain when possible.
-        if readKeychainKey() == nil, let embedded = EmbeddedTMDBKey.decode() {
-            _ = writeKeychainKey(embedded)
-        }
-    }
+    private init() {}
 
     var apiKey: String {
         get {
-            if let custom = readKeychainKey(), !custom.isEmpty {
-                return custom
-            }
-            return EmbeddedTMDBKey.decode() ?? ""
+            return readKeychainKey() ?? ""
         }
         set {
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -69,7 +61,7 @@ final class APIKeyStore {
     }
 
     var isSet: Bool { !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    var isUsingEmbeddedKey: Bool { readKeychainKey() == nil }
+    var isUsingEmbeddedKey: Bool { false }
     var maskedKey: String {
         let current = apiKey
         guard current.count > 8 else { return "••••••••" }
@@ -135,22 +127,4 @@ final class APIKeyStore {
     }
 }
 
-private enum EmbeddedTMDBKey {
-    // XOR-obfuscated key bytes; decrypted at runtime.
-    static let payload: [UInt8] = [
-        43, 93, 13, 85, 51, 86, 80, 95,
-        34, 15, 69, 89, 6, 17, 41, 93,
-        88, 83, 97, 83, 6, 94, 115, 80,
-        22, 95, 0, 19, 125, 12, 14, 82
-    ]
 
-    static let salt = Array("MoodReelCipher".utf8)
-
-    static func decode() -> String? {
-        guard !payload.isEmpty, !salt.isEmpty else { return nil }
-        let decoded = payload.enumerated().map { index, value in
-            value ^ salt[index % salt.count]
-        }
-        return String(bytes: decoded, encoding: .utf8)
-    }
-}

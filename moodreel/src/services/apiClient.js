@@ -200,7 +200,9 @@ export async function tmdbGet(
 
       const errorMsg = normalized.message;
       const fullUrl = err?.config?.url ? `${err.config.url}` : API_BASE_URL + path;
-      if (!shouldSkipLog(normalized)) {
+      const isDev = process.env.NODE_ENV !== 'production';
+      if (isDev && !shouldSkipLog(normalized)) {
+        // eslint-disable-next-line no-console
         console.error(
           `TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`,
           {
@@ -215,7 +217,10 @@ export async function tmdbGet(
 
       if (attempt < retries && isRetryableError(normalized)) {
         const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
-        console.debug(`Retrying in ${delay}ms...`);
+        if (isDev) {
+          // eslint-disable-next-line no-console
+          console.debug(`Retrying in ${delay}ms...`);
+        }
         await sleep(delay);
         continue;
       }

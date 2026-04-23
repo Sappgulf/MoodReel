@@ -5,9 +5,17 @@ final class WatchlistStore: ObservableObject {
     @Published private(set) var items: [WatchlistItem] = []
 
     private let storageKey = "moodreel-watchlist-v1"
+    private var indexByRoute: [String: WatchlistItem] = [:]
 
     init() {
         load()
+    }
+
+    private func rebuildIndex() {
+        indexByRoute = Dictionary(
+            items.map { ($0.route.id, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
     }
 
     var sortedItems: [WatchlistItem] {
@@ -27,15 +35,11 @@ final class WatchlistStore: ObservableObject {
     }
 
     func contains(_ route: MediaRoute) -> Bool {
-        items.contains {
-            $0.mediaId == route.mediaId && $0.mediaType == route.mediaType
-        }
+        indexByRoute[route.id] != nil
     }
 
     func item(for route: MediaRoute) -> WatchlistItem? {
-        items.first {
-            $0.mediaId == route.mediaId && $0.mediaType == route.mediaType
-        }
+        indexByRoute[route.id]
     }
 
     func toggle(_ media: MediaResult, mood: MoodType?) {
@@ -86,6 +90,9 @@ final class WatchlistStore: ObservableObject {
     }
 
     func remove(id: UUID) {
+        if let removed = items.first(where: { $0.id == id }) {
+            indexByRoute.removeValue(forKey: removed.route.id)
+        }
         items.removeAll { $0.id == id }
         save()
     }
@@ -96,6 +103,7 @@ final class WatchlistStore: ObservableObject {
 
     private func add(item: WatchlistItem) {
         items.append(item)
+        indexByRoute[item.route.id] = item
         save()
     }
 
@@ -117,8 +125,10 @@ final class WatchlistStore: ObservableObject {
         guard let data = UserDefaults.standard.data(forKey: storageKey) else { return }
         do {
             items = try JSONDecoder().decode([WatchlistItem].self, from: data)
+            rebuildIndex()
         } catch {
             items = []
+            indexByRoute = [:]
         }
     }
 

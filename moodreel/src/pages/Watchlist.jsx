@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, useDeferredValue } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
 import { SkeletonGrid } from '../components/Skeleton';
@@ -13,568 +13,620 @@ import { copyToClipboard, encodeSharePayload } from '../utils/clipboard';
  * Watchlist page with export/import, notes, watched tracking, random picker, matchmaker
  */
 function Watchlist() {
-    const {
-        watchlist, favorites, toggleWatchlist, isInWatchlist, isFavorite, toggleFavorite,
-        getNote, setNote, getRandomMovie,
-        isWatched, toggleWatched, getWatchedCount,
-        exportData, importData
-    } = useWatchlist();
-    const [activeTab, setActiveTab] = useState('watchlist'); // 'watchlist' | 'favorites'
-    const [exportStatus, setExportStatus] = useState('');
-    const [importStatus, setImportStatus] = useState('');
-    const [randomPick, setRandomPick] = useState(null);
-    const [showMatchmaker, setShowMatchmaker] = useState(false);
-    const [matchInput, setMatchInput] = useState('');
-    const [matchResults, setMatchResults] = useState(null);
-    const [editingNote, setEditingNote] = useState(null);
-    const [noteText, setNoteText] = useState('');
-    const [personalizedRecs, setPersonalizedRecs] = useState([]);
-    const [recsLoading, setRecsLoading] = useState(false);
-    const [recsBasedOn, setRecsBasedOn] = useState(null);
-    const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
-    const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
-    const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' | 'rows'
-    const [searchTerm, setSearchTerm] = useState('');
-    const deferredSearchTerm = useDeferredValue(searchTerm);
-    const [showSpinWheel, setShowSpinWheel] = useState(false);
-    const [shareStatus, setShareStatus] = useState('');
-    const fileInputRef = useRef(null);
+  const {
+    watchlist,
+    favorites,
+    toggleWatchlist,
+    isInWatchlist,
+    isFavorite,
+    toggleFavorite,
+    getNote,
+    setNote,
+    getRandomMovie,
+    isWatched,
+    toggleWatched,
+    getWatchedCount,
+    exportData,
+    importData,
+  } = useWatchlist();
+  const [activeTab, setActiveTab] = useState('watchlist'); // 'watchlist' | 'favorites'
+  const [exportStatus, setExportStatus] = useState('');
+  const [importStatus, setImportStatus] = useState('');
+  const [randomPick, setRandomPick] = useState(null);
+  const [showMatchmaker, setShowMatchmaker] = useState(false);
+  const [matchInput, setMatchInput] = useState('');
+  const [matchResults, setMatchResults] = useState(null);
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteText, setNoteText] = useState('');
+  const [personalizedRecs, setPersonalizedRecs] = useState([]);
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [recsBasedOn, setRecsBasedOn] = useState(null);
+  const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
+  const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
+  const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' | 'rows'
+  const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
+  const [shareStatus, setShareStatus] = useState('');
+  const fileInputRef = useRef(null);
+  const randomPickTimerRef = useRef(null);
+  const navigate = useNavigate();
 
-    // Sort and filter watchlist
-    const sortedList = useMemo(() => {
-        const sourceList = activeTab === 'favorites' ? favorites : watchlist;
-        let list = [...sourceList];
+  // Sort and filter watchlist
+  const sortedList = useMemo(() => {
+    const sourceList = activeTab === 'favorites' ? favorites : watchlist;
+    let list = [...sourceList];
 
-        // Apply search filter
-        if (deferredSearchTerm.trim()) {
-            const query = deferredSearchTerm.toLowerCase().trim();
-            list = list.filter(m => (m.title || '').toLowerCase().includes(query));
-        }
+    // Apply search filter
+    if (deferredSearchTerm.trim()) {
+      const query = deferredSearchTerm.toLowerCase().trim();
+      list = list.filter(m => (m.title || '').toLowerCase().includes(query));
+    }
 
-        // Apply sorting
-        switch (sortBy) {
-            case 'rating':
-                list.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                break;
-            case 'title':
-                list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-                break;
-            case 'watched':
-                list.sort((a, b) => {
-                    const aWatched = isWatched(a.id) ? 1 : 0;
-                    const bWatched = isWatched(b.id) ? 1 : 0;
-                    return bWatched - aWatched;
-                });
-                break;
-            case 'date':
-            default:
-                list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-        }
-
-        // Apply filter (only for watchlist tab really, but harmless for favorites)
-        if (showWatched === 'watched') {
-            list = list.filter(m => isWatched(m.id));
-        } else if (showWatched === 'unwatched') {
-            list = list.filter(m => !isWatched(m.id));
-        }
-        return list;
-    }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
-
-    const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
-
-    // Import from JSON file
-    const handleImportFile = useCallback((e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const success = importData(event.target.result);
-            if (success) {
-                setImportStatus('Imported!');
-            } else {
-                setImportStatus('Failed');
-            }
-            setTimeout(() => setImportStatus(''), 3000);
-        };
-        reader.readAsText(file);
-        e.target.value = '';
-    }, [importData]);
-
-    // Export watchlist to clipboard
-    const handleExport = useCallback(async () => {
-        if (sortedList.length === 0) return;
-
-        const exportText = sortedList.map(item => {
-            const year = item.release_date
-                ? ` (${new Date(item.release_date).getFullYear()})`
-                : '';
-            const type = item.media_type === 'tv' ? ' [TV]' : '';
-            return `• ${item.title}${year}${type}`;
-        }).join('\n');
-
-        const fullExport = `🎬 My MoodReel Watchlist\n${'─'.repeat(25)}\n${exportText}\n\nGenerated by MoodReel`;
-
-        try {
-            await copyToClipboard(fullExport);
-            setExportStatus('Copied!');
-            setTimeout(() => setExportStatus(''), 3000);
-        } catch (err) {
-            setExportStatus('Failed');
-            setTimeout(() => setExportStatus(''), 3000);
-            console.error('Failed to copy watchlist text:', err);
-        }
-    }, [sortedList]);
-
-    // Generate shareable link
-    const handleShareLink = useCallback(async () => {
-        // Create minimal data for sharing (only essential fields)
-        const shareData = {
-            sharedBy: 'A Friend',
-            items: sortedList.slice(0, 20).map(item => ({
-                id: item.id,
-                title: item.title || item.name,
-                poster_path: item.poster_path,
-                vote_average: item.vote_average,
-                media_type: item.media_type || 'movie'
-            }))
-        };
-
-        // Use robust base64 encoding to support Unicode (e.g. movies with accents)
-        const encodedData = encodeSharePayload(shareData);
-
-        const shareUrl = `${window.location.origin}/shared?data=${encodedData}`;
-
-        try {
-            await copyToClipboard(shareUrl);
-            setShareStatus('✓ Copied!');
-            setTimeout(() => setShareStatus(''), 3000);
-        } catch (err) {
-            setShareStatus('Failed');
-            setTimeout(() => setShareStatus(''), 3000);
-            console.error('Failed to copy share link:', err);
-        }
-    }, [sortedList]);
-
-    // Random picker
-    const handleRandomPick = useCallback(() => {
-        const movie = getRandomMovie();
-        setRandomPick(movie);
-        // Clear after 10 seconds
-        setTimeout(() => setRandomPick(null), 10000);
-    }, [getRandomMovie]);
-
-    // Matchmaker - find movies that appear in pasted friend's list
-    const handleMatch = useCallback(() => {
-        const friendTitles = matchInput
-            .split('\n')
-            .map(line => line.replace(/^[•\-*]\s*/, '').split('(')[0].trim().toLowerCase())
-            .filter(Boolean);
-
-        const matches = sortedList.filter(movie => {
-            const movieTitle = (movie.title || movie.name || '').toLowerCase();
-            return friendTitles.some(title =>
-                movieTitle.includes(title) ||
-                title.includes(movieTitle)
-            );
+    // Apply sorting
+    switch (sortBy) {
+      case 'rating':
+        list.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+        break;
+      case 'title':
+        list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        break;
+      case 'watched':
+        list.sort((a, b) => {
+          const aWatched = isWatched(a.id) ? 1 : 0;
+          const bWatched = isWatched(b.id) ? 1 : 0;
+          return bWatched - aWatched;
         });
+        break;
+      case 'date':
+      default:
+        list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    }
 
-        setMatchResults({
-            count: matches.length,
-            movies: matches
-        });
-    }, [matchInput, sortedList]);
+    // Apply filter (only for watchlist tab really, but harmless for favorites)
+    if (showWatched === 'watched') {
+      list = list.filter(m => isWatched(m.id));
+    } else if (showWatched === 'unwatched') {
+      list = list.filter(m => !isWatched(m.id));
+    }
+    return list;
+  }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
 
-    // Notes editing
-    const startEditNote = useCallback((movieId) => {
-        setEditingNote(movieId);
-        setNoteText(getNote(movieId));
-    }, [getNote]);
+  const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
 
-    const saveNote = useCallback(() => {
-        if (editingNote) {
-            setNote(editingNote, noteText);
-            setEditingNote(null);
-            setNoteText('');
+  // Import from JSON file
+  const handleImportFile = useCallback(
+    e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = event => {
+        const success = importData(event.target.result);
+        if (success) {
+          setImportStatus('Imported!');
+        } else {
+          setImportStatus('Failed');
         }
-    }, [editingNote, noteText, setNote]);
+        setTimeout(() => setImportStatus(''), 3000);
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    },
+    [importData]
+  );
 
-    // Fetch personalized recommendations
-    const fetchPersonalizedRecs = useCallback(async () => {
-        if (watchlist.length === 0) return;
+  // Export watchlist to clipboard
+  const handleExport = useCallback(async () => {
+    if (sortedList.length === 0) return;
 
-        setRecsLoading(true);
-        const randomMovie = watchlist[Math.floor(Math.random() * watchlist.length)];
-        setRecsBasedOn(randomMovie);
+    const exportText = sortedList
+      .map(item => {
+        const year = item.release_date ? ` (${new Date(item.release_date).getFullYear()})` : '';
+        const type = item.media_type === 'tv' ? ' [TV]' : '';
+        return `• ${item.title}${year}${type}`;
+      })
+      .join('\n');
 
-        try {
-            const mediaType = randomMovie.media_type || 'movie';
-            const results = await searchService.fetchSimilar(randomMovie.id, mediaType);
+    const fullExport = `🎬 My MoodReel Watchlist\n${'─'.repeat(25)}\n${exportText}\n\nGenerated by MoodReel`;
 
-            // Filter out movies already in watchlist
-            const filtered = results
-                .filter(m => !watchlist.some(w => w.id === m.id))
-                .slice(0, 4)
-                .map(m => ({ ...m, media_type: mediaType }));
+    try {
+      await copyToClipboard(fullExport);
+      setExportStatus('Copied!');
+      setTimeout(() => setExportStatus(''), 3000);
+    } catch (err) {
+      setExportStatus('Failed');
+      setTimeout(() => setExportStatus(''), 3000);
+      console.error('Failed to copy watchlist text:', err);
+    }
+  }, [sortedList]);
 
-            setPersonalizedRecs(filtered);
-        } catch (err) {
-            if (!shouldSkipLog(err)) {
-                console.error('Error fetching recommendations:', err);
-            }
-            setPersonalizedRecs([]);
-        } finally {
-            setRecsLoading(false);
-        }
-    }, [watchlist]);
+  // Generate shareable link
+  const handleShareLink = useCallback(async () => {
+    // Create minimal data for sharing (only essential fields)
+    const shareData = {
+      sharedBy: 'A Friend',
+      items: sortedList.slice(0, 20).map(item => ({
+        id: item.id,
+        title: item.title || item.name,
+        poster_path: item.poster_path,
+        vote_average: item.vote_average,
+        media_type: item.media_type || 'movie',
+      })),
+    };
 
-    // Load personalized recs on mount if watchlist has items
-    useEffect(() => {
-        if (watchlist.length >= 3 && personalizedRecs.length === 0) {
-            fetchPersonalizedRecs();
-        }
-    }, [watchlist.length, personalizedRecs.length, fetchPersonalizedRecs]);
+    // Use robust base64 encoding to support Unicode (e.g. movies with accents)
+    const encodedData = encodeSharePayload(shareData);
 
-    const [visibleCount, setVisibleCount] = useState(12);
+    const shareUrl = `${window.location.origin}/shared?data=${encodedData}`;
 
-    // Reset pagination when list changes
-    useEffect(() => {
-        setVisibleCount(12);
-    }, [activeTab, sortBy, showWatched, deferredSearchTerm]);
+    try {
+      await copyToClipboard(shareUrl);
+      setShareStatus('✓ Copied!');
+      setTimeout(() => setShareStatus(''), 3000);
+    } catch (err) {
+      setShareStatus('Failed');
+      setTimeout(() => setShareStatus(''), 3000);
+      console.error('Failed to copy share link:', err);
+    }
+  }, [sortedList]);
 
-    const visibleItems = useMemo(() => {
-        return sortedList.slice(0, visibleCount);
-    }, [sortedList, visibleCount]);
+  // Random picker
+  const handleRandomPick = useCallback(() => {
+    if (randomPickTimerRef.current) {
+      clearTimeout(randomPickTimerRef.current);
+    }
+    const movie = getRandomMovie();
+    setRandomPick(movie);
+    // Clear after 10 seconds
+    randomPickTimerRef.current = setTimeout(() => setRandomPick(null), 10000);
+  }, [getRandomMovie]);
 
-    const handleLoadMore = useCallback(() => {
-        setVisibleCount(prev => prev + 12);
-    }, []);
+  useEffect(() => {
+    return () => {
+      if (randomPickTimerRef.current) {
+        clearTimeout(randomPickTimerRef.current);
+      }
+    };
+  }, []);
 
-    return (
-        <div className="watchlist-page">
-            <div className="watchlist-header">
-                <div className="watchlist-header-copy">
-                    <h2 className="page-title">Your Library</h2>
-                    <div className="watchlist-tabs" role="group" aria-label="Watchlist views">
-                        <button
-                            type="button"
-                            className={`tab-btn ${activeTab === 'watchlist' ? 'active' : ''}`}
-                            aria-pressed={activeTab === 'watchlist'}
-                            onClick={() => setActiveTab('watchlist')}
-                        >
-                            My Watchlist
-                        </button>
-                        <button
-                            type="button"
-                            className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
-                            aria-pressed={activeTab === 'favorites'}
-                            onClick={() => setActiveTab('favorites')}
-                        >
-                            Favorites ❤️
-                        </button>
-                    </div>
-                </div>
-                <div className="watchlist-actions">
-                    {sortedList.length > 1 && (
-                        <>
-                            <button className="action-btn spin-wheel-btn" onClick={() => setShowSpinWheel(true)} title="Spin the wheel!">
-                                🎡 Spin Wheel
-                            </button>
-                            <button className="action-btn" onClick={handleRandomPick} title="Pick random movie">
-                                🎲 Quick Pick
-                            </button>
-                        </>
-                    )}
-                    {sortedList.length > 0 && (
-                        <>
-                            <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
-                                👥 Matchmaker
-                            </button>
-                            <button className="share-link-btn" onClick={handleShareLink}>
-                                {shareStatus || '🔗 Share Link'}
-                            </button>
-                            <button className="export-btn" onClick={handleExport}>
-                                {exportStatus || '📋 Copy'}
-                            </button>
-                            <button className="export-json-btn" onClick={exportData}>
-                                📥 Export JSON
-                            </button>
-                            <button className="import-btn" onClick={() => fileInputRef.current?.click()}>
-                                {importStatus || '📤 Import'}
-                            </button>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".json"
-                                style={{ display: 'none' }}
-                                onChange={handleImportFile}
-                            />
-                        </>
-                    )}
-                </div>
-            </div>
+  // Matchmaker - find movies that appear in pasted friend's list
+  const handleMatch = useCallback(() => {
+    const friendTitles = matchInput
+      .split('\n')
+      .map(line =>
+        line
+          .replace(/^[•\-*]\s*/, '')
+          .split('(')[0]
+          .trim()
+          .toLowerCase()
+      )
+      .filter(Boolean);
 
-            {/* Watchlist Search */}
-            {(watchlist.length > 0 || favorites.length > 0) && (
-                <div className="watchlist-search-wrapper">
-                    <span className="search-icon-hint">🔍</span>
-                    <input
-                        type="search"
-                        className="watchlist-search-input"
-                        placeholder="Search your watchlist..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        aria-label="Search watchlist"
-                    />
-                    {searchTerm && (
-                        <button
-                            className="search-clear-btn"
-                            onClick={() => setSearchTerm('')}
-                            aria-label="Clear watchlist search"
-                            type="button"
-                        >
-                            ✕
-                        </button>
-                    )}
-                </div>
-            )}
+    const matches = sortedList.filter(movie => {
+      const movieTitle = (movie.title || movie.name || '').toLowerCase();
+      return friendTitles.some(title => movieTitle.includes(title) || title.includes(movieTitle));
+    });
 
-            <div className="watchlist-layout-toggle" role="group" aria-label="Watchlist layout">
-                <button
-                    type="button"
-                    className={`watchlist-layout-btn ${layoutMode === 'grid' ? 'active' : ''}`}
-                    onClick={() => setLayoutMode('grid')}
-                >
-                    🖼️ Poster Board
-                </button>
-                <button
-                    type="button"
-                    className={`watchlist-layout-btn ${layoutMode === 'rows' ? 'active' : ''}`}
-                    onClick={() => setLayoutMode('rows')}
-                >
-                    🎬 Film Log
-                </button>
-            </div>
+    setMatchResults({
+      count: matches.length,
+      movies: matches,
+    });
+  }, [matchInput, sortedList]);
 
-            {/* Watched Filter */}
-            {activeTab === 'watchlist' && watchlist.length > 0 && (
-                <div className="watched-filter">
-                    <span>Show:</span>
-                    <button
-                        className={showWatched === 'all' ? 'active' : ''}
-                        onClick={() => setShowWatched('all')}
-                    >
-                        All ({watchlist.length})
-                    </button>
-                    <button
-                        className={showWatched === 'watched' ? 'active' : ''}
-                        onClick={() => setShowWatched('watched')}
-                    >
-                        ✅ Watched ({watchedCount})
-                    </button>
-                    <button
-                        className={showWatched === 'unwatched' ? 'active' : ''}
-                        onClick={() => setShowWatched('unwatched')}
-                    >
-                        👁️ To Watch ({watchlist.length - watchedCount})
-                    </button>
+  // Notes editing
+  const startEditNote = useCallback(
+    movieId => {
+      setEditingNote(movieId);
+      setNoteText(getNote(movieId));
+    },
+    [getNote]
+  );
 
-                    <div className="sort-dropdown">
-                        <label htmlFor="sort-by">Sort:</label>
-                        <select
-                            id="sort-by"
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                        >
-                            <option value="date">📅 Date Added</option>
-                            <option value="rating">⭐ Rating</option>
-                            <option value="title">🔤 Title</option>
-                            <option value="watched">✅ Watched</option>
-                        </select>
-                    </div>
-                </div>
-            )}
+  const saveNote = useCallback(() => {
+    if (editingNote) {
+      setNote(editingNote, noteText);
+      setEditingNote(null);
+      setNoteText('');
+    }
+  }, [editingNote, noteText, setNote]);
 
-            {/* Personalized Recommendations */}
-            {watchlist.length >= 3 && (
-                <div className="personalized-recs">
-                    <div className="recs-header">
-                        <h3>
-                            {recsBasedOn ? (
-                                <>✨ Because you saved <em>{recsBasedOn.title}</em></>
-                            ) : (
-                                <>✨ Recommended for you</>
-                            )}
-                        </h3>
-                        <button
-                            className="refresh-recs-btn"
-                            onClick={fetchPersonalizedRecs}
-                            disabled={recsLoading}
-                        >
-                            {recsLoading ? '...' : '🔄 Refresh'}
-                        </button>
-                    </div>
-                    {personalizedRecs.length > 0 ? (
-                        <div className="recs-grid">
-                            {personalizedRecs.map(movie => (
-                                <MovieCard
-                                    key={movie.id}
-                                    movie={movie}
-                                    isInWatchlist={isInWatchlist(movie.id)}
-                                    onToggleWatchlist={toggleWatchlist}
-                                    mediaType={movie.media_type}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <SkeletonGrid count={4} />
-                    )}
-                </div>
-            )}
+  // Fetch personalized recommendations
+  const fetchPersonalizedRecs = useCallback(async () => {
+    if (watchlist.length === 0) return;
 
-            {/* Random Pick Result */}
-            {randomPick && (
-                <div className="random-pick-banner">
-                    <span className="pick-icon">🎲</span>
-                    <div className="pick-content">
-                        <p>Tonight's pick:</p>
-                        <h3>{randomPick.title}</h3>
-                    </div>
-                    <Link to={`/${randomPick.media_type}/${randomPick.id}`} className="view-pick-btn">
-                        View Details →
-                    </Link>
-                </div>
-            )}
+    setRecsLoading(true);
+    const randomMovie = watchlist[Math.floor(Math.random() * watchlist.length)];
+    setRecsBasedOn(randomMovie);
 
-            {/* Matchmaker Panel */}
-            {showMatchmaker && (
-                <div className="matchmaker-panel">
-                    <h4>👥 Movie Matchmaker</h4>
-                    <p>Paste a friend's exported watchlist to find movies you both want to watch!</p>
-                    <textarea
-                        value={matchInput}
-                        onChange={(e) => setMatchInput(e.target.value)}
-                        placeholder="Paste friend's watchlist here..."
-                        rows={4}
-                    />
-                    <button onClick={handleMatch} className="primary-button">
-                        Find Matches
-                    </button>
+    try {
+      const mediaType = randomMovie.media_type || 'movie';
+      const results = await searchService.fetchSimilar(randomMovie.id, mediaType);
 
-                    {matchResults && (
-                        <div className="match-results">
-                            {matchResults.count > 0 ? (
-                                <>
-                                    <p className="match-success">
-                                        🎉 Found {matchResults.count} movie{matchResults.count > 1 ? 's' : ''} in common!
-                                    </p>
-                                    <div className="match-list">
-                                        {matchResults.movies.map(m => (
-                                            <span key={m.id} className="match-chip">{m.title}</span>
-                                        ))}
-                                    </div>
-                                </>
-                            ) : (
-                                <p className="no-matches">No matches found. You have unique taste! 🎬</p>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
+      // Filter out movies already in watchlist
+      const filtered = results
+        .filter(m => !watchlist.some(w => w.id === m.id))
+        .slice(0, 4)
+        .map(m => ({ ...m, media_type: mediaType }));
 
-            {sortedList.length === 0 ? (
-                <EmptyState
-                    icon={activeTab === 'favorites' ? "💔" : (watchlist.length === 0 ? "🎬" : "🔍")}
-                    title={activeTab === 'favorites' ? "No favorites yet" : (watchlist.length === 0 ? "Your watchlist is empty" : "No matches found")}
-                    description={activeTab === 'favorites'
-                        ? "Mark movies as favorite ❤️ to see them here!"
-                        : (watchlist.length === 0
-                            ? "Start adding movies and shows you want to watch!"
-                            : `We couldn't find any items matching "${searchTerm}" in your watchlist.`)}
-                    actionLink="/"
-                    actionText="Discover Movies"
-                />
-            ) : (
-                <>
-                    <p className="watchlist-count">
-                        Showing {visibleItems.length} of {sortedList.length} saved
-                    </p>
-                    <div className={`watchlist-grid ${layoutMode === 'rows' ? 'watchlist-grid-rows' : ''}`}>
-                        {visibleItems.map((item) => {
-                            const note = getNote(item.id);
-                            return (
-                                <div key={item.id} className={`watchlist-item ${layoutMode === 'rows' ? 'watchlist-item-row' : ''}`}>
-                                    <MovieCard
-                                        movie={item}
-                                        displayMode={layoutMode === 'rows' ? 'row' : 'poster'}
-                                        isInWatchlist={isInWatchlist(item.id)}
-                                        onToggleWatchlist={toggleWatchlist}
-                                        isFavorite={isFavorite(item.id)}
-                                        onToggleFavorite={toggleFavorite}
-                                        isWatched={isWatched(item.id)}
-                                        onToggleWatched={toggleWatched}
-                                        mediaType={item.media_type}
-                                    />
+      setPersonalizedRecs(filtered);
+    } catch (err) {
+      if (!shouldSkipLog(err)) {
+        console.error('Error fetching recommendations:', err);
+      }
+      setPersonalizedRecs([]);
+    } finally {
+      setRecsLoading(false);
+    }
+  }, [watchlist]);
 
-                                    {/* Note section */}
-                                    <div className="movie-note">
-                                        {editingNote === item.id ? (
-                                            <div className="note-editor">
-                                                <textarea
-                                                    value={noteText}
-                                                    onChange={(e) => setNoteText(e.target.value)}
-                                                    placeholder="Add a note..."
-                                                    rows={2}
-                                                />
-                                                <div className="note-actions">
-                                                    <button type="button" onClick={saveNote}>Save</button>
-                                                    <button type="button" onClick={() => setEditingNote(null)}>Cancel</button>
-                                                </div>
-                                            </div>
-                                        ) : note ? (
-                                            <div className="note-display" onClick={() => startEditNote(item.id)}>
-                                                📝 {note}
-                                            </div>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                className="add-note-btn"
-                                                onClick={() => startEditNote(item.id)}
-                                            >
-                                                + Add note
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {visibleCount < sortedList.length && (
-                        <div className="load-more-container" style={{ textAlign: 'center', margin: '2rem 0' }}>
-                            <button className="primary-button" onClick={handleLoadMore}>
-                                Load More
-                            </button>
-                        </div>
-                    )}
-                </>
-            )}
+  // Load personalized recs on mount if watchlist has items
+  useEffect(() => {
+    if (watchlist.length >= 3 && personalizedRecs.length === 0) {
+      fetchPersonalizedRecs();
+    }
+  }, [watchlist.length, personalizedRecs.length, fetchPersonalizedRecs]);
 
-            <Link to="/stats" className="stats-link">
-                📊 View Your Stats →
-            </Link>
+  const [visibleCount, setVisibleCount] = useState(12);
 
-            {/* Spin the Wheel Modal */}
-            {showSpinWheel && (
-                <SpinWheel
-                    movies={sortedList.filter(m => !isWatched(m.id))}
-                    onSelect={(movie) => {
-                        window.location.href = `/movie/${movie.id}?type=${movie.media_type || 'movie'}`;
-                    }}
-                    onClose={() => setShowSpinWheel(false)}
-                />
-            )}
+  // Reset pagination when list changes
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [activeTab, sortBy, showWatched, deferredSearchTerm]);
+
+  const visibleItems = useMemo(() => {
+    return sortedList.slice(0, visibleCount);
+  }, [sortedList, visibleCount]);
+
+  const handleLoadMore = useCallback(() => {
+    setVisibleCount(prev => prev + 12);
+  }, []);
+
+  return (
+    <div className="watchlist-page">
+      <div className="watchlist-header">
+        <div className="watchlist-header-copy">
+          <h2 className="page-title">Your Library</h2>
+          <div className="watchlist-tabs" role="group" aria-label="Watchlist views">
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'watchlist' ? 'active' : ''}`}
+              aria-pressed={activeTab === 'watchlist'}
+              onClick={() => setActiveTab('watchlist')}
+            >
+              My Watchlist
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
+              aria-pressed={activeTab === 'favorites'}
+              onClick={() => setActiveTab('favorites')}
+            >
+              Favorites ❤️
+            </button>
+          </div>
         </div>
-    );
+        <div className="watchlist-actions">
+          {sortedList.length > 1 && (
+            <>
+              <button
+                className="action-btn spin-wheel-btn"
+                onClick={() => setShowSpinWheel(true)}
+                title="Spin the wheel!"
+              >
+                🎡 Spin Wheel
+              </button>
+              <button className="action-btn" onClick={handleRandomPick} title="Pick random movie">
+                🎲 Quick Pick
+              </button>
+            </>
+          )}
+          {sortedList.length > 0 && (
+            <>
+              <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
+                👥 Matchmaker
+              </button>
+              <button className="share-link-btn" onClick={handleShareLink}>
+                {shareStatus || '🔗 Share Link'}
+              </button>
+              <button className="export-btn" onClick={handleExport}>
+                {exportStatus || '📋 Copy'}
+              </button>
+              <button className="export-json-btn" onClick={exportData}>
+                📥 Export JSON
+              </button>
+              <button className="import-btn" onClick={() => fileInputRef.current?.click()}>
+                {importStatus || '📤 Import'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={handleImportFile}
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Watchlist Search */}
+      {(watchlist.length > 0 || favorites.length > 0) && (
+        <div className="watchlist-search-wrapper">
+          <span className="search-icon-hint">🔍</span>
+          <input
+            type="search"
+            className="watchlist-search-input"
+            placeholder="Search your watchlist..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            aria-label="Search watchlist"
+          />
+          {searchTerm && (
+            <button
+              className="search-clear-btn"
+              onClick={() => setSearchTerm('')}
+              aria-label="Clear watchlist search"
+              type="button"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="watchlist-layout-toggle" role="group" aria-label="Watchlist layout">
+        <button
+          type="button"
+          className={`watchlist-layout-btn ${layoutMode === 'grid' ? 'active' : ''}`}
+          onClick={() => setLayoutMode('grid')}
+        >
+          🖼️ Poster Board
+        </button>
+        <button
+          type="button"
+          className={`watchlist-layout-btn ${layoutMode === 'rows' ? 'active' : ''}`}
+          onClick={() => setLayoutMode('rows')}
+        >
+          🎬 Film Log
+        </button>
+      </div>
+
+      {/* Watched Filter */}
+      {activeTab === 'watchlist' && watchlist.length > 0 && (
+        <div className="watched-filter">
+          <span>Show:</span>
+          <button
+            className={showWatched === 'all' ? 'active' : ''}
+            onClick={() => setShowWatched('all')}
+          >
+            All ({watchlist.length})
+          </button>
+          <button
+            className={showWatched === 'watched' ? 'active' : ''}
+            onClick={() => setShowWatched('watched')}
+          >
+            ✅ Watched ({watchedCount})
+          </button>
+          <button
+            className={showWatched === 'unwatched' ? 'active' : ''}
+            onClick={() => setShowWatched('unwatched')}
+          >
+            👁️ To Watch ({watchlist.length - watchedCount})
+          </button>
+
+          <div className="sort-dropdown">
+            <label htmlFor="sort-by">Sort:</label>
+            <select id="sort-by" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="date">📅 Date Added</option>
+              <option value="rating">⭐ Rating</option>
+              <option value="title">🔤 Title</option>
+              <option value="watched">✅ Watched</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Personalized Recommendations */}
+      {watchlist.length >= 3 && (
+        <div className="personalized-recs">
+          <div className="recs-header">
+            <h3>
+              {recsBasedOn ? (
+                <>
+                  ✨ Because you saved <em>{recsBasedOn.title}</em>
+                </>
+              ) : (
+                <>✨ Recommended for you</>
+              )}
+            </h3>
+            <button
+              className="refresh-recs-btn"
+              onClick={fetchPersonalizedRecs}
+              disabled={recsLoading}
+            >
+              {recsLoading ? '...' : '🔄 Refresh'}
+            </button>
+          </div>
+          {personalizedRecs.length > 0 ? (
+            <div className="recs-grid">
+              {personalizedRecs.map(movie => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  isInWatchlist={isInWatchlist(movie.id)}
+                  onToggleWatchlist={toggleWatchlist}
+                  mediaType={movie.media_type}
+                />
+              ))}
+            </div>
+          ) : (
+            <SkeletonGrid count={4} />
+          )}
+        </div>
+      )}
+
+      {/* Random Pick Result */}
+      {randomPick && (
+        <div className="random-pick-banner">
+          <span className="pick-icon">🎲</span>
+          <div className="pick-content">
+            <p>Tonight's pick:</p>
+            <h3>{randomPick.title}</h3>
+          </div>
+          <Link to={`/${randomPick.media_type}/${randomPick.id}`} className="view-pick-btn">
+            View Details →
+          </Link>
+        </div>
+      )}
+
+      {/* Matchmaker Panel */}
+      {showMatchmaker && (
+        <div className="matchmaker-panel">
+          <h4>👥 Movie Matchmaker</h4>
+          <p>Paste a friend's exported watchlist to find movies you both want to watch!</p>
+          <textarea
+            value={matchInput}
+            onChange={e => setMatchInput(e.target.value)}
+            placeholder="Paste friend's watchlist here..."
+            rows={4}
+          />
+          <button onClick={handleMatch} className="primary-button">
+            Find Matches
+          </button>
+
+          {matchResults && (
+            <div className="match-results">
+              {matchResults.count > 0 ? (
+                <>
+                  <p className="match-success">
+                    🎉 Found {matchResults.count} movie{matchResults.count > 1 ? 's' : ''} in
+                    common!
+                  </p>
+                  <div className="match-list">
+                    {matchResults.movies.map(m => (
+                      <span key={m.id} className="match-chip">
+                        {m.title}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="no-matches">No matches found. You have unique taste! 🎬</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {sortedList.length === 0 ? (
+        <EmptyState
+          icon={activeTab === 'favorites' ? '💔' : watchlist.length === 0 ? '🎬' : '🔍'}
+          title={
+            activeTab === 'favorites'
+              ? 'No favorites yet'
+              : watchlist.length === 0
+                ? 'Your watchlist is empty'
+                : 'No matches found'
+          }
+          description={
+            activeTab === 'favorites'
+              ? 'Mark movies as favorite ❤️ to see them here!'
+              : watchlist.length === 0
+                ? 'Start adding movies and shows you want to watch!'
+                : `We couldn't find any items matching "${searchTerm}" in your watchlist.`
+          }
+          actionLink="/"
+          actionText="Discover Movies"
+        />
+      ) : (
+        <>
+          <p className="watchlist-count">
+            Showing {visibleItems.length} of {sortedList.length} saved
+          </p>
+          <div className={`watchlist-grid ${layoutMode === 'rows' ? 'watchlist-grid-rows' : ''}`}>
+            {visibleItems.map(item => {
+              const note = getNote(item.id);
+              return (
+                <div
+                  key={item.id}
+                  className={`watchlist-item ${layoutMode === 'rows' ? 'watchlist-item-row' : ''}`}
+                >
+                  <MovieCard
+                    movie={item}
+                    displayMode={layoutMode === 'rows' ? 'row' : 'poster'}
+                    isInWatchlist={isInWatchlist(item.id)}
+                    onToggleWatchlist={toggleWatchlist}
+                    isFavorite={isFavorite(item.id)}
+                    onToggleFavorite={toggleFavorite}
+                    isWatched={isWatched(item.id)}
+                    onToggleWatched={toggleWatched}
+                    mediaType={item.media_type}
+                  />
+
+                  {/* Note section */}
+                  <div className="movie-note">
+                    {editingNote === item.id ? (
+                      <div className="note-editor">
+                        <textarea
+                          value={noteText}
+                          onChange={e => setNoteText(e.target.value)}
+                          placeholder="Add a note..."
+                          rows={2}
+                        />
+                        <div className="note-actions">
+                          <button type="button" onClick={saveNote}>
+                            Save
+                          </button>
+                          <button type="button" onClick={() => setEditingNote(null)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : note ? (
+                      <div className="note-display" onClick={() => startEditNote(item.id)}>
+                        📝 {note}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="add-note-btn"
+                        onClick={() => startEditNote(item.id)}
+                      >
+                        + Add note
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {visibleCount < sortedList.length && (
+            <div className="load-more-container" style={{ textAlign: 'center', margin: '2rem 0' }}>
+              <button className="primary-button" onClick={handleLoadMore}>
+                Load More
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      <Link to="/stats" className="stats-link">
+        📊 View Your Stats →
+      </Link>
+
+      {/* Spin the Wheel Modal */}
+      {showSpinWheel && (
+        <SpinWheel
+          movies={sortedList.filter(m => !isWatched(m.id))}
+          onSelect={movie => {
+            navigate(`/${movie.media_type || 'movie'}/${movie.id}`);
+          }}
+          onClose={() => setShowSpinWheel(false)}
+        />
+      )}
+    </div>
+  );
 }
 
 export default Watchlist;

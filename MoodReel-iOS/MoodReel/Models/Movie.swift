@@ -227,9 +227,9 @@ enum MediaResult: Codable, Identifiable, Hashable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: DynamicCodingKey.self)
-        let mediaTypeRaw = try? container.decode(String.self, forKey: DynamicCodingKey(stringValue: "media_type")!)
-        let hasTitle = container.contains(DynamicCodingKey(stringValue: "title")!)
-        let hasName = container.contains(DynamicCodingKey(stringValue: "name")!)
+        let mediaTypeRaw = try? container.decode(String.self, forKey: DynamicCodingKey(stringValue: "media_type"))
+        let hasTitle = container.contains(DynamicCodingKey(stringValue: "title"))
+        let hasName = container.contains(DynamicCodingKey(stringValue: "name"))
 
         if mediaTypeRaw == "tv" || (hasName && !hasTitle) {
             let show = try TVShow(from: decoder)
@@ -252,7 +252,11 @@ private struct DynamicCodingKey: CodingKey {
     var stringValue: String
     var intValue: Int?
 
-    init?(stringValue: String) { self.stringValue = stringValue }
+    init(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+
     init?(intValue: Int) {
         self.intValue = intValue
         self.stringValue = "\(intValue)"

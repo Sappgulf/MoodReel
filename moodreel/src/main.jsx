@@ -7,6 +7,7 @@ import './styles/components.css';
 import './styles/pages.css';
 import './styles/pages-extra.css';
 import './styles/animations.css';
+import './styles/polish.css';
 import './index.css';
 import App from './App.jsx';
 

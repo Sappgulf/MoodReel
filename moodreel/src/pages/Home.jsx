@@ -23,10 +23,19 @@ import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useToasts } from '../context/ToastContext';
 import searchService from '../services/searchService';
-import { fetchProviderCatalog, fetchTitleProviders, getCachedTitleProviders } from '../services/providerService';
+import {
+  fetchProviderCatalog,
+  fetchTitleProviders,
+  getCachedTitleProviders,
+} from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
 import { copyToClipboard } from '../utils/clipboard';
-import { getBackdropUrl, getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
+import {
+  getBackdropUrl,
+  getDisplayTitle,
+  getDisplayOverview,
+  getReleaseYear,
+} from '../utils/mediaUtils';
 import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
 
 function Home() {
@@ -34,7 +43,8 @@ function Home() {
   const { isMobile } = useWindowSize();
   const location = useLocation();
   const { playSound } = useSounds();
-  const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } = useWatchlist();
+  const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } =
+    useWatchlist();
   const { trackSave } = useAchievements();
   const { history: recentMoods, addToHistory } = useMoodHistory();
   const { savePlaylist } = useCustomPlaylists();
@@ -43,22 +53,30 @@ function Home() {
   const { pushToast } = useToasts();
 
   const {
-    mood, setMood,
-    recommendations, setRecommendations,
+    mood,
+    setMood,
+    recommendations,
+    setRecommendations,
     trending,
     error,
-    selectedGenres, setSelectedGenres,
-    selectedProviders, setSelectedProviders,
+    selectedGenres,
+    setSelectedGenres,
+    selectedProviders,
+    setSelectedProviders,
     isLoading,
-    contentType, setContentType,
+    contentType,
+    setContentType,
     matchType,
     hasMore,
-    minRating, setMinRating,
-    hasSearched, setHasSearched,
-    advancedFilters, setAdvancedFilters,
+    minRating,
+    setMinRating,
+    hasSearched,
+    setHasSearched,
+    advancedFilters,
+    setAdvancedFilters,
     fetchTrending,
     search: getRecommendations,
-    loadMore: loadMoreResults
+    loadMore: loadMoreResults,
   } = useMovieDiscovery(currentYear, region);
 
   const [visibleCount, setVisibleCount] = useState(8);
@@ -84,7 +102,6 @@ function Home() {
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
   const hasHydratedRef = useRef(false);
-  const isLoadMoreRef = useRef(false);
   const moodInputRef = useRef(null);
   const titleSearchRef = useRef(null);
 
@@ -132,16 +149,19 @@ function Home() {
     if (regionParam) setRegion(regionParam);
 
     if (yearMinParam || yearMaxParam || ratingParam) {
-      setAdvancedFilters((prev) => ({
+      setAdvancedFilters(prev => ({
         ...prev,
         yearMin: yearMinParam ? parseInt(yearMinParam, 10) : prev.yearMin,
-        yearMax: yearMaxParam ? parseInt(yearMaxParam, 10) : prev.yearMax
+        yearMax: yearMaxParam ? parseInt(yearMaxParam, 10) : prev.yearMax,
       }));
       if (ratingParam) setMinRating(parseFloat(ratingParam));
     }
 
     if (servicesParam) {
-      const ids = servicesParam.split(',').map((id) => parseInt(id, 10)).filter(Boolean);
+      const ids = servicesParam
+        .split(',')
+        .map(id => parseInt(id, 10))
+        .filter(Boolean);
       setMyServices(ids);
     }
 
@@ -154,7 +174,18 @@ function Home() {
     if (moodParam) {
       setTimeout(() => handleSearch(), 0);
     }
-  }, [location.search, handleSearch, setAdvancedFilters, setContentType, setMinRating, setMood, setMyServices, setRegion, setSearchScope, setShowHidden]);
+  }, [
+    location.search,
+    handleSearch,
+    setAdvancedFilters,
+    setContentType,
+    setMinRating,
+    setMood,
+    setMyServices,
+    setRegion,
+    setSearchScope,
+    setShowHidden,
+  ]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
@@ -163,8 +194,10 @@ function Home() {
     if (mood) params.set('mood', mood);
     if (titleQuery) params.set('query', titleQuery);
     if (contentType && contentType !== 'all') params.set('type', contentType);
-    if (advancedFilters.yearMin && advancedFilters.yearMin > 1900) params.set('yearMin', advancedFilters.yearMin);
-    if (advancedFilters.yearMax && advancedFilters.yearMax < currentYear) params.set('yearMax', advancedFilters.yearMax);
+    if (advancedFilters.yearMin && advancedFilters.yearMin > 1900)
+      params.set('yearMin', advancedFilters.yearMin);
+    if (advancedFilters.yearMax && advancedFilters.yearMax < currentYear)
+      params.set('yearMax', advancedFilters.yearMax);
     if (minRating > 0) params.set('rating', minRating);
     if (region && region !== 'US') params.set('region', region);
     if (myServices.length > 0) params.set('services', myServices.join(','));
@@ -174,8 +207,19 @@ function Home() {
     const queryString = params.toString();
     const nextUrl = `${location.pathname}${queryString ? `?${queryString}` : ''}`;
     window.history.replaceState(null, '', nextUrl);
-  }, [mood, titleQuery, contentType, advancedFilters, minRating, region, myServices, searchScope, showHidden, location.pathname, currentYear]);
-
+  }, [
+    mood,
+    titleQuery,
+    contentType,
+    advancedFilters,
+    minRating,
+    region,
+    myServices,
+    searchScope,
+    showHidden,
+    location.pathname,
+    currentYear,
+  ]);
 
   // Dynamic Mood Themes
   useEffect(() => {
@@ -187,15 +231,31 @@ function Home() {
     const moodLower = mood.toLowerCase();
     if (moodLower.includes('romance') || moodLower.includes('love') || moodLower.includes('date')) {
       body.classList.add('mood-romantic');
-    } else if (moodLower.includes('thrill') || moodLower.includes('scary') || moodLower.includes('horror') || moodLower.includes('dark')) {
+    } else if (
+      moodLower.includes('thrill') ||
+      moodLower.includes('scary') ||
+      moodLower.includes('horror') ||
+      moodLower.includes('dark')
+    ) {
       body.classList.add('mood-thriller');
-    } else if (moodLower.includes('happy') || moodLower.includes('uplift') || moodLower.includes('fun') || moodLower.includes('comedy')) {
+    } else if (
+      moodLower.includes('happy') ||
+      moodLower.includes('uplift') ||
+      moodLower.includes('fun') ||
+      moodLower.includes('comedy')
+    ) {
       body.classList.add('mood-happy');
-    } else if (moodLower.includes('classic') || moodLower.includes('old') || moodLower.includes('noir') || moodLower.includes('retro')) {
+    } else if (
+      moodLower.includes('classic') ||
+      moodLower.includes('old') ||
+      moodLower.includes('noir') ||
+      moodLower.includes('retro')
+    ) {
       body.classList.add('mood-classic');
     }
 
-    return () => body.classList.remove('mood-romantic', 'mood-thriller', 'mood-happy', 'mood-classic');
+    return () =>
+      body.classList.remove('mood-romantic', 'mood-thriller', 'mood-happy', 'mood-classic');
   }, [mood]);
 
   // Fetch trending on mount
@@ -224,36 +284,42 @@ function Home() {
     return () => clearTimeout(handle);
   }, [titleQuery]);
 
-  const performAllSearch = useCallback(async (query, controller) => {
-    try {
-      const result = await searchService.search({
-        query,
-        type: contentType,
-        genres: [],
-        providers: selectedProviders,
-        minRating,
-        matchType,
-        region,
-        ...advancedFilters,
-        page: 1,
-        multiPage: true
-      }, controller.signal);
+  const performAllSearch = useCallback(
+    async (query, controller) => {
+      try {
+        const result = await searchService.search(
+          {
+            query,
+            type: contentType,
+            genres: [],
+            providers: selectedProviders,
+            minRating,
+            matchType,
+            region,
+            ...advancedFilters,
+            page: 1,
+            multiPage: true,
+          },
+          controller.signal
+        );
 
-      if (result.error) {
-        setSearchError(result.error);
+        if (result.error) {
+          setSearchError(result.error);
+        }
+        setSearchResults(result.results || []);
+      } catch (err) {
+        if (!shouldSkipLog(err)) {
+          console.error('Error performing title search:', err);
+        }
+        if (!isAbortError(err)) {
+          setSearchError(getUserFacingMessage(err));
+        }
+      } finally {
+        setIsSearchingAll(false);
       }
-      setSearchResults(result.results || []);
-    } catch (err) {
-      if (!shouldSkipLog(err)) {
-        console.error('Error performing title search:', err);
-      }
-      if (!isAbortError(err)) {
-        setSearchError(getUserFacingMessage(err));
-      }
-    } finally {
-      setIsSearchingAll(false);
-    }
-  }, [contentType, selectedProviders, minRating, matchType, region, advancedFilters]);
+    },
+    [contentType, selectedProviders, minRating, matchType, region, advancedFilters]
+  );
 
   useEffect(() => {
     if (searchScope !== 'all') {
@@ -304,10 +370,10 @@ function Home() {
       try {
         const [movieProviders, tvProviders] = await Promise.all([
           fetchProviderCatalog('movie', region, controller.signal),
-          fetchProviderCatalog('tv', region, controller.signal)
+          fetchProviderCatalog('tv', region, controller.signal),
         ]);
         const merged = [...movieProviders, ...tvProviders].reduce((acc, provider) => {
-          if (!acc.some((p) => p.id === provider.id)) {
+          if (!acc.some(p => p.id === provider.id)) {
             acc.push(provider);
           }
           return acc;
@@ -325,41 +391,48 @@ function Home() {
 
   // Infinite scroll observer
   useEffect(() => {
-    if (!loadMoreRef.current || !hasMore || isLoading || isLoadMoreRef.current) return;
+    if (!loadMoreRef.current || !hasMore) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadMoreRef.current) {
-          isLoadMoreRef.current = true;
+      entries => {
+        if (entries[0].isIntersecting) {
           setVisibleCount(prev => prev + 12);
           loadMoreResults();
-          setTimeout(() => { isLoadMoreRef.current = false; }, 500);
         }
       },
       { threshold: 0.1 }
     );
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [hasMore, isLoading, loadMoreResults]);
+  }, [hasMore, loadMoreResults]);
 
-  const handleGenreClick = useCallback((genreId) => {
-    setSelectedGenres((prev) =>
-      prev.includes(genreId) ? prev.filter((id) => id !== genreId) : [...prev, genreId]
-    );
-  }, [setSelectedGenres]);
+  const handleGenreClick = useCallback(
+    genreId => {
+      setSelectedGenres(prev =>
+        prev.includes(genreId) ? prev.filter(id => id !== genreId) : [...prev, genreId]
+      );
+    },
+    [setSelectedGenres]
+  );
 
-  const handleProviderToggle = useCallback((providerId) => {
-    toggleService(providerId);
-  }, [toggleService]);
+  const handleProviderToggle = useCallback(
+    providerId => {
+      toggleService(providerId);
+    },
+    [toggleService]
+  );
 
-  const handleEmojiSelect = useCallback((emojiMood) => {
-    setMood(emojiMood.keyword);
-    if (navigator.vibrate) navigator.vibrate(15);
-    setSelectedGenres((prev) => {
-      const next = new Set(prev);
-      emojiMood.genres.forEach((genreId) => next.add(genreId));
-      return Array.from(next);
-    });
-  }, [setMood, setSelectedGenres]);
+  const handleEmojiSelect = useCallback(
+    emojiMood => {
+      setMood(emojiMood.keyword);
+      if (navigator.vibrate) navigator.vibrate(15);
+      setSelectedGenres(prev => {
+        const next = new Set(prev);
+        emojiMood.genres.forEach(genreId => next.add(genreId));
+        return Array.from(next);
+      });
+    },
+    [setMood, setSelectedGenres]
+  );
 
   const handleSurpriseMe = useCallback(async () => {
     if (isSurpriseLoading) return;
@@ -412,36 +485,59 @@ function Home() {
     setShowWinnerInfo(false);
   }, []);
 
-  const handleSwipeRight = useCallback((movie) => {
-    setIsCardLoading(true);
-    playSound('save');
-    const added = addToWatchlist(movie);
-    if (added) trackSave(added);
-    setRecommendations(prev => prev.filter(m => m.id !== movie.id));
-    setTimeout(() => setIsCardLoading(false), 300);
-  }, [addToWatchlist, trackSave, playSound, setRecommendations]);
+  const handleSwipeRight = useCallback(
+    movie => {
+      setIsCardLoading(true);
+      playSound('save');
+      const added = addToWatchlist(movie);
+      if (added) trackSave(added);
+      setRecommendations(prev => prev.filter(m => m.id !== movie.id));
+      setTimeout(() => setIsCardLoading(false), 300);
+    },
+    [addToWatchlist, trackSave, playSound, setRecommendations]
+  );
 
-  const handleSwipeLeft = useCallback((movie) => {
-    setIsCardLoading(true);
-    playSound('swipe');
-    setRecommendations(prev => prev.filter(m => m.id !== movie.id));
-    setTimeout(() => setIsCardLoading(false), 300);
-  }, [playSound, setRecommendations]);
+  const handleSwipeLeft = useCallback(
+    movie => {
+      setIsCardLoading(true);
+      playSound('swipe');
+      setRecommendations(prev => prev.filter(m => m.id !== movie.id));
+      setTimeout(() => setIsCardLoading(false), 300);
+    },
+    [playSound, setRecommendations]
+  );
 
   const handleSaveVibe = useCallback(() => {
     if (!mood && selectedGenres.length === 0) return;
     const name = prompt("Name your custom vibe (e.g. 'Late Night Thrills'):");
     if (name) {
-      savePlaylist(name, { mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters });
+      savePlaylist(name, {
+        mood,
+        contentType,
+        selectedGenres,
+        selectedProviders,
+        minRating,
+        advancedFilters,
+      });
       playSound('save');
       pushToast({
         icon: '✨',
         title: 'Vibe saved',
         message: `"${name}" added to your playlists.`,
-        duration: 3000
+        duration: 3000,
       });
     }
-  }, [mood, contentType, selectedGenres, selectedProviders, minRating, advancedFilters, savePlaylist, playSound, pushToast]);
+  }, [
+    mood,
+    contentType,
+    selectedGenres,
+    selectedProviders,
+    minRating,
+    advancedFilters,
+    savePlaylist,
+    playSound,
+    pushToast,
+  ]);
 
   const handleClearFilters = useCallback(() => {
     setSelectedGenres([]);
@@ -452,16 +548,19 @@ function Home() {
       sortBy: 'popularity.desc',
       matchType: 'all',
       runtime: 'any',
-      region: 'US'
+      region: 'US',
     });
     playSound('pop');
   }, [setSelectedGenres, setMinRating, setAdvancedFilters, currentYear, playSound]);
 
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return { greeting: 'Good morning!', suggestion: 'uplifting', emoji: '☀️' };
-    if (hour >= 12 && hour < 17) return { greeting: 'Good afternoon!', suggestion: 'adventure', emoji: '🌤️' };
-    if (hour >= 17 && hour < 21) return { greeting: 'Good evening!', suggestion: 'date night', emoji: '🌅' };
+    if (hour >= 5 && hour < 12)
+      return { greeting: 'Good morning!', suggestion: 'uplifting', emoji: '☀️' };
+    if (hour >= 12 && hour < 17)
+      return { greeting: 'Good afternoon!', suggestion: 'adventure', emoji: '🌤️' };
+    if (hour >= 17 && hour < 21)
+      return { greeting: 'Good evening!', suggestion: 'date night', emoji: '🌅' };
     return { greeting: 'Late night vibes', suggestion: 'thriller', emoji: '🌙' };
   }, []);
 
@@ -486,9 +585,7 @@ function Home() {
     ? `/${featuredItem.media_type || contentType}/${featuredItem.id}`
     : null;
 
-  const heroTitle = mood
-    ? `Tuned for “${mood}”`
-    : 'Find the film that fits tonight.';
+  const heroTitle = mood ? `Tuned for “${mood}”` : 'Find the film that fits tonight.';
 
   const heroDescription = mood
     ? 'Your current mood is already shaping the feed. Refine the service, rating, or genre mix, then lock in a pick.'
@@ -510,7 +607,7 @@ function Home() {
 
   const scopedResults = useMemo(() => {
     if (debouncedQuery && searchScope === 'within') {
-      const filtered = filteredRecommendations.filter((item) => {
+      const filtered = filteredRecommendations.filter(item => {
         const title = (item.title || item.name || '').toLowerCase();
         return title.includes(debouncedQuery.toLowerCase());
       });
@@ -520,12 +617,21 @@ function Home() {
       return applySearchRanking(searchResults, debouncedQuery, tieBreakers, selectedGenres);
     }
     return filteredRecommendations;
-  }, [filteredRecommendations, searchResults, debouncedQuery, searchScope, tieBreakers, selectedGenres]);
+  }, [
+    filteredRecommendations,
+    searchResults,
+    debouncedQuery,
+    searchScope,
+    tieBreakers,
+    selectedGenres,
+  ]);
 
   const tasteAdjustedResults = useMemo(() => {
     let results = scopedResults;
     if (!showHidden) {
-      results = results.filter((item) => statusFor(item.id, item.media_type || contentType) !== 'disliked');
+      results = results.filter(
+        item => statusFor(item.id, item.media_type || contentType) !== 'disliked'
+      );
     }
     return [...results].sort((a, b) => {
       const aStatus = statusFor(a.id, a.media_type || contentType);
@@ -539,22 +645,27 @@ function Home() {
     });
   }, [scopedResults, showHidden, statusFor, contentType]);
 
-  const getProviderKey = useCallback((item) => {
-    return `${item.id}-${item.media_type || contentType}-${region}`;
-  }, [contentType, region]);
+  const getProviderKey = useCallback(
+    item => {
+      return `${item.id}-${item.media_type || contentType}-${region}`;
+    },
+    [contentType, region]
+  );
 
   const filteredByServices = useMemo(() => {
     if (myServices.length === 0) return tasteAdjustedResults;
-    return tasteAdjustedResults.filter((item) => {
+    return tasteAdjustedResults.filter(item => {
       const mediaType = item.media_type || contentType;
-      const cached = providerSnapshot[getProviderKey(item)] || getCachedTitleProviders(item.id, mediaType, region);
+      const cached =
+        providerSnapshot[getProviderKey(item)] ||
+        getCachedTitleProviders(item.id, mediaType, region);
       if (!cached) return true;
       const ids = [
-        ...cached.flatrate.map((p) => p.id),
-        ...cached.rent.map((p) => p.id),
-        ...cached.buy.map((p) => p.id)
+        ...cached.flatrate.map(p => p.id),
+        ...cached.rent.map(p => p.id),
+        ...cached.buy.map(p => p.id),
       ];
-      return myServices.some((id) => ids.includes(id));
+      return myServices.some(id => ids.includes(id));
     });
   }, [tasteAdjustedResults, myServices, providerSnapshot, getProviderKey, contentType, region]);
 
@@ -564,7 +675,7 @@ function Home() {
     const itemsToFetch = filteredByServices.slice(0, 12);
     let newSnapshot = {};
 
-    const fetchAll = itemsToFetch.map(async (item) => {
+    const fetchAll = itemsToFetch.map(async item => {
       const mediaType = item.media_type || contentType;
       const key = getProviderKey(item);
       const cached = providerSnapshot[key] || getCachedTitleProviders(item.id, mediaType, region);
@@ -582,9 +693,9 @@ function Home() {
 
     Promise.all(fetchAll).then(() => {
       if (Object.keys(newSnapshot).length > 0) {
-        setProviderSnapshot((prev) => ({
+        setProviderSnapshot(prev => ({
           ...prev,
-          ...newSnapshot
+          ...newSnapshot,
         }));
       }
     });
@@ -606,15 +717,44 @@ function Home() {
       />
 
       {showWinnerInfo && surpriseMovie && (
-        <div className="surprise-banner" onClick={closeSurprise}>
-          <span className="surprise-icon">🎉</span>
+        <div
+          className="surprise-banner"
+          role="button"
+          tabIndex={0}
+          onClick={closeSurprise}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              closeSurprise();
+            }
+          }}
+          aria-label={`Surprise pick: ${surpriseMovie.title || surpriseMovie.name}. Press Enter to dismiss.`}
+        >
+          <span className="surprise-icon" aria-hidden="true">
+            🎉
+          </span>
           <div className="surprise-content">
             <p>We found a gem for you!</p>
             <h3>{surpriseMovie.title || surpriseMovie.name}</h3>
           </div>
           <div className="surprise-actions">
-            <Link to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`} className="surprise-link primary">Watch Now</Link>
-            <button className="surprise-link secondary" onClick={(e) => { e.stopPropagation(); closeSurprise(); }}>Close</button>
+            <Link
+              to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`}
+              className="surprise-link primary"
+              onClick={e => e.stopPropagation()}
+            >
+              Watch Now
+            </Link>
+            <button
+              className="surprise-link secondary"
+              onClick={e => {
+                e.stopPropagation();
+                closeSurprise();
+              }}
+              type="button"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -622,80 +762,93 @@ function Home() {
       {isLoading && !featuredItem ? (
         <DiscoveryHeroSkeleton />
       ) : (
-      <section className="discovery-hero">
-        <div className="discovery-hero-copy">
-          <span className="hero-kicker">MoodReel / discovery engine</span>
-          <h2>{heroTitle}</h2>
-          <p className="hero-description">{heroDescription}</p>
-          <div className="hero-proof-row">
-            <span className="hero-proof">Mood: {heroMoodLabel}</span>
-            <span className="hero-proof">{selectedGenres.length > 0 ? `${selectedGenres.length} genres` : 'All genres'}</span>
-            <span className="hero-proof">{myServices.length > 0 ? `${myServices.length} services` : 'Any service'}</span>
-            <span className="hero-proof">{activeFilterCount} filters</span>
-          </div>
-          <div className="hero-actions">
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => {
-                if (!mood) {
-                  setMood(timeContext.suggestion);
-                  window.setTimeout(() => handleSearch(), 0);
-                  return;
-                }
-                handleSearch();
-              }}
-            >
-              {mood ? 'Search this mood' : `Try “${timeContext.suggestion}”`}
-            </button>
-            <button type="button" className="secondary-button" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
-              {isSurpriseLoading ? 'Shuffling…' : 'Surprise Me'}
-            </button>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'))}
-            >
-              Focus search
-            </button>
-          </div>
-          <p className="hero-hint">
-            Press <kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
-          </p>
-        </div>
-
-        <div className="discovery-hero-visual">
-          {featuredItem ? (
-            <Link to={featuredLink} className="hero-featured-card">
-              <div className="hero-featured-art">
-                <img
-                  src={getBackdropUrl(featuredItem.backdrop_path, 'w780')}
-                  alt={getDisplayTitle(featuredItem)}
-                  loading="eager"
-                  decoding="async"
-                />
-                <div className="hero-featured-overlay" />
-              </div>
-              <div className="hero-featured-copy">
-                <span className="hero-featured-eyebrow">{hasAnySearch ? 'Current spotlight' : 'Trending spotlight'}</span>
-                <h3>{getDisplayTitle(featuredItem)}</h3>
-                <p>{getDisplayOverview(featuredItem)}</p>
-                <div className="hero-featured-meta">
-                  {getReleaseYear(featuredItem) && <span>{getReleaseYear(featuredItem)}</span>}
-                  {featuredItem.vote_average ? <span>{featuredItem.vote_average.toFixed(1)} / 10</span> : null}
-                  <span>{featuredItem.media_type === 'tv' ? 'Series' : 'Film'}</span>
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <div className="hero-featured-card hero-featured-card-empty">
-              <span className="hero-featured-eyebrow">Loading spotlight</span>
-              <h3>MoodReel is finding a fit</h3>
-              <p>The featured pick will appear as soon as the discovery feed lands.</p>
+        <section className="discovery-hero">
+          <div className="discovery-hero-copy">
+            <span className="hero-kicker">MoodReel / discovery engine</span>
+            <h2>{heroTitle}</h2>
+            <p className="hero-description">{heroDescription}</p>
+            <div className="hero-proof-row">
+              <span className="hero-proof">Mood: {heroMoodLabel}</span>
+              <span className="hero-proof">
+                {selectedGenres.length > 0 ? `${selectedGenres.length} genres` : 'All genres'}
+              </span>
+              <span className="hero-proof">
+                {myServices.length > 0 ? `${myServices.length} services` : 'Any service'}
+              </span>
+              <span className="hero-proof">{activeFilterCount} filters</span>
             </div>
-          )}
-        </div>
-      </section>
+            <div className="hero-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  if (!mood) {
+                    setMood(timeContext.suggestion);
+                    window.setTimeout(() => handleSearch(), 0);
+                    return;
+                  }
+                  handleSearch();
+                }}
+              >
+                {mood ? 'Search this mood' : `Try “${timeContext.suggestion}”`}
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleSurpriseMe}
+                disabled={isSurpriseLoading}
+              >
+                {isSurpriseLoading ? 'Shuffling…' : 'Surprise Me'}
+              </button>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'))}
+              >
+                Focus search
+              </button>
+            </div>
+            <p className="hero-hint">
+              Press <kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
+            </p>
+          </div>
+
+          <div className="discovery-hero-visual">
+            {featuredItem ? (
+              <Link to={featuredLink} className="hero-featured-card">
+                <div className="hero-featured-art">
+                  <img
+                    src={getBackdropUrl(featuredItem.backdrop_path, 'w780')}
+                    alt={getDisplayTitle(featuredItem)}
+                    loading="eager"
+                    decoding="async"
+                  />
+                  <div className="hero-featured-overlay" />
+                </div>
+                <div className="hero-featured-copy">
+                  <span className="hero-featured-eyebrow">
+                    {hasAnySearch ? 'Current spotlight' : 'Trending spotlight'}
+                  </span>
+                  <h3>{getDisplayTitle(featuredItem)}</h3>
+                  <p>{getDisplayOverview(featuredItem)}</p>
+                  <div className="hero-featured-meta">
+                    {getReleaseYear(featuredItem) && <span>{getReleaseYear(featuredItem)}</span>}
+                    {featuredItem.vote_average ? (
+                      <span>{featuredItem.vote_average.toFixed(1)} / 10</span>
+                    ) : null}
+                    <span>{featuredItem.media_type === 'tv' ? 'Series' : 'Film'}</span>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="hero-featured-card hero-featured-card-empty">
+                <span className="hero-featured-eyebrow">Loading spotlight</span>
+                <h3>MoodReel is finding a fit</h3>
+                <p>The featured pick will appear as soon as the discovery feed lands.</p>
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
       <div className="discovery-support-grid">
@@ -705,13 +858,25 @@ function Home() {
               <span className="vibe-emoji">{timeContext.emoji}</span>
               <div className="vibe-text">
                 <span className="vibe-label">{timeContext.greeting}</span>
-                <button className="vibe-suggestion" type="button" onClick={() => { setMood(timeContext.suggestion); playSound('pop'); }}>
+                <button
+                  className="vibe-suggestion"
+                  type="button"
+                  onClick={() => {
+                    setMood(timeContext.suggestion);
+                    playSound('pop');
+                  }}
+                >
                   Try <span className="text-gold">"{timeContext.suggestion}"</span>
                 </button>
               </div>
             </div>
             <div className="hero-actions">
-              <button className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`} type="button" onClick={handleSurpriseMe} disabled={isSurpriseLoading}>
+              <button
+                className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`}
+                type="button"
+                onClick={handleSurpriseMe}
+                disabled={isSurpriseLoading}
+              >
                 {isSurpriseLoading ? '🎲 Shuffling…' : '🔥 Surprise Me'}
               </button>
             </div>
@@ -756,7 +921,12 @@ function Home() {
                 isWatched={isWatched(item.id)}
                 onToggleWatched={toggleWatched}
                 mediaType={item.media_type}
-                providerBadges={(providerSnapshot[getProviderKey(item)] || getCachedTitleProviders(item.id, item.media_type, region))?.flatrate?.slice(0, 3) || []}
+                providerBadges={
+                  (
+                    providerSnapshot[getProviderKey(item)] ||
+                    getCachedTitleProviders(item.id, item.media_type, region)
+                  )?.flatrate?.slice(0, 3) || []
+                }
                 onLike={like}
                 onDislike={dislike}
                 tasteStatus={statusFor(item.id, item.media_type)}
@@ -775,7 +945,11 @@ function Home() {
               type="button"
               className={`content-tab ${contentType === type ? 'active' : ''}`}
               aria-pressed={contentType === type}
-              onClick={() => { setContentType(type); setRecommendations([]); setHasSearched(false); }}
+              onClick={() => {
+                setContentType(type);
+                setRecommendations([]);
+                setHasSearched(false);
+              }}
             >
               {type === 'all' ? '🎬 All' : type === 'movie' ? '🎥 Movies' : '📺 TV'}
             </button>
@@ -800,18 +974,32 @@ function Home() {
         </div>
 
         <div className="mood-selector">
+          <label htmlFor="mood-search-input" className="mood-input-label">
+            How are you feeling?
+          </label>
           <div className="mood-input-wrapper">
-            <span className="mood-icon">✨</span>
+            <span className="mood-icon" aria-hidden="true">
+              ✨
+            </span>
             <input
+              id="mood-search-input"
               ref={moodInputRef}
               type="text"
               value={mood}
-              onChange={(e) => setMood(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onChange={e => setMood(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="What's your mood tonight?"
-              aria-label="Mood search"
             />
-            {mood && <button type="button" className="mood-clear-btn" onClick={() => setMood('')} aria-label="Clear mood">✕</button>}
+            {mood && (
+              <button
+                type="button"
+                className="mood-clear-btn"
+                onClick={() => setMood('')}
+                aria-label="Clear mood"
+              >
+                ✕
+              </button>
+            )}
           </div>
           {recentMoods.length > 0 && !mood && (
             <div className="recent-moods">
@@ -821,7 +1009,10 @@ function Home() {
                   key={idx}
                   type="button"
                   className="recent-mood-chip"
-                  onClick={() => { setMood(recentMood); playSound('pop'); }}
+                  onClick={() => {
+                    setMood(recentMood);
+                    playSound('pop');
+                  }}
                 >
                   {recentMood}
                 </button>
@@ -837,7 +1028,7 @@ function Home() {
             id="title-search-input"
             type="text"
             value={titleQuery}
-            onChange={(e) => setTitleQuery(e.target.value)}
+            onChange={e => setTitleQuery(e.target.value)}
             placeholder="Search movies or TV"
           />
           <div className="search-scope-toggle" role="group" aria-label="Search scope">
@@ -875,7 +1066,7 @@ function Home() {
                   icon: '🔗',
                   title: 'Link copied',
                   message: 'Shareable link copied to clipboard.',
-                  duration: 2600
+                  duration: 2600,
                 });
               } catch (err) {
                 console.error('Copy link failed:', err);
@@ -884,7 +1075,7 @@ function Home() {
                   title: 'Copy failed',
                   message: 'Your browser blocked clipboard access.',
                   variant: 'error',
-                  duration: 4000
+                  duration: 4000,
                 });
               }
             }}
@@ -896,23 +1087,29 @@ function Home() {
         <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
 
         {recommendations.length === 0 && !isLoading && (
-          <MoodPlaylists onSelectPlaylist={({ genres, name, customFilters }) => {
-            if (customFilters) {
-              setMood(customFilters.mood || '');
-              setContentType(customFilters.contentType || 'all');
-              setSelectedGenres(customFilters.selectedGenres || []);
-              setSelectedProviders(customFilters.selectedProviders || []);
-              setMinRating(customFilters.minRating || 0);
-              setAdvancedFilters(customFilters.advancedFilters || {});
-            } else {
-              setSelectedGenres(genres);
-              setMood(name);
-            }
-            setTimeout(() => handleSearch(), 0);
-          }} />
+          <MoodPlaylists
+            onSelectPlaylist={({ genres, name, customFilters }) => {
+              if (customFilters) {
+                setMood(customFilters.mood || '');
+                setContentType(customFilters.contentType || 'all');
+                setSelectedGenres(customFilters.selectedGenres || []);
+                setSelectedProviders(customFilters.selectedProviders || []);
+                setMinRating(customFilters.minRating || 0);
+                setAdvancedFilters(customFilters.advancedFilters || {});
+              } else {
+                setSelectedGenres(genres);
+                setMood(name);
+              }
+              setTimeout(() => handleSearch(), 0);
+            }}
+          />
         )}
 
-        <button className="filters-toggle" type="button" onClick={() => setShowFilters(!showFilters)}>
+        <button
+          className="filters-toggle"
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+        >
           {showFilters ? '✕ Hide Filters' : '⚙️ Filter & Sort'}
           {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
         </button>
@@ -951,13 +1148,7 @@ function Home() {
         )}
       </section>
 
-      {error && (
-        <ErrorState
-          title="Search error"
-          message={error}
-          onRetry={handleSearch}
-        />
-      )}
+      {error && <ErrorState title="Search error" message={error} onRetry={handleSearch} />}
 
       {searchError && searchScope === 'all' && (
         <ErrorState
@@ -979,7 +1170,9 @@ function Home() {
           <SkeletonGrid count={8} />
         ) : isMobile && hasAnySearch && filteredByServices.length > 0 ? (
           <div className="swipe-container" style={{ textAlign: 'center' }}>
-            {isCardLoading ? <MovieCardSkeleton /> : (
+            {isCardLoading ? (
+              <MovieCardSkeleton />
+            ) : (
               <SwipeCard
                 movie={filteredByServices[0]}
                 nextMovie={filteredByServices[1]}
@@ -994,28 +1187,38 @@ function Home() {
             {filteredByServices.length > 0 && (
               <div className="results-header">
                 <div className="results-meta">
-                  <h2>Results <span className="results-count">{filteredByServices.length}</span></h2>
+                  <h2>
+                    Results <span className="results-count">{filteredByServices.length}</span>
+                  </h2>
                   <div className="results-meta-row">
                     {(tasteCounts.liked > 0 || tasteCounts.disliked > 0) && (
                       <div className="taste-summary">
-                        {tasteCounts.liked > 0 && <span className="taste-liked">👍 {tasteCounts.liked}</span>}
-                        {tasteCounts.disliked > 0 && <span className="taste-disliked">👎 {tasteCounts.disliked}</span>}
+                        {tasteCounts.liked > 0 && (
+                          <span className="taste-liked">👍 {tasteCounts.liked}</span>
+                        )}
+                        {tasteCounts.disliked > 0 && (
+                          <span className="taste-disliked">👎 {tasteCounts.disliked}</span>
+                        )}
                       </div>
                     )}
                     <label className="show-hidden-toggle">
                       <input
                         type="checkbox"
                         checked={showHidden}
-                        onChange={(e) => setShowHidden(e.target.checked)}
+                        onChange={e => setShowHidden(e.target.checked)}
                       />
                       Show hidden
                     </label>
                   </div>
                 </div>
-                <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>✨ Save Vibe</button>
+                <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>
+                  ✨ Save Vibe
+                </button>
               </div>
             )}
-            <div className={`recommendations ${resultLayout === 'rows' ? 'recommendations-list-mode' : ''}`}>
+            <div
+              className={`recommendations ${resultLayout === 'rows' ? 'recommendations-list-mode' : ''}`}
+            >
               {filteredByServices.slice(0, visibleCount).map((rec, idx) => (
                 <MovieCard
                   key={rec.id}
@@ -1026,7 +1229,12 @@ function Home() {
                   isWatched={isWatched(rec.id)}
                   onToggleWatched={toggleWatched}
                   mediaType={rec.media_type}
-                  providerBadges={(providerSnapshot[getProviderKey(rec)] || getCachedTitleProviders(rec.id, rec.media_type, region))?.flatrate?.slice(0, 3) || []}
+                  providerBadges={
+                    (
+                      providerSnapshot[getProviderKey(rec)] ||
+                      getCachedTitleProviders(rec.id, rec.media_type, region)
+                    )?.flatrate?.slice(0, 3) || []
+                  }
                   onLike={like}
                   onDislike={dislike}
                   tasteStatus={statusFor(rec.id, rec.media_type)}
@@ -1054,7 +1262,9 @@ function Home() {
                 <span>Loading more...</span>
               </>
             ) : (
-              <button className="btn-secondary" onClick={loadMoreResults}>Load More</button>
+              <button className="btn-secondary" onClick={loadMoreResults}>
+                Load More
+              </button>
             )}
           </div>
         )}

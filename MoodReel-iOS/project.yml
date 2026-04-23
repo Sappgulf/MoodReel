@@ -49,13 +49,6 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
-          NSExceptionDomains:
-            api.themoviedb.org:
-              NSExceptionAllowsInsecureHTTPLoads: false
-              NSIncludesSubdomains: true
-            image.tmdb.org:
-              NSExceptionAllowsInsecureHTTPLoads: false
-              NSIncludesSubdomains: true
         UIRequiresFullScreen: false
         LSApplicationQueriesSchemes:
           - youtube

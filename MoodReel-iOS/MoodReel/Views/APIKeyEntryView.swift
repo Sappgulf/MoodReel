@@ -76,10 +76,12 @@ struct APIKeyEntryView: View {
                 .disabled(trimmedKey.isEmpty)
                 .opacity(trimmedKey.isEmpty ? 0.5 : 1)
 
-                Link("Get a free TMDB API key", destination: URL(string: "https://www.themoviedb.org/settings/api")!)
-                    .font(AppFont.caption())
-                    .foregroundStyle(Color.goldLight)
-                    .padding(.top, AppSpacing.sm)
+                if let apiURL = URL(string: "https://www.themoviedb.org/settings/api") {
+                    Link("Get a free TMDB API key", destination: apiURL)
+                        .font(AppFont.caption())
+                        .foregroundStyle(Color.goldLight)
+                        .padding(.top, AppSpacing.sm)
+                }
             }
             .padding(AppSpacing.lg)
             .glassCard(cornerRadius: AppRadius.xl, backgroundOpacity: 1)

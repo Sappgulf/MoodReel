@@ -14,7 +14,6 @@ struct MoodReelApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(watchlistStore)
-                .preferredColorScheme(.dark)
         }
     }
 
@@ -39,10 +38,12 @@ struct MoodReelApp: App {
     }
 
     private func configureNetworkingCache() {
+        let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("moodreel-url-cache", isDirectory: true)
         URLCache.shared = URLCache(
             memoryCapacity: 64 * 1024 * 1024,
             diskCapacity: 256 * 1024 * 1024,
-            diskPath: "moodreel-url-cache"
+            directory: cacheURL
         )
     }
 }
