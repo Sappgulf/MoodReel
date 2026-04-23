@@ -8,6 +8,7 @@ import {
 
 const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env || {} : {};
 const processEnv = typeof process !== 'undefined' ? process.env || {} : {};
+const API_KEY = 'f2b1a353af51ccd27736c209f7ea0ca6';
 const resolveEnv = keys => {
   for (const key of keys) {
     if (viteEnv[key] !== undefined) return viteEnv[key];
@@ -25,6 +26,7 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 function getApiKey() {
   const envApiKey = resolveEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
   if (envApiKey) return envApiKey;
+  if (API_KEY) return API_KEY;
 
   if (typeof window === 'undefined') return null;
   if (window.__MOODREEL_TMDB_API_KEY__) {
