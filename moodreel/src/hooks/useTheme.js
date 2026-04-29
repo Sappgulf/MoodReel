@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { StorageKeys as SK } from '../storage/storageKeys';
 
 const HAS_WINDOW = typeof window !== 'undefined';
 
@@ -24,16 +25,16 @@ export function useTheme() {
   // Auto-schedule preference
   const [autoSchedule, setAutoSchedule] = useState(() => {
     if (!HAS_WINDOW) return false;
-    return localStorage.getItem('moodreel-theme-auto') === 'true';
+    return localStorage.getItem(SK.THEME_AUTO) === 'true';
   });
 
   const [isDark, setIsDark] = useState(() => {
     if (!HAS_WINDOW) return true;
     // If auto-schedule is on, use time-based theme
-    if (localStorage.getItem('moodreel-theme-auto') === 'true') {
+    if (localStorage.getItem(SK.THEME_AUTO) === 'true') {
       return isNightTime();
     }
-    const saved = localStorage.getItem('moodreel-theme');
+    const saved = localStorage.getItem(SK.THEME);
     if (saved !== null) {
       return saved === 'dark';
     }
@@ -68,7 +69,7 @@ export function useTheme() {
       root.classList.add('light-theme');
     }
     if (!autoSchedule && HAS_WINDOW) {
-      localStorage.setItem('moodreel-theme', isDark ? 'dark' : 'light');
+      localStorage.setItem(SK.THEME, isDark ? 'dark' : 'light');
     }
   }, [isDark, autoSchedule]);
 
@@ -79,7 +80,7 @@ export function useTheme() {
     const handler = e => {
       if (autoSchedule) {
         setIsDark(isNightTime());
-      } else if (localStorage.getItem('moodreel-theme') === null) {
+      } else if (localStorage.getItem(SK.THEME) === null) {
         setIsDark(e.matches);
       }
     };
@@ -95,14 +96,14 @@ export function useTheme() {
 
   const toggleTheme = useCallback(() => {
     setAutoSchedule(false);
-    if (HAS_WINDOW) localStorage.setItem('moodreel-theme-auto', 'false');
+    if (HAS_WINDOW) localStorage.setItem(SK.THEME_AUTO, 'false');
     setIsDark(prev => !prev);
   }, []);
 
   const toggleAutoSchedule = useCallback(() => {
     setAutoSchedule(prev => {
       const newValue = !prev;
-      if (HAS_WINDOW) localStorage.setItem('moodreel-theme-auto', String(newValue));
+      if (HAS_WINDOW) localStorage.setItem(SK.THEME_AUTO, String(newValue));
       if (newValue) {
         // Apply time-based theme immediately
         setIsDark(isNightTime());

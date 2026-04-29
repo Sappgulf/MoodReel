@@ -5,6 +5,7 @@ import {
   isExpectedTmdbErrorForLogging,
   shouldSkipLog,
 } from './apiErrorUtils';
+import { StorageKeys as SK } from '../storage/storageKeys';
 
 const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env || {} : {};
 const processEnv = typeof process !== 'undefined' ? process.env || {} : {};
@@ -33,7 +34,7 @@ function getApiKey() {
     return window.__MOODREEL_TMDB_API_KEY__;
   }
   if (window.localStorage) {
-    return window.localStorage.getItem('moodreel-tmdb-api-key');
+    return window.localStorage.getItem(SK.TMDB_API_KEY_USER);
   }
   return null;
 }
@@ -204,7 +205,6 @@ export async function tmdbGet(
       const fullUrl = err?.config?.url ? `${err.config.url}` : API_BASE_URL + path;
       const isDev = process.env.NODE_ENV !== 'production';
       if (isDev && !shouldSkipLog(normalized)) {
-        // eslint-disable-next-line no-console
         console.error(
           `TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`,
           {
@@ -220,7 +220,6 @@ export async function tmdbGet(
       if (attempt < retries && isRetryableError(normalized)) {
         const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
         if (isDev) {
-          // eslint-disable-next-line no-console
           console.debug(`Retrying in ${delay}ms...`);
         }
         await sleep(delay);

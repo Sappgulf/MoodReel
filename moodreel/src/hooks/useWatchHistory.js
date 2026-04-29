@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const HISTORY_KEY = 'moodreel-watch-history';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const HISTORY_KEY = SK.WATCH_HISTORY;
 const MAX_HISTORY = 100;
 
 /**

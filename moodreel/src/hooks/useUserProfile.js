@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 
+import { StorageKeys as SK } from '../storage/storageKeys';
+
 export const useUserProfile = () => {
   const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem('moodreel_profile');
+    const saved = localStorage.getItem(SK.PROFILE);
     return saved
       ? JSON.parse(saved)
       : {
@@ -16,7 +18,7 @@ export const useUserProfile = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('moodreel_profile', JSON.stringify(profile));
+    localStorage.setItem(SK.PROFILE, JSON.stringify(profile));
   }, [profile]);
 
   const updateProfile = updates => {

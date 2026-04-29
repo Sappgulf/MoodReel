@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const RECENT_SEARCHES_KEY = 'moodreel-recent-searches';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const RECENT_SEARCHES_KEY = SK.RECENT_SEARCHES;
 const MAX_RECENT_SEARCHES = 10;
 
 function readStoredJSON(key, fallback) {

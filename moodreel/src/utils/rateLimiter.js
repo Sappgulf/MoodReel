@@ -4,11 +4,13 @@
  * - Regular users: Limited requests per minute
  * - Admin users: Unlimited access (set via localStorage)
  *
- * To enable admin mode: localStorage.setItem('moodreel-admin', 'true')
+ * To enable admin mode: `localStorage.setItem('moodreel-admin', 'true')` (canonical key in `storageKeys.js`).
  */
 
-const RATE_LIMIT_KEY = 'moodreel-rate-limit';
-const ADMIN_KEY = 'moodreel-admin';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const RATE_LIMIT_KEY = SK.RATE_LIMIT;
+const ADMIN_KEY = SK.ADMIN;
 const MAX_REQUESTS_PER_MINUTE = 60; // Increased for better UX in media-heavy app
 const WINDOW_MS = 60000; // 1 minute window
 

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const CUSTOM_PLAYLISTS_KEY = 'moodreel-custom-playlists';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const CUSTOM_PLAYLISTS_KEY = SK.CUSTOM_PLAYLISTS;
 
 export function useCustomPlaylists() {
   const [playlists, setPlaylists] = useState(() => {

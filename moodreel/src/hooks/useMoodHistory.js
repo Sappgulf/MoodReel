@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
-const STORAGE_KEY = 'moodreel-mood-history';
-const DATED_STORAGE_KEY = 'moodreel-mood-history-dated';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const STORAGE_KEY = SK.MOOD_HISTORY;
+const DATED_STORAGE_KEY = SK.MOOD_HISTORY_DATED;
 const MAX_HISTORY = 10;
 const MAX_DATED_HISTORY = 100;
 const HAS_STORAGE = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -26,7 +28,6 @@ export function useMoodHistory() {
   const [historyWithDates, setHistoryWithDates] = useState(() =>
     readStorage(DATED_STORAGE_KEY, [])
   );
-  const pendingAddRef = useRef(null);
 
   // Persist to localStorage outside render phase
   useEffect(() => {

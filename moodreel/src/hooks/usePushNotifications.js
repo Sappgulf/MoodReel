@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { resolvePublicEnv } from '../utils/publicEnv';
-
-const PUSH_SUBSCRIPTION_KEY = 'moodreel-push-subscription';
+import { StorageKeys as SK } from '../storage/storageKeys';
 
 /** VITE_VAPID_PUBLIC_KEY preferred; legacy REACT_APP_VAPID_PUBLIC_KEY supported. */
 function getVapidPublicKey() {
@@ -24,7 +23,7 @@ export function usePushNotifications() {
 
     // Restore subscription from storage
     try {
-      const saved = localStorage.getItem(PUSH_SUBSCRIPTION_KEY);
+      const saved = localStorage.getItem(SK.PUSH_SUBSCRIPTION);
       if (saved) {
         setSubscription(JSON.parse(saved));
       }
@@ -72,7 +71,7 @@ export function usePushNotifications() {
 
       const subData = sub.toJSON();
       setSubscription(subData);
-      localStorage.setItem(PUSH_SUBSCRIPTION_KEY, JSON.stringify(subData));
+      localStorage.setItem(SK.PUSH_SUBSCRIPTION, JSON.stringify(subData));
 
       return subData;
     } catch (err) {
@@ -88,11 +87,11 @@ export function usePushNotifications() {
       if (sub) {
         await sub.unsubscribe();
       }
-    } catch (err) {
+    } catch {
       // silently fail if pushManager is unavailable
     }
     setSubscription(null);
-    localStorage.removeItem(PUSH_SUBSCRIPTION_KEY);
+    localStorage.removeItem(SK.PUSH_SUBSCRIPTION);
   }, []);
 
   const showNotification = useCallback((title, options = {}) => {

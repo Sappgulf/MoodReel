@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { StorageKeys as SK } from '../storage/storageKeys';
 
 const HAS_WINDOW = typeof window !== 'undefined';
 
@@ -10,7 +11,7 @@ function getAudioContext() {
   if (!audioContextInstance) {
     try {
       audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -27,13 +28,13 @@ function getAudioContext() {
  */
 export function useSounds() {
   const isSoundEnabled = useCallback(() => {
-    return localStorage.getItem('moodreel-sounds') !== 'off';
+    return localStorage.getItem(SK.SOUNDS) !== 'off';
   }, []);
 
   const toggleSounds = useCallback(() => {
-    const current = localStorage.getItem('moodreel-sounds');
+    const current = localStorage.getItem(SK.SOUNDS);
     const newValue = current === 'off' ? 'on' : 'off';
-    localStorage.setItem('moodreel-sounds', newValue);
+    localStorage.setItem(SK.SOUNDS, newValue);
     return newValue === 'on';
   }, []);
 

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const STORAGE_KEY = 'moodreel-taste-profile';
-const SHOW_HIDDEN_KEY = 'moodreel-taste-show-hidden';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const STORAGE_KEY = SK.TASTE_PROFILE;
+const SHOW_HIDDEN_KEY = SK.TASTE_SHOW_HIDDEN;
 
 function readStoredJSON(key, fallback) {
   try {

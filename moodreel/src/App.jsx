@@ -182,7 +182,7 @@ function AppContent() {
               message: 'Current view copied to clipboard.',
               duration: 2600,
             });
-          } catch (err) {
+          } catch {
             pushToast({
               icon: '⚠️',
               title: 'Copy failed',

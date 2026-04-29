@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
-
-const ONBOARDING_KEY = 'moodreel-onboarded';
+import { StorageKeys as SK } from '../storage/storageKeys';
 
 const slides = [
   {
@@ -42,24 +41,26 @@ function OnboardingModal() {
   const touchStart = useRef(null);
 
   useEffect(() => {
-    const hasOnboarded = localStorage.getItem(ONBOARDING_KEY);
+    const hasOnboarded = localStorage.getItem(SK.ONBOARDED);
     if (!hasOnboarded) {
       setShow(true);
     }
   }, []);
 
-  const handleClose = () => {
-    localStorage.setItem(ONBOARDING_KEY, 'true');
+  const handleClose = useCallback(() => {
+    localStorage.setItem(SK.ONBOARDED, 'true');
     setShow(false);
-  };
+  }, []);
 
-  const handleNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(prev => prev + 1);
-    } else {
-      handleClose();
-    }
-  };
+  const handleNext = useCallback(() => {
+    setCurrentSlide(prev => {
+      if (prev >= slides.length - 1) {
+        handleClose();
+        return prev;
+      }
+      return prev + 1;
+    });
+  }, [handleClose]);
 
   const handleModalKeyDown = useCallback(
     e => {
@@ -74,7 +75,7 @@ function OnboardingModal() {
         handleNext();
       }
     },
-    [currentSlide, handleClose]
+    [currentSlide, handleNext]
   );
 
   const { dialogRef } = useModalDialog({

@@ -6,11 +6,17 @@
 const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env || {} : {};
 const nodeEnv = typeof globalThis.process !== 'undefined' ? globalThis.process.env || {} : {};
 
-export function resolvePublicEnv(keys) {
+/**
+ * Resolve the first matching public env var (Vite or Node/process).
+ * Prefer `vite` / `node` overrides only in tests; production callers pass keys only.
+ */
+export function resolvePublicEnv(keys, sources) {
   if (!keys?.length) return undefined;
+  const vite = sources?.vite ?? viteEnv;
+  const node = sources?.node ?? nodeEnv;
   for (const key of keys) {
-    if (viteEnv[key] !== undefined && viteEnv[key] !== '') return viteEnv[key];
-    if (nodeEnv[key] !== undefined && nodeEnv[key] !== '') return nodeEnv[key];
+    if (vite[key] !== undefined && vite[key] !== '') return vite[key];
+    if (node[key] !== undefined && node[key] !== '') return node[key];
   }
   return undefined;
 }

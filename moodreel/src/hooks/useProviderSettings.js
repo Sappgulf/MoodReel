@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const REGION_KEY = 'moodreel-region';
-const SERVICES_KEY = 'moodreel-my-services';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const REGION_KEY = SK.REGION;
+const SERVICES_KEY = SK.MY_SERVICES;
 
 function readStoredJSON(key, fallback) {
   try {

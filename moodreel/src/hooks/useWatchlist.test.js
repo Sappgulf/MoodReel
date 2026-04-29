@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, beforeEach, it, expect } from 'vitest';
+import { StorageKeys } from '../storage/storageKeys';
 import { useWatchlist } from './useWatchlist';
 
 beforeEach(() => {
@@ -194,7 +195,7 @@ describe('useWatchlist', () => {
         result.current.addToWatchlist(mockMovie);
       });
 
-      expect(localStorage.setItem).toHaveBeenCalledWith('moodreel_watchlist', expect.any(String));
+      expect(localStorage.setItem).toHaveBeenCalledWith(StorageKeys.WATCHLIST, expect.any(String));
     });
   });
 });

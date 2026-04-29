@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
-const ACHIEVEMENTS_KEY = 'moodreel-achievements';
-const STATS_KEY = 'moodreel-achievement-stats';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const ACHIEVEMENTS_KEY = SK.ACHIEVEMENTS;
+const STATS_KEY = SK.ACHIEVEMENT_STATS;
 
 // Achievement definitions
 const ACHIEVEMENT_DEFS = [

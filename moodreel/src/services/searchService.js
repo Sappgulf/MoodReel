@@ -11,6 +11,7 @@
 
 import { parseMoodToGenres } from '../utils/moodParser';
 import { canMakeRequest, getRemainingRequests } from '../utils/rateLimiter';
+import { StorageKeys as SK } from '../storage/storageKeys';
 import { tmdbGet, ensureArray, ensureNumber } from './apiClient';
 import { getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
 import { applySearchRanking } from '../utils/searchRanking';
@@ -20,7 +21,7 @@ import { getUserFacingMessage, isAbortError, shouldSkipLog } from './apiErrorUti
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
 const CONTENT_DETAILS_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const ACTOR_CREDITS_TTL_MS = 60 * 60 * 1000; // 1 hour
-const CACHE_KEY = 'moodreel-search-persistent-cache';
+const CACHE_KEY = SK.SEARCH_CACHE;
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
 const HAS_LOCAL_STORAGE =
   typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -54,7 +55,6 @@ function hydrateSearchCache() {
   } catch (err) {
     const isDev = process.env.NODE_ENV !== 'production';
     if (isDev) {
-      // eslint-disable-next-line no-console
       console.warn('Failed to load search cache from localStorage', err);
     }
     try {
@@ -418,7 +418,7 @@ export async function search(params, signal) {
             const data2 = await fetchMediaType({ ...params, page: 2 }, type, signal);
             results = [...results, ...data2.results];
             page = 2;
-          } catch (e) {
+          } catch {
             // Ignore page 2 failure
           }
         }
@@ -448,7 +448,7 @@ export async function search(params, signal) {
             requestedType: type,
             resultsReturned: trendingResults.length,
           });
-        } catch (e) {
+        } catch {
           // Ignore fallback failure
         }
       }
@@ -482,7 +482,6 @@ export async function search(params, signal) {
       if (staleData) {
         const isDev = process.env.NODE_ENV !== 'production';
         if (isDev) {
-          // eslint-disable-next-line no-console
           console.debug('Returning stale cache data due to network error');
         }
         emitSearchFallback({
@@ -607,7 +606,6 @@ export async function fetchContentDetails(id, mediaType = 'movie', signal) {
       if (stale) {
         const isDev = process.env.NODE_ENV !== 'production';
         if (isDev && !shouldSkipLog(err)) {
-          // eslint-disable-next-line no-console
           console.debug('Returning stale content details due to network error');
         }
         return stale;
@@ -654,7 +652,6 @@ export async function fetchActorCredits(actorId, signal) {
       if (stale) {
         const isDev = process.env.NODE_ENV !== 'production';
         if (isDev && !shouldSkipLog(err)) {
-          // eslint-disable-next-line no-console
           console.debug('Returning stale actor credits due to network error');
         }
         return stale;

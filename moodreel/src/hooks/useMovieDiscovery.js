@@ -166,7 +166,6 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
       }
     } catch (err) {
       if (!shouldSkipLog(err)) {
-        // eslint-disable-next-line no-console
         console.error('Error loading more:', err);
       }
     } finally {

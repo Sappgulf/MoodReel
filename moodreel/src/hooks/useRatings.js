@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 
-const STORAGE_KEY = 'moodreel-ratings';
+import { StorageKeys as SK } from '../storage/storageKeys';
+
+const STORAGE_KEY = SK.RATINGS;
 
 /**
  * Custom hook for user ratings and reviews

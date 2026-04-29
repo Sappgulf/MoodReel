@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+import { StorageKeys as SK } from '../storage/storageKeys';
+
 /**
  * Install prompt banner for PWA
  * Shows "Add to Home Screen" on supported mobile browsers
@@ -11,7 +13,7 @@ function InstallPrompt() {
 
   const readDismissPreference = () => {
     try {
-      const dismissed = localStorage.getItem('moodreel-install-dismissed');
+      const dismissed = localStorage.getItem(SK.INSTALL_DISMISSED);
       return dismissed ? parseInt(dismissed, 10) : null;
     } catch {
       return null;
@@ -20,7 +22,7 @@ function InstallPrompt() {
 
   const persistDismissPreference = value => {
     try {
-      localStorage.setItem('moodreel-install-dismissed', String(value));
+      localStorage.setItem(SK.INSTALL_DISMISSED, String(value));
     } catch {
       // Ignore environments where localStorage is blocked.
     }

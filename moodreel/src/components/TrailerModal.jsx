@@ -5,9 +5,9 @@ import { useModalDialog } from '../hooks/useModalDialog';
  * Modal for playing YouTube trailers
  */
 function TrailerModal({ videoKey, onClose }) {
-  if (!videoKey) return null;
+  const { dialogRef } = useModalDialog({ isOpen: Boolean(videoKey), onClose });
 
-  const { dialogRef } = useModalDialog({ isOpen: !!videoKey, onClose });
+  if (!videoKey) return null;
 
   const handleBackdropClick = e => {
     if (e.target === e.currentTarget) {

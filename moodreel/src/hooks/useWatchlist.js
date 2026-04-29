@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-
-const WATCHLIST_KEY = 'moodreel_watchlist';
-const NOTES_KEY = 'moodreel_notes';
-const WATCHED_KEY = 'moodreel_watched';
+import { StorageKeys as SK } from '../storage/storageKeys';
 
 /**
  * Custom hook for managing watchlist with localStorage persistence
@@ -11,7 +8,7 @@ const WATCHED_KEY = 'moodreel_watched';
 export function useWatchlist() {
   const [watchlist, setWatchlist] = useState(() => {
     try {
-      const saved = localStorage.getItem(WATCHLIST_KEY);
+      const saved = localStorage.getItem(SK.WATCHLIST);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -20,7 +17,7 @@ export function useWatchlist() {
 
   const [notes, setNotes] = useState(() => {
     try {
-      const saved = localStorage.getItem(NOTES_KEY);
+      const saved = localStorage.getItem(SK.NOTES);
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
@@ -29,7 +26,7 @@ export function useWatchlist() {
 
   const [watched, setWatched] = useState(() => {
     try {
-      const saved = localStorage.getItem(WATCHED_KEY);
+      const saved = localStorage.getItem(SK.WATCHED);
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
@@ -39,7 +36,7 @@ export function useWatchlist() {
   // Persist watchlist
   useEffect(() => {
     try {
-      localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist));
+      localStorage.setItem(SK.WATCHLIST, JSON.stringify(watchlist));
     } catch (error) {
       console.error('Failed to save watchlist:', error);
     }
@@ -48,7 +45,7 @@ export function useWatchlist() {
   // Persist notes
   useEffect(() => {
     try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+      localStorage.setItem(SK.NOTES, JSON.stringify(notes));
     } catch (error) {
       console.error('Failed to save notes:', error);
     }
@@ -57,7 +54,7 @@ export function useWatchlist() {
   // Persist watched
   useEffect(() => {
     try {
-      localStorage.setItem(WATCHED_KEY, JSON.stringify(watched));
+      localStorage.setItem(SK.WATCHED, JSON.stringify(watched));
     } catch (error) {
       console.error('Failed to save watched:', error);
     }
@@ -212,7 +209,7 @@ export function useWatchlist() {
 
   const [favorites, setFavorites] = useState(() => {
     try {
-      const saved = localStorage.getItem('moodreel_favorites');
+      const saved = localStorage.getItem(SK.FAVORITES_LEGACY);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -222,7 +219,7 @@ export function useWatchlist() {
   // Persist favorites
   useEffect(() => {
     try {
-      localStorage.setItem('moodreel_favorites', JSON.stringify(favorites));
+      localStorage.setItem(SK.FAVORITES_LEGACY, JSON.stringify(favorites));
     } catch (error) {
       console.error('Failed to save favorites:', error);
     }
