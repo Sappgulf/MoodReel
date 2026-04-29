@@ -308,6 +308,10 @@ input {
   min-width: 0;
 }
 
+.app-main:focus {
+  outline: none;
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,

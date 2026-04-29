@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getPosterUrl } from '../utils/mediaUtils';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -17,13 +18,13 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
     setIsExiting(null);
   }, [movie?.id]);
 
-  // Preload next movie's poster image
+  // Preload the next card art so swipes do not reveal a blank shell.
   useEffect(() => {
-    if (nextMovie?.poster_path) {
-      const img = new Image();
-      img.src = `https://image.tmdb.org/t/p/w342${nextMovie.poster_path}`;
-    }
-  }, [nextMovie?.poster_path]);
+    const nextArtPath = nextMovie?.poster_path || nextMovie?.backdrop_path;
+    if (!nextArtPath) return;
+    const img = new Image();
+    img.src = getPosterUrl(nextArtPath, nextMovie?.poster_path ? 'w342' : 'w780');
+  }, [nextMovie?.backdrop_path, nextMovie?.poster_path]);
 
   // Keyboard support for swiping
   useEffect(() => {
@@ -65,9 +66,8 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
   );
 
   const title = movie.title || movie.name;
-  const posterUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-    : null;
+  const posterPath = movie.poster_path || movie.backdrop_path;
+  const posterUrl = getPosterUrl(posterPath, movie.poster_path ? 'w342' : 'w780');
   const detailPath = mediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
 
   const handleTouchStart = useCallback(e => {
@@ -134,11 +134,16 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
         state={{ item: { ...movie, media_type: mediaType } }}
         className="swipe-card-link"
       >
-        {posterUrl ? (
-          <img src={posterUrl} alt={title} loading="lazy" decoding="async" />
-        ) : (
-          <div className="no-poster">No Poster</div>
-        )}
+        <img
+          src={posterUrl}
+          alt={`${title} poster`}
+          loading="eager"
+          decoding="async"
+          onError={e => {
+            e.target.onerror = null;
+            e.target.src = getPosterUrl();
+          }}
+        />
         <div className="swipe-card-info">
           <h3>{title}</h3>
           <p className="rating">⭐ {movie.vote_average?.toFixed(1)}</p>

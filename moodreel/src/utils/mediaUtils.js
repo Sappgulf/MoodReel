@@ -1,7 +1,7 @@
 export const FALLBACK_POSTER =
   'data:image/svg+xml,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750"><rect fill="#1a1a2e" width="500" height="750"/><text fill="#555" font-family="sans-serif" font-size="24" text-anchor="middle" x="250" y="375">No Poster</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#182231"/><stop offset="1" stop-color="#0c1017"/></linearGradient></defs><rect fill="url(#g)" width="500" height="750"/><rect x="72" y="120" width="356" height="510" rx="28" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="8"/><text fill="#bcc3d3" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="middle" x="250" y="350">Poster</text><text fill="#8b93a4" font-family="Inter, Arial, sans-serif" font-size="24" text-anchor="middle" x="250" y="392">unavailable</text></svg>'
   );
 export const FALLBACK_BACKDROP =
   'data:image/svg+xml,' +

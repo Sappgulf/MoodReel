@@ -34,6 +34,8 @@ const MovieCard = memo(function MovieCard({
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
   const resolvedMediaType = movie.media_type || mediaType;
   const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
+  const posterPath = movie.poster_path || movie.backdrop_path;
+  const posterSize = movie.poster_path ? 'w500' : 'w780';
 
   const cardRef = useRef(null);
   const touchStartX = useRef(null);
@@ -313,9 +315,9 @@ const MovieCard = memo(function MovieCard({
       >
         <div className="poster-wrapper">
           <img
-            src={getPosterUrl(movie.poster_path)}
+            src={getPosterUrl(posterPath, posterSize)}
             alt={`${title} poster`}
-            loading="lazy"
+            loading={index < 8 ? 'eager' : 'lazy'}
             decoding="async"
             onError={e => {
               e.target.onerror = null;
