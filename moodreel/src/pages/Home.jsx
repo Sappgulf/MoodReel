@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import MovieCard from '../components/MovieCard';
-import SwipeCard from '../components/SwipeCard';
-import EmojiPicker from '../components/EmojiPicker';
+import { useLocation } from 'react-router-dom';
+import DiscoveryHero from '../components/home/DiscoveryHero';
+import SurpriseWinnerBanner from '../components/home/SurpriseWinnerBanner';
+import HomeTrendingStrip from '../components/home/HomeTrendingStrip';
+import HomeResultsPanel from '../components/home/HomeResultsPanel';
 import StreamingFilter from '../components/StreamingFilter';
 import RatingFilter from '../components/RatingFilter';
 import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
+import EmojiPicker from '../components/EmojiPicker';
 import MoodPulse from '../components/MoodPulse';
 import ShuffleOverlay from '../components/ShuffleOverlay';
-import { SkeletonGrid, MovieCardSkeleton, DiscoveryHeroSkeleton } from '../components/Skeleton';
-import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAchievements } from '../hooks/useAchievements';
@@ -18,6 +18,7 @@ import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
 import { useSounds } from '../hooks/useSounds';
 import { useMovieDiscovery } from '../hooks/useMovieDiscovery';
+import { useSurpriseShuffle } from '../hooks/useSurpriseShuffle';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
@@ -30,12 +31,6 @@ import {
 } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
 import { copyToClipboard } from '../utils/clipboard';
-import {
-  getBackdropUrl,
-  getDisplayTitle,
-  getDisplayOverview,
-  getReleaseYear,
-} from '../utils/mediaUtils';
 import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
 
 function Home() {
@@ -51,6 +46,9 @@ function Home() {
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } = useTasteProfile();
   const { pushToast } = useToasts();
+
+  const { isSurpriseLoading, showWinnerInfo, surpriseMovie, closeSurprise, handleSurpriseMe } =
+    useSurpriseShuffle({ playSound });
 
   const {
     mood,
@@ -84,10 +82,6 @@ function Home() {
   const [genres, setGenres] = useState([]);
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
-  const [showWinnerInfo, setShowWinnerInfo] = useState(false);
-  const [surpriseMovie, setSurpriseMovie] = useState(null);
-  const [titleQuery, setTitleQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchScope, setSearchScope] = useState('within');
   const [searchResults, setSearchResults] = useState([]);
@@ -96,8 +90,7 @@ function Home() {
   const [providerSnapshot, setProviderSnapshot] = useState({});
   const [providerCatalog, setProviderCatalog] = useState([]);
   const [resultLayout, setResultLayout] = useState('poster');
-  const surpriseSessionRef = useRef(0);
-  const surpriseRevealTimerRef = useRef(null);
+  const [titleQuery, setTitleQuery] = useState('');
 
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
@@ -266,14 +259,6 @@ function Home() {
   }, [fetchTrending]);
 
   useEffect(() => {
-    return () => {
-      if (surpriseRevealTimerRef.current) {
-        clearTimeout(surpriseRevealTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     setProviderSnapshot({});
   }, [region]);
 
@@ -433,57 +418,6 @@ function Home() {
     },
     [setMood, setSelectedGenres]
   );
-
-  const handleSurpriseMe = useCallback(async () => {
-    if (isSurpriseLoading) return;
-    playSound('click');
-    if (navigator.vibrate) navigator.vibrate(20);
-    surpriseSessionRef.current += 1;
-    const sessionId = surpriseSessionRef.current;
-    setSurpriseMovie(null);
-    setShowWinnerInfo(false);
-    setIsSurpriseLoading(true);
-    // Shuffle duration
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    if (sessionId !== surpriseSessionRef.current) return;
-    try {
-      const randomPick = await searchService.fetchRandomDiscovery();
-      if (sessionId !== surpriseSessionRef.current) return;
-      if (randomPick) {
-        setSurpriseMovie(randomPick);
-        // Keep overlay open for "Winner" reveal
-        if (surpriseRevealTimerRef.current) {
-          clearTimeout(surpriseRevealTimerRef.current);
-        }
-        surpriseRevealTimerRef.current = setTimeout(() => {
-          if (sessionId !== surpriseSessionRef.current) return;
-          surpriseRevealTimerRef.current = null;
-          setIsSurpriseLoading(false);
-          setShowWinnerInfo(true);
-          if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Victory buzz
-        }, 500);
-      } else {
-        if (sessionId === surpriseSessionRef.current) {
-          setIsSurpriseLoading(false);
-        }
-      }
-    } catch (err) {
-      if (sessionId !== surpriseSessionRef.current) return;
-      console.error('Surprise me failed:', err);
-      setIsSurpriseLoading(false);
-    }
-  }, [isSurpriseLoading, playSound]);
-
-  const closeSurprise = useCallback(() => {
-    surpriseSessionRef.current += 1;
-    if (surpriseRevealTimerRef.current) {
-      clearTimeout(surpriseRevealTimerRef.current);
-      surpriseRevealTimerRef.current = null;
-    }
-    setIsSurpriseLoading(false);
-    setSurpriseMovie(null);
-    setShowWinnerInfo(false);
-  }, []);
 
   const handleSwipeRight = useCallback(
     movie => {
@@ -717,139 +651,27 @@ function Home() {
       />
 
       {showWinnerInfo && surpriseMovie && (
-        <div
-          className="surprise-banner"
-          role="button"
-          tabIndex={0}
-          onClick={closeSurprise}
-          onKeyDown={e => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              closeSurprise();
-            }
-          }}
-          aria-label={`Surprise pick: ${surpriseMovie.title || surpriseMovie.name}. Press Enter to dismiss.`}
-        >
-          <span className="surprise-icon" aria-hidden="true">
-            🎉
-          </span>
-          <div className="surprise-content">
-            <p>We found a gem for you!</p>
-            <h3>{surpriseMovie.title || surpriseMovie.name}</h3>
-          </div>
-          <div className="surprise-actions">
-            <Link
-              to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`}
-              className="surprise-link primary"
-              onClick={e => e.stopPropagation()}
-            >
-              Watch Now
-            </Link>
-            <button
-              className="surprise-link secondary"
-              onClick={e => {
-                e.stopPropagation();
-                closeSurprise();
-              }}
-              type="button"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <SurpriseWinnerBanner surpriseMovie={surpriseMovie} onClose={closeSurprise} />
       )}
 
-      {isLoading && !featuredItem ? (
-        <DiscoveryHeroSkeleton />
-      ) : (
-        <section className="discovery-hero">
-          <div className="discovery-hero-copy">
-            <span className="hero-kicker">MoodReel / discovery engine</span>
-            <h2>{heroTitle}</h2>
-            <p className="hero-description">{heroDescription}</p>
-            <div className="hero-proof-row">
-              <span className="hero-proof">Mood: {heroMoodLabel}</span>
-              <span className="hero-proof">
-                {selectedGenres.length > 0 ? `${selectedGenres.length} genres` : 'All genres'}
-              </span>
-              <span className="hero-proof">
-                {myServices.length > 0 ? `${myServices.length} services` : 'Any service'}
-              </span>
-              <span className="hero-proof">{activeFilterCount} filters</span>
-            </div>
-            <div className="hero-actions">
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => {
-                  if (!mood) {
-                    setMood(timeContext.suggestion);
-                    window.setTimeout(() => handleSearch(), 0);
-                    return;
-                  }
-                  handleSearch();
-                }}
-              >
-                {mood ? 'Search this mood' : `Try “${timeContext.suggestion}”`}
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={handleSurpriseMe}
-                disabled={isSurpriseLoading}
-              >
-                {isSurpriseLoading ? 'Shuffling…' : 'Surprise Me'}
-              </button>
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'))}
-              >
-                Focus search
-              </button>
-            </div>
-            <p className="hero-hint">
-              Press <kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
-            </p>
-          </div>
-
-          <div className="discovery-hero-visual">
-            {featuredItem ? (
-              <Link to={featuredLink} className="hero-featured-card">
-                <div className="hero-featured-art">
-                  <img
-                    src={getBackdropUrl(featuredItem.backdrop_path, 'w780')}
-                    alt={getDisplayTitle(featuredItem)}
-                    loading="eager"
-                    decoding="async"
-                  />
-                  <div className="hero-featured-overlay" />
-                </div>
-                <div className="hero-featured-copy">
-                  <span className="hero-featured-eyebrow">
-                    {hasAnySearch ? 'Current spotlight' : 'Trending spotlight'}
-                  </span>
-                  <h3>{getDisplayTitle(featuredItem)}</h3>
-                  <p>{getDisplayOverview(featuredItem)}</p>
-                  <div className="hero-featured-meta">
-                    {getReleaseYear(featuredItem) && <span>{getReleaseYear(featuredItem)}</span>}
-                    {featuredItem.vote_average ? (
-                      <span>{featuredItem.vote_average.toFixed(1)} / 10</span>
-                    ) : null}
-                    <span>{featuredItem.media_type === 'tv' ? 'Series' : 'Film'}</span>
-                  </div>
-                </div>
-              </Link>
-            ) : (
-              <div className="hero-featured-card hero-featured-card-empty">
-                <span className="hero-featured-eyebrow">Loading spotlight</span>
-                <h3>MoodReel is finding a fit</h3>
-                <p>The featured pick will appear as soon as the discovery feed lands.</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      <DiscoveryHero
+        isLoading={isLoading}
+        featuredItem={featuredItem}
+        featuredLink={featuredLink}
+        heroTitle={heroTitle}
+        heroDescription={heroDescription}
+        heroMoodLabel={heroMoodLabel}
+        activeFilterCount={activeFilterCount}
+        mood={mood}
+        selectedGenres={selectedGenres}
+        myServices={myServices}
+        timeContext={timeContext}
+        handleSearch={handleSearch}
+        setMood={setMood}
+        isSurpriseLoading={isSurpriseLoading}
+        handleSurpriseMe={handleSurpriseMe}
+        hasAnySearch={hasAnySearch}
+      />
 
       <div className="discovery-support-grid">
         <div className="discovery-support-column">
@@ -908,34 +730,21 @@ function Home() {
         {!hasAnySearch && <MoodPulse />}
       </div>
 
-      {trending.length > 0 && recommendations.length === 0 && !hasAnySearch && (
-        <section className="trending-section">
-          <h2>🔥 Trending Now</h2>
-          <div className="recommendations">
-            {trending.map((item, idx) => (
-              <MovieCard
-                key={item.id}
-                movie={item}
-                isInWatchlist={isInWatchlist(item.id)}
-                onToggleWatchlist={toggleWatchlist}
-                isWatched={isWatched(item.id)}
-                onToggleWatched={toggleWatched}
-                mediaType={item.media_type}
-                providerBadges={
-                  (
-                    providerSnapshot[getProviderKey(item)] ||
-                    getCachedTitleProviders(item.id, item.media_type, region)
-                  )?.flatrate?.slice(0, 3) || []
-                }
-                onLike={like}
-                onDislike={dislike}
-                tasteStatus={statusFor(item.id, item.media_type)}
-                index={idx}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <HomeTrendingStrip
+        trending={trending}
+        recommendationsLength={recommendations.length}
+        hasAnySearch={hasAnySearch}
+        region={region}
+        providerSnapshot={providerSnapshot}
+        getProviderKey={getProviderKey}
+        isInWatchlist={isInWatchlist}
+        toggleWatchlist={toggleWatchlist}
+        isWatched={isWatched}
+        toggleWatched={toggleWatched}
+        like={like}
+        dislike={dislike}
+        statusFor={statusFor}
+      />
 
       <section className="discovery-console">
         <div className="content-toggle-tabs" role="group" aria-label="Content type">
@@ -1165,110 +974,42 @@ function Home() {
         />
       )}
 
-      <div aria-live="polite">
-        {isBusy && filteredByServices.length === 0 ? (
-          <SkeletonGrid count={8} />
-        ) : isMobile && hasAnySearch && filteredByServices.length > 0 ? (
-          <div className="swipe-container" style={{ textAlign: 'center' }}>
-            {isCardLoading ? (
-              <MovieCardSkeleton />
-            ) : (
-              <SwipeCard
-                movie={filteredByServices[0]}
-                nextMovie={filteredByServices[1]}
-                onSwipeLeft={handleSwipeLeft}
-                onSwipeRight={handleSwipeRight}
-                mediaType={filteredByServices[0]?.media_type}
-              />
-            )}
-          </div>
-        ) : (
-          <div className="recommendations-container">
-            {filteredByServices.length > 0 && (
-              <div className="results-header">
-                <div className="results-meta">
-                  <h2>
-                    Results <span className="results-count">{filteredByServices.length}</span>
-                  </h2>
-                  <div className="results-meta-row">
-                    {(tasteCounts.liked > 0 || tasteCounts.disliked > 0) && (
-                      <div className="taste-summary">
-                        {tasteCounts.liked > 0 && (
-                          <span className="taste-liked">👍 {tasteCounts.liked}</span>
-                        )}
-                        {tasteCounts.disliked > 0 && (
-                          <span className="taste-disliked">👎 {tasteCounts.disliked}</span>
-                        )}
-                      </div>
-                    )}
-                    <label className="show-hidden-toggle">
-                      <input
-                        type="checkbox"
-                        checked={showHidden}
-                        onChange={e => setShowHidden(e.target.checked)}
-                      />
-                      Show hidden
-                    </label>
-                  </div>
-                </div>
-                <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>
-                  ✨ Save Vibe
-                </button>
-              </div>
-            )}
-            <div
-              className={`recommendations ${resultLayout === 'rows' ? 'recommendations-list-mode' : ''}`}
-            >
-              {filteredByServices.slice(0, visibleCount).map((rec, idx) => (
-                <MovieCard
-                  key={rec.id}
-                  movie={rec}
-                  displayMode={resultLayout === 'rows' ? 'row' : 'poster'}
-                  isInWatchlist={isInWatchlist(rec.id)}
-                  onToggleWatchlist={toggleWatchlist}
-                  isWatched={isWatched(rec.id)}
-                  onToggleWatched={toggleWatched}
-                  mediaType={rec.media_type}
-                  providerBadges={
-                    (
-                      providerSnapshot[getProviderKey(rec)] ||
-                      getCachedTitleProviders(rec.id, rec.media_type, region)
-                    )?.flatrate?.slice(0, 3) || []
-                  }
-                  onLike={like}
-                  onDislike={dislike}
-                  tasteStatus={statusFor(rec.id, rec.media_type)}
-                  index={idx}
-                />
-              ))}
-              {hasAnySearch && !isBusy && filteredByServices.length === 0 && (
-                <EmptyState
-                  icon="✨"
-                  title="No results found"
-                  description="Try a different mood or clear your filters!"
-                  onActionClick={() => setMood('')}
-                  actionText="Clear Search"
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {hasMore && !isMobile && searchScope !== 'all' && (
-          <div ref={loadMoreRef} className="load-more-indicator">
-            {isLoading ? (
-              <>
-                <span className="loading-spinner lg"></span>
-                <span>Loading more...</span>
-              </>
-            ) : (
-              <button className="btn-secondary" onClick={loadMoreResults}>
-                Load More
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <HomeResultsPanel
+        isBusy={isBusy}
+        filteredByServices={filteredByServices}
+        isMobile={isMobile}
+        hasAnySearch={hasAnySearch}
+        isCardLoading={isCardLoading}
+        handleSwipeLeft={handleSwipeLeft}
+        handleSwipeRight={handleSwipeRight}
+        filteredByServicesFirst={filteredByServices[0]}
+        filteredByServicesSecond={filteredByServices[1]}
+        visibleCount={visibleCount}
+        resultLayout={resultLayout}
+        isInWatchlist={isInWatchlist}
+        toggleWatchlist={toggleWatchlist}
+        isWatched={isWatched}
+        toggleWatched={toggleWatched}
+        providerSnapshot={providerSnapshot}
+        getProviderKey={getProviderKey}
+        getCachedTitleProvidersFn={(id, mediaType, reg) =>
+          getCachedTitleProviders(id, mediaType, reg)
+        }
+        region={region}
+        like={like}
+        dislike={dislike}
+        tasteCounts={tasteCounts}
+        showHidden={showHidden}
+        setShowHidden={setShowHidden}
+        statusFor={statusFor}
+        handleSaveVibe={handleSaveVibe}
+        setMood={setMood}
+        hasMore={hasMore}
+        isLoading={isLoading}
+        loadMoreResults={loadMoreResults}
+        searchScope={searchScope}
+        loadMoreRef={loadMoreRef}
+      />
     </main>
   );
 }

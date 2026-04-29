@@ -1,59 +1,56 @@
-// Jest setup file for MoodReel tests
-// This file is automatically run before all tests
+import { vi, beforeEach } from 'vitest';
 
-// Mock localStorage
+// Match previous Jest mocks for unit tests under Vitest.
+
 const localStorageMock = {
-    getItem: jest.fn((key) => null),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-    clear: jest.fn(),
+  getItem: vi.fn(() => null),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// Mock matchMedia (for theme detection)
 Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: jest.fn().mockImplementation((query) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    })),
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
 });
 
-// Mock AudioContext (for sound effects)
 class MockAudioContext {
-    createOscillator() {
-        return {
-            connect: jest.fn(),
-            start: jest.fn(),
-            stop: jest.fn(),
-            frequency: { value: 0 },
-            type: 'sine',
-        };
-    }
-    createGain() {
-        return {
-            connect: jest.fn(),
-            gain: {
-                setValueAtTime: jest.fn(),
-                exponentialRampToValueAtTime: jest.fn(),
-            },
-        };
-    }
-    get destination() {
-        return {};
-    }
+  createOscillator() {
+    return {
+      connect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+      frequency: { value: 0 },
+      type: 'sine',
+    };
+  }
+  createGain() {
+    return {
+      connect: vi.fn(),
+      gain: {
+        setValueAtTime: vi.fn(),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+    };
+  }
+  get destination() {
+    return {};
+  }
 }
 window.AudioContext = MockAudioContext;
 window.webkitAudioContext = MockAudioContext;
 
-// Reset mocks between tests
 beforeEach(() => {
-    jest.clearAllMocks();
-    localStorageMock.getItem.mockImplementation(() => null);
+  vi.clearAllMocks();
+  localStorageMock.getItem.mockImplementation(() => null);
 });

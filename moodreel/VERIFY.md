@@ -1,34 +1,42 @@
 # VERIFY.md — MoodReel Verification
 
 ## Install
+
 ```bash
 npm install
 ```
 
 ## Environment Setup
+
 ```bash
 cp .env.example .env
 ```
+
 Edit `.env` and set:
+
 - `REACT_APP_TMDB_API_KEY`
 - Optional: `REACT_APP_TMDB_BASE_URL`
 
 Optional alternative (no `.env` edit): set a runtime key in the browser console and reload:
+
 ```javascript
-localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
+localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY');
 ```
 
 ## Run (Dev)
+
 ```bash
 npm start
 ```
 
 ## Build
+
 ```bash
 npm run build
 ```
 
 ## Manual Smoke Checklist
+
 - Mood flow: enter mood → recommendations grid appears.
 - Search: title search works in both “within mood results” and “search all” modes.
 - Details: open a title and confirm metadata, cast, and similar titles render.

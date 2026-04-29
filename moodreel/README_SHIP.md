@@ -13,47 +13,57 @@ npm start
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_TMDB_API_KEY` | ✅ | [Get one here](https://www.themoviedb.org/settings/api) |
-| `REACT_APP_TMDB_API_KEY` | ✅ Legacy | [Get one here](https://www.themoviedb.org/settings/api) |
+| Variable                 | Required  | Description                                                       |
+| ------------------------ | --------- | ----------------------------------------------------------------- |
+| `VITE_TMDB_API_KEY`      | ✅        | [Get one here](https://www.themoviedb.org/settings/api)           |
+| `REACT_APP_TMDB_API_KEY` | ✅ Legacy | [Get one here](https://www.themoviedb.org/settings/api)           |
+| `VITE_VAPID_PUBLIC_KEY`  | Optional  | Web Push: public VAPID key (legacy: `REACT_APP_VAPID_PUBLIC_KEY`) |
 
 ### Local Runtime Key (Optional)
+
 If you want to avoid editing `.env`, set a local-only key in the browser console:
 
 ```javascript
-localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
+localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY');
 ```
 
 Reload the page after setting it.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm start` | Dev server at http://localhost:3000 (Vite) |
-| `npm run build` | Production build to `/build` |
-| `npm test` | Run test suite |
-| `npm run test:unit` | Run unit tests once |
-| `npm run eject` | Eject from CRA (legacy only) |
+| Command                 | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `npm start`             | Dev server at http://localhost:3000 (Vite)      |
+| `npm run build`         | Production build to `/build`                    |
+| `npm test` / `test:run` | Unit tests (Vitest, watch / single run)         |
+| `npm run test:unit`     | Same as `test:run` (CI-friendly)                |
+| `npm run lint`          | ESLint on `src/`                                |
+| `npm run typecheck`     | `tsc --noEmit` (shared types in `src/types.ts`) |
+| `npm run format:check`  | Prettier check                                  |
+
+## TypeScript vs JavaScript
+
+The app stays **React + JSX** for screens and hooks. **`src/types.ts`** holds shared interfaces and constants; `npm run typecheck` runs `tsc --noEmit` so those contracts stay checked without forcing a whole-app migration. New code can add `.ts` / `.tsx` gradually; keep `strict` migration deliberate.
 
 ## Architecture
 
 ```
 src/
-├── index.js         # React 18 createRoot entry
-├── App.js           # Router + ErrorBoundary + Suspense
+├── main.jsx              # Vite entry
+├── App.jsx               # Router + ErrorBoundary + Suspense
 ├── pages/
-│   ├── Home.js      # Mood input, genre filters, results
-│   ├── MovieDetails.js  # Details, providers, similar
-│   └── Watchlist.js # Saved items
+│   ├── Home.jsx          # Discovery (mood + title search + results)
+│   ├── MovieDetails.jsx
+│   └── Watchlist.jsx
 ├── components/
-│   ├── MovieCard.js # Memoized card component
-│   ├── Skeleton.js  # Loading placeholders
-│   └── ErrorBoundary.js # Crash protection
+│   ├── home/             # Home page sections (hero, trending, results)
+│   ├── MovieCard.jsx
+│   ├── Skeleton.jsx
+│   └── ErrorBoundary.jsx
 ├── hooks/
-│   └── useWatchlist.js  # localStorage persistence
-└── [App|index].css  # Design system + components
+│   ├── useWatchlist.js
+│   └── useSurpriseShuffle.js
+└── styles/               # Layered CSS
 ```
 
 ## Key Features
@@ -84,23 +94,27 @@ src/
 ## Deployment
 
 ### Vercel (Recommended)
+
 ```bash
 npm run build
 npx vercel --prod
 ```
 
 Vercel is wired for both root and subdirectory deployments:
+
 - Repo root `vercel.json` builds `moodreel/` and outputs `moodreel/build`
 - `moodreel/vercel.json` supports setting the Vercel project root directly to `moodreel/`
 - Both configs use explicit install/build commands so Vercel stays on the Vite build path
 
 ### Netlify
+
 ```bash
 npm run build
 # Deploy /build folder
 ```
 
 ### Docker
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app

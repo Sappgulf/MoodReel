@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { resolvePublicEnv } from '../utils/publicEnv';
 
-const PUSH_PERMISSION_KEY = 'moodreel-push-permission';
 const PUSH_SUBSCRIPTION_KEY = 'moodreel-push-subscription';
-const env = typeof process !== 'undefined' ? process.env || {} : {};
+
+/** VITE_VAPID_PUBLIC_KEY preferred; legacy REACT_APP_VAPID_PUBLIC_KEY supported. */
+function getVapidPublicKey() {
+  return resolvePublicEnv(['VITE_VAPID_PUBLIC_KEY', 'REACT_APP_VAPID_PUBLIC_KEY']);
+}
 
 export function usePushNotifications() {
   const [permission, setPermission] = useState(
@@ -53,9 +57,17 @@ export function usePushNotifications() {
     try {
       const registration = await navigator.serviceWorker.ready;
 
+      const applicationServerKey = getVapidPublicKey();
+      if (!applicationServerKey) {
+        console.error(
+          'Push: set VITE_VAPID_PUBLIC_KEY (or legacy REACT_APP_VAPID_PUBLIC_KEY) in .env.'
+        );
+        return null;
+      }
+
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: env.REACT_APP_VAPID_PUBLIC_KEY,
+        applicationServerKey,
       });
 
       const subData = sub.toJSON();

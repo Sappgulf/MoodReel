@@ -12,7 +12,7 @@ const emojiMoods = [
   { emoji: '😂', label: 'Comedy', genres: [35], keyword: 'funny', color: '#facc15' },
   { emoji: '👨‍👩‍👧', label: 'Family', genres: [10751], keyword: 'family', color: '#4ade80' },
   { emoji: '🎭', label: 'Drama', genres: [18], keyword: 'dramatic', color: '#93c5fd' },
-  { emoji: '📚', label: 'Documentary', genres: [99], keyword: 'documentary', color: '#34d399' }
+  { emoji: '📚', label: 'Documentary', genres: [99], keyword: 'documentary', color: '#34d399' },
 ];
 
 function Particle({ style }) {
@@ -25,7 +25,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
   const particleIdRef = useRef(0);
 
   const activeCount = useMemo(
-    () => emojiMoods.filter((mood) => mood.genres.some((g) => selectedGenres.includes(g))).length,
+    () => emojiMoods.filter(mood => mood.genres.some(g => selectedGenres.includes(g))).length,
     [selectedGenres]
   );
 
@@ -44,14 +44,14 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
         id,
         x: centerX + Math.cos(angle) * velocity,
         y: centerY + Math.sin(angle) * velocity,
-        color
+        color,
       });
     }
 
-    setParticles((prev) => [...prev, ...newParticles]);
+    setParticles(prev => [...prev, ...newParticles]);
 
     setTimeout(() => {
-      setParticles((prev) => prev.filter((p) => !newParticles.some((np) => np.id === p.id)));
+      setParticles(prev => prev.filter(p => !newParticles.some(np => np.id === p.id)));
     }, 500);
   }, []);
 
@@ -79,14 +79,14 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
       </div>
 
       <div className="emoji-grid">
-        {visibleMoods.map((mood) => {
-          const isActive = mood.genres.some((g) => selectedGenres.includes(g));
+        {visibleMoods.map(mood => {
+          const isActive = mood.genres.some(g => selectedGenres.includes(g));
 
           return (
             <button
               key={mood.emoji}
               className={`emoji-btn ${isActive ? 'active' : ''}`}
-              onClick={(e) => handleClick(mood, e)}
+              onClick={e => handleClick(mood, e)}
               title={mood.label}
               aria-label={mood.label}
               aria-pressed={isActive}
@@ -104,7 +104,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
         <button
           type="button"
           className="show-more-btn"
-          onClick={() => setShowAllMoods((prev) => !prev)}
+          onClick={() => setShowAllMoods(prev => !prev)}
           aria-expanded={showAllMoods}
         >
           {showAllMoods ? '▲ Show fewer moods' : `▼ Show ${hiddenMoodCount} more moods`}
@@ -112,13 +112,13 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
       )}
 
       <div className="particle-container" aria-hidden="true">
-        {particles.map((particle) => (
+        {particles.map(particle => (
           <Particle
             key={particle.id}
             style={{
               left: particle.x,
               top: particle.y,
-              background: particle.color
+              background: particle.color,
             }}
           />
         ))}

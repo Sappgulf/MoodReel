@@ -1,17 +1,20 @@
 # memory.md — MoodReel Project Memory (STRICT)
 
 ## What This App Is
+
 MoodReel is a web app to find movies/TV shows by mood and search, then view details (and trailers when available) and save items to a watchlist.
 
 ## Core User Flows (Do Not Break)
-1) Mood selection/quiz → recommendations list/grid.
-2) Search → relevant results with sane ranking.
-3) Open a title → detail view (metadata + trailer if available).
-4) Watchlist add/remove → persists after refresh.
-5) Taste profile (like/dislike) → influences ranking and can hide disliked titles.
-6) Shareable links → URL encodes mood/search/filters for easy sharing.
+
+1. Mood selection/quiz → recommendations list/grid.
+2. Search → relevant results with sane ranking.
+3. Open a title → detail view (metadata + trailer if available).
+4. Watchlist add/remove → persists after refresh.
+5. Taste profile (like/dislike) → influences ranking and can hide disliked titles.
+6. Shareable links → URL encodes mood/search/filters for easy sharing.
 
 ## Frontend Stack (Verified)
+
 - Framework: React 18 (CRA-based)
 - Router: React Router Dom 7
 - Styling: Vanilla CSS / Cinema Noir Design System
@@ -19,6 +22,7 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
 - Testing: Jest, React Testing Library, custom smoke script (`scripts/smoke.js`)
 
 ## Data Source (Verified)
+
 - Primary API provider: TMDB (The Movie Database)
 - Auth: env var key name(s): `REACT_APP_TMDB_API_KEY`
 - Note: DO NOT TOUCH. LEAVE IT ALONE. Keep the TMDB API key sourced from environment variables only.
@@ -35,11 +39,13 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
   - Fields may be missing; UI handles null/undefined with fallbacks.
 
 ## Ranking / “Match Score” (Verified)
+
 - Discovery: Driven by genre mapping in `moodParser.js`.
 - Sorting: Defaulted to `popularity.desc` via TMDB API.
 - Filter: Client-side vote_average filtering for quality assurance.
 
 ## Persistence
+
 - Watchlist persistence method: localStorage
 - localStorage keys:
   - `moodreel-watchlist`: Saved movies/TV
@@ -57,6 +63,7 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
   - `moodreel-taste-show-hidden`: Show hidden toggle
 
 ## UI Principles
+
 - Cinema Noir Premium aesthetics (Dark mode, glassmorphism).
 - Gold and Crimson accents (`#FFD700`, `#DC143C`).
 - 3D Parallax cards with tilt effects.
@@ -64,6 +71,7 @@ MoodReel is a web app to find movies/TV shows by mood and search, then view deta
 - Keyboard accessibility: Focus rings, ARIA labels, semantic HTML.
 
 ## Known Pitfalls
+
 - API rate limits (TMDB): Tracked via `rateLimiter.js`.
 - Missing assets: Fallbacks implemented for posters, backdrops, and trailers.
 - Request storms: `AbortController` and `inflightRequests` Map used for deduplication.

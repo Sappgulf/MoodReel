@@ -1,4 +1,5 @@
 {
+  // App code is mostly JS/JSX; shared contracts live in types.ts. Run `npm run typecheck`. Enable strict incrementally when migrating files to .ts.
   "compilerOptions": {
     "target": "ES2020",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],

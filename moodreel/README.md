@@ -9,6 +9,7 @@
 ## ✨ Features
 
 ### 🎯 Discovery
+
 - **Mood-based search** — Type "cozy rainy day" or "need a good cry" and get relevant movies
 - **Emoji quick-pick** — Tap mood emojis (😊😱💕🚀) for instant genre filtering
 - **Surprise Me** — Random trending movie for the indecisive
@@ -18,6 +19,7 @@
 - **Search history** — Recent searches shown as clickable chips
 
 ### 📱 Mobile Experience
+
 - **Swipe cards** — Tinder-style swipe right to save, left to pass
 - **Pull-to-refresh** — Swipe down to reload recommendations
 - **Haptic feedback** — Vibration on swipe actions
@@ -26,6 +28,7 @@
 - **Onboarding tour** — First-time welcome with feature highlights
 
 ### ❤️ Watchlist
+
 - **Save movies** — Build your personal watchlist with one tap
 - **Mark as watched** — Track what you've seen vs. what's on your list
 - **Sorting** — Sort by date added, rating, title, or watched status
@@ -37,17 +40,21 @@
 - **Personalized recs** — "Because you saved X..." similar movie suggestions
 
 ### 🏆 Achievements
+
 8 unlockable badges with progress tracking:
+
 - 🎬 First Save • 🎥 Movie Buff (10 saves) • 📺 Binge Watcher (5 TV shows)
 - 😱 Horror Fan • 💕 Hopeless Romantic • 🔥 Trendsetter
 - 📅 Consistent (5-day streak) • ⭐ Critic (rate 5 movies)
 
 ### 📊 Analytics
+
 - **Stats dashboard** — Total saved, avg ratings, top moods
 - **Mood calendar** — 30-day visualization of your mood searches
 - **Genre breakdown** — See patterns in your taste
 
 ### 🎥 Movie Details
+
 - **Trailer playback** — Watch YouTube trailers in fullscreen modal
 - **Streaming providers** — See where to watch (Netflix, Hulu, etc.)
 - **Cast & crew** — Top 6 cast members with photos
@@ -59,7 +66,8 @@
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm 9+
 
 ### Installation
@@ -83,54 +91,59 @@ The app will open at http://localhost:3000
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_TMDB_API_KEY` | ✅ Required | Your TMDB API key. |
-| `REACT_APP_TMDB_API_KEY` | ✅ Legacy | Legacy CRA alias for API key (if still needed). |
-| `VITE_TMDB_BASE_URL` | ❌ Optional | Override TMDB base URL (default: https://api.themoviedb.org/3). |
-| `REACT_APP_TMDB_BASE_URL` | ❌ Optional | Legacy CRA alias for base URL. |
+| Variable                  | Required    | Description                                                     |
+| ------------------------- | ----------- | --------------------------------------------------------------- |
+| `VITE_TMDB_API_KEY`       | ✅ Required | Your TMDB API key.                                              |
+| `REACT_APP_TMDB_API_KEY`  | ✅ Legacy   | Legacy CRA alias for API key (if still needed).                 |
+| `VITE_TMDB_BASE_URL`      | ❌ Optional | Override TMDB base URL (default: https://api.themoviedb.org/3). |
+| `REACT_APP_TMDB_BASE_URL` | ❌ Optional | Legacy CRA alias for base URL.                                  |
 
 ### Local Runtime Key (Optional)
+
 If you prefer not to edit `.env`, you can set a local-only key in the browser:
 
 ```javascript
-localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
+localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY');
 ```
 
 Reload the page after setting it. Remove it with:
 
 ```javascript
-localStorage.removeItem('moodreel-tmdb-api-key')
+localStorage.removeItem('moodreel-tmdb-api-key');
 ```
 
 ### Rate Limiting
 
 The app includes client-side rate limiting to reduce accidental API request bursts:
+
 - **Regular users**: 60 requests per minute
 - **Admin users**: Unlimited (no rate limiting)
 
 #### Enable Admin Mode (Unlimited Access)
+
 Open browser console and run:
+
 ```javascript
-localStorage.setItem('moodreel-admin', 'true')
+localStorage.setItem('moodreel-admin', 'true');
 ```
 
 Then refresh the page. To disable:
+
 ```javascript
-localStorage.removeItem('moodreel-admin')
+localStorage.removeItem('moodreel-admin');
 ```
 
 ---
 
 ## 📦 Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm start` | Start dev server (Vite) at http://localhost:3000 |
-| `npm run build` | Create production build in `/build` |
-| `npm test` | Run React test suite |
-| `npm run test:unit` | Run unit tests once (watch disabled) |
-| `npm run eject` | Eject from CRA (irreversible) |
+| Command             | Description                                      |
+| ------------------- | ------------------------------------------------ |
+| `npm start`         | Start dev server (Vite) at http://localhost:3000 |
+| `npm run build`     | Create production build in `/build`              |
+| `npm test`          | Run React test suite                             |
+| `npm run test:unit` | Run unit tests once (watch disabled)             |
+| `npm run eject`     | Eject from CRA (irreversible)                    |
 
 ---
 
@@ -148,6 +161,7 @@ npm test -- useWatchlist.test.js
 ```
 
 ### Test Coverage
+
 - `useWatchlist.test.js` — 15 tests for watchlist operations
 - `moodParser.test.js` — 11 tests for mood-to-genre parsing
 
@@ -194,20 +208,21 @@ src/
 
 ## ⌨️ Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `?` | Show shortcuts modal |
-| `D` | Toggle dark/light theme |
-| `M` | Toggle sound effects |
+| Key     | Action                         |
+| ------- | ------------------------------ |
+| `?`     | Show shortcuts modal           |
+| `D`     | Toggle dark/light theme        |
+| `M`     | Toggle sound effects           |
 | `←` `→` | Swipe left/right (mobile mode) |
-| `Enter` | Search with current mood |
-| `Esc` | Close modals |
+| `Enter` | Search with current mood       |
+| `Esc`   | Close modals                   |
 
 ---
 
 ## 📱 PWA Installation
 
 On mobile Chrome/Safari:
+
 1. Visit the app
 2. Tap "Add to Home Screen" prompt (or ⋮ menu → Install)
 3. Launch from home screen for full-screen experience
@@ -217,18 +232,21 @@ On mobile Chrome/Safari:
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 ```bash
 npm run build
 npx vercel --prod
 ```
 
 Deployment is configured for both common Vercel layouts:
+
 - Repo root `vercel.json` points Vercel at `moodreel/` and publishes `moodreel/build`
 - `moodreel/vercel.json` supports a project root set directly to `moodreel/`
 
 Both configs use explicit `installCommand` and `buildCommand` settings so Vercel builds with Vite instead of falling back to the older CRA path.
 
 ### Other Platforms
+
 ```bash
 npm run build
 # Deploy the /build folder to any static host
@@ -239,23 +257,28 @@ npm run build
 ## 🔧 Troubleshooting
 
 ### "No movies loading" / Blank recommendations
+
 - **Cause**: Missing or invalid TMDB API key
 - **Fix**: Ensure `VITE_TMDB_API_KEY` is set in `.env` file
 - **Verify**: Check browser console for API errors
 
 ### "Tests failing with localStorage errors"
+
 - **Cause**: Missing test setup
 - **Fix**: Ensure `src/setupTests.js` exists with localStorage mocks
 
 ### PWA not installing
+
 - **Cause**: Not served over HTTPS or already installed
 - **Fix**: Deploy to HTTPS host (Vercel, Netlify) for install prompts
 
 ### Build warnings about browserslist
+
 - **Cause**: Outdated browser data
 - **Fix**: Run `npx update-browserslist-db@latest`
 
 ### Achievement not unlocking after rating
+
 - **Cause**: Fixed in latest version (was missing trackRating integration)
 - **Fix**: Pull latest code - achievements now properly track ratings
 

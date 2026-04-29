@@ -134,7 +134,7 @@ function normalizeApiError(err, path) {
 
   return new TmdbApiError({
     code: `TMDB_HTTP_${status}`,
-    message: body?.status_message || toUserMessage({ code: `HTTP_${status}`, status }),
+    message: body?.status_message || getUserFacingMessage({ code: `TMDB_HTTP_${status}`, status }),
     path,
     status,
     retryAfter,
