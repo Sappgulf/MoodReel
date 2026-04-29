@@ -287,6 +287,35 @@
   margin-bottom: 0;
 }
 
+body.mood-romantic .discovery-hero,
+body.mood-happy .discovery-hero,
+body.mood-thriller .discovery-hero,
+body.mood-classic .discovery-hero {
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+body.mood-romantic .discovery-hero {
+  border-color: rgba(244, 114, 182, 0.35);
+  box-shadow: 0 22px 80px rgba(244, 114, 182, 0.12);
+}
+
+body.mood-happy .discovery-hero {
+  border-color: rgba(250, 204, 21, 0.35);
+  box-shadow: 0 22px 80px rgba(250, 204, 21, 0.12);
+}
+
+body.mood-thriller .discovery-hero {
+  border-color: rgba(239, 68, 68, 0.32);
+  box-shadow: 0 22px 80px rgba(124, 58, 237, 0.14);
+}
+
+body.mood-classic .discovery-hero {
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: 0 22px 80px rgba(148, 163, 184, 0.12);
+}
+
 @media (max-width: 768px) {
   .discovery-hero,
   .discovery-support-grid {
@@ -333,6 +362,10 @@
   box-shadow:
     var(--shadow-gold-sm),
     inset 0 1px 0 rgba(255, 215, 0, 0.05);
+}
+
+.discovery-support-column .hero-vibe-bar {
+  margin-bottom: 0;
 }
 
 .vibe-greeting {
@@ -1456,6 +1489,34 @@
   font-size: 0.9rem;
   font-style: italic;
   line-height: 1.5;
+}
+
+.limited-details-banner {
+  display: grid;
+  gap: 0.35rem;
+  margin: var(--spacing-sm) 0 var(--spacing-lg);
+  padding: var(--spacing-md);
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--color-bg-elevated));
+}
+
+.limited-details-banner span {
+  color: var(--color-text-gold);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.limited-details-banner p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.limited-details-banner .text-button {
+  justify-self: start;
 }
 
 .movie-details .meta-row {

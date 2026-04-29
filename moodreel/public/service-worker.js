@@ -11,14 +11,19 @@ const STATIC_ASSETS = [
     '/og_preview.png'
 ];
 
-// Install - cache static assets
+// Install - cache static assets. Updates wait until the app asks them to activate.
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_ASSETS);
         })
     );
-    self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data?.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 // Activate - clear old caches

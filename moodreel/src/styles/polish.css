@@ -10,6 +10,7 @@
 .onboarding-backdrop,
 .shortcuts-backdrop,
 .trailer-modal-backdrop,
+.save-vibe-backdrop,
 .spin-wheel-overlay {
   position: fixed;
   inset: 0;
@@ -27,6 +28,7 @@
 .onboarding-modal,
 .shortcuts-modal,
 .trailer-modal,
+.save-vibe-modal,
 .spin-wheel-modal {
   position: relative;
   width: min(640px, 100%);
@@ -53,6 +55,7 @@
 .onboarding-skip,
 .shortcuts-close,
 .trailer-close,
+.save-vibe-close,
 .spin-wheel-close {
   position: absolute;
   top: var(--spacing-md);
@@ -76,6 +79,7 @@
 .onboarding-skip:hover,
 .shortcuts-close:hover,
 .trailer-close:hover,
+.save-vibe-close:hover,
 .spin-wheel-close:hover {
   background: var(--color-bg-elevated);
   color: var(--color-text-primary);
@@ -85,8 +89,71 @@
 .onboarding-skip:active,
 .shortcuts-close:active,
 .trailer-close:active,
+.save-vibe-close:active,
 .spin-wheel-close:active {
   transform: scale(0.95);
+}
+
+.save-vibe-modal {
+  width: min(520px, 100%);
+}
+
+.modal-kicker,
+.details-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.save-vibe-modal h2 {
+  margin-bottom: var(--spacing-sm);
+}
+
+.save-vibe-modal p {
+  color: var(--color-text-secondary);
+}
+
+.save-vibe-label {
+  display: block;
+  margin: var(--spacing-lg) 0 var(--spacing-xs);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.save-vibe-modal input {
+  width: 100%;
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.save-vibe-modal input:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+.save-vibe-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xl);
+}
+
+.toast-action {
+  align-self: flex-start;
+  margin-top: var(--spacing-xs);
+  padding: 0.35rem 0.7rem;
+  color: #09090b;
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .onboarding-content {

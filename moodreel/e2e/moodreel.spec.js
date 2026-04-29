@@ -25,6 +25,25 @@ test.describe('MoodReel E2E', () => {
     expect(criticalErrors).toHaveLength(0);
   });
 
+  test('first-run onboarding can be completed', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('moodreel-onboarded');
+      window.localStorage.setItem('moodreel-install-dismissed', 'true');
+    });
+
+    await page.goto('/');
+    const onboarding = page.getByRole('dialog', { name: /Welcome to MoodReel/ });
+    await expect(onboarding).toBeVisible();
+
+    for (let i = 0; i < 4; i += 1) {
+      await page.getByRole('button', { name: 'Next →' }).click();
+    }
+
+    await page.getByRole('button', { name: /Let's Go/ }).click();
+    await expect(onboarding).toBeHidden();
+    await expect(page.locator('h1')).toContainText('MoodReel');
+  });
+
   test('mood selection updates results', async ({ page }) => {
     await page.goto('/');
 

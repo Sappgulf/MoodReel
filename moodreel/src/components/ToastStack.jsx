@@ -21,6 +21,20 @@ function ToastStack() {
             {toast.label && <p className="toast-label">{toast.label}</p>}
             {toast.title && <h4 className="toast-title">{toast.title}</h4>}
             {toast.message && <p className="toast-description">{toast.message}</p>}
+            {toast.action && (
+              <button
+                className="toast-action"
+                type="button"
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toast.action.onClick?.();
+                  dismissToast(toast.id);
+                }}
+              >
+                {toast.action.label}
+              </button>
+            )}
           </div>
           <button
             className="toast-dismiss"

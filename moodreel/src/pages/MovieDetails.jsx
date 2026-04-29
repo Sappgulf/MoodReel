@@ -53,6 +53,7 @@ function MovieDetails() {
   const [actorFilmography, setActorFilmography] = useState([]);
   const [actorLoading, setActorLoading] = useState(false);
   const [actorError, setActorError] = useState('');
+  const [isLimitedDetails, setIsLimitedDetails] = useState(false);
   const actorRequestRef = useRef(null);
   const actorRequestIdRef = useRef(0);
   const actorDialogCloseRef = useRef(null);
@@ -80,6 +81,8 @@ function MovieDetails() {
       setAllProviders(null);
       setTrailer(null);
       setCast([]);
+      setDirector(null);
+      setIsLimitedDetails(false);
 
       if (!isValidId) {
         setError('Invalid details URL. Please open a valid item.');
@@ -101,6 +104,7 @@ function MovieDetails() {
         }
 
         setContent(details);
+        setIsLimitedDetails(!data.details);
         setSimilar((data.similar || []).slice(0, 6));
 
         // Get region providers or first available region
@@ -129,6 +133,7 @@ function MovieDetails() {
         if (!mounted || controller.signal.aborted) return;
         if (routedItem) {
           setContent({ ...routedItem, media_type: mediaType });
+          setIsLimitedDetails(true);
           setSimilar([]);
           setProviders(null);
           setAllProviders(null);
@@ -392,6 +397,18 @@ function MovieDetails() {
             <div className="movie-info">
               <p className="movie-details-eyebrow">{isTV ? 'TV Title' : 'Movie'}</p>
               <h1>{title}</h1>
+              {isLimitedDetails && (
+                <div className="limited-details-banner" role="status">
+                  <span>Limited details</span>
+                  <p>
+                    Showing saved card data while live TMDB details are unavailable. Watchlist,
+                    taste, and sharing still work.
+                  </p>
+                  <button type="button" className="text-button" onClick={handleRetry}>
+                    Retry live details
+                  </button>
+                </div>
+              )}
               {tagline && <p className="movie-tagline">{tagline}</p>}
               <p className="overview">{overview}</p>
 

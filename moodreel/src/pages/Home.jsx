@@ -5,6 +5,7 @@ import SurpriseWinnerBanner from '../components/home/SurpriseWinnerBanner';
 import HomeTrendingStrip from '../components/home/HomeTrendingStrip';
 import HomeResultsPanel from '../components/home/HomeResultsPanel';
 import HomeDiscoveryConsole from '../components/home/HomeDiscoveryConsole';
+import SaveVibeModal from '../components/SaveVibeModal';
 import MoodPulse from '../components/MoodPulse';
 import ShuffleOverlay from '../components/ShuffleOverlay';
 import ErrorState from '../components/ErrorState';
@@ -18,6 +19,7 @@ import { useSurpriseShuffle } from '../hooks/useSurpriseShuffle';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
+import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useToasts } from '../context/ToastContext';
 import searchService from '../services/searchService';
 import {
@@ -27,6 +29,14 @@ import {
 } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
 import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
+
+function getTitleTokens(item) {
+  return (item.title || item.name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(token => token.length > 3);
+}
 
 function Home() {
   const currentYear = new Date().getFullYear();
@@ -39,7 +49,9 @@ function Home() {
   const { history: recentMoods, addToHistory } = useMoodHistory();
   const { savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
-  const { like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } = useTasteProfile();
+  const { profile, like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } =
+    useTasteProfile();
+  const { history: watchHistory } = useWatchHistory();
   const { pushToast } = useToasts();
 
   const { isSurpriseLoading, showWinnerInfo, surpriseMovie, closeSurprise, handleSurpriseMe } =
@@ -86,6 +98,7 @@ function Home() {
   const [providerCatalog, setProviderCatalog] = useState([]);
   const [resultLayout, setResultLayout] = useState('poster');
   const [titleQuery, setTitleQuery] = useState('');
+  const [showSaveVibeModal, setShowSaveVibeModal] = useState(false);
 
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
@@ -436,10 +449,19 @@ function Home() {
     [playSound, setRecommendations]
   );
 
+  const suggestedVibeName = useMemo(() => {
+    if (mood) return mood.replace(/\b\w/g, char => char.toUpperCase());
+    if (selectedGenres.length > 0) return 'Custom Genre Mix';
+    return 'My MoodReel Vibe';
+  }, [mood, selectedGenres.length]);
+
   const handleSaveVibe = useCallback(() => {
     if (!mood && selectedGenres.length === 0) return;
-    const name = prompt("Name your custom vibe (e.g. 'Late Night Thrills'):");
-    if (name) {
+    setShowSaveVibeModal(true);
+  }, [mood, selectedGenres.length]);
+
+  const handleConfirmSaveVibe = useCallback(
+    name => {
       savePlaylist(name, {
         mood,
         contentType,
@@ -455,18 +477,20 @@ function Home() {
         message: `"${name}" added to your playlists.`,
         duration: 3000,
       });
-    }
-  }, [
-    mood,
-    contentType,
-    selectedGenres,
-    selectedProviders,
-    minRating,
-    advancedFilters,
-    savePlaylist,
-    playSound,
-    pushToast,
-  ]);
+      setShowSaveVibeModal(false);
+    },
+    [
+      mood,
+      contentType,
+      selectedGenres,
+      selectedProviders,
+      minRating,
+      advancedFilters,
+      savePlaylist,
+      playSound,
+      pushToast,
+    ]
+  );
 
   const handleClearFilters = useCallback(() => {
     setSelectedGenres([]);
@@ -562,17 +586,38 @@ function Home() {
         item => statusFor(item.id, item.media_type || contentType) !== 'disliked'
       );
     }
+    const likedKeys = profile?.liked || [];
+    const recentTokens = new Set(watchHistory.slice(0, 12).flatMap(getTitleTokens));
+    const mediaTypeCounts = watchHistory.reduce((acc, item) => {
+      const type = item.media_type || 'movie';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    const getPreferenceScore = item => {
+      const mediaType = item.media_type || contentType;
+      const status = statusFor(item.id, mediaType);
+      const key = `${item.id}-${mediaType}`;
+      let score = 0;
+      if (status === 'liked') score += 60;
+      if (status === 'disliked') score -= 80;
+      if (likedKeys.includes(key)) score += 20;
+      score += Math.min(mediaTypeCounts[mediaType] || 0, 6) * 2;
+      score += getTitleTokens(item).filter(token => recentTokens.has(token)).length * 3;
+      return score;
+    };
+
     return [...results].sort((a, b) => {
       const aStatus = statusFor(a.id, a.media_type || contentType);
       const bStatus = statusFor(b.id, b.media_type || contentType);
-      if (aStatus === bStatus) return 0;
-      if (aStatus === 'liked') return -1;
-      if (bStatus === 'liked') return 1;
-      if (aStatus === 'disliked') return 1;
-      if (bStatus === 'disliked') return -1;
-      return 0;
+      if (aStatus !== bStatus) {
+        if (aStatus === 'liked') return -1;
+        if (bStatus === 'liked') return 1;
+        if (aStatus === 'disliked') return 1;
+        if (bStatus === 'disliked') return -1;
+      }
+      return getPreferenceScore(b) - getPreferenceScore(a);
     });
-  }, [scopedResults, showHidden, statusFor, contentType]);
+  }, [scopedResults, showHidden, statusFor, contentType, watchHistory, profile]);
 
   const getProviderKey = useCallback(
     item => {
@@ -649,6 +694,13 @@ function Home() {
         <SurpriseWinnerBanner surpriseMovie={surpriseMovie} onClose={closeSurprise} />
       )}
 
+      <SaveVibeModal
+        isOpen={showSaveVibeModal}
+        defaultName={suggestedVibeName}
+        onClose={() => setShowSaveVibeModal(false)}
+        onSave={handleConfirmSaveVibe}
+      />
+
       <DiscoveryHero
         isLoading={isLoading}
         featuredItem={featuredItem}
@@ -694,7 +746,7 @@ function Home() {
                 onClick={handleSurpriseMe}
                 disabled={isSurpriseLoading}
               >
-                {isSurpriseLoading ? '🎲 Shuffling…' : '🔥 Surprise Me'}
+                {isSurpriseLoading ? '🎲 Shuffling…' : 'Shuffle tonight'}
               </button>
             </div>
           </div>
