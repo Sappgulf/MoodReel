@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('MoodReel E2E', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('moodreel-onboarded', 'true');
+      window.localStorage.setItem('moodreel-install-dismissed', 'true');
+    });
+  });
+
   test('homepage loads without errors', async ({ page }) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -10,7 +17,9 @@ test.describe('MoodReel E2E', () => {
 
     await page.goto('/');
     await expect(page.locator('h1')).toContainText('MoodReel');
-    await expect(page.locator('.nav-link').first()).toBeVisible();
+    await expect(
+      page.locator('nav[aria-label="Primary navigation"]:visible').first()
+    ).toBeVisible();
 
     const criticalErrors = errors.filter(e => !e.includes('Warning') && !e.includes('deprecat'));
     expect(criticalErrors).toHaveLength(0);
@@ -22,23 +31,23 @@ test.describe('MoodReel E2E', () => {
     const moodButton = page.locator('.emoji-picker button').first();
     if (await moodButton.isVisible()) {
       await moodButton.click();
-      await page.waitForTimeout(1500);
+      await page.getByRole('button', { name: /Get Recommendations|Searching/ }).click();
     }
 
-    const movieCards = page.locator('.movie-card, [class*="movie-card"]');
-    await expect(movieCards.first()).toBeVisible({ timeout: 10000 });
+    const resultCard = page.locator('.recommendation, .swipe-card').first();
+    await expect(resultCard).toBeVisible({ timeout: 15000 });
   });
 
   test('navigation works correctly', async ({ page }) => {
     await page.goto('/');
 
-    await page.click('text=Watchlist');
+    await page.locator('a[href="/watchlist"]:visible').first().click();
     await expect(page).toHaveURL(/.*\/watchlist/);
 
-    await page.click('text=Profile');
+    await page.locator('a[href="/profile"]:visible').first().click();
     await expect(page).toHaveURL(/.*\/profile/);
 
-    await page.click('text=Stats');
+    await page.locator('a[href="/stats"]:visible').first().click();
     await expect(page).toHaveURL(/.*\/stats/);
   });
 
@@ -56,7 +65,7 @@ test.describe('MoodReel E2E', () => {
 
   test('watchlist page loads', async ({ page }) => {
     await page.goto('/watchlist');
-    await expect(page.locator('.watchlist-page, [class*="watchlist"]')).toBeVisible({
+    await expect(page.locator('.watchlist-page')).toBeVisible({
       timeout: 5000,
     });
   });
@@ -67,10 +76,10 @@ test.describe('MoodReel E2E', () => {
     await page.keyboard.press('?');
     await page.waitForTimeout(500);
 
-    const modal = page.locator('.keyboard-shortcuts-modal, [class*="shortcuts"]');
-    if (await modal.isVisible({ timeout: 2000 })) {
-      await page.keyboard.press('Escape');
-    }
+    const modal = page.getByRole('dialog', { name: /Keyboard Shortcuts/ });
+    await expect(modal).toBeVisible({ timeout: 2000 });
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
   });
 
   test('mobile bottom nav is visible on mobile viewport', async ({ page }) => {
@@ -90,18 +99,19 @@ test.describe('MoodReel E2E', () => {
     const moodButton = page.locator('.emoji-picker button').first();
     if (await moodButton.isVisible()) {
       await moodButton.click();
-      await page.waitForTimeout(1500);
+      await page.getByRole('button', { name: /Get Recommendations|Searching/ }).click();
     }
 
     // Wait for at least one recommendation card
-    const cardLink = page.locator('.recommendation a, .movie-card a').first();
-    await expect(cardLink).toBeVisible({ timeout: 10000 });
+    const cardLink = page.locator('.recommendation a, .swipe-card a').first();
+    await expect(cardLink).toBeVisible({ timeout: 15000 });
 
     // Click through to the detail page
     await cardLink.click();
     await page.waitForURL(/\/(movie|tv)\/\d+/, { timeout: 10000 });
 
     // Verify detail page rendered key sections
-    await expect(page.locator('text=Overview')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.movie-details')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Cast' })).toBeVisible();
   });
 });

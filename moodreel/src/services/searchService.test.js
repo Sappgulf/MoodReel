@@ -1,5 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { generateCacheKey, clearCache, getCacheStats } from './searchService';
+import { generateCacheKey, clearCache, getCacheStats, search } from './searchService';
+import { canMakeRequest } from '../utils/rateLimiter';
+import { tmdbGet } from './apiClient';
 
 vi.mock('axios', () => ({
   get: vi.fn(),
@@ -117,6 +119,35 @@ describe('searchService', () => {
       expect(getCacheStats().size).toBe(0);
       clearCache();
       expect(getCacheStats().size).toBe(0);
+    });
+  });
+
+  describe('search caching', () => {
+    it('returns cached results before consuming another rate-limit slot', async () => {
+      tmdbGet.mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            title: 'Happy Test',
+            overview: 'A bright test result',
+            vote_average: 8,
+            vote_count: 20,
+            popularity: 10,
+          },
+        ],
+        page: 1,
+        total_pages: 1,
+        total_results: 1,
+      });
+
+      const params = { query: 'happy', type: 'movie' };
+      const first = await search(params);
+      const second = await search(params);
+
+      expect(first.results).toHaveLength(1);
+      expect(second).toBe(first);
+      expect(tmdbGet).toHaveBeenCalledTimes(1);
+      expect(canMakeRequest).toHaveBeenCalledTimes(1);
     });
   });
 });

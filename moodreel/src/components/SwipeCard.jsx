@@ -129,7 +129,11 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
       <div className={`swipe-indicator left ${offset < -30 ? 'visible' : ''}`}>❌ PASS</div>
       <div className={`swipe-indicator right ${offset > 30 ? 'visible' : ''}`}>💚 SAVE</div>
 
-      <Link to={detailPath} className="swipe-card-link">
+      <Link
+        to={detailPath}
+        state={{ item: { ...movie, media_type: mediaType } }}
+        className="swipe-card-link"
+      >
         {posterUrl ? (
           <img src={posterUrl} alt={title} loading="lazy" decoding="async" />
         ) : (

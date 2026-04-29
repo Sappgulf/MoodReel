@@ -871,6 +871,11 @@
   border-radius: var(--radius-lg);
 }
 
+.title-search[aria-busy='true'] input {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.14);
+}
+
 .search-scope-toggle {
   display: inline-flex;
   align-items: center;

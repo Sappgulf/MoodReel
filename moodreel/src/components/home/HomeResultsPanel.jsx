@@ -31,6 +31,7 @@ export default function HomeResultsPanel({
   statusFor,
   handleSaveVibe,
   setMood,
+  handleClearFilters,
   hasMore,
   isLoading,
   loadMoreResults,
@@ -122,9 +123,12 @@ export default function HomeResultsPanel({
               <EmptyState
                 icon="✨"
                 title="No results found"
-                description="Try a different mood or clear your filters!"
-                onActionClick={() => setMood('')}
-                actionText="Clear Search"
+                description="Try a different mood or reset your active filters."
+                onActionClick={() => {
+                  setMood('');
+                  handleClearFilters();
+                }}
+                actionText="Reset Search"
               />
             )}
           </div>

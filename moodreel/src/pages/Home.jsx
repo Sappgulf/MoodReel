@@ -636,7 +636,7 @@ function Home() {
   const hasAnySearch = hasSearched || (searchScope === 'all' && debouncedQuery);
 
   return (
-    <main className="page-enter">
+    <main className="page-enter discovery-page">
       <ShuffleOverlay
         isActive={isSurpriseLoading}
         isWinner={showWinnerInfo}
@@ -829,6 +829,7 @@ function Home() {
         statusFor={statusFor}
         handleSaveVibe={handleSaveVibe}
         setMood={setMood}
+        handleClearFilters={handleClearFilters}
         hasMore={hasMore}
         isLoading={isLoading}
         loadMoreResults={loadMoreResults}

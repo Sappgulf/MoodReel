@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 import { StorageKeys as SK } from '../storage/storageKeys';
 
 const STORAGE_KEY = SK.RATINGS;
@@ -10,17 +11,12 @@ const STORAGE_KEY = SK.RATINGS;
  */
 export function useRatings() {
   const [ratings, setRatings] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
+    return safeGetJSON(STORAGE_KEY, {});
   });
 
   const saveRatings = useCallback(newRatings => {
     setRatings(newRatings);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newRatings));
+    safeSetJSON(STORAGE_KEY, newRatings);
   }, []);
 
   const getRating = useCallback(

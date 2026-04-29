@@ -77,7 +77,7 @@ export default function DiscoveryHero({
           </button>
         </div>
         <p className="hero-hint">
-          Press <kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
+          Press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
         </p>
       </div>
 

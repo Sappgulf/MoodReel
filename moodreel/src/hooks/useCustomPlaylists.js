@@ -1,21 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 import { StorageKeys as SK } from '../storage/storageKeys';
 
 const CUSTOM_PLAYLISTS_KEY = SK.CUSTOM_PLAYLISTS;
 
 export function useCustomPlaylists() {
   const [playlists, setPlaylists] = useState(() => {
-    try {
-      const saved = localStorage.getItem(CUSTOM_PLAYLISTS_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    return safeGetJSON(CUSTOM_PLAYLISTS_KEY, []);
   });
 
   useEffect(() => {
-    localStorage.setItem(CUSTOM_PLAYLISTS_KEY, JSON.stringify(playlists));
+    safeSetJSON(CUSTOM_PLAYLISTS_KEY, playlists);
   }, [playlists]);
 
   const savePlaylist = useCallback((name, filters) => {

@@ -340,6 +340,18 @@ export async function search(params, signal) {
     };
   }
 
+  const cacheKey = generateCacheKey(params);
+
+  // Cache and inflight hits should not consume the client-side rate limit.
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  if (inflightRequests.has(cacheKey)) {
+    return inflightRequests.get(cacheKey);
+  }
+
   // Check rate limit
   if (!canMakeRequest()) {
     return {
@@ -349,19 +361,6 @@ export async function search(params, signal) {
       hasMore: false,
       error: `Rate limit reached. Please wait a moment. (${getRemainingRequests()} remaining)`,
     };
-  }
-
-  const cacheKey = generateCacheKey(params);
-
-  // Check cache first
-  const cached = getCached(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  // Check for inflight request with same key
-  if (inflightRequests.has(cacheKey)) {
-    return inflightRequests.get(cacheKey);
   }
 
   // Create the request promise

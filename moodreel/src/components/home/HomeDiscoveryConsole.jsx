@@ -84,6 +84,7 @@ export default function HomeDiscoveryConsole({
         <button
           type="button"
           className={`result-layout-btn ${resultLayout === 'poster' ? 'active' : ''}`}
+          aria-pressed={resultLayout === 'poster'}
           onClick={() => setResultLayout('poster')}
         >
           🎞 Poster Grid
@@ -91,6 +92,7 @@ export default function HomeDiscoveryConsole({
         <button
           type="button"
           className={`result-layout-btn ${resultLayout === 'rows' ? 'active' : ''}`}
+          aria-pressed={resultLayout === 'rows'}
           onClick={() => setResultLayout('rows')}
         >
           📜 Cinematic List
@@ -145,7 +147,7 @@ export default function HomeDiscoveryConsole({
         )}
       </div>
 
-      <div className="title-search">
+      <div className="title-search" aria-busy={isBusy}>
         <label htmlFor="title-search-input">Search titles</label>
         <input
           ref={titleSearchRef}

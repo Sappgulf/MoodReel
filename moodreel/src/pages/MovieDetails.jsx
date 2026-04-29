@@ -13,6 +13,7 @@ import { useTrailer } from '../context/TrailerContext';
 import { useSounds } from '../hooks/useSounds';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useProviderSettings } from '../hooks/useProviderSettings';
+import { useModalDialog } from '../hooks/useModalDialog';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
@@ -29,6 +30,7 @@ function MovieDetails() {
   const location = useLocation();
   const isTV = location.pathname.startsWith('/tv');
   const mediaType = isTV ? 'tv' : 'movie';
+  const routedItem = location.state?.item || null;
   const [requestNonce, setRequestNonce] = useState(0);
   const isValidId = typeof id === 'string' && /^\d+$/.test(id);
 
@@ -53,6 +55,7 @@ function MovieDetails() {
   const [actorError, setActorError] = useState('');
   const actorRequestRef = useRef(null);
   const actorRequestIdRef = useRef(0);
+  const actorDialogCloseRef = useRef(null);
 
   const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
@@ -88,8 +91,17 @@ function MovieDetails() {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
         if (!mounted || controller.signal.aborted) return;
 
-        setContent(data.details);
-        setSimilar(data.similar.slice(0, 6));
+        const details =
+          data.details || (routedItem ? { ...routedItem, media_type: mediaType } : null);
+        if (!details) {
+          setError(
+            'This title did not return usable details. Please try again or pick another result.'
+          );
+          return;
+        }
+
+        setContent(details);
+        setSimilar((data.similar || []).slice(0, 6));
 
         // Get region providers or first available region
         const results = data.providers;
@@ -103,17 +115,29 @@ function MovieDetails() {
         setTrailer(trailerVideo || null);
 
         // Get top 6 cast members and director
-        const castData = data.credits.cast || [];
-        const crewData = data.credits.crew || [];
+        const credits = data.credits || { cast: [], crew: [] };
+        const castData = credits.cast || [];
+        const crewData = credits.crew || [];
         setCast(castData.slice(0, 6));
 
         const dir = crewData.find(c => c.job === 'Director');
         setDirector(dir || null);
 
         // Track this view in history with credits for DNA feature
-        addToHistory({ ...data.details, media_type: mediaType }, data.credits);
+        addToHistory({ ...details, media_type: mediaType }, credits);
       } catch (err) {
         if (!mounted || controller.signal.aborted) return;
+        if (routedItem) {
+          setContent({ ...routedItem, media_type: mediaType });
+          setSimilar([]);
+          setProviders(null);
+          setAllProviders(null);
+          setTrailer(null);
+          setCast([]);
+          setDirector(null);
+          addToHistory({ ...routedItem, media_type: mediaType }, { cast: [], crew: [] });
+          return;
+        }
         if (!isAbortError(err)) {
           setError(getUserFacingMessage(err) || 'Error fetching details.');
         }
@@ -133,7 +157,7 @@ function MovieDetails() {
       mounted = false;
       controller.abort();
     };
-  }, [id, mediaType, addToHistory, isValidId, requestNonce]);
+  }, [id, mediaType, addToHistory, isValidId, requestNonce, routedItem]);
 
   useEffect(() => {
     if (!allProviders) {
@@ -225,6 +249,12 @@ function MovieDetails() {
     setActorError('');
   }, []);
 
+  const { dialogRef: actorDialogRef } = useModalDialog({
+    isOpen: Boolean(selectedActor),
+    onClose: closeActorModal,
+    focusRef: actorDialogCloseRef,
+  });
+
   const handleToggleWatchlist = useCallback(() => {
     if (content) {
       toggleWatchlist({ ...content, media_type: mediaType });
@@ -273,6 +303,9 @@ function MovieDetails() {
   if (isLoading) {
     return (
       <main role="main">
+        <Link to="/" className="back-button">
+          ← Back to Discover
+        </Link>
         <div className="movie-details">
           <div className="movie-details-header">
             <div className="poster-container">
@@ -290,7 +323,18 @@ function MovieDetails() {
   }
 
   if (!content) {
-    return null;
+    return (
+      <main role="main">
+        <Link to="/" className="back-button">
+          ← Back to Discover
+        </Link>
+        <ErrorState
+          title="Couldn't load details"
+          message="This title did not return usable details. Please try again or pick another result."
+          onRetry={handleRetry}
+        />
+      </main>
+    );
   }
 
   const title = getDisplayTitle(content);
@@ -677,8 +721,21 @@ function MovieDetails() {
       {/* Actor Filmography Modal */}
       {selectedActor && (
         <div className="filmography-overlay" onClick={closeActorModal}>
-          <div className="filmography-modal" onClick={e => e.stopPropagation()}>
-            <button className="filmography-close" onClick={closeActorModal}>
+          <div
+            className="filmography-modal"
+            ref={actorDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="filmography-heading"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              ref={actorDialogCloseRef}
+              className="filmography-close"
+              type="button"
+              aria-label="Close filmography"
+              onClick={closeActorModal}
+            >
               ✕
             </button>
             <div className="filmography-header">
@@ -690,7 +747,7 @@ function MovieDetails() {
                 />
               )}
               <div>
-                <h3>{selectedActor.name}</h3>
+                <h3 id="filmography-heading">{selectedActor.name}</h3>
                 <p className="filmography-subtitle">Filmography</p>
               </div>
             </div>
@@ -715,7 +772,7 @@ function MovieDetails() {
                     key={`${credit.id}-${credit.media_type}`}
                     to={`/${credit.media_type === 'tv' ? 'tv' : 'movie'}/${credit.id}`}
                     className="filmography-item"
-                    onClick={() => setSelectedActor(null)}
+                    onClick={closeActorModal}
                   >
                     {credit.poster_path ? (
                       <img

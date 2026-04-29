@@ -305,7 +305,11 @@ const MovieCard = memo(function MovieCard({
         )}
       </div>
 
-      <Link to={detailPath} className={linkClassName}>
+      <Link
+        to={detailPath}
+        state={{ item: { ...movie, media_type: resolvedMediaType } }}
+        className={linkClassName}
+      >
         <div className="poster-wrapper">
           <img
             src={getPosterUrl(movie.poster_path)}
