@@ -328,6 +328,32 @@ function MovieDetails() {
     return reasons.slice(0, 3);
   }, [content, director, isLimitedDetails, mediaType, statusFor, watchHistory]);
 
+  const tasteIntel = useMemo(() => {
+    const viewedCast = new Set(watchHistory.flatMap(item => item.cast || []));
+    const viewedDirectors = new Set(watchHistory.flatMap(item => item.directors || []));
+    const castMatches = cast.filter(person => viewedCast.has(person.name)).slice(0, 3);
+    const directorMatch = director && viewedDirectors.has(director.name) ? director.name : '';
+    const normalizedReview = (userReview || reviewText || '').toLowerCase();
+    const positiveWords = ['love', 'great', 'fun', 'beautiful', 'favorite', 'excellent'];
+    const criticalWords = ['slow', 'boring', 'bad', 'weak', 'confusing', 'disappointing'];
+    const positiveHits = positiveWords.filter(word => normalizedReview.includes(word)).length;
+    const criticalHits = criticalWords.filter(word => normalizedReview.includes(word)).length;
+
+    let reviewSentiment = 'No review notes yet';
+    if (normalizedReview) {
+      if (positiveHits > criticalHits) reviewSentiment = 'Your notes lean positive';
+      else if (criticalHits > positiveHits) reviewSentiment = 'Your notes flag some friction';
+      else reviewSentiment = 'Your notes are balanced';
+    }
+
+    return {
+      castMatches,
+      directorMatch,
+      reviewSentiment,
+      hasSignals: castMatches.length > 0 || Boolean(directorMatch) || Boolean(normalizedReview),
+    };
+  }, [cast, director, reviewText, userReview, watchHistory]);
+
   if (error) {
     return (
       <main role="main">
@@ -607,6 +633,39 @@ function MovieDetails() {
               <li key={reason}>{reason}</li>
             ))}
           </ul>
+        </section>
+
+        <section
+          className="taste-intel-section details-section"
+          aria-labelledby="taste-intel-heading"
+        >
+          <header className="details-section-head">
+            <p className="details-kicker">Taste Intelligence</p>
+            <h3 id="taste-intel-heading">Your signal on this title</h3>
+          </header>
+          <div className="taste-intel-grid">
+            <div className="taste-intel-card">
+              <span>Cast affinity</span>
+              <strong>
+                {tasteIntel.castMatches.length > 0
+                  ? tasteIntel.castMatches.map(person => person.name).join(', ')
+                  : 'No repeated cast yet'}
+              </strong>
+            </div>
+            <div className="taste-intel-card">
+              <span>Director affinity</span>
+              <strong>{tasteIntel.directorMatch || 'No director repeat yet'}</strong>
+            </div>
+            <div className="taste-intel-card">
+              <span>Review sentiment</span>
+              <strong>{tasteIntel.reviewSentiment}</strong>
+            </div>
+          </div>
+          {!tasteIntel.hasSignals && (
+            <p className="taste-intel-empty">
+              Open more details pages or write a review to make this section more personal.
+            </p>
+          )}
         </section>
 
         {/* Cast Section */}

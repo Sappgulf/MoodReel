@@ -44,16 +44,47 @@ function genreLabelFor(item, genres) {
   return genres.find(genre => genre.id === genreId)?.name || '';
 }
 
+const CURATED_COLLECTIONS = [
+  {
+    id: 'under-90',
+    label: 'Under 90 min',
+    description: 'Fast, low-commitment picks for weeknights.',
+    mood: 'tight paced comfort',
+    filters: { runtime: 'short', sortBy: 'popularity.desc' },
+  },
+  {
+    id: 'visual-comfort',
+    label: 'Visual comfort',
+    description: 'Warm, stylish titles for an easy couch reset.',
+    mood: 'cozy visually beautiful',
+    filters: { runtime: 'any', sortBy: 'vote_average.desc' },
+  },
+  {
+    id: 'crowd-night',
+    label: 'Crowd night',
+    description: 'Popular crowd-pleasers with enough ratings to trust.',
+    mood: 'fun crowd pleasing',
+    filters: { runtime: 'medium', sortBy: 'popularity.desc' },
+  },
+  {
+    id: 'hidden-gems',
+    label: 'Hidden gems',
+    description: 'Higher-rated picks outside the obvious first row.',
+    mood: 'hidden gem',
+    filters: { runtime: 'any', sortBy: 'vote_average.desc' },
+  },
+];
+
 function Home() {
   const currentYear = new Date().getFullYear();
   const { isMobile } = useWindowSize();
   const location = useLocation();
   const { playSound } = useSounds();
-  const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } =
+  const { watchlist, isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } =
     useWatchlist();
   const { trackSave } = useAchievements();
   const { history: recentMoods, addToHistory } = useMoodHistory();
-  const { savePlaylist } = useCustomPlaylists();
+  const { playlists, savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { profile, like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } =
     useTasteProfile();
@@ -511,6 +542,21 @@ function Home() {
     playSound('pop');
   }, [setSelectedGenres, setMinRating, setAdvancedFilters, currentYear, playSound]);
 
+  const handleCollectionSelect = useCallback(
+    collection => {
+      setMood(collection.mood);
+      setAdvancedFilters(prev => ({
+        ...prev,
+        ...collection.filters,
+        yearMax: currentYear,
+      }));
+      setMinRating(collection.id === 'hidden-gems' || collection.id === 'visual-comfort' ? 7 : 0);
+      playSound('pop');
+      window.setTimeout(() => handleSearch(), 0);
+    },
+    [currentYear, handleSearch, playSound, setAdvancedFilters, setMinRating, setMood]
+  );
+
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12)
@@ -544,6 +590,15 @@ function Home() {
     : null;
 
   const watchHistory = useMemo(() => safeGetJSON(SK.WATCH_HISTORY, []), []);
+
+  const watchlistGenreCounts = useMemo(() => {
+    return watchlist.reduce((acc, item) => {
+      (item.genre_ids || []).forEach(genreId => {
+        acc[genreId] = (acc[genreId] || 0) + 1;
+      });
+      return acc;
+    }, {});
+  }, [watchlist]);
 
   const heroTitle = mood ? `Tuned for “${mood}”` : 'Find the film that fits tonight.';
 
@@ -594,7 +649,11 @@ function Home() {
       );
     }
     const likedKeys = profile?.liked || [];
+    const dislikedKeys = profile?.disliked || [];
     const recentTokens = new Set(watchHistory.slice(0, 12).flatMap(getTitleTokens));
+    const recentKeys = new Set(
+      watchHistory.slice(0, 30).map(item => `${item.id}-${item.media_type || 'movie'}`)
+    );
     const mediaTypeCounts = watchHistory.reduce((acc, item) => {
       const type = item.media_type || 'movie';
       acc[type] = (acc[type] || 0) + 1;
@@ -608,6 +667,13 @@ function Home() {
       if (status === 'liked') score += 60;
       if (status === 'disliked') score -= 80;
       if (likedKeys.includes(key)) score += 20;
+      if (dislikedKeys.includes(key)) score -= 50;
+      if (recentKeys.has(key)) score -= 12;
+      if (isInWatchlist(item.id)) score -= 8;
+      score += (item.genre_ids || []).reduce(
+        (sum, genreId) => sum + Math.min(watchlistGenreCounts[genreId] || 0, 4) * 4,
+        0
+      );
       score += Math.min(mediaTypeCounts[mediaType] || 0, 6) * 2;
       score += getTitleTokens(item).filter(token => recentTokens.has(token)).length * 3;
       return score;
@@ -624,7 +690,16 @@ function Home() {
       }
       return getPreferenceScore(b) - getPreferenceScore(a);
     });
-  }, [scopedResults, showHidden, statusFor, contentType, watchHistory, profile]);
+  }, [
+    scopedResults,
+    showHidden,
+    statusFor,
+    contentType,
+    watchHistory,
+    profile,
+    isInWatchlist,
+    watchlistGenreCounts,
+  ]);
 
   const getProviderKey = useCallback(
     item => {
@@ -648,7 +723,13 @@ function Home() {
         return 'Available on one of your services';
       }
       const genreLabel = genreLabelFor(item, genres);
+      const matchingWatchlistGenres = (item.genre_ids || []).filter(
+        genreId => watchlistGenreCounts[genreId] > 0
+      );
       if (mood && genreLabel) return `Matches your ${mood} mood through ${genreLabel}`;
+      if (matchingWatchlistGenres.length > 0 && genreLabel) {
+        return `Boosted by your saved ${genreLabel} picks`;
+      }
       if (watchHistory.some(historyItem => historyItem.media_type === mediaType)) {
         return `More ${mediaType === 'tv' ? 'series' : 'movies'} based on your history`;
       }
@@ -665,6 +746,7 @@ function Home() {
       genres,
       mood,
       watchHistory,
+      watchlistGenreCounts,
     ]
   );
 
@@ -684,6 +766,18 @@ function Home() {
       return myServices.some(id => ids.includes(id));
     });
   }, [tasteAdjustedResults, myServices, providerSnapshot, getProviderKey, contentType, region]);
+
+  const handleSmartSurprise = useCallback(() => {
+    const avoidKeys = [
+      ...(profile?.liked || []),
+      ...(profile?.disliked || []),
+      ...watchHistory.slice(0, 30).map(item => `${item.id}-${item.media_type || 'movie'}`),
+    ];
+    handleSurpriseMe({
+      candidates: filteredByServices.length > 0 ? filteredByServices : trending,
+      avoidKeys,
+    });
+  }, [filteredByServices, handleSurpriseMe, profile, trending, watchHistory]);
 
   useEffect(() => {
     if (filteredByServices.length === 0) return;
@@ -757,8 +851,6 @@ function Home() {
         timeContext={timeContext}
         handleSearch={handleSearch}
         setMood={setMood}
-        isSurpriseLoading={isSurpriseLoading}
-        handleSurpriseMe={handleSurpriseMe}
         hasAnySearch={hasAnySearch}
       />
 
@@ -785,7 +877,7 @@ function Home() {
               <button
                 className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`}
                 type="button"
-                onClick={handleSurpriseMe}
+                onClick={handleSmartSurprise}
                 disabled={isSurpriseLoading}
               >
                 {isSurpriseLoading ? '🎲 Shuffling…' : 'Shuffle tonight'}
@@ -812,6 +904,10 @@ function Home() {
                 <span>Filters</span>
                 <strong>{activeFilterCount}</strong>
               </div>
+              <div className="insight-item">
+                <span>Saved vibes</span>
+                <strong>{playlists.length}</strong>
+              </div>
             </div>
           </div>
         </div>
@@ -834,6 +930,30 @@ function Home() {
         dislike={dislike}
         statusFor={statusFor}
       />
+
+      <section className="curated-collections glass-panel" aria-labelledby="collections-heading">
+        <div className="collections-copy">
+          <span className="insight-kicker">Curated paths</span>
+          <h2 id="collections-heading">Pick the shape of tonight</h2>
+          <p>
+            Editorial shortcuts use the same discovery engine, then let your watchlist and taste
+            signals reorder the results.
+          </p>
+        </div>
+        <div className="collections-grid">
+          {CURATED_COLLECTIONS.map(collection => (
+            <button
+              key={collection.id}
+              type="button"
+              className="collection-chip"
+              onClick={() => handleCollectionSelect(collection)}
+            >
+              <span>{collection.label}</span>
+              <small>{collection.description}</small>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <HomeDiscoveryConsole
         contentType={contentType}

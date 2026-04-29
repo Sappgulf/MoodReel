@@ -1549,12 +1549,33 @@
    Offline Banner
    ===================================================== */
 .offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   text-align: center;
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 0.8rem;
   font-weight: 500;
+}
+
+.offline-banner p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.offline-actions {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+}
+
+.offline-actions a {
+  color: var(--color-text-gold);
+  font-weight: 700;
 }
 
 /* =====================================================

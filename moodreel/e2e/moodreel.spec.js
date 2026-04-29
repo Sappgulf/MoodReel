@@ -118,6 +118,15 @@ test.describe('MoodReel E2E', () => {
     });
   });
 
+  test('profile exposes local privacy controls', async ({ page }) => {
+    await page.goto('/profile');
+
+    await expect(page.getByRole('heading', { name: /Privacy & Local Data/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Export data' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Import backup' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reset local data' })).toBeVisible();
+  });
+
   test('keyboard shortcut opens modal', async ({ page }) => {
     await page.goto('/');
 
@@ -138,6 +147,20 @@ test.describe('MoodReel E2E', () => {
     if (await bottomNav.isVisible()) {
       await expect(bottomNav.locator('.bottom-nav-item')).toHaveCount(5);
     }
+  });
+
+  test('mobile swipe stack supports rejecting a result', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+
+    await page.locator('.emoji-picker button').first().click();
+    await page.getByRole('button', { name: /Get Recommendations|Searching/ }).click();
+    const swipeCard = page.locator('.swipe-card').first();
+    await expect(swipeCard).toBeVisible({ timeout: 15000 });
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.locator('.swipe-card, .empty-state').first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test('home search leads to detail page', async ({ page }) => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useAchievements } from '../hooks/useAchievements';
@@ -11,6 +11,7 @@ import { useToasts } from '../context/ToastContext';
 import { calculatePersona } from '../utils/personaUtils';
 import { copyToClipboard } from '../utils/clipboard';
 import { GENRE_MAP } from '../utils/mediaUtils';
+import { clearMoodReelData, downloadPrivacyExport, importPrivacyData } from '../utils/privacyData';
 
 const AVATARS = ['🎬', '🍿', '⭐', '🎭', '🎥', '🎞️', '🎟️', '📺', '🎧', '🎮', '💡', '✨'];
 
@@ -36,6 +37,7 @@ function Profile() {
   const { pushToast } = useToasts();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(profile);
+  const importInputRef = useRef(null);
 
   const stats = useMemo(() => {
     const genreCounts = {};
@@ -61,6 +63,61 @@ function Profile() {
   const handleSave = () => {
     updateProfile(editForm);
     setIsEditing(false);
+  };
+
+  const handleExportData = () => {
+    const didStart = downloadPrivacyExport();
+    pushToast({
+      icon: didStart ? '⬇️' : '⚠️',
+      title: didStart ? 'Data export ready' : 'Export unavailable',
+      message: didStart
+        ? 'Your MoodReel backup includes local profile, taste, vibes, ratings, and watch data.'
+        : 'This browser blocked the download flow.',
+      variant: didStart ? 'info' : 'error',
+      duration: 4000,
+    });
+  };
+
+  const handleImportFile = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const importedCount = importPrivacyData(await file.text());
+      pushToast({
+        icon: '⬆️',
+        title: 'Data imported',
+        message: `${importedCount} MoodReel data sections restored. Reloading to apply them.`,
+        duration: 3500,
+      });
+      window.setTimeout(() => window.location.reload(), 600);
+    } catch (error) {
+      pushToast({
+        icon: '⚠️',
+        title: 'Import failed',
+        message: error.message || 'Choose a MoodReel export file and try again.',
+        variant: 'error',
+        duration: 5000,
+      });
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handleResetLocalData = () => {
+    const shouldReset = window.confirm(
+      'Reset all local MoodReel data on this device? This clears profile, saved vibes, watchlist, ratings, history, and preferences.'
+    );
+    if (!shouldReset) return;
+
+    clearMoodReelData();
+    pushToast({
+      icon: '🧹',
+      title: 'Local data reset',
+      message: 'MoodReel will reload with a clean local profile.',
+      duration: 3000,
+    });
+    window.setTimeout(() => window.location.reload(), 600);
   };
 
   return (
@@ -206,6 +263,47 @@ function Profile() {
               Reset taste profile
             </button>
           </div>
+        </div>
+
+        <div className="privacy-card glass-card">
+          <h3>🔒 Privacy & Local Data</h3>
+          <p>
+            MoodReel stores your profile, vibes, watchlist, ratings, and taste signals locally in
+            this browser. They stay on this device unless you export or share them.
+          </p>
+          <div className="privacy-data-stats" aria-label="Stored local data summary">
+            <span>{watchlist.length} watchlist</span>
+            <span>{moodHistory.length} moods</span>
+            <span>{watchHistory.length} viewed</span>
+            <span>{tasteCounts.liked + tasteCounts.disliked} taste signals</span>
+          </div>
+          <div className="privacy-actions">
+            <button type="button" className="secondary-button" onClick={handleExportData}>
+              Export data
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => importInputRef.current?.click()}
+            >
+              Import backup
+            </button>
+            <button
+              type="button"
+              className="text-button danger-text"
+              onClick={handleResetLocalData}
+            >
+              Reset local data
+            </button>
+          </div>
+          <input
+            ref={importInputRef}
+            className="sr-only"
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImportFile}
+            aria-label="Import MoodReel backup file"
+          />
         </div>
       </div>
 

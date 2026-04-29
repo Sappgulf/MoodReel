@@ -23,6 +23,7 @@ export const StorageKeys = Object.freeze({
   MY_SERVICES: 'moodreel-my-services',
   SEARCH_CACHE: 'moodreel-search-persistent-cache',
   SOUNDS: 'moodreel-sounds',
+  SURPRISE_SEEN: 'moodreel-surprise-seen',
   TASTE_PROFILE: 'moodreel-taste-profile',
   TASTE_SHOW_HIDDEN: 'moodreel-taste-show-hidden',
   THEME_AUTO: 'moodreel-theme-auto',

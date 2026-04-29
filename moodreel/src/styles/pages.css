@@ -279,6 +279,72 @@
   margin: var(--spacing-xl) 0;
 }
 
+.curated-collections {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1fr);
+  gap: var(--spacing-lg);
+  align-items: center;
+  margin: var(--spacing-lg) 0;
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.collections-copy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.collections-copy h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+  letter-spacing: -0.03em;
+}
+
+.collections-copy p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.collection-chip {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 116px;
+  padding: 0.9rem;
+  text-align: left;
+  color: var(--color-text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.08), transparent 50%),
+    var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.collection-chip:hover,
+.collection-chip:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.42);
+}
+
+.collection-chip span {
+  font-weight: 800;
+}
+
+.collection-chip small {
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
 .discovery-page .content-toggle-tabs,
 .discovery-page .mood-selector,
 .discovery-page .title-search,
@@ -318,7 +384,8 @@ body.mood-classic .discovery-hero {
 
 @media (max-width: 768px) {
   .discovery-hero,
-  .discovery-support-grid {
+  .discovery-support-grid,
+  .curated-collections {
     grid-template-columns: 1fr;
   }
 
@@ -341,6 +408,10 @@ body.mood-classic .discovery-hero {
 
   .discovery-library {
     gap: var(--spacing-lg);
+  }
+
+  .collections-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1536,6 +1607,40 @@ body.mood-classic .discovery-hero {
   line-height: 1.55;
 }
 
+.taste-intel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.taste-intel-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--color-bg-elevated);
+}
+
+.taste-intel-card span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.taste-intel-card strong {
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+
+.taste-intel-empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
 .movie-details .meta-row {
   display: flex;
   align-items: center;
@@ -1652,6 +1757,10 @@ body.mood-classic .discovery-hero {
 
   .movie-facts-strip {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+
+  .taste-intel-grid {
+    grid-template-columns: 1fr;
   }
 
   .action-buttons {
@@ -2690,6 +2799,42 @@ body.mood-classic .discovery-hero {
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: var(--spacing-md);
+}
+
+.privacy-card {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.privacy-card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+.privacy-data-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+}
+
+.privacy-data-stats span {
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.privacy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.danger-text {
+  color: var(--color-error, #ef4444);
 }
 
 .persona-content {

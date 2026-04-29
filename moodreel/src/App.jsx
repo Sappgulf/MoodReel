@@ -13,6 +13,8 @@ import TrailerPiP from './components/TrailerPiP';
 import ToastStack from './components/ToastStack';
 import { useUserProfile } from './hooks/useUserProfile';
 import { copyToClipboard } from './utils/clipboard';
+import { safeGetJSON } from './storage/safeStorage';
+import { StorageKeys as SK } from './storage/storageKeys';
 
 // Lazy load secondary routes for code-splitting
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
@@ -67,6 +69,14 @@ function NotFoundPage() {
         Return to Discover
       </Link>
     </section>
+  );
+}
+
+function GuardedRoute({ children, routeKey }) {
+  return (
+    <ErrorBoundary variant="page" resetKey={routeKey}>
+      {children}
+    </ErrorBoundary>
   );
 }
 
@@ -220,6 +230,13 @@ function AppContent() {
     [location.pathname, setDocumentTitle]
   );
   const routePath = location.pathname;
+  const offlineSummary = useMemo(() => {
+    if (!isOffline) return null;
+    return {
+      watchlistCount: safeGetJSON(SK.WATCHLIST, []).length,
+      vibesCount: safeGetJSON(SK.CUSTOM_PLAYLISTS, []).length,
+    };
+  }, [isOffline]);
 
   const announceSearchFallback = useCallback(
     event => {
@@ -322,7 +339,8 @@ function AppContent() {
           pushToast({
             icon: '⬆️',
             title: 'Update ready',
-            message: 'A fresh MoodReel build is available.',
+            message:
+              'Fresh polish is available: offline shell, smarter shuffle, and data controls.',
             duration: 0,
             action: {
               label: 'Reload',
@@ -475,7 +493,15 @@ function AppContent() {
       {/* Offline Indicator */}
       {isOffline && (
         <div className="offline-banner" role="status" aria-live="polite">
-          📡 You are offline. Showing cached results.
+          <span>📡 Offline mode</span>
+          <p>
+            Saved shell ready: {offlineSummary?.watchlistCount || 0} watchlist titles and{' '}
+            {offlineSummary?.vibesCount || 0} saved vibes are still available.
+          </p>
+          <div className="offline-actions">
+            <Link to="/watchlist">Open Watchlist</Link>
+            <Link to="/profile">Data Settings</Link>
+          </div>
         </div>
       )}
 
@@ -630,23 +656,128 @@ function AppContent() {
         >
           <Suspense fallback={<SkeletonGrid count={8} />}>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route
+                path="/"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <Home />
+                  </GuardedRoute>
+                }
+              />
               <Route path="/movie" element={<Navigate to="/" replace />} />
               <Route path="/tv" element={<Navigate to="/" replace />} />
-              <Route path="/movie/:id" element={<MovieDetails />} />
-              <Route path="/tv/:id" element={<MovieDetails />} />
-              <Route path="/movie/:id/" element={<MovieDetails />} />
-              <Route path="/tv/:id/" element={<MovieDetails />} />
-              <Route path="/watchlist" element={<Watchlist />} />
-              <Route path="/shared" element={<SharedList />} />
-              <Route path="/achievements" element={<Achievements />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/share/:shareId" element={<SharedList />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/calendar" element={<MoodCalendar />} />
-              <Route path="/404" element={<NotFoundPage />} />
-              <Route path="/not-found" element={<NotFoundPage />} />
-              <Route path="*" element={<NotFoundPage />} />
+              <Route
+                path="/movie/:id"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <MovieDetails />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/tv/:id"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <MovieDetails />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/movie/:id/"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <MovieDetails />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/tv/:id/"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <MovieDetails />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/watchlist"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <Watchlist />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/shared"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <SharedList />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/achievements"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <Achievements />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <Profile />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/share/:shareId"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <SharedList />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/stats"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <Stats />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <MoodCalendar />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/404"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <NotFoundPage />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="/not-found"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <NotFoundPage />
+                  </GuardedRoute>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <NotFoundPage />
+                  </GuardedRoute>
+                }
+              />
             </Routes>
           </Suspense>
         </main>

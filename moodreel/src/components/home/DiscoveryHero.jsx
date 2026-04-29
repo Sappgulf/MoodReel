@@ -21,8 +21,6 @@ export default function DiscoveryHero({
   timeContext,
   handleSearch,
   setMood,
-  isSurpriseLoading,
-  handleSurpriseMe,
   hasAnySearch,
 }) {
   if (isLoading && !featuredItem) {
@@ -63,10 +61,9 @@ export default function DiscoveryHero({
           <button
             type="button"
             className="secondary-button"
-            onClick={handleSurpriseMe}
-            disabled={isSurpriseLoading}
+            onClick={() => document.getElementById('collections-heading')?.scrollIntoView()}
           >
-            {isSurpriseLoading ? 'Shuffling…' : 'Surprise Me'}
+            Browse collections
           </button>
           <button
             type="button"
