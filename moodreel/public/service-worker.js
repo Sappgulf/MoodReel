@@ -24,6 +24,9 @@ self.addEventListener('message', (event) => {
     if (event.data?.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
+    if (event.data?.type === 'GET_VERSION') {
+        event.source?.postMessage({ type: 'CACHE_VERSION', version: CACHE_VERSION });
+    }
 });
 
 // Activate - clear old caches
@@ -45,8 +48,36 @@ self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
 
+    const url = new URL(event.request.url);
+    if (!['http:', 'https:'].includes(url.protocol)) return;
+
     // Skip API requests (don't cache)
     if (event.request.url.includes('api.themoviedb.org')) {
+        return;
+    }
+
+    // Navigation: network-first with cached app shell fallback.
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).catch(() => caches.match('/').then((cached) => cached || caches.match('/index.html')))
+        );
+        return;
+    }
+
+    // Static same-origin assets: stale-while-revalidate.
+    if (url.origin === self.location.origin && url.pathname.startsWith('/assets/')) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                const networkFetch = fetch(event.request).then((response) => {
+                    if (response.ok) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+                    }
+                    return response;
+                });
+                return cachedResponse || networkFetch;
+            })
+        );
         return;
     }
 

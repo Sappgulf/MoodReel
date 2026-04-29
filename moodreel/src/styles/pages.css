@@ -1519,6 +1519,23 @@ body.mood-classic .discovery-hero {
   justify-self: start;
 }
 
+.why-like-list {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.why-like-list li {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  line-height: 1.55;
+}
+
 .movie-details .meta-row {
   display: flex;
   align-items: center;

@@ -19,9 +19,10 @@ import { useSurpriseShuffle } from '../hooks/useSurpriseShuffle';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
-import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useToasts } from '../context/ToastContext';
 import searchService from '../services/searchService';
+import { safeGetJSON } from '../storage/safeStorage';
+import { StorageKeys as SK } from '../storage/storageKeys';
 import {
   fetchProviderCatalog,
   fetchTitleProviders,
@@ -38,6 +39,11 @@ function getTitleTokens(item) {
     .filter(token => token.length > 3);
 }
 
+function genreLabelFor(item, genres) {
+  const genreId = item.genre_ids?.[0];
+  return genres.find(genre => genre.id === genreId)?.name || '';
+}
+
 function Home() {
   const currentYear = new Date().getFullYear();
   const { isMobile } = useWindowSize();
@@ -51,7 +57,6 @@ function Home() {
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { profile, like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } =
     useTasteProfile();
-  const { history: watchHistory } = useWatchHistory();
   const { pushToast } = useToasts();
 
   const { isSurpriseLoading, showWinnerInfo, surpriseMovie, closeSurprise, handleSurpriseMe } =
@@ -538,6 +543,8 @@ function Home() {
     ? `/${featuredItem.media_type || contentType}/${featuredItem.id}`
     : null;
 
+  const watchHistory = useMemo(() => safeGetJSON(SK.WATCH_HISTORY, []), []);
+
   const heroTitle = mood ? `Tuned for “${mood}”` : 'Find the film that fits tonight.';
 
   const heroDescription = mood
@@ -624,6 +631,41 @@ function Home() {
       return `${item.id}-${item.media_type || contentType}-${region}`;
     },
     [contentType, region]
+  );
+
+  const getRecommendationReason = useCallback(
+    item => {
+      const mediaType = item.media_type || contentType;
+      const status = statusFor(item.id, mediaType);
+      if (status === 'liked') return 'Because you liked this title';
+      const cached =
+        providerSnapshot[getProviderKey(item)] ||
+        getCachedTitleProviders(item.id, mediaType, region);
+      if (
+        myServices.length > 0 &&
+        cached?.flatrate?.some(provider => myServices.includes(provider.id))
+      ) {
+        return 'Available on one of your services';
+      }
+      const genreLabel = genreLabelFor(item, genres);
+      if (mood && genreLabel) return `Matches your ${mood} mood through ${genreLabel}`;
+      if (watchHistory.some(historyItem => historyItem.media_type === mediaType)) {
+        return `More ${mediaType === 'tv' ? 'series' : 'movies'} based on your history`;
+      }
+      if (item.vote_average >= 8) return 'Highly rated by TMDB viewers';
+      return item.media_type === 'tv' ? 'Series pick for this vibe' : 'Movie pick for this vibe';
+    },
+    [
+      contentType,
+      statusFor,
+      providerSnapshot,
+      getProviderKey,
+      region,
+      myServices,
+      genres,
+      mood,
+      watchHistory,
+    ]
   );
 
   const filteredByServices = useMemo(() => {
@@ -879,6 +921,7 @@ function Home() {
         showHidden={showHidden}
         setShowHidden={setShowHidden}
         statusFor={statusFor}
+        getRecommendationReason={getRecommendationReason}
         handleSaveVibe={handleSaveVibe}
         setMood={setMood}
         handleClearFilters={handleClearFilters}

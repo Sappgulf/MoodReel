@@ -57,6 +57,35 @@ test.describe('MoodReel E2E', () => {
     await expect(resultCard).toBeVisible({ timeout: 15000 });
   });
 
+  test('save vibe modal stores a custom vibe', async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'Mobile Safari',
+      'Save Vibe lives in the desktop results header.'
+    );
+
+    await page.goto('/');
+
+    await page.locator('.emoji-picker button').first().click();
+    await page.getByRole('button', { name: /Get Recommendations|Searching/ }).click();
+    await expect(page.locator('.recommendation, .swipe-card').first()).toBeVisible({
+      timeout: 15000,
+    });
+
+    await page
+      .getByRole('button', { name: /Save Vibe/ })
+      .first()
+      .click();
+    const modal = page.getByRole('dialog', { name: /Name your custom discovery mix/ });
+    await expect(modal).toBeVisible();
+    await modal.getByLabel('Vibe name').fill('E2E Cozy Vibe');
+    await modal.getByRole('button', { name: 'Save Vibe', exact: true }).click();
+    await expect(modal).toBeHidden();
+
+    await page.reload();
+    await page.getByLabel('Search saved vibes').fill('E2E Cozy');
+    await expect(page.getByText('✨ E2E Cozy Vibe')).toBeVisible();
+  });
+
   test('navigation works correctly', async ({ page }) => {
     await page.goto('/');
 

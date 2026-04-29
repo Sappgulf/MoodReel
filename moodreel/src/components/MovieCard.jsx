@@ -20,6 +20,7 @@ const MovieCard = memo(function MovieCard({
   onSwipeRight,
   onSwipeLeft,
   providerBadges = [],
+  reason = '',
   onLike,
   onDislike,
   tasteStatus = 'neutral',
@@ -331,6 +332,7 @@ const MovieCard = memo(function MovieCard({
           {isRowMode && movie.overview ? (
             <p className="card-overview">{movie.overview.slice(0, 120)}</p>
           ) : null}
+          {reason && <p className="recommendation-reason">{reason}</p>}
           <div className="card-footer">
             {rating && (
               <div className="rating" aria-label={`Rating: ${rating} out of 10`}>

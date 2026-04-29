@@ -29,6 +29,7 @@ export default function HomeResultsPanel({
   showHidden,
   setShowHidden,
   statusFor,
+  getRecommendationReason,
   handleSaveVibe,
   setMood,
   handleClearFilters,
@@ -116,6 +117,7 @@ export default function HomeResultsPanel({
                 onLike={like}
                 onDislike={dislike}
                 tasteStatus={statusFor(rec.id, rec.media_type)}
+                reason={getRecommendationReason?.(rec)}
                 index={idx}
               />
             ))}

@@ -995,6 +995,7 @@ a {
   .onboarding-backdrop,
   .shortcuts-backdrop,
   .trailer-modal-backdrop,
+  .save-vibe-backdrop,
   .spin-wheel-overlay {
     animation: none !important;
   }
@@ -1002,6 +1003,7 @@ a {
   .onboarding-modal,
   .shortcuts-modal,
   .trailer-modal,
+  .save-vibe-modal,
   .spin-wheel-modal {
     animation: none !important;
   }

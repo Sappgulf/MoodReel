@@ -34,7 +34,7 @@ function MovieDetails() {
   const [requestNonce, setRequestNonce] = useState(0);
   const isValidId = typeof id === 'string' && /^\d+$/.test(id);
 
-  const { addToHistory } = useWatchHistory();
+  const { history: watchHistory, addToHistory } = useWatchHistory();
   const { playTrailer } = useTrailer();
   const { playSound } = useSounds();
   const [content, setContent] = useState(null);
@@ -293,6 +293,40 @@ function MovieDetails() {
       buy: normalizeProviderList(providers.buy || []),
     };
   }, [providers]);
+
+  const whyYouMightLikeIt = useMemo(() => {
+    if (!content) return [];
+    const reasons = [];
+    const status = statusFor(content.id, mediaType);
+    if (status === 'liked') {
+      reasons.push(
+        'You marked this as a liked title, so similar picks will stay closer to this lane.'
+      );
+    }
+    if (isLimitedDetails) {
+      reasons.push(
+        'This page is using saved card data while live details are temporarily unavailable.'
+      );
+    }
+    if (director) {
+      reasons.push(
+        `Directed by ${director.name}, with cast and similar-title context used for future ranking.`
+      );
+    }
+    const sameTypeViews = watchHistory.filter(item => item.media_type === mediaType).length;
+    if (sameTypeViews > 1) {
+      reasons.push(
+        `You have opened ${sameTypeViews} ${mediaType === 'tv' ? 'series' : 'movies'} recently, so this format is boosted.`
+      );
+    }
+    if (content.vote_average >= 8) {
+      reasons.push('TMDB viewers rate this strongly.');
+    }
+    if (reasons.length === 0) {
+      reasons.push('It matched the discovery filters that brought you here.');
+    }
+    return reasons.slice(0, 3);
+  }, [content, director, isLimitedDetails, mediaType, statusFor, watchHistory]);
 
   if (error) {
     return (
@@ -561,6 +595,18 @@ function MovieDetails() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="why-like-section details-section" aria-labelledby="why-like-heading">
+          <header className="details-section-head">
+            <p className="details-kicker">Taste Signal</p>
+            <h3 id="why-like-heading">Why you might like it</h3>
+          </header>
+          <ul className="why-like-list">
+            {whyYouMightLikeIt.map(reason => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
         </section>
 
         {/* Cast Section */}

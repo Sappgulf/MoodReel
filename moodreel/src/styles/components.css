@@ -1607,6 +1607,38 @@
     background-color var(--transition-fast);
 }
 
+.playlist-select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.22rem;
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.playlist-search-label {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.playlist-search-input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 .playlist-card:hover,
 .playlist-card.hovered {
   transform: translateY(-1px);
@@ -1630,12 +1662,24 @@
   overflow: hidden;
 }
 
-.delete-playlist {
+.playlist-actions {
   position: absolute;
   top: 0.4rem;
   right: 0.45rem;
-  width: 1.2rem;
-  height: 1.2rem;
+  display: flex;
+  gap: 0.2rem;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.playlist-card:hover .playlist-actions,
+.playlist-card:focus-within .playlist-actions {
+  opacity: 1;
+}
+
+.playlist-action {
+  width: 1.35rem;
+  height: 1.35rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1643,6 +1687,13 @@
   background: rgba(0, 0, 0, 0.35);
   color: var(--color-text-on-dark);
   font-size: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+}
+
+.playlist-action:hover {
+  background: rgba(255, 215, 0, 0.85);
+  color: #09090b;
 }
 
 @media (min-width: 1024px) {
@@ -2060,6 +2111,20 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   max-width: 70ch;
+}
+
+.recommendation-reason {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.28rem 0.5rem;
+  color: var(--color-text-on-dark);
+  background: rgba(255, 215, 0, 0.14);
+  border: 1px solid rgba(255, 215, 0, 0.22);
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  line-height: 1.25;
 }
 
 @media (max-width: 768px) {
