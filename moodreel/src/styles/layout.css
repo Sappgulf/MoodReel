@@ -42,7 +42,7 @@
 }
 
 .logo-link img {
-  height: 28px;
+  height: 36px;
   width: auto;
   display: block;
 }
@@ -203,7 +203,7 @@ main {
   }
 
   .logo-link img {
-    height: 24px;
+    height: 32px;
   }
 
   .App-header h1 {

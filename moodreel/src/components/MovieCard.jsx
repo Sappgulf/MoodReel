@@ -1,7 +1,12 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProviderBadges from './ProviderBadges';
-import { getDisplayTitle, getPosterUrl, getReleaseYear } from '../utils/mediaUtils';
+import {
+  getDisplayTitle,
+  getPosterUrl,
+  getReleaseYear,
+  FALLBACK_POSTER,
+} from '../utils/mediaUtils';
 import { useSounds } from '../hooks/useSounds';
 
 /**
@@ -35,12 +40,8 @@ const MovieCard = memo(function MovieCard({
   const resolvedMediaType = movie.media_type || mediaType;
   const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
   const posterPath = movie.poster_path;
-  // Use w342 for fast initial paint on first visible rows, w500 for deeper items
-  const posterSize = posterPath ? (index < 8 ? 'w342' : 'w500') : 'w500';
-  // Responsive srcset for crisp rendering on retina displays
-  const posterSrcSet = posterPath
-    ? `${getPosterUrl(posterPath, 'w342')} 342w, ${getPosterUrl(posterPath, 'w500')} 500w, ${getPosterUrl(posterPath, 'w780')} 780w`
-    : undefined;
+  // Always use w500 for reliable loading; TMDB serves it fast enough
+  const posterUrl = getPosterUrl(posterPath, 'w500');
 
   const cardRef = useRef(null);
   const touchStartX = useRef(null);
@@ -320,16 +321,13 @@ const MovieCard = memo(function MovieCard({
       >
         <div className="poster-wrapper">
           <img
-            src={getPosterUrl(posterPath, posterSize)}
-            srcSet={posterSrcSet}
-            sizes="(max-width: 639px) 45vw, (max-width: 1023px) 30vw, 220px"
+            src={posterUrl}
             alt={`${title} poster`}
             loading={index < 8 ? 'eager' : 'lazy'}
             decoding="async"
             onError={e => {
               e.target.onerror = null;
-              e.target.removeAttribute('srcset');
-              e.target.src = getPosterUrl();
+              e.target.src = FALLBACK_POSTER;
             }}
           />
         </div>
