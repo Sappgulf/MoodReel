@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { getPosterUrl } from '../utils/mediaUtils';
+import MediaImage from './MediaImage';
 
 // Curated list of top streaming providers (TMDB US IDs)
 export const STREAMING_PROVIDERS = [
@@ -62,12 +62,12 @@ function StreamingFilter({ selectedProviders = [], onToggle, providers, label = 
               title={provider.name}
             >
               {provider.logoPath ? (
-                <img
+                <MediaImage
                   className="streaming-logo-img"
-                  src={getPosterUrl(provider.logoPath, 'w45')}
+                  path={provider.logoPath}
+                  size="w45"
                   alt=""
                   loading="lazy"
-                  decoding="async"
                 />
               ) : (
                 <span className="streaming-logo" aria-hidden="true">

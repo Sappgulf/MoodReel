@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { getPosterUrl } from '../utils/mediaUtils';
+import MediaImage from './MediaImage';
 
 function ProviderBadgeItem({ provider }) {
   const [hasError, setHasError] = useState(false);
@@ -23,13 +23,13 @@ function ProviderBadgeItem({ provider }) {
   }
 
   return (
-    <img
-      src={getPosterUrl(provider.logoPath, 'w45')}
+    <MediaImage
+      path={provider.logoPath}
+      size="w45"
       alt={provider.name}
       title={provider.name}
       className="provider-badge"
       loading="lazy"
-      decoding="async"
       onError={handleError}
     />
   );

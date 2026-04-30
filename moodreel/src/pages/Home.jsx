@@ -136,6 +136,7 @@ function Home() {
   const [resultLayout, setResultLayout] = useState('poster');
   const [titleQuery, setTitleQuery] = useState('');
   const [showSaveVibeModal, setShowSaveVibeModal] = useState(false);
+  const [shouldRunHydratedSearch, setShouldRunHydratedSearch] = useState(false);
 
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
@@ -211,11 +212,10 @@ function Home() {
     hasHydratedRef.current = true;
 
     if (moodParam) {
-      setTimeout(() => handleSearch(), 0);
+      setShouldRunHydratedSearch(true);
     }
   }, [
     location.search,
-    handleSearch,
     setAdvancedFilters,
     setContentType,
     setMinRating,
@@ -225,6 +225,12 @@ function Home() {
     setSearchScope,
     setShowHidden,
   ]);
+
+  useEffect(() => {
+    if (!shouldRunHydratedSearch || !mood.trim()) return;
+    setShouldRunHydratedSearch(false);
+    handleSearch();
+  }, [handleSearch, mood, shouldRunHydratedSearch]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;

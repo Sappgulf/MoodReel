@@ -1,7 +1,7 @@
 {
-  "installCommand": "cd moodreel && npm ci",
-  "buildCommand": "cd moodreel && npm run build",
-  "outputDirectory": "moodreel/build",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
   "framework": null,
   "headers": [
     {

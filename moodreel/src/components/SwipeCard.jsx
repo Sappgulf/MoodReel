@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPosterUrl } from '../utils/mediaUtils';
+import MediaImage from './MediaImage';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -67,7 +68,6 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
 
   const title = movie.title || movie.name;
   const posterPath = movie.poster_path || movie.backdrop_path;
-  const posterUrl = getPosterUrl(posterPath, movie.poster_path ? 'w342' : 'w780');
   const detailPath = mediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
 
   const handleTouchStart = useCallback(e => {
@@ -134,15 +134,12 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
         state={{ item: { ...movie, media_type: mediaType } }}
         className="swipe-card-link"
       >
-        <img
-          src={posterUrl}
+        <MediaImage
+          path={posterPath}
+          type={movie.poster_path ? 'poster' : 'backdrop'}
+          size={movie.poster_path ? 'w342' : 'w780'}
           alt={`${title} poster`}
           loading="eager"
-          decoding="async"
-          onError={e => {
-            e.target.onerror = null;
-            e.target.src = getPosterUrl();
-          }}
         />
         <div className="swipe-card-info">
           <h3>{title}</h3>

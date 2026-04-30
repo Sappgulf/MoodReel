@@ -1,4 +1,3 @@
-import EmojiPicker from '../EmojiPicker';
 import MoodPlaylists from '../MoodPlaylists';
 import StreamingFilter from '../StreamingFilter';
 import RatingFilter from '../RatingFilter';
@@ -6,17 +5,11 @@ import AdvancedFilters from '../AdvancedFilters';
 import { copyToClipboard } from '../../utils/clipboard';
 
 export default function HomeDiscoveryConsole({
-  contentType,
   setContentType,
-  setRecommendations,
-  setHasSearched,
   resultLayout,
   setResultLayout,
   mood,
   setMood,
-  moodInputRef,
-  recentMoods,
-  playSound,
   titleQuery,
   setTitleQuery,
   titleSearchRef,
@@ -25,7 +18,6 @@ export default function HomeDiscoveryConsole({
   isBusy,
   handleSearch,
   pushToast,
-  handleEmojiSelect,
   selectedGenres,
   recommendations,
   isLoading,
@@ -62,89 +54,29 @@ export default function HomeDiscoveryConsole({
 
   return (
     <section className="discovery-console">
-      <div className="content-toggle-tabs" role="group" aria-label="Content type">
-        {['all', 'movie', 'tv'].map(type => (
-          <button
-            key={type}
-            type="button"
-            className={`content-tab ${contentType === type ? 'active' : ''}`}
-            aria-pressed={contentType === type}
-            onClick={() => {
-              setContentType(type);
-              setRecommendations([]);
-              setHasSearched(false);
-            }}
-          >
-            {type === 'all' ? '🎬 All' : type === 'movie' ? '🎥 Movies' : '📺 TV'}
-          </button>
-        ))}
-      </div>
-
-      <div className="result-layout-toggle" role="group" aria-label="Result layout">
-        <button
-          type="button"
-          className={`result-layout-btn ${resultLayout === 'poster' ? 'active' : ''}`}
-          aria-pressed={resultLayout === 'poster'}
-          onClick={() => setResultLayout('poster')}
-        >
-          🎞 Poster Grid
-        </button>
-        <button
-          type="button"
-          className={`result-layout-btn ${resultLayout === 'rows' ? 'active' : ''}`}
-          aria-pressed={resultLayout === 'rows'}
-          onClick={() => setResultLayout('rows')}
-        >
-          📜 Cinematic List
-        </button>
-      </div>
-
-      <div className="mood-selector">
-        <label htmlFor="mood-search-input" className="mood-input-label">
-          How are you feeling?
-        </label>
-        <div className="mood-input-wrapper">
-          <span className="mood-icon" aria-hidden="true">
-            ✨
-          </span>
-          <input
-            id="mood-search-input"
-            ref={moodInputRef}
-            type="text"
-            value={mood}
-            onChange={e => setMood(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="What's your mood tonight?"
-          />
-          {mood && (
-            <button
-              type="button"
-              className="mood-clear-btn"
-              onClick={() => setMood('')}
-              aria-label="Clear mood"
-            >
-              ✕
-            </button>
-          )}
+      <div className="discovery-console-head">
+        <div>
+          <p className="details-kicker">Refine</p>
+          <h3>{mood ? `Results for “${mood}”` : 'Browse the feed'}</h3>
         </div>
-        {recentMoods.length > 0 && !mood && (
-          <div className="recent-moods">
-            <span className="recent-moods-label">Recent:</span>
-            {recentMoods.slice(0, 5).map((recentMood, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className="recent-mood-chip"
-                onClick={() => {
-                  setMood(recentMood);
-                  playSound('pop');
-                }}
-              >
-                {recentMood}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="result-layout-toggle" role="group" aria-label="Result layout">
+          <button
+            type="button"
+            className={`result-layout-btn ${resultLayout === 'poster' ? 'active' : ''}`}
+            aria-pressed={resultLayout === 'poster'}
+            onClick={() => setResultLayout('poster')}
+          >
+            🎞 Poster Grid
+          </button>
+          <button
+            type="button"
+            className={`result-layout-btn ${resultLayout === 'rows' ? 'active' : ''}`}
+            aria-pressed={resultLayout === 'rows'}
+            onClick={() => setResultLayout('rows')}
+          >
+            📜 Cinematic List
+          </button>
+        </div>
       </div>
 
       <div className="title-search" aria-busy={isBusy}>
@@ -178,8 +110,8 @@ export default function HomeDiscoveryConsole({
       </div>
 
       <div className="search-container">
-        <button className="primary-button" type="button" onClick={handleSearch} disabled={isBusy}>
-          {isBusy ? 'Searching…' : 'Get Recommendations'}
+        <button className="secondary-button" type="button" onClick={handleSearch} disabled={isBusy}>
+          {isBusy ? 'Searching…' : 'Refresh Results'}
         </button>
         <button
           className="secondary-button"
@@ -209,8 +141,6 @@ export default function HomeDiscoveryConsole({
           🔗 Copy Link
         </button>
       </div>
-
-      <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
 
       {recommendations.length === 0 && !isLoading && (
         <MoodPlaylists onSelectPlaylist={onSelectPlaylist} />

@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom';
-import {
-  getBackdropUrl,
-  getDisplayTitle,
-  getDisplayOverview,
-  getReleaseYear,
-} from '../../utils/mediaUtils';
+import { getDisplayTitle, getDisplayOverview, getReleaseYear } from '../../utils/mediaUtils';
+import MediaImage from '../MediaImage';
 import { DiscoveryHeroSkeleton } from '../Skeleton';
 
 export default function DiscoveryHero({
@@ -115,11 +111,12 @@ export default function DiscoveryHero({
         {featuredItem ? (
           <Link to={featuredLink} className="hero-featured-card">
             <div className="hero-featured-art">
-              <img
-                src={getBackdropUrl(featuredItem.backdrop_path, 'w780')}
+              <MediaImage
+                type="backdrop"
+                path={featuredItem.backdrop_path || featuredItem.poster_path}
+                size={featuredItem.backdrop_path ? 'w780' : 'w500'}
                 alt={getDisplayTitle(featuredItem)}
                 loading="eager"
-                decoding="async"
               />
               <div className="hero-featured-overlay" />
             </div>

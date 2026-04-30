@@ -573,7 +573,7 @@ export async function fetchContentDetails(id, mediaType = 'movie', signal) {
     return cached;
   }
 
-  if (contentDetailsInflight.has(cacheKey)) {
+  if (!signal && contentDetailsInflight.has(cacheKey)) {
     return contentDetailsInflight.get(cacheKey);
   }
 
@@ -616,7 +616,9 @@ export async function fetchContentDetails(id, mediaType = 'movie', signal) {
     }
   })();
 
-  contentDetailsInflight.set(cacheKey, requestPromise);
+  if (!signal) {
+    contentDetailsInflight.set(cacheKey, requestPromise);
+  }
   return requestPromise;
 }
 
@@ -632,7 +634,7 @@ export async function fetchActorCredits(actorId, signal) {
     return cached;
   }
 
-  if (actorCreditsInflight.has(cacheKey)) {
+  if (!signal && actorCreditsInflight.has(cacheKey)) {
     return actorCreditsInflight.get(cacheKey);
   }
 
@@ -662,7 +664,9 @@ export async function fetchActorCredits(actorId, signal) {
     }
   })();
 
-  actorCreditsInflight.set(cacheKey, requestPromise);
+  if (!signal) {
+    actorCreditsInflight.set(cacheKey, requestPromise);
+  }
   return requestPromise;
 }
 

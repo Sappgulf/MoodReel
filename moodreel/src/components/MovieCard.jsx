@@ -1,12 +1,8 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProviderBadges from './ProviderBadges';
-import {
-  getDisplayTitle,
-  getPosterUrl,
-  getReleaseYear,
-  FALLBACK_POSTER,
-} from '../utils/mediaUtils';
+import MediaImage from './MediaImage';
+import { getDisplayTitle, getReleaseYear } from '../utils/mediaUtils';
 import { useSounds } from '../hooks/useSounds';
 
 /**
@@ -40,8 +36,6 @@ const MovieCard = memo(function MovieCard({
   const resolvedMediaType = movie.media_type || mediaType;
   const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
   const posterPath = movie.poster_path;
-  // Always use w500 for reliable loading; TMDB serves it fast enough
-  const posterUrl = getPosterUrl(posterPath, 'w500');
 
   const cardRef = useRef(null);
   const touchStartX = useRef(null);
@@ -320,15 +314,11 @@ const MovieCard = memo(function MovieCard({
         className={linkClassName}
       >
         <div className="poster-wrapper">
-          <img
-            src={posterUrl}
+          <MediaImage
+            path={posterPath}
+            size="w500"
             alt={`${title} poster`}
             loading={index < 8 ? 'eager' : 'lazy'}
-            decoding="async"
-            onError={e => {
-              e.target.onerror = null;
-              e.target.src = FALLBACK_POSTER;
-            }}
           />
         </div>
 

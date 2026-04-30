@@ -2083,6 +2083,7 @@
 }
 
 .recommendation .poster-wrapper img {
+  display: block;
   position: relative;
   z-index: 2;
   width: 100%;
@@ -2091,6 +2092,11 @@
   transition:
     transform var(--transition-slow),
     opacity var(--transition-base);
+}
+
+.recommendation .poster-wrapper img[data-image-state='fallback'] {
+  object-fit: cover;
+  background: var(--color-bg-tertiary);
 }
 
 /* Poster images load without fade-in animation to avoid visibility issues */

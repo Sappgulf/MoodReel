@@ -389,6 +389,25 @@
   gap: var(--spacing-md);
 }
 
+.discovery-console-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.06), transparent 38%),
+    var(--color-bg-secondary);
+}
+
+.discovery-console-head h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1;
+}
+
 .discovery-library {
   display: grid;
   gap: var(--spacing-xl);
@@ -509,6 +528,11 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 
   .discovery-library {
     gap: var(--spacing-lg);
+  }
+
+  .discovery-console-head {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

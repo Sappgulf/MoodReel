@@ -512,7 +512,10 @@ function AppContent() {
         <div className="header-top">
           <Link to="/" className="logo-link">
             <h1>
-              <img src="/moodreel-logo.png" alt="MoodReel" />
+              <span className="logo-mark" aria-hidden="true">
+                <img src="/moodreel-logo.png" alt="" />
+              </span>
+              <span className="logo-wordmark">MoodReel</span>
             </h1>
           </Link>
           <div className="header-controls">

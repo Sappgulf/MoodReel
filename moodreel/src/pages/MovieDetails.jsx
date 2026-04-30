@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
+import MediaImage from '../components/MediaImage';
 import ShareButtons from '../components/ShareButtons';
 import StarRating from '../components/StarRating';
 import TrailerModal from '../components/TrailerModal';
@@ -17,13 +18,7 @@ import { useModalDialog } from '../hooks/useModalDialog';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
-import {
-  getBackdropUrl,
-  getDisplayOverview,
-  getDisplayTitle,
-  getPosterUrl,
-  normalizeProviderList,
-} from '../utils/mediaUtils';
+import { getDisplayOverview, getDisplayTitle, normalizeProviderList } from '../utils/mediaUtils';
 
 function MovieDetails() {
   const { id } = useParams();
@@ -420,12 +415,13 @@ function MovieDetails() {
   return (
     <main role="main" className="immersive-main">
       <div className="movie-details-backdrop">
-        <img
-          src={getBackdropUrl(content.backdrop_path)}
+        <MediaImage
+          type="backdrop"
+          path={content.backdrop_path || content.poster_path}
+          size={content.backdrop_path ? 'original' : 'w780'}
           alt=""
           className="backdrop-img"
-          decoding="async"
-          onError={e => (e.target.style.display = 'none')}
+          loading="eager"
         />
       </div>
 
@@ -438,19 +434,7 @@ function MovieDetails() {
           <div className="movie-details-header">
             {/* Poster */}
             <div className="poster-container">
-              {content.poster_path ? (
-                <img
-                  src={getPosterUrl(content.poster_path)}
-                  alt={`${title} poster`}
-                  decoding="async"
-                  onError={e => {
-                    e.target.onerror = null;
-                    e.target.src = getPosterUrl();
-                  }}
-                />
-              ) : (
-                <div className="no-poster">No Poster</div>
-              )}
+              <MediaImage path={content.poster_path} alt={`${title} poster`} loading="eager" />
             </div>
 
             {/* Info */}
@@ -685,12 +669,12 @@ function MovieDetails() {
                   aria-label={`${person.name} — ${person.character || 'Cast and crew member'}`}
                 >
                   {person.profile_path ? (
-                    <img
-                      src={getPosterUrl(person.profile_path, 'w185')}
+                    <MediaImage
+                      path={person.profile_path}
+                      size="w185"
                       alt={person.name}
                       className="cast-photo"
                       loading="lazy"
-                      decoding="async"
                     />
                   ) : (
                     <div className="cast-photo-placeholder">👤</div>
@@ -745,14 +729,14 @@ function MovieDetails() {
                   <h4>Stream</h4>
                   <div className="provider-grid">
                     {providerGroups.stream.map(provider => (
-                      <img
+                      <MediaImage
                         key={`stream-${provider.id}`}
-                        src={getPosterUrl(provider.logoPath, 'w92')}
+                        path={provider.logoPath}
+                        size="w92"
                         alt={provider.name}
                         title={`Stream on ${provider.name}`}
                         className="provider-logo"
                         loading="lazy"
-                        decoding="async"
                       />
                     ))}
                   </div>
@@ -763,14 +747,14 @@ function MovieDetails() {
                   <h4>Rent</h4>
                   <div className="provider-grid">
                     {providerGroups.rent.map(provider => (
-                      <img
+                      <MediaImage
                         key={`rent-${provider.id}`}
-                        src={getPosterUrl(provider.logoPath, 'w92')}
+                        path={provider.logoPath}
+                        size="w92"
                         alt={provider.name}
                         title={`Rent on ${provider.name}`}
                         className="provider-logo"
                         loading="lazy"
-                        decoding="async"
                       />
                     ))}
                   </div>
@@ -781,14 +765,14 @@ function MovieDetails() {
                   <h4>Buy</h4>
                   <div className="provider-grid">
                     {providerGroups.buy.map(provider => (
-                      <img
+                      <MediaImage
                         key={`buy-${provider.id}`}
-                        src={getPosterUrl(provider.logoPath, 'w92')}
+                        path={provider.logoPath}
+                        size="w92"
                         alt={provider.name}
                         title={`Buy on ${provider.name}`}
                         className="provider-logo"
                         loading="lazy"
-                        decoding="async"
                       />
                     ))}
                   </div>
@@ -862,8 +846,9 @@ function MovieDetails() {
             </button>
             <div className="filmography-header">
               {selectedActor.profile_path && (
-                <img
-                  src={getPosterUrl(selectedActor.profile_path, 'w185')}
+                <MediaImage
+                  path={selectedActor.profile_path}
+                  size="w185"
                   alt={selectedActor.name}
                   className="filmography-actor-photo"
                 />
@@ -897,12 +882,12 @@ function MovieDetails() {
                     onClick={closeActorModal}
                   >
                     {credit.poster_path ? (
-                      <img
-                        src={getPosterUrl(credit.poster_path, 'w154')}
+                      <MediaImage
+                        path={credit.poster_path}
+                        size="w154"
                         alt={credit.title || credit.name}
                         className="filmography-poster"
                         loading="lazy"
-                        decoding="async"
                       />
                     ) : (
                       <div className="filmography-poster-placeholder">🎬</div>

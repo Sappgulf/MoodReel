@@ -4,7 +4,8 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useRatings } from '../hooks/useRatings';
 import { useWatchHistory } from '../hooks/useWatchHistory';
-import { GENRE_MAP, getPosterUrl } from '../utils/mediaUtils';
+import { GENRE_MAP } from '../utils/mediaUtils';
+import MediaImage from '../components/MediaImage';
 import GenrePieChart from '../components/GenrePieChart';
 import CountUp from '../components/CountUp';
 
@@ -327,12 +328,12 @@ function Stats() {
                   className="discovery-item"
                 >
                   {item.poster_path ? (
-                    <img
-                      src={getPosterUrl(item.poster_path, 'w92')}
+                    <MediaImage
+                      path={item.poster_path}
+                      size="w92"
                       alt={item.title}
                       className="discovery-poster"
                       loading="lazy"
-                      decoding="async"
                     />
                   ) : (
                     <div className="discovery-poster-placeholder">🎬</div>

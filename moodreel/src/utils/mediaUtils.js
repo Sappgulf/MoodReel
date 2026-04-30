@@ -11,6 +11,10 @@ export const FALLBACK_BACKDROP =
 export const FALLBACK_TITLE = 'Untitled';
 export const FALLBACK_OVERVIEW = 'No description available.';
 
+const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
+const ABSOLUTE_IMAGE_URL_PATTERN = /^(https?:)?\/\//i;
+const INLINE_IMAGE_PATTERN = /^(data|blob):/i;
+
 export const GENRE_MAP = {
   28: 'Action',
   12: 'Adventure',
@@ -43,14 +47,22 @@ export function getDisplayOverview(item) {
 
 export function getPosterUrl(path, size = 'w500') {
   if (!path) return FALLBACK_POSTER;
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `https://image.tmdb.org/t/p/${size}/${cleanPath}`;
+  const cleanPath = String(path).trim();
+  if (!cleanPath) return FALLBACK_POSTER;
+  if (INLINE_IMAGE_PATTERN.test(cleanPath) || ABSOLUTE_IMAGE_URL_PATTERN.test(cleanPath)) {
+    return cleanPath;
+  }
+  return `${TMDB_IMAGE_BASE_URL}/${size}/${cleanPath.replace(/^\/+/, '')}`;
 }
 
 export function getBackdropUrl(path, size = 'original') {
   if (!path) return FALLBACK_BACKDROP;
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `https://image.tmdb.org/t/p/${size}/${cleanPath}`;
+  const cleanPath = String(path).trim();
+  if (!cleanPath) return FALLBACK_BACKDROP;
+  if (INLINE_IMAGE_PATTERN.test(cleanPath) || ABSOLUTE_IMAGE_URL_PATTERN.test(cleanPath)) {
+    return cleanPath;
+  }
+  return `${TMDB_IMAGE_BASE_URL}/${size}/${cleanPath.replace(/^\/+/, '')}`;
 }
 
 export function getReleaseYear(item) {
