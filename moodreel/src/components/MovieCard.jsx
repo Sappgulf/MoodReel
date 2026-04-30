@@ -34,9 +34,13 @@ const MovieCard = memo(function MovieCard({
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
   const resolvedMediaType = movie.media_type || mediaType;
   const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
-  const posterPath = movie.poster_path || movie.backdrop_path;
-  // Smaller initial payload for above-the-fold cards; promote on hover via CSS
-  const posterSize = movie.poster_path ? (index < 8 ? 'w342' : 'w500') : 'w780';
+  const posterPath = movie.poster_path;
+  // Use w342 for fast initial paint on first visible rows, w500 for deeper items
+  const posterSize = posterPath ? (index < 8 ? 'w342' : 'w500') : 'w500';
+  // Responsive srcset for crisp rendering on retina displays
+  const posterSrcSet = posterPath
+    ? `https://image.tmdb.org/t/p/w342${posterPath} 342w, https://image.tmdb.org/t/p/w500${posterPath} 500w, https://image.tmdb.org/t/p/w780${posterPath} 780w`
+    : undefined;
 
   const cardRef = useRef(null);
   const touchStartX = useRef(null);
@@ -317,11 +321,14 @@ const MovieCard = memo(function MovieCard({
         <div className="poster-wrapper">
           <img
             src={getPosterUrl(posterPath, posterSize)}
+            srcSet={posterSrcSet}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             alt={`${title} poster`}
             loading={index < 8 ? 'eager' : 'lazy'}
             decoding="async"
             onError={e => {
               e.target.onerror = null;
+              e.target.removeAttribute('srcset');
               e.target.src = getPosterUrl();
             }}
           />

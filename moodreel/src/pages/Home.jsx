@@ -7,6 +7,7 @@ import HomeResultsPanel from '../components/home/HomeResultsPanel';
 import HomeDiscoveryConsole from '../components/home/HomeDiscoveryConsole';
 import SaveVibeModal from '../components/SaveVibeModal';
 import MoodPulse from '../components/MoodPulse';
+import EmojiPicker from '../components/EmojiPicker';
 import ShuffleOverlay from '../components/ShuffleOverlay';
 import ErrorState from '../components/ErrorState';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -84,7 +85,7 @@ function Home() {
     useWatchlist();
   const { trackSave } = useAchievements();
   const { history: recentMoods, addToHistory } = useMoodHistory();
-  const { playlists, savePlaylist } = useCustomPlaylists();
+  const { playlists: _playlists, savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { profile, like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } =
     useTasteProfile();
@@ -850,84 +851,90 @@ function Home() {
         onSave={handleConfirmSaveVibe}
       />
 
-      <DiscoveryHero
-        isLoading={isLoading}
-        featuredItem={featuredItem}
-        featuredLink={featuredLink}
-        heroTitle={heroTitle}
-        heroDescription={heroDescription}
-        heroMoodLabel={heroMoodLabel}
-        activeFilterCount={activeFilterCount}
-        mood={mood}
-        selectedGenres={selectedGenres}
-        myServices={myServices}
-        timeContext={timeContext}
-        handleSearch={handleSearch}
-        setMood={setMood}
-        hasAnySearch={hasAnySearch}
-      />
+      {/* Unified Discovery Surface */}
+      <section className="discovery-surface">
+        <DiscoveryHero
+          isLoading={isLoading}
+          featuredItem={featuredItem}
+          featuredLink={featuredLink}
+          heroTitle={heroTitle}
+          heroDescription={heroDescription}
+          heroMoodLabel={heroMoodLabel}
+          activeFilterCount={activeFilterCount}
+          mood={mood}
+          selectedGenres={selectedGenres}
+          myServices={myServices}
+          timeContext={timeContext}
+          handleSearch={handleSearch}
+          setMood={setMood}
+          hasAnySearch={hasAnySearch}
+          moodInputRef={moodInputRef}
+          recentMoods={recentMoods}
+          playSound={playSound}
+          isBusy={isBusy}
+          contentType={contentType}
+          setContentType={setContentType}
+          setRecommendations={setRecommendations}
+          setHasSearched={setHasSearched}
+        />
 
-      <div className="discovery-support-grid">
-        <div className="discovery-support-column">
-          <div className="hero-vibe-bar glass-panel">
-            <div className="vibe-greeting">
-              <span className="vibe-emoji">{timeContext.emoji}</span>
-              <div className="vibe-text">
-                <span className="vibe-label">{timeContext.greeting}</span>
-                <button
-                  className="vibe-suggestion"
-                  type="button"
-                  onClick={() => {
-                    setMood(timeContext.suggestion);
-                    playSound('pop');
-                  }}
-                >
-                  Try <span className="text-gold">"{timeContext.suggestion}"</span>
-                </button>
-              </div>
-            </div>
-            <div className="hero-actions">
-              <button
-                className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`}
-                type="button"
-                onClick={handleSmartSurprise}
-                disabled={isSurpriseLoading}
-              >
-                {isSurpriseLoading ? '🎲 Shuffling…' : 'Shuffle tonight'}
-              </button>
-            </div>
+        {/* Compact Context Toolbar */}
+        <div className="context-toolbar">
+          <div className="context-toolbar-left">
+            <span className="context-pill">
+              {timeContext.emoji} {timeContext.greeting}
+            </span>
+            {activeFilterCount > 0 && (
+              <span className="context-pill context-pill-active">
+                {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''}
+              </span>
+            )}
+            {myServices.length > 0 && (
+              <span className="context-pill context-pill-active">
+                {myServices.length} service{myServices.length > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
-
-          <div className="discovery-insights glass-panel">
-            <span className="insight-kicker">Quick glance</span>
-            <div className="insight-grid">
-              <div className="insight-item">
-                <span>Current mood</span>
-                <strong>{mood || timeContext.suggestion}</strong>
-              </div>
-              <div className="insight-item">
-                <span>Recent mood</span>
-                <strong>{recentMoods[0] || 'None yet'}</strong>
-              </div>
-              <div className="insight-item">
-                <span>Services</span>
-                <strong>{myServices.length > 0 ? `${myServices.length} selected` : 'Any'}</strong>
-              </div>
-              <div className="insight-item">
-                <span>Filters</span>
-                <strong>{activeFilterCount}</strong>
-              </div>
-              <div className="insight-item">
-                <span>Saved vibes</span>
-                <strong>{playlists.length}</strong>
-              </div>
-            </div>
+          <div className="context-toolbar-right">
+            <button
+              className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`}
+              type="button"
+              onClick={handleSmartSurprise}
+              disabled={isSurpriseLoading}
+            >
+              {isSurpriseLoading ? '🎲' : 'Shuffle'}
+            </button>
           </div>
         </div>
 
-        {!hasAnySearch && <MoodPulse />}
-      </div>
+        {/* Horizontal Curated Collections */}
+        {!hasAnySearch && (
+          <div className="curated-strip">
+            <span className="curated-strip-label">Curated</span>
+            <div className="curated-chips">
+              {CURATED_COLLECTIONS.map(collection => (
+                <button
+                  key={collection.id}
+                  type="button"
+                  className="curated-chip"
+                  onClick={() => handleCollectionSelect(collection)}
+                >
+                  {collection.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
+        {/* Compact Emoji Quick-Pick */}
+        {!hasAnySearch && (
+          <div className="emoji-quick-bar">
+            <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
+          </div>
+        )}
+      </section>
+
+      {/* Trending — compact, only when idle */}
       <HomeTrendingStrip
         trending={trending}
         recommendationsLength={recommendations.length}
@@ -944,29 +951,12 @@ function Home() {
         statusFor={statusFor}
       />
 
-      <section className="curated-collections glass-panel" aria-labelledby="collections-heading">
-        <div className="collections-copy">
-          <span className="insight-kicker">Curated paths</span>
-          <h2 id="collections-heading">Pick the shape of tonight</h2>
-          <p>
-            Editorial shortcuts use the same discovery engine, then let your watchlist and taste
-            signals reorder the results.
-          </p>
+      {/* Mood Pulse — compact sidebar feel */}
+      {!hasAnySearch && (
+        <div className="mood-pulse-inline">
+          <MoodPulse />
         </div>
-        <div className="collections-grid">
-          {CURATED_COLLECTIONS.map(collection => (
-            <button
-              key={collection.id}
-              type="button"
-              className="collection-chip"
-              onClick={() => handleCollectionSelect(collection)}
-            >
-              <span>{collection.label}</span>
-              <small>{collection.description}</small>
-            </button>
-          ))}
-        </div>
-      </section>
+      )}
 
       <HomeDiscoveryConsole
         contentType={contentType}

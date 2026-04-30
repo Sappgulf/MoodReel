@@ -13,15 +13,17 @@ export default function DiscoveryHero({
   featuredLink,
   heroTitle,
   heroDescription,
-  heroMoodLabel,
-  activeFilterCount,
   mood,
-  selectedGenres,
-  myServices,
-  timeContext,
-  handleSearch,
   setMood,
-  hasAnySearch,
+  handleSearch,
+  isBusy,
+  contentType,
+  setContentType,
+  setRecommendations,
+  setHasSearched,
+  moodInputRef,
+  recentMoods,
+  playSound,
 }) {
   if (isLoading && !featuredItem) {
     return <DiscoveryHeroSkeleton />;
@@ -30,52 +32,83 @@ export default function DiscoveryHero({
   return (
     <section className="discovery-hero">
       <div className="discovery-hero-copy">
-        <span className="hero-kicker">MoodReel / discovery engine</span>
+        <span className="hero-kicker">MoodReel</span>
         <h2>{heroTitle}</h2>
         <p className="hero-description">{heroDescription}</p>
-        <div className="hero-proof-row">
-          <span className="hero-proof">Mood: {heroMoodLabel}</span>
-          <span className="hero-proof">
-            {selectedGenres.length > 0 ? `${selectedGenres.length} genres` : 'All genres'}
-          </span>
-          <span className="hero-proof">
-            {myServices.length > 0 ? `${myServices.length} services` : 'Any service'}
-          </span>
-          <span className="hero-proof">{activeFilterCount} filters</span>
+
+        {/* Unified search surface */}
+        <div className="hero-search-surface">
+          <div className="content-toggle-tabs" role="group" aria-label="Content type">
+            {['all', 'movie', 'tv'].map(type => (
+              <button
+                key={type}
+                type="button"
+                className={`content-tab ${contentType === type ? 'active' : ''}`}
+                aria-pressed={contentType === type}
+                onClick={() => {
+                  setContentType(type);
+                  setRecommendations([]);
+                  setHasSearched(false);
+                }}
+              >
+                {type === 'all' ? 'All' : type === 'movie' ? 'Movies' : 'TV'}
+              </button>
+            ))}
+          </div>
+
+          <div className="mood-input-wrapper">
+            <span className="mood-icon" aria-hidden="true">
+              ✨
+            </span>
+            <input
+              ref={moodInputRef}
+              type="text"
+              value={mood}
+              onChange={e => setMood(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="What's your mood tonight?"
+              aria-label="Search by mood"
+            />
+            {mood && (
+              <button
+                type="button"
+                className="mood-clear-btn"
+                onClick={() => setMood('')}
+                aria-label="Clear mood"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="hero-search-actions">
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleSearch}
+              disabled={isBusy}
+            >
+              {isBusy ? 'Searching…' : 'Discover'}
+            </button>
+            {recentMoods.length > 0 && !mood && (
+              <div className="recent-moods">
+                {recentMoods.slice(0, 4).map((recentMood, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="recent-mood-chip"
+                    onClick={() => {
+                      setMood(recentMood);
+                      playSound('pop');
+                    }}
+                  >
+                    {recentMood}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="hero-actions">
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => {
-              if (!mood) {
-                setMood(timeContext.suggestion);
-                window.setTimeout(() => handleSearch(), 0);
-                return;
-              }
-              handleSearch();
-            }}
-          >
-            {mood ? 'Search this mood' : `Try “${timeContext.suggestion}”`}
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => document.getElementById('collections-heading')?.scrollIntoView()}
-          >
-            Browse collections
-          </button>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => window.dispatchEvent(new CustomEvent('moodreel:focus-mood-search'))}
-          >
-            Focus search
-          </button>
-        </div>
-        <p className="hero-hint">
-          Press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>K</kbd> for the quick-action palette.
-        </p>
       </div>
 
       <div className="discovery-hero-visual">
@@ -91,9 +124,7 @@ export default function DiscoveryHero({
               <div className="hero-featured-overlay" />
             </div>
             <div className="hero-featured-copy">
-              <span className="hero-featured-eyebrow">
-                {hasAnySearch ? 'Current spotlight' : 'Trending spotlight'}
-              </span>
+              <span className="hero-featured-eyebrow">Trending spotlight</span>
               <h3>{getDisplayTitle(featuredItem)}</h3>
               <p>{getDisplayOverview(featuredItem)}</p>
               <div className="hero-featured-meta">

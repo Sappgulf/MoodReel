@@ -1,12 +1,12 @@
 export const FALLBACK_POSTER =
   'data:image/svg+xml,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#182231"/><stop offset="1" stop-color="#0c1017"/></linearGradient></defs><rect fill="url(#g)" width="500" height="750"/><rect x="72" y="120" width="356" height="510" rx="28" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="8"/><text fill="#bcc3d3" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="middle" x="250" y="350">Poster</text><text fill="#8b93a4" font-family="Inter, Arial, sans-serif" font-size="24" text-anchor="middle" x="250" y="392">unavailable</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1a2332"/><stop offset="1" stop-color="#0d1117"/></linearGradient><linearGradient id="f" x1="0" x2="1" y1="0" y2="1"><stop stop-color="rgba(255,215,0,0.08)"/><stop offset="1" stop-color="rgba(255,215,0,0)"/></linearGradient></defs><rect fill="url(#g)" width="500" height="750"/><rect fill="url(#f)" width="500" height="750"/><rect x="175" y="275" width="150" height="200" rx="20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6" stroke-dasharray="12 8"/><circle cx="250" cy="230" r="30" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4"/><path d="M235 220 L250 210 L265 220 L265 240 L250 250 L235 240 Z" fill="rgba(255,255,255,0.06)"/><text fill="#8b93a4" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="500" text-anchor="middle" x="250" y="530">No poster available</text></svg>'
   );
 export const FALLBACK_BACKDROP =
   'data:image/svg+xml,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect fill="#1a1a2e" width="1280" height="720"/><text fill="#555" font-family="sans-serif" font-size="32" text-anchor="middle" x="640" y="360">No Backdrop</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1a2332"/><stop offset="1" stop-color="#0d1117"/></linearGradient></defs><rect fill="url(#bg)" width="1280" height="720"/><rect x="540" y="260" width="200" height="200" rx="24" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-dasharray="12 8"/><text fill="#8b93a4" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="500" text-anchor="middle" x="640" y="510">No backdrop available</text></svg>'
   );
 export const FALLBACK_TITLE = 'Untitled';
 export const FALLBACK_OVERVIEW = 'No description available.';
