@@ -20,6 +20,15 @@ import searchService from '../services/searchService';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
 import { getDisplayOverview, getDisplayTitle, normalizeProviderList } from '../utils/mediaUtils';
 
+function getPersonInitials(name = '') {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('');
+}
+
 function MovieDetails() {
   const { id } = useParams();
   const location = useLocation();
@@ -288,6 +297,15 @@ function MovieDetails() {
       buy: normalizeProviderList(providers.buy || []),
     };
   }, [providers]);
+
+  const providerSections = useMemo(() => {
+    if (!providerGroups) return [];
+    return [
+      { key: 'stream', label: 'Stream', action: 'Stream on', providers: providerGroups.stream },
+      { key: 'rent', label: 'Rent', action: 'Rent on', providers: providerGroups.rent },
+      { key: 'buy', label: 'Buy', action: 'Buy on', providers: providerGroups.buy },
+    ].filter(section => section.providers.length > 0);
+  }, [providerGroups]);
 
   const whyYouMightLikeIt = useMemo(() => {
     if (!content) return [];
@@ -676,15 +694,20 @@ function MovieDetails() {
                   aria-label={`${person.name} — ${person.character || 'Cast and crew member'}`}
                 >
                   {person.profile_path ? (
-                    <MediaImage
-                      path={person.profile_path}
-                      size="w185"
-                      alt={person.name}
-                      className="cast-photo"
-                      loading="lazy"
-                    />
+                    <span className="cast-photo-shell" aria-hidden="true">
+                      <span className="cast-initials">{getPersonInitials(person.name)}</span>
+                      <MediaImage
+                        path={person.profile_path}
+                        size="w185"
+                        alt=""
+                        className="cast-photo"
+                        loading="eager"
+                      />
+                    </span>
                   ) : (
-                    <div className="cast-photo-placeholder">👤</div>
+                    <span className="cast-photo-placeholder" aria-hidden="true">
+                      {getPersonInitials(person.name) || 'Cast'}
+                    </span>
                   )}
                   <div className="cast-info">
                     <p className="cast-name">{person.name}</p>
@@ -726,65 +749,28 @@ function MovieDetails() {
             <p className="details-kicker">Chapter Three</p>
             <h3 id="providers-heading">Where to Watch ({region})</h3>
           </header>
-          {providerGroups &&
-          (providerGroups.stream.length > 0 ||
-            providerGroups.rent.length > 0 ||
-            providerGroups.buy.length > 0) ? (
+          {providerSections.length > 0 ? (
             <div className="streaming-providers">
-              {providerGroups.stream.length > 0 && (
-                <div className="provider-group">
-                  <h4>Stream</h4>
-                  <div className="provider-grid">
-                    {providerGroups.stream.map(provider => (
-                      <MediaImage
-                        key={`stream-${provider.id}`}
-                        path={provider.logoPath}
-                        size="w92"
-                        alt={provider.name}
-                        title={`Stream on ${provider.name}`}
-                        className="provider-logo"
-                        loading="lazy"
-                      />
+              {providerSections.map(section => (
+                <div className="provider-group" key={section.key}>
+                  <h4>{section.label}</h4>
+                  <ul className="provider-grid" aria-label={`${section.label} providers`}>
+                    {section.providers.map(provider => (
+                      <li className="provider-card" key={`${section.key}-${provider.id}`}>
+                        <MediaImage
+                          path={provider.logoPath}
+                          size="w92"
+                          alt=""
+                          title={`${section.action} ${provider.name}`}
+                          className="provider-logo"
+                          loading="lazy"
+                        />
+                        <span>{provider.name}</span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
-              )}
-              {providerGroups.rent.length > 0 && (
-                <div className="provider-group">
-                  <h4>Rent</h4>
-                  <div className="provider-grid">
-                    {providerGroups.rent.map(provider => (
-                      <MediaImage
-                        key={`rent-${provider.id}`}
-                        path={provider.logoPath}
-                        size="w92"
-                        alt={provider.name}
-                        title={`Rent on ${provider.name}`}
-                        className="provider-logo"
-                        loading="lazy"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {providerGroups.buy.length > 0 && (
-                <div className="provider-group">
-                  <h4>Buy</h4>
-                  <div className="provider-grid">
-                    {providerGroups.buy.map(provider => (
-                      <MediaImage
-                        key={`buy-${provider.id}`}
-                        path={provider.logoPath}
-                        size="w92"
-                        alt={provider.name}
-                        title={`Buy on ${provider.name}`}
-                        className="provider-logo"
-                        loading="lazy"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
           ) : (
             <p className="providers-empty">No provider data available for this title.</p>
