@@ -43,12 +43,14 @@ export function getDisplayOverview(item) {
 
 export function getPosterUrl(path, size = 'w500') {
   if (!path) return FALLBACK_POSTER;
-  return `https://image.tmdb.org/t/p/${size}${path}`;
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `https://image.tmdb.org/t/p/${size}/${cleanPath}`;
 }
 
 export function getBackdropUrl(path, size = 'original') {
   if (!path) return FALLBACK_BACKDROP;
-  return `https://image.tmdb.org/t/p/${size}${path}`;
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `https://image.tmdb.org/t/p/${size}/${cleanPath}`;
 }
 
 export function getReleaseYear(item) {

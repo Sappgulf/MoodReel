@@ -1,14 +1,16 @@
 // MoodReel Service Worker for PWA functionality
 // IMPORTANT: Bump CACHE_VERSION on each deploy to invalidate old caches
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 const CACHE_NAME = `moodreel-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/logo192.png',
-    '/logo512.png',
-    '/og_preview.png'
+    '/icon-192.png',
+    '/icon-512.png',
+    '/maskable-icon-512.png',
+    '/og_preview.png',
+    '/moodreel-logo.png'
 ];
 
 // Install - cache static assets. Updates wait until the app asks them to activate.

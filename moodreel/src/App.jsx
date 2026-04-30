@@ -511,7 +511,9 @@ function AppContent() {
       >
         <div className="header-top">
           <Link to="/" className="logo-link">
-            <h1>🎬 MoodReel</h1>
+            <h1>
+              <img src="/moodreel-logo.png" alt="MoodReel" />
+            </h1>
           </Link>
           <div className="header-controls">
             <button

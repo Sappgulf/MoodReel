@@ -98,8 +98,8 @@ export function usePushNotifications() {
     if (Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(registration => {
         registration.showNotification(title, {
-          icon: '/logo192.png',
-          badge: '/logo192.png',
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
           ...options,
         });
       });
