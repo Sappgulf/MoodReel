@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { getPosterUrl } from '../utils/mediaUtils';
 import './ShuffleOverlay.css';
 
 const ShuffleOverlay = ({
@@ -62,7 +63,7 @@ const ShuffleOverlay = ({
           {isWinner && winnerItem ? (
             <div className="shuffle-item winner-floating">
               <img
-                src={`https://image.tmdb.org/t/p/w500${winnerItem.poster_path}`}
+                src={getPosterUrl(winnerItem.poster_path, 'w500')}
                 alt={winnerItem.title || winnerItem.name}
                 className="shuffle-poster"
                 loading="lazy"
@@ -77,7 +78,7 @@ const ShuffleOverlay = ({
               <div key={`${item.id}-${idx}`} className="shuffle-item">
                 {item.poster_path ? (
                   <img
-                    src={`https://image.tmdb.org/t/p/w185${item.poster_path}`}
+                    src={getPosterUrl(item.poster_path, 'w185')}
                     alt=""
                     className="shuffle-poster"
                     loading="lazy"

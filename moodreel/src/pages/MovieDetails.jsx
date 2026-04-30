@@ -686,7 +686,7 @@ function MovieDetails() {
                 >
                   {person.profile_path ? (
                     <img
-                      src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
+                      src={getPosterUrl(person.profile_path, 'w185')}
                       alt={person.name}
                       className="cast-photo"
                       loading="lazy"
@@ -863,7 +863,7 @@ function MovieDetails() {
             <div className="filmography-header">
               {selectedActor.profile_path && (
                 <img
-                  src={`https://image.tmdb.org/t/p/w185${selectedActor.profile_path}`}
+                  src={getPosterUrl(selectedActor.profile_path, 'w185')}
                   alt={selectedActor.name}
                   className="filmography-actor-photo"
                 />
@@ -898,7 +898,7 @@ function MovieDetails() {
                   >
                     {credit.poster_path ? (
                       <img
-                        src={`https://image.tmdb.org/t/p/w154${credit.poster_path}`}
+                        src={getPosterUrl(credit.poster_path, 'w154')}
                         alt={credit.title || credit.name}
                         className="filmography-poster"
                         loading="lazy"

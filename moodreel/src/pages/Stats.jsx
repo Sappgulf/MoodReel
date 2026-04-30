@@ -4,7 +4,7 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useRatings } from '../hooks/useRatings';
 import { useWatchHistory } from '../hooks/useWatchHistory';
-import { GENRE_MAP } from '../utils/mediaUtils';
+import { GENRE_MAP, getPosterUrl } from '../utils/mediaUtils';
 import GenrePieChart from '../components/GenrePieChart';
 import CountUp from '../components/CountUp';
 
@@ -328,7 +328,7 @@ function Stats() {
                 >
                   {item.poster_path ? (
                     <img
-                      src={`https://image.tmdb.org/t/p/w92${item.poster_path}`}
+                      src={getPosterUrl(item.poster_path, 'w92')}
                       alt={item.title}
                       className="discovery-poster"
                       loading="lazy"

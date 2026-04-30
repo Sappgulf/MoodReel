@@ -39,7 +39,7 @@ const MovieCard = memo(function MovieCard({
   const posterSize = posterPath ? (index < 8 ? 'w342' : 'w500') : 'w500';
   // Responsive srcset for crisp rendering on retina displays
   const posterSrcSet = posterPath
-    ? `https://image.tmdb.org/t/p/w342${posterPath} 342w, https://image.tmdb.org/t/p/w500${posterPath} 500w, https://image.tmdb.org/t/p/w780${posterPath} 780w`
+    ? `${getPosterUrl(posterPath, 'w342')} 342w, ${getPosterUrl(posterPath, 'w500')} 500w, ${getPosterUrl(posterPath, 'w780')} 780w`
     : undefined;
 
   const cardRef = useRef(null);
@@ -322,7 +322,7 @@ const MovieCard = memo(function MovieCard({
           <img
             src={getPosterUrl(posterPath, posterSize)}
             srcSet={posterSrcSet}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            sizes="(max-width: 639px) 45vw, (max-width: 1023px) 30vw, 220px"
             alt={`${title} poster`}
             loading={index < 8 ? 'eager' : 'lazy'}
             decoding="async"
