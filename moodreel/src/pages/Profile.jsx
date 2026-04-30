@@ -59,6 +59,7 @@ function Profile() {
 
   const persona = useMemo(() => calculatePersona(stats), [stats]);
   const safeLevelProgress = Math.max(0, Math.min(100, Number(progressToNextLevel) || 0));
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
 
   const handleSave = () => {
     updateProfile(editForm);
@@ -158,6 +159,20 @@ function Profile() {
             </p>
             <div className="level-badge">Level {level}</div>
           </div>
+          <div className="profile-quick-stats" aria-label="Profile summary">
+            <span>
+              <strong>{stats.totalMovies}</strong>
+              viewed
+            </span>
+            <span>
+              <strong>{moodHistory.length}</strong>
+              moods
+            </span>
+            <span>
+              <strong>{unlockedCount}</strong>
+              badges
+            </span>
+          </div>
           <button
             type="button"
             className="edit-profile-btn"
@@ -211,7 +226,7 @@ function Profile() {
               <span className="stat-label">Watched</span>
             </div>
             <Link to="/achievements" className="stat-item clickable-stat">
-              <span className="stat-value">{achievements.filter(a => a.unlocked).length}</span>
+              <span className="stat-value">{unlockedCount}</span>
               <span className="stat-label">Badges</span>
             </Link>
             <div className="stat-item">

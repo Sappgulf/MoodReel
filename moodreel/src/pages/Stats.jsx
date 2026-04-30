@@ -137,11 +137,27 @@ function Stats() {
 
       <div className="page-hero">
         <div>
-          <h2 className="page-title">📊 Your Watch Stats</h2>
+          <p className="details-kicker">Viewing signal</p>
+          <h2 className="page-title">Your Watch Stats</h2>
           <p className="page-subtitle">
             {stats.totalMovies} saved · {stats.searchCount} searches · {stats.userRatingsCount}{' '}
             ratings
           </p>
+        </div>
+      </div>
+
+      <div className="stats-priority-strip" aria-label="Current stats summary">
+        <div>
+          <span>{watchStats.total}</span>
+          <p>titles opened</p>
+        </div>
+        <div>
+          <span>{stats.topMoods[0]?.[0] || 'No mood yet'}</span>
+          <p>top search mood</p>
+        </div>
+        <div>
+          <span>{stats.genreData[0]?.name || 'No genre yet'}</span>
+          <p>saved genre lead</p>
         </div>
       </div>
 

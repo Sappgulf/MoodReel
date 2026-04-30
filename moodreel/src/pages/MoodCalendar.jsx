@@ -31,6 +31,13 @@ function getMoodColor(mood) {
   return moodColors.default;
 }
 
+function formatDateLabel(date) {
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 function MoodCalendar() {
   const { history, historyWithDates, clearHistory } = useMoodHistory();
 
@@ -60,6 +67,28 @@ function MoodCalendar() {
     return days;
   }, [historyWithDates]);
 
+  const calendarSummary = useMemo(() => {
+    const activeDays = calendarData.filter(day => day.hasActivity);
+    const moodCounts = historyWithDates.reduce((acc, entry) => {
+      acc[entry.mood] = (acc[entry.mood] || 0) + 1;
+      return acc;
+    }, {});
+    const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None yet';
+
+    let currentStreak = 0;
+    for (let i = calendarData.length - 1; i >= 0; i -= 1) {
+      if (!calendarData[i].hasActivity) break;
+      currentStreak += 1;
+    }
+
+    return {
+      activeDays: activeDays.length,
+      totalSearches: historyWithDates.length,
+      topMood,
+      currentStreak,
+    };
+  }, [calendarData, historyWithDates]);
+
   // Get week labels
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -84,12 +113,34 @@ function MoodCalendar() {
         )}
       </div>
 
-      <div className="page-hero">
+      <div className="page-hero calendar-hero">
         <div>
-          <h2 className="page-title">📅 Mood Calendar</h2>
-          <p className="page-subtitle">Your mood search history over the last 30 days</p>
+          <p className="details-kicker">Mood rhythm</p>
+          <h2 className="page-title">Mood Calendar</h2>
+          <p className="page-subtitle">
+            A 30-day view of what you have been asking MoodReel to find.
+          </p>
         </div>
         {history.length > 0 && <div className="page-hero-chip">Last 30 days</div>}
+      </div>
+
+      <div className="calendar-insights" aria-label="Mood calendar summary">
+        <div className="calendar-insight">
+          <span>{calendarSummary.activeDays}</span>
+          <p>active days</p>
+        </div>
+        <div className="calendar-insight">
+          <span>{calendarSummary.totalSearches}</span>
+          <p>mood searches</p>
+        </div>
+        <div className="calendar-insight">
+          <span>{calendarSummary.currentStreak}</span>
+          <p>day streak</p>
+        </div>
+        <div className="calendar-insight calendar-insight-wide">
+          <span>{calendarSummary.topMood}</span>
+          <p>top mood</p>
+        </div>
       </div>
 
       {/* Calendar Grid */}
@@ -121,14 +172,25 @@ function MoodCalendar() {
                   : `${day.month} ${day.dayOfMonth}`
               }
             >
-              <span className="day-number">{day.dayOfMonth}</span>
+              <span className="day-number">
+                <span>{day.dayOfMonth}</span>
+                <span className="day-month">{formatDateLabel(day.date)}</span>
+              </span>
               {day.moods.length > 0 && (
-                <div className="mood-dots">
-                  {day.moods.slice(0, 3).map((mood, i) => (
-                    <span key={i} className="mood-dot" style={{ background: getMoodColor(mood) }} />
+                <div className="mood-dots" aria-label={`${day.moods.length} mood searches`}>
+                  {day.moods.slice(0, 2).map((mood, i) => (
+                    <span
+                      key={`${mood}-${i}`}
+                      className="mood-dot"
+                      style={{
+                        '--mood-color': getMoodColor(mood),
+                      }}
+                    >
+                      {mood}
+                    </span>
                   ))}
-                  {day.moods.length > 3 && (
-                    <span className="more-moods">+{day.moods.length - 3}</span>
+                  {day.moods.length > 2 && (
+                    <span className="more-moods">+{day.moods.length - 2}</span>
                   )}
                 </div>
               )}

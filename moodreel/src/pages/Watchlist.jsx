@@ -93,6 +93,14 @@ function Watchlist() {
   }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
 
   const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
+  const libraryStats = useMemo(
+    () => [
+      { label: 'Saved', value: watchlist.length },
+      { label: 'Watched', value: watchedCount },
+      { label: 'Favorites', value: favorites.length },
+    ],
+    [favorites.length, watchedCount, watchlist.length]
+  );
 
   // Import from JSON file
   const handleImportFile = useCallback(
@@ -286,7 +294,11 @@ function Watchlist() {
     <div className="watchlist-page">
       <div className="watchlist-header">
         <div className="watchlist-header-copy">
+          <p className="details-kicker">Library</p>
           <h2 className="page-title">Your Library</h2>
+          <p className="page-subtitle">
+            Keep the short list clean, sortable, and ready for tonight.
+          </p>
           <div className="watchlist-tabs" role="group" aria-label="Watchlist views">
             <button
               type="button"
@@ -305,6 +317,14 @@ function Watchlist() {
               Favorites ❤️
             </button>
           </div>
+        </div>
+        <div className="watchlist-summary" aria-label="Library summary">
+          {libraryStats.map(stat => (
+            <div key={stat.label} className="watchlist-summary-item">
+              <strong>{stat.value}</strong>
+              <span>{stat.label}</span>
+            </div>
+          ))}
         </div>
         <div className="watchlist-actions">
           {sortedList.length > 1 && (
