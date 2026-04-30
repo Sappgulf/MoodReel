@@ -611,6 +611,9 @@ function Home() {
     }, {});
   }, [watchlist]);
 
+  // Destructure taste arrays for stable useMemo dependencies
+  const { liked: likedKeys = [], disliked: dislikedKeys = [] } = profile || {};
+
   const heroTitle = mood ? `Tuned for “${mood}”` : 'Find the film that fits tonight.';
 
   const heroDescription = mood
@@ -659,8 +662,6 @@ function Home() {
         item => statusFor(item.id, item.media_type || contentType) !== 'disliked'
       );
     }
-    const likedKeys = profile?.liked || [];
-    const dislikedKeys = profile?.disliked || [];
     const recentTokens = new Set(watchHistory.slice(0, 12).flatMap(getTitleTokens));
     const recentKeys = new Set(
       watchHistory.slice(0, 30).map(item => `${item.id}-${item.media_type || 'movie'}`)
@@ -707,7 +708,8 @@ function Home() {
     statusFor,
     contentType,
     watchHistory,
-    profile,
+    likedKeys,
+    dislikedKeys,
     isInWatchlist,
     watchlistGenreCounts,
   ]);

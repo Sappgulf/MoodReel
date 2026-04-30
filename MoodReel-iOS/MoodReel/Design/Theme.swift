@@ -123,10 +123,10 @@ struct AppGradients {
 
 struct AppFont {
     static func displayLarge(_ size: CGFloat = 32) -> Font {
-        .custom("Georgia-Bold", size: size)
+        .custom("Georgia-Bold", size: size, relativeTo: .largeTitle)
     }
     static func display(_ size: CGFloat = 24) -> Font {
-        .custom("Georgia", size: size)
+        .custom("Georgia", size: size, relativeTo: .title1)
     }
     static func headline(_ size: CGFloat = 18) -> Font {
         .system(size: size, weight: .semibold, design: .default)

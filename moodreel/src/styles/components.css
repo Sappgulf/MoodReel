@@ -128,6 +128,7 @@
   color: var(--color-text-on-dark);
   background: rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Card Actions */
@@ -1116,6 +1117,19 @@
   font-size: 3rem;
   margin-bottom: var(--spacing-md);
   opacity: 0.5;
+  animation: emptyStateFloat 3s ease-in-out infinite;
+}
+
+@keyframes emptyStateFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-8px);
+    opacity: 0.75;
+  }
 }
 
 .empty-state-title {
@@ -1841,6 +1855,25 @@
 .hero-featured-art-skeleton {
   min-height: 260px;
   border-radius: 0;
+  background: linear-gradient(
+    105deg,
+    var(--color-bg-tertiary) 20%,
+    rgba(255, 215, 0, 0.06) 40%,
+    var(--color-bg-elevated-2) 50%,
+    rgba(255, 215, 0, 0.06) 60%,
+    var(--color-bg-tertiary) 80%
+  );
+  background-size: 300% 100%;
+  animation: heroSkeletonPan 2.4s ease-in-out infinite;
+}
+
+@keyframes heroSkeletonPan {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .quick-actions-backdrop {

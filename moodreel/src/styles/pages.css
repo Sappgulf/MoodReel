@@ -382,6 +382,55 @@ body.mood-classic .discovery-hero {
   box-shadow: 0 22px 80px rgba(148, 163, 184, 0.12);
 }
 
+/* Mood theming extensions: nav, buttons, scrollbar */
+body.mood-romantic .bottom-nav-item.active::after {
+  background: linear-gradient(90deg, rgba(244, 114, 182, 0.8), rgba(244, 114, 182, 0.4));
+}
+
+body.mood-happy .bottom-nav-item.active::after {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.4));
+}
+
+body.mood-thriller .bottom-nav-item.active::after {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.8), rgba(124, 58, 237, 0.5));
+}
+
+body.mood-classic .bottom-nav-item.active::after {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.8), rgba(148, 163, 184, 0.4));
+}
+
+body.mood-romantic .primary-button {
+  box-shadow: 0 0 20px rgba(244, 114, 182, 0.2);
+}
+
+body.mood-happy .primary-button {
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
+}
+
+body.mood-thriller .primary-button {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+body.mood-classic .primary-button {
+  box-shadow: 0 0 20px rgba(148, 163, 184, 0.2);
+}
+
+body.mood-romantic ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(244, 114, 182, 0.6), var(--color-bg-tertiary));
+}
+
+body.mood-happy ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.6), var(--color-bg-tertiary));
+}
+
+body.mood-thriller ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.6), var(--color-bg-tertiary));
+}
+
+body.mood-classic ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.6), var(--color-bg-tertiary));
+}
+
 @media (max-width: 768px) {
   .discovery-hero,
   .discovery-support-grid,
@@ -737,6 +786,7 @@ body.mood-classic .discovery-hero {
   border-radius: var(--radius-full);
   font-size: 0.875rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .rating-large .stars {

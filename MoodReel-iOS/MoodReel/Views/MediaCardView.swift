@@ -5,8 +5,13 @@ struct MediaCardView: View {
     let isSaved: Bool
     let onTap: () -> Void
     let onToggleSave: () -> Void
+    @EnvironmentObject private var tasteProfileStore: TasteProfileStore
     @State private var isPressed = false
     @State private var showSaveAnimation = false
+
+    private var tasteStatus: TasteStatus {
+        tasteProfileStore.status(for: item.route)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -113,6 +118,31 @@ struct MediaCardView: View {
                     withAnimation {
                         showSaveAnimation = false
                     }
+                }
+            }
+        }
+        .contextMenu {
+            Button {
+                tasteProfileStore.like(item.route)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } label: {
+                Label("More like this", systemImage: "hand.thumbsup.fill")
+            }
+            .disabled(tasteStatus == .liked)
+
+            Button {
+                tasteProfileStore.dislike(item.route)
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            } label: {
+                Label("Not for me", systemImage: "hand.thumbsdown.fill")
+            }
+            .disabled(tasteStatus == .disliked)
+
+            if tasteStatus != .neutral {
+                Button {
+                    tasteProfileStore.clear(item.route)
+                } label: {
+                    Label("Clear preference", systemImage: "xmark.circle")
                 }
             }
         }

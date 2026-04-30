@@ -35,7 +35,8 @@ const MovieCard = memo(function MovieCard({
   const resolvedMediaType = movie.media_type || mediaType;
   const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
   const posterPath = movie.poster_path || movie.backdrop_path;
-  const posterSize = movie.poster_path ? 'w500' : 'w780';
+  // Smaller initial payload for above-the-fold cards; promote on hover via CSS
+  const posterSize = movie.poster_path ? (index < 8 ? 'w342' : 'w500') : 'w780';
 
   const cardRef = useRef(null);
   const touchStartX = useRef(null);

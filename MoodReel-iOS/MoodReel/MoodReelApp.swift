@@ -4,6 +4,7 @@ import UIKit
 @main
 struct MoodReelApp: App {
     @StateObject private var watchlistStore = WatchlistStore()
+    @StateObject private var tasteProfileStore = TasteProfileStore()
 
     init() {
         configureAppearance()
@@ -14,6 +15,7 @@ struct MoodReelApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(watchlistStore)
+                .environmentObject(tasteProfileStore)
         }
     }
 

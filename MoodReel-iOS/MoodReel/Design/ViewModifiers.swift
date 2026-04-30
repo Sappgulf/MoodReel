@@ -28,7 +28,7 @@ struct GlassCardModifier: ViewModifier {
                     .background(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(.ultraThinMaterial)
-                            .opacity(0.3)
+                            .opacity(0.5)
                     )
             )
             .overlay(

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MediaDetailView: View {
     @EnvironmentObject private var watchlistStore: WatchlistStore
+    @EnvironmentObject private var tasteProfileStore: TasteProfileStore
     @StateObject private var viewModel: MediaDetailViewModel
     @State private var userRating: Double = 7.0
     @State private var hasRating = false
@@ -17,12 +18,21 @@ struct MediaDetailView: View {
         watchlistStore.item(for: route)
     }
 
+    private var shareURL: URL {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "moodreel.app"
+        components.path = "/\(route.mediaType.rawValue)/\(route.mediaId)"
+        return components.url ?? URL(string: "https://moodreel.app")!
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 headerPoster
                 titleBlock
                 actionsBlock
+                tasteBlock
                 overviewBlock
                 providersBlock
                 castBlock
@@ -35,6 +45,14 @@ struct MediaDetailView: View {
         .background(Color.bgPrimary.ignoresSafeArea())
         .navigationTitle(viewModel.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(item: shareURL, subject: Text(viewModel.displayTitle)) {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(Color.gold)
+                }
+            }
+        }
         .task {
             if viewModel.bundle == nil {
                 await viewModel.load()
@@ -150,6 +168,34 @@ struct MediaDetailView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            Spacer()
+        }
+        .padding(.horizontal, AppSpacing.md)
+    }
+
+    private var tasteBlock: some View {
+        HStack(spacing: AppSpacing.sm) {
+            let status = tasteProfileStore.status(for: route)
+            Button {
+                tasteProfileStore.like(route)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                Label("Like", systemImage: status == .liked ? "hand.thumbsup.fill" : "hand.thumbsup")
+                    .font(AppFont.caption())
+            }
+            .foregroundStyle(status == .liked ? Color.gold : Color.textSecondary)
+            .buttonStyle(.plain)
+
+            Button {
+                tasteProfileStore.dislike(route)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                Label("Dislike", systemImage: status == .disliked ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                    .font(AppFont.caption())
+            }
+            .foregroundStyle(status == .disliked ? Color.crimson : Color.textSecondary)
+            .buttonStyle(.plain)
 
             Spacer()
         }

@@ -86,7 +86,9 @@ function EmptyState({
 
   return (
     <div className="empty-state" role="status" aria-live="polite">
-      <div className="empty-state-icon">{finalIcon}</div>
+      <div className="empty-state-icon" aria-hidden="true">
+        {finalIcon}
+      </div>
       <h3 className="empty-state-title">{finalTitle}</h3>
       <p className="empty-state-description">{finalDescription}</p>
       {children}

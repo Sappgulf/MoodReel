@@ -683,22 +683,6 @@ function AppContent() {
                 }
               />
               <Route
-                path="/movie/:id/"
-                element={
-                  <GuardedRoute routeKey={routePath}>
-                    <MovieDetails />
-                  </GuardedRoute>
-                }
-              />
-              <Route
-                path="/tv/:id/"
-                element={
-                  <GuardedRoute routeKey={routePath}>
-                    <MovieDetails />
-                  </GuardedRoute>
-                }
-              />
-              <Route
                 path="/watchlist"
                 element={
                   <GuardedRoute routeKey={routePath}>
