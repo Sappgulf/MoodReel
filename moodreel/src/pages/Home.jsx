@@ -141,6 +141,7 @@ function Home() {
   const hasHydratedRef = useRef(false);
   const moodInputRef = useRef(null);
   const titleSearchRef = useRef(null);
+  const loadMoreDebounceRef = useRef(null);
 
   const handleSearch = useCallback(() => {
     if (mood) addToHistory(mood);
@@ -418,20 +419,30 @@ function Home() {
     return () => controller.abort();
   }, [region]);
 
-  // Infinite scroll observer
+  // Infinite scroll observer (debounced to prevent request storms)
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore) return;
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting) {
           setVisibleCount(prev => prev + 12);
-          loadMoreResults();
+          if (loadMoreDebounceRef.current) {
+            clearTimeout(loadMoreDebounceRef.current);
+          }
+          loadMoreDebounceRef.current = setTimeout(() => {
+            loadMoreResults();
+          }, 400);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.25 }
     );
     observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (loadMoreDebounceRef.current) {
+        clearTimeout(loadMoreDebounceRef.current);
+      }
+    };
   }, [hasMore, loadMoreResults]);
 
   const handleGenreClick = useCallback(

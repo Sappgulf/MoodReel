@@ -40,9 +40,10 @@ struct MoodReelApp: App {
     private func configureNetworkingCache() {
         let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
             .appendingPathComponent("moodreel-url-cache", isDirectory: true)
+        // TMDB images are immutable (paths include content hashes), so we can cache aggressively.
         URLCache.shared = URLCache(
-            memoryCapacity: 64 * 1024 * 1024,
-            diskCapacity: 256 * 1024 * 1024,
+            memoryCapacity: 128 * 1024 * 1024,   // 128 MB in-memory
+            diskCapacity: 512 * 1024 * 1024,     // 512 MB on-disk for posters/backdrops
             directory: cacheURL
         )
     }

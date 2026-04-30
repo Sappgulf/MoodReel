@@ -1225,6 +1225,17 @@
   color: var(--color-text-on-dark-muted);
 }
 
+.provider-badge-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--color-text-on-dark);
+  background: linear-gradient(135deg, var(--color-amber-dark), var(--color-gold));
+  letter-spacing: 0.02em;
+}
+
 /* =====================================================
    Toasts
    ===================================================== */
@@ -2095,6 +2106,17 @@
 .recommendation-row-mode {
   display: flex;
   min-height: 160px;
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+  border: 1px solid transparent;
+}
+
+.recommendation-row-mode:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--color-border-hover);
 }
 
 .swipe-card-link-row {
