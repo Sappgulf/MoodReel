@@ -600,7 +600,14 @@ function Home() {
   }, [selectedGenres, myServices, minRating, advancedFilters, currentYear]);
 
   const featuredItem = useMemo(() => {
-    return recommendations[0] || trending[0] || null;
+    const hasArtwork = item => Boolean(item?.backdrop_path || item?.poster_path);
+    return (
+      recommendations.find(hasArtwork) ||
+      recommendations[0] ||
+      trending.find(hasArtwork) ||
+      trending[0] ||
+      null
+    );
   }, [recommendations, trending]);
 
   const featuredLink = featuredItem

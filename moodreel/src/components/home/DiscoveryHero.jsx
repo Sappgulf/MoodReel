@@ -25,6 +25,17 @@ export default function DiscoveryHero({
     return <DiscoveryHeroSkeleton />;
   }
 
+  const featuredArtSources = featuredItem
+    ? [
+        featuredItem.backdrop_path
+          ? { path: featuredItem.backdrop_path, type: 'backdrop', size: 'w780' }
+          : null,
+        featuredItem.poster_path
+          ? { path: featuredItem.poster_path, type: 'poster', size: 'w500' }
+          : null,
+      ].filter(Boolean)
+    : [];
+
   return (
     <section className="discovery-hero">
       <div className="discovery-hero-copy">
@@ -114,7 +125,7 @@ export default function DiscoveryHero({
               <MediaImage
                 type="backdrop"
                 path={featuredItem.backdrop_path || featuredItem.poster_path}
-                size={featuredItem.backdrop_path ? 'w780' : 'w500'}
+                sources={featuredArtSources}
                 alt={getDisplayTitle(featuredItem)}
                 loading="eager"
               />

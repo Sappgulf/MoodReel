@@ -18,7 +18,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_ASSETS);
-        })
+        }).then(() => self.skipWaiting())
     );
 });
 
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
     if (!['http:', 'https:'].includes(url.protocol)) return;
 
     // Skip API requests (don't cache)
-    if (event.request.url.includes('api.themoviedb.org')) {
+    if (event.request.url.includes('api.themoviedb.org') || event.request.url.includes('image.tmdb.org')) {
         return;
     }
 

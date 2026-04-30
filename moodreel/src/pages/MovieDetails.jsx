@@ -411,6 +411,12 @@ function MovieDetails() {
     isTV && content.number_of_seasons
       ? `${content.number_of_seasons} season${content.number_of_seasons > 1 ? 's' : ''}`
       : '';
+  const backdropSources = [
+    content.backdrop_path
+      ? { path: content.backdrop_path, type: 'backdrop', size: 'original' }
+      : null,
+    content.poster_path ? { path: content.poster_path, type: 'poster', size: 'w780' } : null,
+  ].filter(Boolean);
 
   return (
     <main role="main" className="immersive-main">
@@ -419,6 +425,7 @@ function MovieDetails() {
           type="backdrop"
           path={content.backdrop_path || content.poster_path}
           size={content.backdrop_path ? 'original' : 'w780'}
+          sources={backdropSources}
           alt=""
           className="backdrop-img"
           loading="eager"
