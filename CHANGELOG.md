@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-05-01
+
+### Implemented
+- **Scope:** web + docs + CI
+- **What changed:**
+  - Fixed Vercel deployment alignment for root/subdirectory Vite builds and SPA rewrites.
+  - Cleaned web scripts to reflect Vite runtime path and explicit verification flow.
+  - Sanitized TMDB request logging by redacting `api_key` in error debug payloads.
+  - Fixed watchlist identity collisions by keying watchlist/notes/watched/favorites by `media_type:id` with migration compatibility.
+  - Moved service worker registration out of inline HTML into `src/main.jsx` with production gating.
+  - Refreshed README/VERIFY/SHIP/TODO docs and web CI checks.
+- **Why it changed:** Production-readiness pass for safer deployment, clearer docs, and correctness.
+
 ## 2026-02-10
 
 ### Planned

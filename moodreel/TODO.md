@@ -1,19 +1,25 @@
-# MoodReel Polish Todo
+# MoodReel Backlog
 
-## Completed in this branch
+## P0 — must fix before sharing
 
-- [x] Rework the Discover first viewport into a cinematic hero with a featured pick.
-- [x] Tighten the brand system around a clearer noir palette and display typography.
-- [x] Reduce card reliance on hover by keeping core metadata visible by default.
-- [x] Add a global quick-action palette for navigation and common actions.
-- [x] Improve loading states with a hero skeleton that matches the new layout.
-- [x] Upgrade empty states with clearer, more actionable copy.
-- [x] Improve the PWA install prompt lifecycle cleanup.
-- [x] Make toast dismissal keyboard-accessible.
-- [x] Add missing `type="button"` safeguards to interactive controls in key views.
+- Replace legacy `react-scripts` unit test runner with Vitest to remove dual-tooling drift.
+- Add deterministic provider/filter integration tests with TMDB fixtures.
+- Add CI-safe E2E strategy (mocked API or nightly key-injected run).
 
-## Follow-up ideas
+## P1 — quality polish
 
-- [ ] Consider a dedicated share card exporter for mood-based social previews.
-- [ ] Consolidate remaining CSS transitions from `all` to explicit properties.
-- [ ] Review whether the bottom nav should collapse further on smaller phones.
+- Remove remaining broad CSS transitions (`transition: all`) with explicit properties.
+- Improve offline fallback UX copy and add dedicated offline screen.
+- Add explicit accessibility regression checks for keyboard focus order.
+
+## P2 — product additions
+
+- Share card exporter for mood-based social previews.
+- Expanded provider-region presets and onboarding.
+- Better multi-profile local persistence.
+
+## P3 — iOS/TestFlight readiness
+
+- Add TestFlight preflight checklist and release metadata templates.
+- Add crash/reporting instrumentation plan.
+- Complete privacy nutrition labels and legal content review.
