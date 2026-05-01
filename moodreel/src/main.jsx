@@ -21,3 +21,15 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+    });
+  } else {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(reg => reg.unregister());
+    });
+  }
+}

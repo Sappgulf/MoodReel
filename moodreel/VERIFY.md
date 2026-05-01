@@ -1,41 +1,42 @@
-# VERIFY.md — MoodReel Verification
+# MoodReel Verification
 
 ## Install
+
 ```bash
 npm install
 ```
 
-## Environment Setup
-```bash
-cp .env.example .env
-```
-Edit `.env` and set:
-- `REACT_APP_TMDB_API_KEY`
-- Optional: `REACT_APP_TMDB_BASE_URL`
+## Build + tests
 
-Optional alternative (no `.env` edit): set a runtime key in the browser console and reload:
-```javascript
-localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY')
-```
-
-## Run (Dev)
 ```bash
-npm start
-```
-
-## Build
-```bash
+npm run format:check
+npm run test:unit
 npm run build
 ```
 
-## Manual Smoke Checklist
-- Mood flow: enter mood → recommendations grid appears.
-- Search: title search works in both “within mood results” and “search all” modes.
-- Details: open a title and confirm metadata, cast, and similar titles render.
-- Trailer fallback: if no trailer, fallback message is shown (no crash).
-- Watchlist persistence: add/remove, refresh page, and verify saved items persist.
-- Provider display: provider badges show on cards; details page groups stream/rent/buy when available.
-- Provider filters: “My Services” selection filters results when provider data is available.
-- Region selection: change region in Profile and confirm providers update.
-- Taste profile: like/dislike impacts ranking; hidden titles show when toggled.
-- Shareable link: “Copy link” includes mood, filters, search query, region, and services.
+## Optional E2E
+
+```bash
+npm run test:e2e
+```
+
+Run only in deterministic env (stable TMDB mocking/fixtures or controlled API key).
+
+## Manual smoke checks (web)
+
+- Mood search returns results.
+- Title search returns results.
+- Details page loads metadata, trailer fallback, providers, similar content.
+- Provider filter honesty: “My Services” should not imply confirmed availability while provider data is still unknown.
+- Watchlist persistence survives refresh.
+- Shareable link restores mood/filter/query/region/provider state.
+- Missing/invalid API key shows safe user-facing error (no key leakage).
+- PWA install prompt appears in production context.
+- Offline sanity: app shell reloads and no crash when offline.
+
+## iOS verification steps
+
+1. Open `MoodReel-iOS/MoodReel.xcodeproj`.
+2. Enter TMDB API key via app gate.
+3. Build and run simulator target.
+4. Smoke test Discover, Watchlist, Detail, Settings, and API-key reset flow.

@@ -2,11 +2,11 @@
   "installCommand": "cd moodreel && npm ci",
   "buildCommand": "cd moodreel && npm run build",
   "outputDirectory": "moodreel/build",
-  "framework": null,
+  "framework": "vite",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/index.html"
     }
   ]
 }

@@ -70,6 +70,14 @@ function normalizeParams(params) {
   return Object.fromEntries(entries);
 }
 
+function sanitizeParamsForLog(params) {
+  const normalized = normalizeParams(params);
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'api_key')) {
+    return normalized;
+  }
+  return { ...normalized, api_key: '[REDACTED]' };
+}
+
 function getCacheKey(path, params) {
   return `${path}?${JSON.stringify(normalizeParams(params))}`;
 }
@@ -209,7 +217,7 @@ export async function tmdbGet(
             code: normalized.code,
             status: normalized.status,
             url: fullUrl,
-            params: normalizeParams(finalParams),
+            params: sanitizeParamsForLog(finalParams),
             retryAfter: normalized.retryAfter,
           }
         );
@@ -238,6 +246,7 @@ const apiClient = {
   isAbortError,
   isExpectedTmdbErrorForLogging,
   shouldSkipLog,
+  sanitizeParamsForLog,
 };
 
 export default apiClient;
