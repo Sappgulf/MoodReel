@@ -40,6 +40,13 @@ Reload the page after setting it.
 | `npm run lint`          | ESLint on `src/`                                |
 | `npm run typecheck`     | `tsc --noEmit` (shared types in `src/types.ts`) |
 | `npm run format:check`  | Prettier check                                  |
+| `npm run test:e2e`      | Playwright browser smoke tests                  |
+
+On a fresh machine or clean CI image, install Playwright browsers before E2E:
+
+```bash
+npx playwright install chromium webkit
+```
 
 ## TypeScript vs JavaScript
 
@@ -143,3 +150,15 @@ All data from [TMDB API v3](https://developer.themoviedb.org/docs):
 - Firefox 88+
 - Safari 14+
 - Edge 90+
+
+## iOS Verification
+
+The native app lives in `../MoodReel-iOS`. Use a signing-free simulator build for compile verification:
+
+```bash
+xcodebuild -project ../MoodReel-iOS/MoodReel.xcodeproj \
+  -scheme MoodReel \
+  -destination 'generic/platform=iOS Simulator' \
+  -configuration Debug \
+  build CODE_SIGNING_ALLOWED=NO
+```

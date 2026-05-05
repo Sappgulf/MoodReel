@@ -412,7 +412,15 @@ function AppContent() {
         return;
       }
       // ? = show shortcuts
-      if (!isEditable && !isOverlayOpen && !e.ctrlKey && !e.metaKey && !e.altKey && key === '?') {
+      const isShortcutHelpKey = key === '?' || (key === '/' && e.shiftKey);
+      if (
+        !isEditable &&
+        !isOverlayOpen &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        isShortcutHelpKey
+      ) {
         e.preventDefault();
         setShowShortcuts(true);
       }

@@ -126,7 +126,7 @@ struct AppFont {
         .custom("Georgia-Bold", size: size, relativeTo: .largeTitle)
     }
     static func display(_ size: CGFloat = 24) -> Font {
-        .custom("Georgia", size: size, relativeTo: .title1)
+        .custom("Georgia", size: size, relativeTo: .title)
     }
     static func headline(_ size: CGFloat = 18) -> Font {
         .system(size: size, weight: .semibold, design: .default)

@@ -14,8 +14,9 @@ cp .env.example .env
 
 Edit `.env` and set:
 
-- `REACT_APP_TMDB_API_KEY`
-- Optional: `REACT_APP_TMDB_BASE_URL`
+- `VITE_TMDB_API_KEY`
+- Optional: `VITE_TMDB_BASE_URL`
+- Legacy aliases still supported: `REACT_APP_TMDB_API_KEY`, `REACT_APP_TMDB_BASE_URL`
 
 Optional alternative (no `.env` edit): set a runtime key in the browser console and reload:
 
@@ -33,6 +34,26 @@ npm start
 
 ```bash
 npm run build
+```
+
+## Automated Verification
+
+```bash
+npm run verify
+npm run typecheck
+npm run format:check
+npx playwright install chromium webkit
+npm run test:e2e
+```
+
+## iOS Compile Check
+
+```bash
+xcodebuild -project ../MoodReel-iOS/MoodReel.xcodeproj \
+  -scheme MoodReel \
+  -destination 'generic/platform=iOS Simulator' \
+  -configuration Debug \
+  build CODE_SIGNING_ALLOWED=NO
 ```
 
 ## Manual Smoke Checklist

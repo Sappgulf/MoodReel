@@ -25,6 +25,7 @@
 		B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E482C07B60A067B50F672D /* Theme.swift */; };
 		B86001651F53833059C70623 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */; };
 		BDA9292CD0650F733ABDADE6 /* MoodReelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */; };
+		C6A41E4E2B8D4F4D9E0C92A1 /* TasteProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */; };
 		DA96987D1482B38518FA4FDB /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */; };
 		E40326A5753EB7A5EE67A227 /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */; };
 		EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2536D00C4BA4F422998FD9 /* TMDBService.swift */; };
@@ -52,6 +53,7 @@
 		7AA4DF8C276F322BA10747CF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		950A606672A209499B19F74E /* APIKeyEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyEntryView.swift; sourceTree = "<group>"; };
+		C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasteProfileStore.swift; sourceTree = "<group>"; };
 		DF1E97789AFA3B75A8C21A20 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
 		E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		F2E482C07B60A067B50F672D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 			children = (
 				70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */,
 				213BEF41155E24382B2CCC26 /* MediaDetailViewModel.swift */,
+				C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */,
 				287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */,
 			);
 			path = ViewModels;
@@ -305,6 +308,7 @@
 				08568088B348945BAEA53AF8 /* SettingsView.swift in Sources */,
 				808DAA8FA8228F27F31BA962 /* TMDBConfig.swift in Sources */,
 				EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */,
+				C6A41E4E2B8D4F4D9E0C92A1 /* TasteProfileStore.swift in Sources */,
 				B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */,
 				B86001651F53833059C70623 /* ViewModifiers.swift in Sources */,
 				516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */,
