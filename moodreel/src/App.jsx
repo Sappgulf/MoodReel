@@ -26,6 +26,7 @@ const MoodCalendar = lazy(() => import('./pages/MoodCalendar'));
 const Achievements = lazy(() => import('./pages/Achievements'));
 const SharedList = lazy(() => import('./pages/SharedList'));
 const Profile = lazy(() => import('./pages/Profile'));
+const Tonight = lazy(() => import('./pages/Tonight'));
 
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
 const SEARCH_FALLBACK_TOAST_COOLDOWN_MS = 12000;
@@ -116,6 +117,13 @@ function AppContent() {
         description: 'Review saved titles, notes, and watched items.',
         shortcut: 'G W',
         onSelect: () => navigate('/watchlist'),
+      },
+      {
+        id: 'tonight',
+        label: 'Tonight Mode',
+        description: 'Get three curated picks for tonight.',
+        shortcut: 'G T',
+        onSelect: () => navigate('/tonight'),
       },
       {
         id: 'stats',
@@ -211,6 +219,7 @@ function AppContent() {
     else if (path === '/profile') title = 'Profile | MoodReel';
     else if (path === '/stats') title = 'Your Stats | MoodReel';
     else if (path === '/calendar') title = 'Mood Calendar | MoodReel';
+    else if (path === '/tonight') title = 'Tonight Mode | MoodReel';
     else if (path === '/not-found' || path === '/404') title = 'Page not found | MoodReel';
     return title;
   }, []);
@@ -588,6 +597,7 @@ function AppContent() {
               <Route path="/movie/:id/" element={<MovieDetails />} />
               <Route path="/tv/:id/" element={<MovieDetails />} />
               <Route path="/watchlist" element={<Watchlist />} />
+              <Route path="/tonight" element={<Tonight />} />
               <Route path="/shared" element={<SharedList />} />
               <Route path="/achievements" element={<Achievements />} />
               <Route path="/profile" element={<Profile />} />

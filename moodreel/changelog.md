@@ -23,3 +23,7 @@ Types: Added, Changed, Fixed, Performance, Security.
 - Added: Initial MoodReel app with mood-based discovery, search, details, trailers, and watchlist.
 - Added: Achievement system and cinematic DNA analytics.
 - Added: PWA support with install prompt and offline caching.
+
+## 2026-05-06
+- Migrated unit tests from react-scripts/Jest to Vitest.
+- Added recommendation scoring utility and Tonight Mode route.
