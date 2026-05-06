@@ -6,22 +6,22 @@
     "axios": "^1.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.6.2",
-    "react-scripts": "^5.0.1"
+    "react-router-dom": "^7.6.2"
   },
   "scripts": {
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "react-scripts test",
-    "test:unit": "react-scripts test --watchAll=false",
+    "test": "vitest run",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "verify": "npm run format:check && npm run test:unit && npm run build",
     "smoke": "node scripts/smoke.js",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:watch": "vitest"
   },
   "eslintConfig": {
     "extends": [
@@ -55,6 +55,8 @@
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "typescript": "^4.9.5",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vitest": "^2.1.8",
+    "jsdom": "^25.0.1"
   }
 }

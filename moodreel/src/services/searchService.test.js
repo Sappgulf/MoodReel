@@ -1,20 +1,20 @@
 import { generateCacheKey, clearCache, getCacheStats } from './searchService';
 
 // Mock axios
-jest.mock('axios', () => ({
-  get: jest.fn(),
-  isCancel: jest.fn(),
+vi.mock('axios', () => ({
+  get: vi.fn(),
+  isCancel: vi.fn(),
 }));
 
 // Mock rateLimiter
-jest.mock('../utils/rateLimiter', () => ({
-  canMakeRequest: jest.fn(() => true),
-  getRemainingRequests: jest.fn(() => 30),
+vi.mock('../utils/rateLimiter', () => ({
+  canMakeRequest: vi.fn(() => true),
+  getRemainingRequests: vi.fn(() => 30),
 }));
 
 // Mock moodParser
-jest.mock('../utils/moodParser', () => ({
-  parseMoodToGenres: jest.fn(text => {
+vi.mock('../utils/moodParser', () => ({
+  parseMoodToGenres: vi.fn(text => {
     if (text === 'happy') return [35];
     if (text === 'scary') return [27];
     return [];
@@ -22,20 +22,20 @@ jest.mock('../utils/moodParser', () => ({
 }));
 
 // Mock apiClient to avoid import.meta parsing issues in Jest
-jest.mock('./apiClient', () => ({
-  tmdbGet: jest.fn(),
-  ensureArray: jest.fn(v => (Array.isArray(v) ? v : [])),
-  ensureNumber: jest.fn((v, fallback = 0) => (Number.isFinite(v) ? v : fallback)),
-  ensureString: jest.fn((v, fallback = '') => (typeof v === 'string' ? v : fallback)),
-  isAbortError: jest.fn(() => false),
-  isExpectedTmdbErrorForLogging: jest.fn(() => false),
-  shouldSkipLog: jest.fn(() => false),
+vi.mock('./apiClient', () => ({
+  tmdbGet: vi.fn(),
+  ensureArray: vi.fn(v => (Array.isArray(v) ? v : [])),
+  ensureNumber: vi.fn((v, fallback = 0) => (Number.isFinite(v) ? v : fallback)),
+  ensureString: vi.fn((v, fallback = '') => (typeof v === 'string' ? v : fallback)),
+  isAbortError: vi.fn(() => false),
+  isExpectedTmdbErrorForLogging: vi.fn(() => false),
+  shouldSkipLog: vi.fn(() => false),
 }));
 
 describe('searchService', () => {
   beforeEach(() => {
     clearCache();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('generateCacheKey', () => {
