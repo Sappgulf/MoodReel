@@ -30,15 +30,14 @@ import {
   getCachedTitleProviders,
 } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
+import {
+  buildTonightPicks,
+  getRecommendationKey,
+  NIGHT_CONSTRAINTS,
+  rankRecommendations,
+  TONIGHT_MODES,
+} from '../utils/recommendationScoring';
 import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
-
-function getTitleTokens(item) {
-  return (item.title || item.name || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter(token => token.length > 3);
-}
 
 function genreLabelFor(item, genres) {
   const genreId = item.genre_ids?.[0];
@@ -75,6 +74,10 @@ const CURATED_COLLECTIONS = [
     filters: { runtime: 'any', sortBy: 'vote_average.desc' },
   },
 ];
+
+function getReadableTitle(item) {
+  return item?.title || item?.name || 'This title';
+}
 
 function Home() {
   const currentYear = new Date().getFullYear();
@@ -135,6 +138,12 @@ function Home() {
   const [resultLayout, setResultLayout] = useState('poster');
   const [titleQuery, setTitleQuery] = useState('');
   const [showSaveVibeModal, setShowSaveVibeModal] = useState(false);
+  const [tonightMode, setTonightMode] = useState('easy-win');
+  const [activeConstraintIds, setActiveConstraintIds] = useState(
+    () => TONIGHT_MODES[0].defaultConstraints
+  );
+  const [passedDecisionIds, setPassedDecisionIds] = useState([]);
+  const [lockedPickId, setLockedPickId] = useState('');
 
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
@@ -409,20 +418,26 @@ function Home() {
       playSound('save');
       const added = addToWatchlist(movie);
       if (added) trackSave(added);
-      setRecommendations(prev => prev.filter(m => m.id !== movie.id));
+      const movieKey = getRecommendationKey(movie, movie.media_type || contentType);
+      setRecommendations(prev =>
+        prev.filter(m => getRecommendationKey(m, m.media_type || contentType) !== movieKey)
+      );
       setTimeout(() => setIsCardLoading(false), 300);
     },
-    [addToWatchlist, trackSave, playSound, setRecommendations]
+    [addToWatchlist, trackSave, playSound, setRecommendations, contentType]
   );
 
   const handleSwipeLeft = useCallback(
     movie => {
       setIsCardLoading(true);
       playSound('swipe');
-      setRecommendations(prev => prev.filter(m => m.id !== movie.id));
+      const movieKey = getRecommendationKey(movie, movie.media_type || contentType);
+      setRecommendations(prev =>
+        prev.filter(m => getRecommendationKey(m, m.media_type || contentType) !== movieKey)
+      );
       setTimeout(() => setIsCardLoading(false), 300);
     },
-    [playSound, setRecommendations]
+    [playSound, setRecommendations, contentType]
   );
 
   const suggestedVibeName = useMemo(() => {
@@ -497,6 +512,73 @@ function Home() {
     [currentYear, handleSearch, playSound, setAdvancedFilters, setMinRating, setMood]
   );
 
+  const activeTonightMode = useMemo(
+    () => TONIGHT_MODES.find(mode => mode.id === tonightMode) || TONIGHT_MODES[0],
+    [tonightMode]
+  );
+
+  const handleTonightModeSelect = useCallback(
+    mode => {
+      setTonightMode(mode.id);
+      setActiveConstraintIds(mode.defaultConstraints);
+      setPassedDecisionIds([]);
+      setLockedPickId('');
+      if (!mood.trim()) {
+        setMood(mode.mood);
+      }
+      setAdvancedFilters(prev => ({
+        ...prev,
+        ...mode.filters,
+        yearMax: currentYear,
+      }));
+      setMinRating(prev => Math.max(prev, mode.minRating));
+      playSound('pop');
+    },
+    [currentYear, mood, playSound, setAdvancedFilters, setMinRating, setMood]
+  );
+
+  const handleConstraintToggle = useCallback(
+    constraint => {
+      setActiveConstraintIds(prev => {
+        const next = prev.includes(constraint.id)
+          ? prev.filter(id => id !== constraint.id)
+          : [...prev, constraint.id];
+        return next;
+      });
+
+      if (constraint.id === 'under-90' || constraint.id === 'low-commitment') {
+        setAdvancedFilters(prev => ({ ...prev, runtime: 'short' }));
+      }
+      if (constraint.id === 'high-rating' || constraint.id === 'hidden-gem') {
+        setMinRating(prev => Math.max(prev, constraint.id === 'high-rating' ? 7 : 6.8));
+        setAdvancedFilters(prev => ({ ...prev, sortBy: 'vote_average.desc' }));
+      }
+      if (constraint.id === 'newer') {
+        setAdvancedFilters(prev => ({
+          ...prev,
+          yearMin: Math.max(prev.yearMin || 1900, currentYear - 5),
+          yearMax: currentYear,
+          sortBy: 'primary_release_date.desc',
+        }));
+      }
+      if (constraint.id === 'classic') {
+        setAdvancedFilters(prev => ({
+          ...prev,
+          yearMax: Math.min(prev.yearMax || currentYear, 2005),
+          sortBy: 'vote_average.desc',
+        }));
+      }
+      if (constraint.id === 'family-friendly') {
+        setSelectedGenres(prev => (prev.includes(10751) ? prev : [...prev, 10751]));
+      }
+      if (constraint.id === 'no-horror') {
+        setSelectedGenres(prev => prev.filter(genreId => genreId !== 27));
+      }
+      playSound('pop');
+    },
+    [currentYear, playSound, setAdvancedFilters, setMinRating, setSelectedGenres]
+  );
+
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12)
@@ -518,8 +600,9 @@ function Home() {
     if (advancedFilters.yearMax < currentYear) count++;
     if (advancedFilters.runtime && advancedFilters.runtime !== 'any') count++;
     if (advancedFilters.sortBy && advancedFilters.sortBy !== 'popularity.desc') count++;
+    if (activeConstraintIds.length > 0) count++;
     return count;
-  }, [selectedGenres, myServices, minRating, advancedFilters, currentYear]);
+  }, [selectedGenres, myServices, minRating, advancedFilters, currentYear, activeConstraintIds]);
 
   const featuredItem = useMemo(() => {
     const hasArtwork = item => Boolean(item?.backdrop_path || item?.poster_path);
@@ -591,64 +674,70 @@ function Home() {
     selectedGenres,
   ]);
 
-  const tasteAdjustedResults = useMemo(() => {
-    let results = scopedResults;
-    if (!showHidden) {
-      results = results.filter(
-        item => statusFor(item.id, item.media_type || contentType) !== 'disliked'
-      );
-    }
-    const recentTokens = new Set(watchHistory.slice(0, 12).flatMap(getTitleTokens));
-    const recentKeys = new Set(
-      watchHistory.slice(0, 30).map(item => `${item.id}-${item.media_type || 'movie'}`)
-    );
-    const mediaTypeCounts = watchHistory.reduce((acc, item) => {
-      const type = item.media_type || 'movie';
-      acc[type] = (acc[type] || 0) + 1;
+  const rankedScorecards = useMemo(() => {
+    const visibleResults = showHidden
+      ? scopedResults
+      : scopedResults.filter(
+          item => statusFor(item.id, item.media_type || contentType) !== 'disliked'
+        );
+    const savedKeys = watchlist.map(item => getRecommendationKey(item, item.media_type || 'movie'));
+    const watchedKeys = watchlist
+      .filter(item => isWatched(item.id, item.media_type || 'movie'))
+      .map(item => getRecommendationKey(item, item.media_type || 'movie'));
+    const watchHistoryKeys = watchHistory
+      .slice(0, 30)
+      .map(item => getRecommendationKey(item, item.media_type || 'movie'));
+    const providerDataByKey = visibleResults.reduce((acc, item) => {
+      const mediaType = item.media_type || contentType;
+      const providerKey = `${item.id}-${mediaType}-${region}`;
+      acc[getRecommendationKey(item, mediaType)] =
+        providerSnapshot[providerKey] || getCachedTitleProviders(item.id, mediaType, region);
       return acc;
     }, {});
-    const getPreferenceScore = item => {
-      const mediaType = item.media_type || contentType;
-      const status = statusFor(item.id, mediaType);
-      const key = `${item.id}-${mediaType}`;
-      let score = 0;
-      if (status === 'liked') score += 60;
-      if (status === 'disliked') score -= 80;
-      if (likedKeys.includes(key)) score += 20;
-      if (dislikedKeys.includes(key)) score -= 50;
-      if (recentKeys.has(key)) score -= 12;
-      if (isInWatchlist(item.id)) score -= 8;
-      score += (item.genre_ids || []).reduce(
-        (sum, genreId) => sum + Math.min(watchlistGenreCounts[genreId] || 0, 4) * 4,
-        0
-      );
-      score += Math.min(mediaTypeCounts[mediaType] || 0, 6) * 2;
-      score += getTitleTokens(item).filter(token => recentTokens.has(token)).length * 3;
-      return score;
-    };
 
-    return [...results].sort((a, b) => {
-      const aStatus = statusFor(a.id, a.media_type || contentType);
-      const bStatus = statusFor(b.id, b.media_type || contentType);
-      if (aStatus !== bStatus) {
-        if (aStatus === 'liked') return -1;
-        if (bStatus === 'liked') return 1;
-        if (aStatus === 'disliked') return 1;
-        if (bStatus === 'disliked') return -1;
-      }
-      return getPreferenceScore(b) - getPreferenceScore(a);
+    return rankRecommendations(visibleResults, {
+      mode: activeTonightMode,
+      constraints: activeConstraintIds,
+      selectedGenres,
+      providerDataByKey,
+      myServices,
+      likedKeys,
+      dislikedKeys,
+      savedKeys,
+      watchedKeys,
+      watchHistoryKeys,
+      watchlistGenreCounts,
+      contentType,
+      currentYear,
     });
   }, [
     scopedResults,
     showHidden,
     statusFor,
     contentType,
+    region,
     watchHistory,
     likedKeys,
     dislikedKeys,
-    isInWatchlist,
+    watchlist,
+    isWatched,
     watchlistGenreCounts,
+    activeTonightMode,
+    activeConstraintIds,
+    selectedGenres,
+    providerSnapshot,
+    myServices,
+    currentYear,
   ]);
+
+  const tasteAdjustedResults = useMemo(
+    () => rankedScorecards.map(scorecard => scorecard.item),
+    [rankedScorecards]
+  );
+
+  const scorecardByKey = useMemo(() => {
+    return new Map(rankedScorecards.map(scorecard => [scorecard.key, scorecard]));
+  }, [rankedScorecards]);
 
   const getProviderKey = useCallback(
     item => {
@@ -660,6 +749,8 @@ function Home() {
   const getRecommendationReason = useCallback(
     item => {
       const mediaType = item.media_type || contentType;
+      const scorecard = scorecardByKey.get(getRecommendationKey(item, mediaType));
+      if (scorecard?.explanation) return scorecard.explanation;
       const status = statusFor(item.id, mediaType);
       if (status === 'liked') return 'Because you liked this title';
       const cached =
@@ -687,6 +778,7 @@ function Home() {
     },
     [
       contentType,
+      scorecardByKey,
       statusFor,
       providerSnapshot,
       getProviderKey,
@@ -715,6 +807,48 @@ function Home() {
       return myServices.some(id => ids.includes(id));
     });
   }, [tasteAdjustedResults, myServices, providerSnapshot, getProviderKey, contentType, region]);
+
+  const tonightPicks = useMemo(() => {
+    const visibleKeys = new Set(
+      filteredByServices.map(item => getRecommendationKey(item, item.media_type || contentType))
+    );
+    const visibleScorecards = rankedScorecards.filter(scorecard => visibleKeys.has(scorecard.key));
+    return buildTonightPicks(visibleScorecards, {
+      lockedPickId,
+      passedKeys: passedDecisionIds,
+    });
+  }, [contentType, filteredByServices, lockedPickId, passedDecisionIds, rankedScorecards]);
+
+  const handleDecisionPick = useCallback(
+    item => {
+      const key = getRecommendationKey(item, item.media_type || contentType);
+      setLockedPickId(key);
+      const added = addToWatchlist(item);
+      if (added) trackSave(added);
+      playSound('save');
+      pushToast({
+        icon: '🎬',
+        title: "Tonight's pick locked",
+        message: `${getReadableTitle(item)} ${added ? 'was saved to your watchlist.' : 'is already in your watchlist.'}`,
+        duration: 3600,
+      });
+    },
+    [addToWatchlist, contentType, playSound, pushToast, trackSave]
+  );
+
+  const handleDecisionPass = useCallback(
+    item => {
+      const key = getRecommendationKey(item, item.media_type || contentType);
+      setLockedPickId(prev => (prev === key ? '' : prev));
+      setPassedDecisionIds(prev => {
+        const next = prev.includes(key) ? prev : [...prev, key];
+        const resetThreshold = Math.min(Math.max(filteredByServices.length - 3, 3), 12);
+        return next.length >= resetThreshold ? [] : next;
+      });
+      playSound('swipe');
+    },
+    [contentType, filteredByServices.length, playSound]
+  );
 
   const handleSmartSurprise = useCallback(() => {
     const avoidKeys = [
@@ -839,6 +973,47 @@ function Home() {
             >
               {isSurpriseLoading ? '🎲' : 'Shuffle'}
             </button>
+          </div>
+        </div>
+
+        <div className="tonight-mode-rail" aria-label="Tonight Mode">
+          <div className="tonight-mode-copy">
+            <span>What kind of night is it?</span>
+            <strong>{activeTonightMode.label}</strong>
+            <p>{activeTonightMode.description}</p>
+          </div>
+          <div className="tonight-flow-controls">
+            <div className="tonight-mode-options" role="group" aria-label="Choose tonight mood">
+              {TONIGHT_MODES.map(mode => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  className={`tonight-mode-chip ${tonightMode === mode.id ? 'active' : ''}`}
+                  aria-pressed={tonightMode === mode.id}
+                  onClick={() => handleTonightModeSelect(mode)}
+                >
+                  <span>{mode.eyebrow}</span>
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+            <div className="constraint-chip-row" role="group" aria-label="Tonight constraints">
+              {NIGHT_CONSTRAINTS.map(constraint => {
+                const isActive = activeConstraintIds.includes(constraint.id);
+                return (
+                  <button
+                    key={constraint.id}
+                    type="button"
+                    className={`constraint-chip ${isActive ? 'active' : ''}`}
+                    aria-pressed={isActive}
+                    title={constraint.description}
+                    onClick={() => handleConstraintToggle(constraint)}
+                  >
+                    {constraint.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -989,6 +1164,11 @@ function Home() {
         loadMoreResults={loadMoreResults}
         searchScope={searchScope}
         loadMoreRef={loadMoreRef}
+        activeTonightMode={activeTonightMode}
+        tonightPicks={tonightPicks}
+        lockedPickId={lockedPickId}
+        onPickCandidate={handleDecisionPick}
+        onPassCandidate={handleDecisionPass}
       />
     </main>
   );

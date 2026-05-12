@@ -97,10 +97,10 @@ const MovieCard = memo(function MovieCard({
       e.preventDefault();
       e.stopPropagation();
       if (navigator.vibrate) navigator.vibrate(5);
-      onToggleWatched(movie.id);
+      onToggleWatched(movie.id, resolvedMediaType);
       playSound('click');
     },
-    [movie.id, onToggleWatched, playSound]
+    [movie.id, onToggleWatched, playSound, resolvedMediaType]
   );
 
   const handleLike = useCallback(

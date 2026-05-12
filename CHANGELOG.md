@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-05-11
+
+### Implemented
+- **Scope:** web + iOS product upgrade
+- **What changed:**
+  - Re-centered Discover around Tonight Mode: mood presets, constraint chips, Safe Bet / Best Match / Wild Card, and Pick Between These.
+  - Added pure `recommendationScoring` logic with deterministic ranking and explanation tests.
+  - Included provider availability, ratings, popularity, taste profile, saved/watched state, selected constraints, and mood/genre affinity in ranking.
+  - Made watchlist/watched lookups media-type-aware while preserving legacy ID-only callers.
+  - Bounded provider caches and documented the analyzer/performance workflow.
+  - Added iOS Discover parity for Tonight constraints and a top-three Tonight picks section without changing Keychain API key handling, privacy manifest, URLCache, or region/provider detail behavior.
+- **Verification performed:** Pending in this branch.
+
 ## 2026-02-10
 
 ### Planned

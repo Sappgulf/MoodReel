@@ -2,6 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { StorageKeys as SK } from '../storage/storageKeys';
 import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
+function getMediaKey(itemOrId, mediaType) {
+  if (typeof itemOrId === 'object' && itemOrId !== null) {
+    return `${itemOrId.id}-${itemOrId.media_type || mediaType || 'movie'}`;
+  }
+  if (!mediaType) return String(itemOrId);
+  return `${itemOrId}-${mediaType || 'movie'}`;
+}
+
 /**
  * Custom hook for managing watchlist with localStorage persistence
  * Includes notes, watched status, and genre tracking
@@ -38,7 +46,8 @@ export function useWatchlist() {
     let added = null;
     setWatchlist(prev => {
       // Check if already exists inside the updater to avoid stale closure
-      const existing = prev.some(i => i.id === item.id);
+      const newKey = getMediaKey(item);
+      const existing = prev.some(i => getMediaKey(i) === newKey);
       if (existing) return prev;
 
       const newItem = {
@@ -57,15 +66,20 @@ export function useWatchlist() {
     return added; // Return for external tracking (achievements)
   }, []);
 
-  const removeFromWatchlist = useCallback(id => {
-    setWatchlist(prev => prev.filter(item => item.id !== id));
+  const removeFromWatchlist = useCallback((id, mediaType) => {
+    const key = mediaType ? getMediaKey(id, mediaType) : null;
+    setWatchlist(prev =>
+      key ? prev.filter(item => getMediaKey(item) !== key) : prev.filter(item => item.id !== id)
+    );
     setNotes(prev => {
       const newNotes = { ...prev };
+      delete newNotes[key || id];
       delete newNotes[id];
       return newNotes;
     });
     setWatched(prev => {
       const newWatched = { ...prev };
+      delete newWatched[key || id];
       delete newWatched[id];
       return newWatched;
     });
@@ -75,17 +89,27 @@ export function useWatchlist() {
     return new Set(watchlist.map(item => item.id));
   }, [watchlist]);
 
+  const watchlistKeys = useMemo(() => {
+    return new Set(watchlist.map(item => getMediaKey(item)));
+  }, [watchlist]);
+
+  const watchedKeys = useMemo(() => {
+    return new Set(Object.keys(watched));
+  }, [watched]);
+
   const isInWatchlist = useCallback(
-    id => {
+    (id, mediaType) => {
+      if (mediaType) return watchlistKeys.has(getMediaKey(id, mediaType));
       return watchlistIds.has(id);
     },
-    [watchlistIds]
+    [watchlistIds, watchlistKeys]
   );
 
   const toggleWatchlist = useCallback(
     item => {
-      if (isInWatchlist(item.id)) {
-        removeFromWatchlist(item.id);
+      const mediaType = item.media_type || 'movie';
+      if (isInWatchlist(item.id, mediaType)) {
+        removeFromWatchlist(item.id, mediaType);
       } else {
         addToWatchlist(item);
       }
@@ -95,35 +119,38 @@ export function useWatchlist() {
 
   // Notes management
   const getNote = useCallback(
-    movieId => {
-      return notes[movieId] || '';
+    (movieId, mediaType) => {
+      return notes[getMediaKey(movieId, mediaType)] || notes[movieId] || '';
     },
     [notes]
   );
 
-  const setNote = useCallback((movieId, note) => {
+  const setNote = useCallback((movieId, note, mediaType) => {
     setNotes(prev => ({
       ...prev,
-      [movieId]: note,
+      [getMediaKey(movieId, mediaType)]: note,
     }));
   }, []);
 
   // Watched management
   const isWatched = useCallback(
-    movieId => {
+    (movieId, mediaType) => {
+      if (mediaType) return !!watched[getMediaKey(movieId, mediaType)] || !!watched[movieId];
       return !!watched[movieId];
     },
     [watched]
   );
 
-  const toggleWatched = useCallback(movieId => {
+  const toggleWatched = useCallback((movieId, mediaType) => {
+    const key = getMediaKey(movieId, mediaType);
     setWatched(prev => {
-      if (prev[movieId]) {
+      if (prev[key] || (!mediaType && prev[movieId])) {
         const newWatched = { ...prev };
-        delete newWatched[movieId];
+        delete newWatched[key];
+        if (!mediaType) delete newWatched[movieId];
         return newWatched;
       } else {
-        return { ...prev, [movieId]: Date.now() };
+        return { ...prev, [key]: Date.now() };
       }
     });
   }, []);
@@ -230,6 +257,8 @@ export function useWatchlist() {
 
   return {
     watchlist,
+    watchlistKeys,
+    watchedKeys,
     favorites,
     addToWatchlist,
     removeFromWatchlist,

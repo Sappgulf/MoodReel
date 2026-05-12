@@ -1,6 +1,6 @@
 # MoodReel – Ship Guide
 
-> Cinema-noir movie & TV discovery app built with React 18
+> Cinema-noir mood-to-decision app built with React 18
 
 ## Quick Start
 
@@ -76,6 +76,9 @@ src/
 ## Key Features
 
 - **Mood-to-genre mapping**: Natural language → TMDB genres
+- **Tonight Mode**: Mood + constraints → Safe Bet, Best Match, and Wild Card
+- **Explainable scoring**: Provider availability, taste, saved/watched state, rating, popularity, and constraints influence ranking
+- **Pick Between These**: Compare the shortlist and lock one title without doomscrolling
 - **Movie/TV toggle**: Instant content type switching
 - **Watchlist**: localStorage-persisted favorites
 - **Streaming providers**: "Where to watch" via TMDB
@@ -88,6 +91,8 @@ src/
 - ✅ AbortController for all API calls
 - ✅ Image lazy loading
 - ✅ Memoized callbacks (useCallback)
+- ✅ Bounded TMDB/provider caches
+- ✅ `npm run analyze` behind Rollup visualizer for bundle investigation
 
 ## Accessibility
 

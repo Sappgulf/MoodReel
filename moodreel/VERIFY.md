@@ -58,7 +58,12 @@ xcodebuild -project ../MoodReel-iOS/MoodReel.xcodeproj \
 
 ## Manual Smoke Checklist
 
+- Fresh install / no API key: clear local storage, launch app, confirm branded API key-needed state links to Profile.
+- Valid API key: save a local key in Profile or set `VITE_TMDB_API_KEY`, then reload Discover.
 - Mood flow: enter mood → recommendations grid appears.
+- Tonight Mode: choose a “What kind of night is it?” preset and confirm Safe Bet / Best Match / Wild Card render with explanations.
+- Constraint chips: toggle under 90, streaming now, family friendly, no horror, hidden gem, high rating, newer, classic, low commitment, and wild card; confirm ranking/filter copy updates without crashing.
+- Pick Between These: pick one shortlist title, confirm it locks and saves; swap another out and confirm the shortlist changes.
 - Search: title search works in both “within mood results” and “search all” modes.
 - Details: open a title and confirm metadata, cast, and similar titles render.
 - Trailer fallback: if no trailer, fallback message is shown (no crash).
@@ -68,3 +73,6 @@ xcodebuild -project ../MoodReel-iOS/MoodReel.xcodeproj \
 - Region selection: change region in Profile and confirm providers update.
 - Taste profile: like/dislike impacts ranking; hidden titles show when toggled.
 - Shareable link: “Copy link” includes mood, filters, search query, region, and services.
+- Mobile viewport: verify touch targets, bottom navigation, Tonight chips, and Pick Between These stack cleanly.
+- Reduced motion: enable reduced motion and confirm large transitions/shortlist hover motion are suppressed.
+- Offline/cached behavior: disconnect network after prior use and confirm cached/offline banner behavior is understandable.

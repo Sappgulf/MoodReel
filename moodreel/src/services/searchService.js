@@ -419,7 +419,13 @@ export async function search(params, signal) {
       }
 
       const dedupedResults = dedupeByMediaId(results);
-      const rankedResults = applySearchRanking(dedupedResults, normalizedQuery, getTieBreakers);
+      const moodGenres = parseMoodToGenres(normalizedQuery);
+      const rankedResults = applySearchRanking(
+        dedupedResults,
+        normalizedQuery,
+        getTieBreakers,
+        moodGenres
+      );
 
       const result = {
         results: rankedResults,

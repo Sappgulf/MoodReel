@@ -32,6 +32,7 @@ struct DiscoverView: View {
                         moodScroller
                         controlsRow
                         quickFiltersRow
+                        tonightPicksSection
                         resultsSection
                     }
                     .padding(AppSpacing.md)
@@ -93,7 +94,7 @@ struct DiscoverView: View {
                 .font(AppFont.display())
                 .goldText()
 
-            Text("Find movies and shows that match your current vibe.")
+            Text("Mood, constraints, three confident picks, then watch.")
                 .font(AppFont.body())
                 .foregroundStyle(Color.textSecondary)
         }
@@ -110,7 +111,7 @@ struct DiscoverView: View {
 
                 Spacer()
 
-                Text("\(viewModel.filteredItems.count) picks")
+                Text("\(viewModel.tonightPicks.count) tonight")
                     .font(AppFont.caption())
                     .foregroundStyle(Color.gold)
                     .padding(.horizontal, 10)
@@ -124,6 +125,10 @@ struct DiscoverView: View {
             Text(viewModel.selectedMood.description)
                 .font(AppFont.body())
                 .foregroundStyle(Color.textSecondary)
+
+            Text(viewModel.constraintSummary)
+                .font(AppFont.caption())
+                .foregroundStyle(Color.gold)
 
             if let updatedAt = viewModel.lastResultUpdatedAt {
                 Text("Updated \(updatedAt.formatted(date: .omitted, time: .shortened))")
@@ -295,7 +300,7 @@ struct DiscoverView: View {
     private var quickFiltersRow: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack {
-                Text("Refine Picks")
+                Text("What kind of night is it?")
                     .font(AppFont.caption())
                     .foregroundStyle(Color.textMuted)
 
@@ -343,9 +348,94 @@ struct DiscoverView: View {
             }
             .pickerStyle(.menu)
             .tint(.textSecondary)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 8)], spacing: 8) {
+                ForEach(DiscoverViewModel.NightConstraint.allCases) { constraint in
+                    let isSelected = viewModel.selectedConstraints.contains(constraint)
+                    Button {
+                        viewModel.toggleConstraint(constraint)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Label(constraint.title, systemImage: constraint.systemImage)
+                            .font(AppFont.caption())
+                            .lineLimit(1)
+                            .foregroundStyle(isSelected ? Color.black : Color.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(isSelected ? AnyShapeStyle(AppGradients.gold) : AnyShapeStyle(Color.bgTertiary))
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(isSelected ? Color.clear : Color.borderDefault, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(constraint.title)
+                    .accessibilityHint(isSelected ? "Selected" : "Double tap to add this constraint")
+                }
+            }
         }
         .padding(AppSpacing.md)
         .glassCard(cornerRadius: AppRadius.lg, backgroundOpacity: 1)
+    }
+
+    private var tonightPicksSection: some View {
+        Group {
+            if !viewModel.tonightPicks.isEmpty {
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Tonight Mode")
+                            .font(AppFont.captionSmall())
+                            .foregroundStyle(Color.gold)
+                            .textCase(.uppercase)
+                        Text("Safe Bet • Best Match • Wild Card")
+                            .font(AppFont.headline())
+                            .foregroundStyle(Color.textPrimary)
+                        Text("Three picks only, ranked with your mood and constraints so you can stop scrolling.")
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.textSecondary)
+                    }
+
+                    ForEach(Array(viewModel.tonightPicks.enumerated()), id: \.element.stableIdentifier) { index, item in
+                        Button {
+                            navigationPath.append(item.route)
+                        } label: {
+                            HStack(spacing: AppSpacing.md) {
+                                Text(tonightSlotTitle(for: index))
+                                    .font(AppFont.captionSmall())
+                                    .foregroundStyle(Color.gold)
+                                    .frame(width: 76, alignment: .leading)
+
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(item.displayTitle)
+                                        .font(AppFont.subheadline())
+                                        .foregroundStyle(Color.textPrimary)
+                                        .lineLimit(1)
+                                    Text("★ \(item.ratingFormatted) • \(item.mediaType.displayName)")
+                                        .font(AppFont.captionSmall())
+                                        .foregroundStyle(Color.textMuted)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(Color.textMuted)
+                            }
+                            .padding(AppSpacing.sm)
+                            .background(Color.bgTertiary.opacity(0.7))
+                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Open \(item.displayTitle)")
+                    }
+                }
+                .padding(AppSpacing.md)
+                .glassCard(cornerRadius: AppRadius.xl, backgroundOpacity: 1)
+                .goldBorder(cornerRadius: AppRadius.xl, opacity: 0.32)
+            }
+        }
     }
     
     @State private var isSurprisePressed = false
@@ -522,6 +612,14 @@ struct DiscoverView: View {
                     feedbackBanner = nil
                 }
             }
+        }
+    }
+
+    private func tonightSlotTitle(for index: Int) -> String {
+        switch index {
+        case 0: return "Safe Bet"
+        case 1: return "Best Match"
+        default: return "Wild Card"
         }
     }
 }

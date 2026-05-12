@@ -17,3 +17,13 @@
 - [x] Consider a dedicated share card exporter for mood-based social previews.
 - [x] Consolidate remaining CSS transitions from `all` to explicit properties.
 - [x] Review whether the bottom nav should collapse further on smaller phones.
+- [x] Re-center Discover around Tonight Mode with mood presets, constraint chips, and three confident picks.
+- [x] Move recommendation scoring into a pure tested utility.
+- [x] Add media-type-aware watchlist/watched keys for movie-vs-TV collisions.
+- [x] Add iOS Discover parity for Tonight constraints and top-three picks.
+
+## Next phase candidates
+
+- [ ] Add runtime enrichment for Tonight cards when TMDB detail data is already cached.
+- [ ] Persist preferred Tonight constraints per user profile.
+- [ ] Add Playwright coverage for Pick Between These once stable API-key fixtures are available.

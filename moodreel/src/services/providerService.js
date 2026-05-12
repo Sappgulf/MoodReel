@@ -3,9 +3,19 @@ import { normalizeProviderList } from '../utils/mediaUtils';
 
 const providerCache = new Map();
 const catalogCache = new Map();
+const PROVIDER_CACHE_LIMIT = 160;
+const CATALOG_CACHE_LIMIT = 48;
 
 function getProviderKey(id, mediaType, region) {
   return `${mediaType}-${id}-${region}`;
+}
+
+function setBounded(cache, key, value, limit) {
+  cache.set(key, value);
+  if (cache.size > limit) {
+    const oldestKey = cache.keys().next().value;
+    cache.delete(oldestKey);
+  }
 }
 
 export async function fetchProviderCatalog(mediaType = 'movie', region = 'US', signal) {
@@ -24,7 +34,7 @@ export async function fetchProviderCatalog(mediaType = 'movie', region = 'US', s
   });
 
   const providers = normalizeProviderList(ensureArray(response.results));
-  catalogCache.set(cacheKey, providers);
+  setBounded(catalogCache, cacheKey, providers, CATALOG_CACHE_LIMIT);
   return providers;
 }
 
@@ -42,7 +52,7 @@ export async function fetchTitleProviders(id, mediaType = 'movie', region = 'US'
     rent: normalizeProviderList(regionData?.rent || []),
     buy: normalizeProviderList(regionData?.buy || []),
   };
-  providerCache.set(cacheKey, normalized);
+  setBounded(providerCache, cacheKey, normalized, PROVIDER_CACHE_LIMIT);
   return normalized;
 }
 

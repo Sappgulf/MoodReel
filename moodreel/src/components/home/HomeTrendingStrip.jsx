@@ -28,9 +28,9 @@ export default function HomeTrendingStrip({
           <MovieCard
             key={item.id}
             movie={item}
-            isInWatchlist={isInWatchlist(item.id)}
+            isInWatchlist={isInWatchlist(item.id, item.media_type)}
             onToggleWatchlist={toggleWatchlist}
-            isWatched={isWatched(item.id)}
+            isWatched={isWatched(item.id, item.media_type)}
             onToggleWatched={toggleWatched}
             mediaType={item.media_type}
             providerBadges={

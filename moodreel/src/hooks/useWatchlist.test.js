@@ -43,6 +43,23 @@ describe('useWatchlist', () => {
       expect(result.current.watchlist).toHaveLength(1);
     });
 
+    it('allows same TMDB id when media type differs', () => {
+      const { result } = renderHook(() => useWatchlist());
+
+      act(() => {
+        result.current.addToWatchlist(mockMovie);
+        result.current.addToWatchlist({
+          ...mockMovie,
+          title: 'Test Show',
+          media_type: 'tv',
+        });
+      });
+
+      expect(result.current.watchlist).toHaveLength(2);
+      expect(result.current.isInWatchlist(123, 'movie')).toBe(true);
+      expect(result.current.isInWatchlist(123, 'tv')).toBe(true);
+    });
+
     it('should add timestamp to movie', () => {
       const { result } = renderHook(() => useWatchlist());
 
@@ -146,6 +163,17 @@ describe('useWatchlist', () => {
       });
 
       expect(result.current.getWatchedCount()).toBe(3);
+    });
+
+    it('tracks watched status by media type when provided', () => {
+      const { result } = renderHook(() => useWatchlist());
+
+      act(() => {
+        result.current.toggleWatched(123, 'tv');
+      });
+
+      expect(result.current.isWatched(123, 'tv')).toBe(true);
+      expect(result.current.isWatched(123, 'movie')).toBe(false);
     });
   });
 

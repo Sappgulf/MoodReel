@@ -39,6 +39,51 @@ final class DiscoverViewModel: ObservableObject {
         }
     }
 
+    enum NightConstraint: String, CaseIterable, Identifiable {
+        case under90
+        case streamingNow
+        case familyFriendly
+        case noHorror
+        case hiddenGem
+        case highRating
+        case newer
+        case classic
+        case lowCommitment
+        case wildCard
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .under90: return "Under 90"
+            case .streamingNow: return "Streaming now"
+            case .familyFriendly: return "Family friendly"
+            case .noHorror: return "No horror"
+            case .hiddenGem: return "Hidden gem"
+            case .highRating: return "High rating"
+            case .newer: return "Newer"
+            case .classic: return "Classic"
+            case .lowCommitment: return "Low commitment"
+            case .wildCard: return "Wild card"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .under90: return "clock"
+            case .streamingNow: return "play.tv"
+            case .familyFriendly: return "person.3"
+            case .noHorror: return "moon.zzz"
+            case .hiddenGem: return "sparkle.magnifyingglass"
+            case .highRating: return "star.fill"
+            case .newer: return "calendar.badge.clock"
+            case .classic: return "film.stack"
+            case .lowCommitment: return "sofa"
+            case .wildCard: return "die.face.5"
+            }
+        }
+    }
+
     @Published var selectedMood: MoodType = .happy
     @Published var query: String = ""
     @Published var items: [MediaResult] = []
@@ -52,6 +97,7 @@ final class DiscoverViewModel: ObservableObject {
     @Published var contentFilter: ContentFilter = .all
     @Published var minRating: Double = 0
     @Published var sortOption: SortOption = .popularity
+    @Published var selectedConstraints: Set<NightConstraint> = [.streamingNow, .lowCommitment]
 
     private(set) var mode: FeedMode = .mood
     private var currentPage = 1
@@ -92,16 +138,38 @@ final class DiscoverViewModel: ObservableObject {
 
         let ratingFiltered = contentFiltered.filter { $0.voteAverage >= minRating }
 
-        switch sortOption {
-        case .popularity:
-            return ratingFiltered.sorted { $0.popularity > $1.popularity }
-        case .rating:
-            return ratingFiltered.sorted { $0.voteAverage > $1.voteAverage }
-        case .newest:
-            return ratingFiltered.sorted { lhs, rhs in
-                (lhs.releaseYear ?? "0000") > (rhs.releaseYear ?? "0000")
+        let constrained = ratingFiltered.filter { item in
+            constraintAllows(item)
+        }
+
+        return constrained.sorted { lhs, rhs in
+            let lhsScore = tonightScore(for: lhs)
+            let rhsScore = tonightScore(for: rhs)
+            if lhsScore != rhsScore { return lhsScore > rhsScore }
+
+            switch sortOption {
+            case .popularity:
+                return lhs.popularity > rhs.popularity
+            case .rating:
+                return lhs.voteAverage > rhs.voteAverage
+            case .newest:
+                return (lhs.releaseYear ?? "0000") > (rhs.releaseYear ?? "0000")
             }
         }
+    }
+
+    var tonightPicks: [MediaResult] {
+        Array(filteredItems.prefix(3))
+    }
+
+    var constraintSummary: String {
+        if selectedConstraints.isEmpty {
+            return "No extra constraints"
+        }
+        return selectedConstraints
+            .sorted { $0.title < $1.title }
+            .map(\.title)
+            .joined(separator: " • ")
     }
 
     func loadForSelectedMood() async {
@@ -143,6 +211,28 @@ final class DiscoverViewModel: ObservableObject {
     func clearSearchHistory() {
         searchHistory = []
         saveInsights()
+    }
+
+    func toggleConstraint(_ constraint: NightConstraint) {
+        if selectedConstraints.contains(constraint) {
+            selectedConstraints.remove(constraint)
+        } else {
+            selectedConstraints.insert(constraint)
+        }
+
+        switch constraint {
+        case .highRating, .hiddenGem:
+            minRating = max(minRating, constraint == .highRating ? 7.0 : 6.8)
+            sortOption = .rating
+        case .newer:
+            sortOption = .newest
+        case .familyFriendly:
+            if selectedMood == .scared {
+                selectedMood = .happy
+            }
+        default:
+            break
+        }
     }
 
     func loadNextPageIfNeeded(currentItem item: MediaResult) async {
@@ -221,6 +311,67 @@ final class DiscoverViewModel: ObservableObject {
         return latestRequestID
     }
 
+    private func constraintAllows(_ item: MediaResult) -> Bool {
+        let genres = item.genreIdsForScoring
+        let year = Int(item.releaseYear ?? "") ?? 0
+
+        if selectedConstraints.contains(.noHorror), genres.contains(27) {
+            return false
+        }
+        if selectedConstraints.contains(.familyFriendly), genres.contains(27) {
+            return false
+        }
+        if selectedConstraints.contains(.newer), year > 0 {
+            let currentYear = Calendar.current.component(.year, from: Date())
+            if year < currentYear - 8 { return false }
+        }
+        if selectedConstraints.contains(.classic), year > 0, year > 2005 {
+            return false
+        }
+
+        return true
+    }
+
+    private func tonightScore(for item: MediaResult) -> Double {
+        let genres = item.genreIdsForScoring
+        let year = Int(item.releaseYear ?? "") ?? 0
+        let currentYear = Calendar.current.component(.year, from: Date())
+        var score = item.voteAverage * 8
+        score += min(log10(max(item.popularity, 1)) * 5, 14)
+        score += min(log10(Double(max(item.voteCountForScoring, 1))) * 4, 18)
+
+        let moodHits = genres.filter { selectedMood.genreIds.contains($0) }.count
+        score += Double(moodHits * 18)
+
+        if selectedConstraints.contains(.streamingNow) {
+            // Provider availability is verified on detail; keep this as a mild list-level confidence boost.
+            score += 4
+        }
+        if selectedConstraints.contains(.familyFriendly), genres.contains(where: { [16, 10751].contains($0) }) {
+            score += 22
+        }
+        if selectedConstraints.contains(.hiddenGem), item.voteAverage >= 7, item.popularity < 90 {
+            score += 20
+        }
+        if selectedConstraints.contains(.highRating), item.voteAverage >= 7.4 {
+            score += 22
+        }
+        if selectedConstraints.contains(.newer), year >= currentYear - 5 {
+            score += 16
+        }
+        if selectedConstraints.contains(.classic), year > 0, year <= 2005 {
+            score += year <= 1985 ? 22 : 16
+        }
+        if selectedConstraints.contains(.lowCommitment), item.mediaType == .movie {
+            score += 6
+        }
+        if selectedConstraints.contains(.wildCard), genres.contains(where: { [14, 878, 9648, 99].contains($0) }) {
+            score += 18
+        }
+
+        return score
+    }
+
     private func recordDiscovery(resultCount: Int) {
         let now = Date()
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -297,5 +448,23 @@ final class DiscoverViewModel: ObservableObject {
 extension MediaResult {
     var stableIdentifier: String {
         "\(mediaType.rawValue)-\(id)"
+    }
+
+    var genreIdsForScoring: [Int] {
+        switch self {
+        case .movie(let movie):
+            return movie.genreIds ?? []
+        case .tvShow(let show):
+            return show.genreIds ?? []
+        }
+    }
+
+    var voteCountForScoring: Int {
+        switch self {
+        case .movie(let movie):
+            return movie.voteCount
+        case .tvShow(let show):
+            return show.voteCount
+        }
     }
 }

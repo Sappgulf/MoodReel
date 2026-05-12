@@ -2,6 +2,8 @@ import MovieCard from '../MovieCard';
 import SwipeCard from '../SwipeCard';
 import EmptyState from '../EmptyState';
 import { SkeletonGrid, MovieCardSkeleton } from '../Skeleton';
+import { getDisplayOverview, getDisplayTitle, getReleaseYear } from '../../utils/mediaUtils';
+import { getRecommendationKey } from '../../utils/recommendationScoring';
 
 export default function HomeResultsPanel({
   isBusy,
@@ -38,6 +40,11 @@ export default function HomeResultsPanel({
   loadMoreResults,
   searchScope,
   loadMoreRef,
+  activeTonightMode,
+  tonightPicks = [],
+  lockedPickId,
+  onPickCandidate,
+  onPassCandidate,
 }) {
   return (
     <div aria-live="polite">
@@ -59,6 +66,63 @@ export default function HomeResultsPanel({
         </div>
       ) : (
         <div className="recommendations-container">
+          {filteredByServices.length > 1 && tonightPicks.length > 0 && (
+            <section className="pick-between-panel" aria-labelledby="pick-between-heading">
+              <div className="pick-between-intro">
+                <span className="section-kicker">Pick Between These</span>
+                <h2 id="pick-between-heading">
+                  Shortlist for {activeTonightMode.label.toLowerCase()}
+                </h2>
+                <p>{activeTonightMode.decisionCopy} Three picks, no doomscroll.</p>
+              </div>
+              <div className="pick-between-grid">
+                {tonightPicks.map(pick => {
+                  const item = pick.item;
+                  const key = getRecommendationKey(item, item.media_type || 'movie');
+                  const isLocked = lockedPickId === key;
+                  const title = getDisplayTitle(item);
+                  const year = getReleaseYear(item);
+                  const overview = getDisplayOverview(item);
+                  const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
+                  const reason = pick.explanation || getRecommendationReason?.(item);
+
+                  return (
+                    <article key={key} className={`pick-between-card ${isLocked ? 'locked' : ''}`}>
+                      <div className="pick-between-card-head">
+                        <span className="pick-between-rank">
+                          {isLocked ? 'Locked' : pick.slotLabel}
+                        </span>
+                        {rating && <span className="pick-between-rating">{rating} / 10</span>}
+                      </div>
+                      <h3>{title}</h3>
+                      <p>{reason || overview}</p>
+                      <div className="pick-between-meta">
+                        {year && <span>{year}</span>}
+                        <span>{item.media_type === 'tv' ? 'Series' : 'Film'}</span>
+                      </div>
+                      <div className="pick-between-actions">
+                        <button
+                          type="button"
+                          className="primary-button pick-between-pick"
+                          onClick={() => onPickCandidate(item)}
+                        >
+                          {isLocked ? 'Picked' : 'Pick this'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary pick-between-pass"
+                          onClick={() => onPassCandidate(item)}
+                        >
+                          Swap out
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {filteredByServices.length > 0 && (
             <div className="results-header">
               <div className="results-meta">
@@ -103,9 +167,9 @@ export default function HomeResultsPanel({
                 key={rec.id}
                 movie={rec}
                 displayMode={resultLayout === 'rows' ? 'row' : 'poster'}
-                isInWatchlist={isInWatchlist(rec.id)}
+                isInWatchlist={isInWatchlist(rec.id, rec.media_type)}
                 onToggleWatchlist={toggleWatchlist}
-                isWatched={isWatched(rec.id)}
+                isWatched={isWatched(rec.id, rec.media_type)}
                 onToggleWatched={toggleWatched}
                 mediaType={rec.media_type}
                 providerBadges={

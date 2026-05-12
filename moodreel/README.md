@@ -1,6 +1,6 @@
 # MoodReel
 
-MoodReel is a Vite + React movie and TV discovery app for finding titles by mood, saving a watchlist, tracking taste, and opening cinematic detail pages backed by TMDB.
+MoodReel is a Vite + React mood-to-decision engine for finding what to watch tonight. The core loop is mood → constraints → three confident picks → human-readable explanation → trailer/provider detail → save/watch/rate → better future recommendations.
 
 ## Quick Start
 
@@ -42,6 +42,7 @@ TMDB API key field:
 | `npm run test:ci`                        | Run Vitest with coverage.                           |
 | `npm run test:e2e`                       | Run Playwright E2E tests.                           |
 | `npm run bundle:check`                   | Check production bundle size.                       |
+| `npm run analyze`                        | Build with Rollup visualizer output in `build/`.    |
 | `npm run verify`                         | Run lint, unit tests, build, and bundle check.      |
 
 Playwright browsers are required before E2E on a fresh machine:
@@ -81,6 +82,16 @@ src/
 └── utils/
 ```
 
+## Product Direction
+
+MoodReel is centered on **Tonight Mode**, not generic catalog browsing:
+
+- Start with “What kind of night is it?” mood presets.
+- Add constraints such as under 90 minutes, streaming now, family friendly, no horror, hidden gem, high rating, newer, classic, low commitment, or wild card.
+- Return a focused shortlist: **Safe Bet**, **Best Match**, and **Wild Card**.
+- Explain every pick with visible ranking reasons such as mood fit, provider availability, rating confidence, taste profile, saved/watched state, and constraint match.
+- Keep deeper browsing available, but bias the main flow toward fewer better choices.
+
 ## Verification
 
 ```bash
@@ -89,6 +100,14 @@ npm run typecheck
 npm run format:check
 npm run test:e2e
 ```
+
+## Performance Notes
+
+- Secondary routes and heavier overlays are lazy-loaded from `App.jsx`.
+- `src/utils/recommendationScoring.js` is pure and unit-tested so ranking changes do not require UI rewrites.
+- Provider and TMDB response caches are bounded to prevent unbounded session growth.
+- Posters/backdrops use lazy loading by default; hero imagery is eager only where it is the primary visual.
+- Use `npm run analyze` when a feature adds a sizeable dependency or route.
 
 ## Deployment
 
