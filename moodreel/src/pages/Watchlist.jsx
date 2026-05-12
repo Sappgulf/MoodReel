@@ -73,8 +73,8 @@ function Watchlist() {
         break;
       case 'watched':
         list.sort((a, b) => {
-          const aWatched = isWatched(a.id) ? 1 : 0;
-          const bWatched = isWatched(b.id) ? 1 : 0;
+          const aWatched = isWatched(a.id, a.media_type) ? 1 : 0;
+          const bWatched = isWatched(b.id, b.media_type) ? 1 : 0;
           return bWatched - aWatched;
         });
         break;
@@ -85,9 +85,9 @@ function Watchlist() {
 
     // Apply filter (only for watchlist tab really, but harmless for favorites)
     if (showWatched === 'watched') {
-      list = list.filter(m => isWatched(m.id));
+      list = list.filter(m => isWatched(m.id, m.media_type));
     } else if (showWatched === 'unwatched') {
-      list = list.filter(m => !isWatched(m.id));
+      list = list.filter(m => !isWatched(m.id, m.media_type));
     }
     return list;
   }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
@@ -101,6 +101,17 @@ function Watchlist() {
     ],
     [favorites.length, watchedCount, watchlist.length]
   );
+
+  const maybeTonightItems = useMemo(() => {
+    return watchlist
+      .filter(item => !isWatched(item.id, item.media_type))
+      .sort((a, b) => {
+        const ratingDelta = (b.vote_average || 0) - (a.vote_average || 0);
+        if (ratingDelta !== 0) return ratingDelta;
+        return (b.addedAt || 0) - (a.addedAt || 0);
+      })
+      .slice(0, 3);
+  }, [isWatched, watchlist]);
 
   // Import from JSON file
   const handleImportFile = useCallback(
@@ -253,7 +264,7 @@ function Watchlist() {
 
       // Filter out movies already in watchlist
       const filtered = results
-        .filter(m => !watchlist.some(w => w.id === m.id))
+        .filter(m => !watchlist.some(w => w.id === m.id && (w.media_type || 'movie') === mediaType))
         .slice(0, 4)
         .map(m => ({ ...m, media_type: mediaType }));
 
@@ -370,6 +381,37 @@ function Watchlist() {
         </div>
       </div>
 
+      {maybeTonightItems.length > 0 && (
+        <section className="maybe-tonight-panel" aria-labelledby="maybe-tonight-heading">
+          <div className="maybe-tonight-copy">
+            <p className="details-kicker">Maybe Tonight</p>
+            <h3 id="maybe-tonight-heading">Your saved list, narrowed to a decision.</h3>
+            <p>
+              MoodReel is treating saved titles as candidates, not clutter. Start with these before
+              adding more.
+            </p>
+          </div>
+          <div className="maybe-tonight-grid">
+            {maybeTonightItems.map((item, index) => (
+              <Link
+                key={`${item.id}-${item.media_type || 'movie'}`}
+                to={`/${item.media_type || 'movie'}/${item.id}`}
+                state={{ item }}
+                className="maybe-tonight-card"
+              >
+                <span>
+                  {index === 0 ? 'Best saved bet' : index === 1 ? 'Backup pick' : 'Wildcard'}
+                </span>
+                <strong>{item.title || item.name}</strong>
+                <small>
+                  {item.vote_average ? `${item.vote_average.toFixed(1)} TMDB` : 'Saved title'}
+                </small>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Watchlist Search */}
       {(watchlist.length > 0 || favorites.length > 0) && (
         <div className="watchlist-search-wrapper">
@@ -474,8 +516,10 @@ function Watchlist() {
                 <MovieCard
                   key={movie.id}
                   movie={movie}
-                  isInWatchlist={isInWatchlist(movie.id)}
+                  isInWatchlist={isInWatchlist(movie.id, movie.media_type)}
                   onToggleWatchlist={toggleWatchlist}
+                  isWatched={isWatched(movie.id, movie.media_type)}
+                  onToggleWatched={toggleWatched}
                   mediaType={movie.media_type}
                 />
               ))}
@@ -569,17 +613,24 @@ function Watchlist() {
               const note = getNote(item.id);
               return (
                 <div
-                  key={item.id}
+                  key={`${item.id}-${item.media_type || 'movie'}`}
                   className={`watchlist-item ${layoutMode === 'rows' ? 'watchlist-item-row' : ''}`}
                 >
+                  <div className="watchlist-lane-chip">
+                    {isWatched(item.id, item.media_type)
+                      ? 'Watched'
+                      : isFavorite(item.id, item.media_type)
+                        ? 'Watch soon'
+                        : 'Maybe tonight'}
+                  </div>
                   <MovieCard
                     movie={item}
                     displayMode={layoutMode === 'rows' ? 'row' : 'poster'}
-                    isInWatchlist={isInWatchlist(item.id)}
+                    isInWatchlist={isInWatchlist(item.id, item.media_type)}
                     onToggleWatchlist={toggleWatchlist}
-                    isFavorite={isFavorite(item.id)}
+                    isFavorite={isFavorite(item.id, item.media_type)}
                     onToggleFavorite={toggleFavorite}
-                    isWatched={isWatched(item.id)}
+                    isWatched={isWatched(item.id, item.media_type)}
                     onToggleWatched={toggleWatched}
                     mediaType={item.media_type}
                   />
@@ -638,7 +689,7 @@ function Watchlist() {
       {/* Spin the Wheel Modal */}
       {showSpinWheel && (
         <SpinWheel
-          movies={sortedList.filter(m => !isWatched(m.id))}
+          movies={sortedList.filter(m => !isWatched(m.id, m.media_type))}
           onSelect={movie => {
             navigate(`/${movie.media_type || 'movie'}/${movie.id}`);
           }}

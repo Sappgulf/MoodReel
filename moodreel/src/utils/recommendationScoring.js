@@ -6,6 +6,14 @@ const WILD_GENRES = new Set([14, 878, 9648, 99]);
 const CLASSIC_YEAR = 2005;
 const NEWER_WINDOW_YEARS = 5;
 
+export const TASTE_SETTING_DEFAULTS = Object.freeze({
+  contentType: 'any',
+  maxRuntime: 0,
+  avoidHorror: false,
+  hiddenGemBias: false,
+  preferredDecades: [],
+});
+
 export const TONIGHT_MODES = [
   {
     id: 'easy-win',
@@ -152,6 +160,47 @@ function pushReason(reasons, reason) {
   if (reason && !reasons.includes(reason)) reasons.push(reason);
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getConfidenceLabel(scorecard, confidence) {
+  if (scorecard.penalties?.includes('already watched')) return 'Freshness warning';
+  if (confidence >= 92) return 'Lock this in';
+  if (confidence >= 85) return 'Confident match';
+  if (confidence >= 76) return 'Good bet';
+  if (scorecard.reasons?.includes('defensible wild card')) return 'Risky but worth it';
+  return 'Worth a look';
+}
+
+function getDecisionTags(scorecard) {
+  const tags = [];
+  if (scorecard.reasons?.includes('available on your services')) tags.push('Streaming fit');
+  if (
+    scorecard.reasons?.includes('under 90 minutes') ||
+    scorecard.reasons?.includes('low-commitment runtime')
+  ) {
+    tags.push('Low effort');
+  }
+  if (scorecard.reasons?.includes('strong rating confidence')) tags.push('Critic-safe');
+  if (scorecard.reasons?.includes('hidden gem profile')) tags.push('Hidden gem');
+  if (scorecard.reasons?.includes('defensible wild card')) tags.push('Left turn');
+  if (scorecard.reasons?.some(reason => reason.includes('genre match'))) tags.push('Mood fit');
+  if (tags.length === 0 && (scorecard.item.vote_average || 0) >= 7.5) tags.push('High-rated');
+  return tags.slice(0, 4);
+}
+
+function buildDecisionDebate(scorecard, slotLabel) {
+  const title = getDisplayTitle(scorecard.item);
+  if (slotLabel === 'Safe Bet') {
+    return `${title} is the least risky call: strong audience signal with fewer caveats than the rest of the row.`;
+  }
+  if (slotLabel === 'Wild Card') {
+    return `${title} earns the weird slot because it has enough quality signal to justify the curveball.`;
+  }
+  return `${title} is the best overall match once mood, constraints, services, and taste signals are balanced.`;
+}
+
 export function scoreRecommendation(item, context = {}) {
   const {
     mode = TONIGHT_MODES[0],
@@ -167,6 +216,7 @@ export function scoreRecommendation(item, context = {}) {
     watchedKeys = [],
     watchHistoryKeys = [],
     watchlistGenreCounts = {},
+    tasteSettings = TASTE_SETTING_DEFAULTS,
     contentType = 'movie',
     currentYear = new Date().getFullYear(),
   } = context;
@@ -327,6 +377,58 @@ export function scoreRecommendation(item, context = {}) {
     0
   );
 
+  const preferredContentType = tasteSettings.contentType || 'any';
+  const itemType = item?.media_type || contentType;
+  if (preferredContentType !== 'any') {
+    if (preferredContentType === itemType) {
+      score += 10;
+      pushReason(
+        reasons,
+        `matches your ${preferredContentType === 'tv' ? 'series' : 'movie'} preference`
+      );
+    } else {
+      score -= 8;
+      penalties.push('outside your format preference');
+    }
+  }
+
+  const maxRuntime = Number(tasteSettings.maxRuntime || 0);
+  if (maxRuntime > 0 && runtime) {
+    if (runtime <= maxRuntime) {
+      score += 10;
+      pushReason(reasons, 'within your runtime comfort zone');
+    } else if (runtime > maxRuntime + 20) {
+      score -= 14;
+      penalties.push('longer than your usual limit');
+    }
+  }
+
+  if (tasteSettings.avoidHorror && genreIds.some(genreId => HORROR_GENRES.has(genreId))) {
+    score -= 60;
+    penalties.push('against your no-horror preference');
+  }
+
+  if (tasteSettings.hiddenGemBias) {
+    if (rating >= 7 && voteCount >= 150 && popularity < 100) {
+      score += 12;
+      pushReason(reasons, 'fits your hidden-gem bias');
+    } else if (popularity > 260) {
+      score -= 8;
+      penalties.push('too obvious for your taste profile');
+    }
+  }
+
+  const preferredDecades = Array.isArray(tasteSettings.preferredDecades)
+    ? tasteSettings.preferredDecades
+    : [];
+  if (preferredDecades.length > 0 && year) {
+    const decade = Math.floor(year / 10) * 10;
+    if (preferredDecades.includes(decade)) {
+      score += 8;
+      pushReason(reasons, `matches your ${decade}s preference`);
+    }
+  }
+
   if (reasons.length === 0) {
     if (rating >= 7.2) pushReason(reasons, 'solid audience rating');
     else pushReason(reasons, 'fits the current discovery mix');
@@ -354,7 +456,7 @@ export function buildRecommendationExplanation({ item, reasons = [], penalties =
 }
 
 export function rankRecommendations(items, context = {}) {
-  return [...items]
+  const sorted = [...items]
     .map(item => scoreRecommendation(item, context))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
@@ -364,6 +466,21 @@ export function rankRecommendations(items, context = {}) {
       if (voteDelta !== 0) return voteDelta;
       return getDisplayTitle(a.item).localeCompare(getDisplayTitle(b.item));
     });
+
+  const topScore = sorted[0]?.score ?? 0;
+  const bottomScore = sorted[sorted.length - 1]?.score ?? topScore - 1;
+  const spread = Math.max(topScore - bottomScore, 1);
+
+  return sorted.map((scorecard, index) => {
+    const relative = (scorecard.score - bottomScore) / spread;
+    const confidence = clamp(Math.round(72 + relative * 24 - Math.min(index, 6)), 42, 98);
+    return {
+      ...scorecard,
+      confidence,
+      confidenceLabel: getConfidenceLabel(scorecard, confidence),
+      tags: getDecisionTags(scorecard),
+    };
+  });
 }
 
 export function buildTonightPicks(scorecards, { lockedPickId = '', passedKeys = [] } = {}) {
@@ -380,6 +497,10 @@ export function buildTonightPicks(scorecards, { lockedPickId = '', passedKeys = 
       ...match,
       slot,
       slotLabel: slot === 'safe' ? 'Safe Bet' : slot === 'best' ? 'Best Match' : 'Wild Card',
+      debateLine: buildDecisionDebate(
+        match,
+        slot === 'safe' ? 'Safe Bet' : slot === 'best' ? 'Best Match' : 'Wild Card'
+      ),
       explanation: buildRecommendationExplanation({
         item: match.item,
         reasons: match.reasons,
@@ -394,6 +515,7 @@ export function buildTonightPicks(scorecards, { lockedPickId = '', passedKeys = 
         ...locked,
         slot: 'best',
         slotLabel: 'Best Match',
+        debateLine: buildDecisionDebate(locked, 'Best Match'),
         explanation: buildRecommendationExplanation({
           item: locked.item,
           reasons: locked.reasons,
@@ -430,6 +552,7 @@ const recommendationScoring = {
   rankRecommendations,
   buildTonightPicks,
   buildRecommendationExplanation,
+  TASTE_SETTING_DEFAULTS,
 };
 
 export default recommendationScoring;

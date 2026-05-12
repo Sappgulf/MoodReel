@@ -30,11 +30,13 @@ import {
   getCachedTitleProviders,
 } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
+import { copyToClipboard } from '../utils/clipboard';
 import {
   buildTonightPicks,
   getRecommendationKey,
   NIGHT_CONSTRAINTS,
   rankRecommendations,
+  TASTE_SETTING_DEFAULTS,
   TONIGHT_MODES,
 } from '../utils/recommendationScoring';
 import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
@@ -74,6 +76,75 @@ const CURATED_COLLECTIONS = [
     filters: { runtime: 'any', sortBy: 'vote_average.desc' },
   },
 ];
+
+const TOP_STREAMING_SERVICES = [
+  { id: 8, label: 'Netflix' },
+  { id: 9, label: 'Prime' },
+  { id: 337, label: 'Disney+' },
+  { id: 15, label: 'Hulu' },
+  { id: 1899, label: 'Max' },
+  { id: 350, label: 'Apple TV+' },
+  { id: 386, label: 'Peacock' },
+  { id: 531, label: 'Paramount+' },
+];
+
+const HUMAN_MOOD_PRESETS = [
+  {
+    id: 'fried',
+    label: 'Mentally fried',
+    mood: 'low effort comfort funny',
+    constraints: ['low-commitment', 'under-90', 'streaming-now'],
+  },
+  {
+    id: 'date',
+    label: 'Date night',
+    mood: 'date night warm stylish romantic',
+    constraints: ['streaming-now', 'high-rating', 'no-horror'],
+  },
+  {
+    id: 'win',
+    label: 'Need a win',
+    mood: 'uplifting triumphant feel good',
+    constraints: ['high-rating', 'low-commitment'],
+  },
+  {
+    id: 'comfort',
+    label: 'Background comfort',
+    mood: 'cozy familiar comfort comedy',
+    constraints: ['low-commitment', 'streaming-now', 'family-friendly'],
+  },
+  {
+    id: 'feel',
+    label: 'Make me feel something',
+    mood: 'emotional beautiful moving drama',
+    constraints: ['high-rating'],
+  },
+  {
+    id: 'chaos',
+    label: 'Chaos mode',
+    mood: 'weird wild unpredictable late night',
+    constraints: ['wild-card', 'hidden-gem'],
+  },
+];
+
+const DECISION_FEEDBACK = [
+  { id: 'too-long', label: 'Too long' },
+  { id: 'too-dark', label: 'Too dark' },
+  { id: 'seen-it', label: 'Seen it' },
+  { id: 'not-vibe', label: 'Not my vibe' },
+  { id: 'need-lighter', label: 'Need lighter' },
+  { id: 'more-obscure', label: 'More obscure' },
+];
+
+const REROLL_INTENTS = [
+  { id: 'shorter', label: 'Shorter' },
+  { id: 'lighter', label: 'More fun' },
+  { id: 'stranger', label: 'Weirder' },
+  { id: 'acclaimed', label: 'More acclaimed' },
+  { id: 'available', label: 'Only streamable' },
+];
+
+const TASTE_SETTINGS_KEY = 'moodreel-taste-settings';
 
 function getReadableTitle(item) {
   return item?.title || item?.name || 'This title';
@@ -144,6 +215,7 @@ function Home() {
   );
   const [passedDecisionIds, setPassedDecisionIds] = useState([]);
   const [lockedPickId, setLockedPickId] = useState('');
+  const [decisionFeedback, setDecisionFeedback] = useState({});
 
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
@@ -579,6 +651,30 @@ function Home() {
     [currentYear, playSound, setAdvancedFilters, setMinRating, setSelectedGenres]
   );
 
+  const handleMoodPreset = useCallback(
+    preset => {
+      setMood(preset.mood);
+      setActiveConstraintIds(preset.constraints);
+      setPassedDecisionIds([]);
+      setLockedPickId('');
+      if (
+        preset.constraints.includes('under-90') ||
+        preset.constraints.includes('low-commitment')
+      ) {
+        setAdvancedFilters(prev => ({ ...prev, runtime: 'short' }));
+      }
+      if (preset.constraints.includes('high-rating')) {
+        setMinRating(prev => Math.max(prev, 7));
+      }
+      if (preset.constraints.includes('no-horror')) {
+        setSelectedGenres(prev => prev.filter(genreId => genreId !== 27));
+      }
+      playSound('pop');
+      window.setTimeout(() => handleSearch(), 0);
+    },
+    [handleSearch, playSound, setAdvancedFilters, setMinRating, setMood, setSelectedGenres]
+  );
+
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12)
@@ -603,6 +699,14 @@ function Home() {
     if (activeConstraintIds.length > 0) count++;
     return count;
   }, [selectedGenres, myServices, minRating, advancedFilters, currentYear, activeConstraintIds]);
+
+  const activeConstraintLabels = useMemo(
+    () =>
+      activeConstraintIds
+        .map(id => NIGHT_CONSTRAINTS.find(constraint => constraint.id === id)?.label)
+        .filter(Boolean),
+    [activeConstraintIds]
+  );
 
   const featuredItem = useMemo(() => {
     const hasArtwork = item => Boolean(item?.backdrop_path || item?.poster_path);
@@ -630,8 +734,22 @@ function Home() {
     }, {});
   }, [watchlist]);
 
+  const tasteRecap = useMemo(() => {
+    const topGenreId = Object.entries(watchlistGenreCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const topGenreName = genres.find(genre => String(genre.id) === String(topGenreId))?.name;
+    const lastMood = recentMoods[0];
+    const signals = [];
+    if (topGenreName) signals.push(`saved ${topGenreName.toLowerCase()} titles`);
+    if (tasteCounts.liked > 0) signals.push(`${tasteCounts.liked} liked picks`);
+    if (lastMood) signals.push(`recent "${lastMood}" mood`);
+    return signals.length > 0
+      ? `MoodReel is using ${signals.slice(0, 3).join(', ')}.`
+      : 'Save, rate, and mark watched titles to sharpen future picks.';
+  }, [genres, recentMoods, tasteCounts.liked, watchlistGenreCounts]);
+
   // Destructure taste arrays for stable useMemo dependencies
   const { liked: likedKeys = [], disliked: dislikedKeys = [] } = profile || {};
+  const tasteSettings = useMemo(() => safeGetJSON(TASTE_SETTINGS_KEY, TASTE_SETTING_DEFAULTS), []);
 
   const heroTitle = mood ? `Tuned for “${mood}”` : 'Find the film that fits tonight.';
 
@@ -707,6 +825,7 @@ function Home() {
       watchedKeys,
       watchHistoryKeys,
       watchlistGenreCounts,
+      tasteSettings,
       contentType,
       currentYear,
     });
@@ -719,6 +838,7 @@ function Home() {
     watchHistory,
     likedKeys,
     dislikedKeys,
+    tasteSettings,
     watchlist,
     isWatched,
     watchlistGenreCounts,
@@ -819,6 +939,29 @@ function Home() {
     });
   }, [contentType, filteredByServices, lockedPickId, passedDecisionIds, rankedScorecards]);
 
+  const decisionStats = useMemo(
+    () => ({
+      candidateCount: filteredByServices.length,
+      pickCount: tonightPicks.length,
+      passedCount: passedDecisionIds.length,
+      serviceCount: myServices.length,
+      topConfidence: tonightPicks[0]?.confidence || 0,
+      lockedTitle:
+        tonightPicks.find(
+          pick =>
+            getRecommendationKey(pick.item, pick.item.media_type || contentType) === lockedPickId
+        )?.item || null,
+    }),
+    [
+      contentType,
+      filteredByServices.length,
+      lockedPickId,
+      myServices.length,
+      passedDecisionIds.length,
+      tonightPicks,
+    ]
+  );
+
   const handleDecisionPick = useCallback(
     item => {
       const key = getRecommendationKey(item, item.media_type || contentType);
@@ -836,6 +979,60 @@ function Home() {
     [addToWatchlist, contentType, playSound, pushToast, trackSave]
   );
 
+  const handleDecisionFeedback = useCallback(
+    (item, feedback) => {
+      const mediaType = item.media_type || contentType;
+      const key = getRecommendationKey(item, mediaType);
+      setDecisionFeedback(prev => ({ ...prev, [key]: feedback.id }));
+      setPassedDecisionIds(prev => (prev.includes(key) ? prev : [...prev, key]));
+
+      if (feedback.id === 'too-long') {
+        setActiveConstraintIds(prev =>
+          Array.from(new Set([...prev, 'under-90', 'low-commitment']))
+        );
+        setAdvancedFilters(prev => ({ ...prev, runtime: 'short' }));
+      }
+      if (feedback.id === 'too-dark') {
+        setActiveConstraintIds(prev => Array.from(new Set([...prev, 'no-horror'])));
+        setSelectedGenres(prev => prev.filter(genreId => genreId !== 27));
+      }
+      if (feedback.id === 'seen-it') {
+        toggleWatched(item.id, mediaType);
+      }
+      if (feedback.id === 'not-vibe') {
+        dislike(item, mediaType);
+      }
+      if (feedback.id === 'need-lighter') {
+        setMood('lighter fun comfort');
+        setActiveConstraintIds(prev =>
+          Array.from(new Set([...prev, 'low-commitment', 'no-horror']))
+        );
+      }
+      if (feedback.id === 'more-obscure') {
+        setActiveConstraintIds(prev => Array.from(new Set([...prev, 'hidden-gem', 'wild-card'])));
+        setAdvancedFilters(prev => ({ ...prev, sortBy: 'vote_average.desc' }));
+      }
+
+      playSound('swipe');
+      pushToast({
+        icon: '🎚️',
+        title: 'Taste adjusted',
+        message: `${feedback.label} will shape the next three picks.`,
+        duration: 2600,
+      });
+    },
+    [
+      contentType,
+      dislike,
+      playSound,
+      pushToast,
+      setAdvancedFilters,
+      setMood,
+      setSelectedGenres,
+      toggleWatched,
+    ]
+  );
+
   const handleDecisionPass = useCallback(
     item => {
       const key = getRecommendationKey(item, item.media_type || contentType);
@@ -849,6 +1046,79 @@ function Home() {
     },
     [contentType, filteredByServices.length, playSound]
   );
+
+  const handleDecisionReroll = useCallback(
+    intent => {
+      setPassedDecisionIds(prev =>
+        Array.from(
+          new Set([
+            ...prev,
+            ...tonightPicks.map(pick =>
+              getRecommendationKey(pick.item, pick.item.media_type || contentType)
+            ),
+          ])
+        )
+      );
+      setLockedPickId('');
+
+      if (intent.id === 'shorter') {
+        setActiveConstraintIds(prev =>
+          Array.from(new Set([...prev, 'under-90', 'low-commitment']))
+        );
+        setAdvancedFilters(prev => ({ ...prev, runtime: 'short' }));
+      }
+      if (intent.id === 'lighter') {
+        setMood('fun lighter comfort comedy');
+        setActiveConstraintIds(prev =>
+          Array.from(new Set([...prev, 'no-horror', 'low-commitment']))
+        );
+      }
+      if (intent.id === 'stranger') {
+        setActiveConstraintIds(prev => Array.from(new Set([...prev, 'wild-card', 'hidden-gem'])));
+      }
+      if (intent.id === 'acclaimed') {
+        setActiveConstraintIds(prev => Array.from(new Set([...prev, 'high-rating'])));
+        setMinRating(prev => Math.max(prev, 7.4));
+      }
+      if (intent.id === 'available') {
+        setActiveConstraintIds(prev => Array.from(new Set([...prev, 'streaming-now'])));
+      }
+
+      playSound('pop');
+      pushToast({
+        icon: '🎲',
+        title: 'Re-rolled with intent',
+        message: `MoodReel is looking for: ${intent.label.toLowerCase()}.`,
+        duration: 2600,
+      });
+    },
+    [contentType, playSound, pushToast, setAdvancedFilters, setMinRating, setMood, tonightPicks]
+  );
+
+  const handleShareTonight = useCallback(async () => {
+    if (tonightPicks.length === 0) return;
+    const lines = tonightPicks.map(
+      pick =>
+        `${pick.slotLabel}: ${getReadableTitle(pick.item)} (${pick.confidence || 0}% match) - ${pick.explanation}`
+    );
+    try {
+      await copyToClipboard(`MoodReel picked tonight:\n${lines.join('\n')}`);
+      pushToast({
+        icon: '🔗',
+        title: 'Tonight card copied',
+        message: 'The three-pick decision card is ready to share.',
+        duration: 2600,
+      });
+    } catch {
+      pushToast({
+        icon: '⚠️',
+        title: 'Copy failed',
+        message: 'Clipboard access was blocked by the browser.',
+        variant: 'error',
+        duration: 3600,
+      });
+    }
+  }, [pushToast, tonightPicks]);
 
   const handleSmartSurprise = useCallback(() => {
     const avoidKeys = [
@@ -1017,6 +1287,70 @@ function Home() {
           </div>
         </div>
 
+        <div className="tonight-intelligence-grid" aria-label="Tonight setup">
+          <section className="tonight-intel-card no-doomscroll-card">
+            <span>No Doomscroll</span>
+            <strong>Three defensible picks, then feedback.</strong>
+            <p>
+              {decisionStats.pickCount > 0
+                ? `${decisionStats.pickCount} picks ready from ${decisionStats.candidateCount} ranked candidates.`
+                : 'Search a mood and MoodReel will collapse the catalog into a short list.'}
+            </p>
+            {activeConstraintLabels.length > 0 && (
+              <div className="intel-chip-row">
+                {activeConstraintLabels.slice(0, 5).map(label => (
+                  <span key={label}>{label}</span>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="tonight-intel-card service-setup-card">
+            <span>Streaming setup</span>
+            <strong>
+              {myServices.length > 0
+                ? `${myServices.length} service${myServices.length > 1 ? 's' : ''} active`
+                : 'Tell MoodReel what you can watch.'}
+            </strong>
+            <div className="service-quick-grid" role="group" aria-label="Streaming services">
+              {TOP_STREAMING_SERVICES.map(service => (
+                <button
+                  key={service.id}
+                  type="button"
+                  className={`service-quick-chip ${myServices.includes(service.id) ? 'active' : ''}`}
+                  aria-pressed={myServices.includes(service.id)}
+                  onClick={() => toggleService(service.id)}
+                >
+                  {service.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="tonight-intel-card mood-preset-card">
+            <span>Human presets</span>
+            <strong>Start with the real problem.</strong>
+            <div className="human-mood-grid" role="group" aria-label="Human mood presets">
+              {HUMAN_MOOD_PRESETS.map(preset => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="human-mood-chip"
+                  onClick={() => handleMoodPreset(preset)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="tonight-intel-card taste-recap-card">
+            <span>Taste recap</span>
+            <strong>Better future picks</strong>
+            <p>{tasteRecap}</p>
+          </section>
+        </div>
+
         {/* Horizontal Curated Collections */}
         {!hasAnySearch && (
           <div className="curated-strip">
@@ -1167,8 +1501,17 @@ function Home() {
         activeTonightMode={activeTonightMode}
         tonightPicks={tonightPicks}
         lockedPickId={lockedPickId}
+        activeConstraintLabels={activeConstraintLabels}
+        decisionStats={decisionStats}
+        decisionFeedback={decisionFeedback}
+        decisionFeedbackOptions={DECISION_FEEDBACK}
+        rerollOptions={REROLL_INTENTS}
+        myServicesCount={myServices.length}
         onPickCandidate={handleDecisionPick}
         onPassCandidate={handleDecisionPass}
+        onFeedbackCandidate={handleDecisionFeedback}
+        onRerollCandidate={handleDecisionReroll}
+        onShareTonight={handleShareTonight}
       />
     </main>
   );

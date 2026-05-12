@@ -603,7 +603,7 @@ function AppContent() {
             </button>
           </div>
         </div>
-        <p>Discover films that match your mood</p>
+        <p>Mood, constraints, three confident picks.</p>
 
         <nav className="nav-links desktop-nav" aria-label="Primary navigation">
           <Link
@@ -663,7 +663,20 @@ function AppContent() {
           aria-current={location.pathname === '/' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">🎬</span>
-          <span className="bottom-nav-label">Discover</span>
+          <span className="bottom-nav-label">Tonight</span>
+        </Link>
+        <Link
+          to="/"
+          className="bottom-nav-item"
+          onClick={() => {
+            if (!HAS_WINDOW) return;
+            window.setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('moodreel:focus-title-search'));
+            }, 75);
+          }}
+        >
+          <span className="bottom-nav-icon">🔎</span>
+          <span className="bottom-nav-label">Search</span>
         </Link>
         <Link
           to="/watchlist"
@@ -671,7 +684,7 @@ function AppContent() {
           aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">❤️</span>
-          <span className="bottom-nav-label">Watchlist</span>
+          <span className="bottom-nav-label">Saved</span>
         </Link>
         <Link
           to="/profile"
@@ -687,15 +700,7 @@ function AppContent() {
           aria-current={location.pathname === '/stats' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">📊</span>
-          <span className="bottom-nav-label">Stats</span>
-        </Link>
-        <Link
-          to="/calendar"
-          className={`bottom-nav-item ${location.pathname === '/calendar' ? 'active' : ''}`}
-          aria-current={location.pathname === '/calendar' ? 'page' : undefined}
-        >
-          <span className="bottom-nav-icon">📅</span>
-          <span className="bottom-nav-label">Calendar</span>
+          <span className="bottom-nav-label">Taste</span>
         </Link>
       </nav>
 

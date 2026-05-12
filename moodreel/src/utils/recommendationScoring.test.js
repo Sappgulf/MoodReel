@@ -84,6 +84,8 @@ describe('recommendationScoring', () => {
 
     expect(picks.map(pick => pick.slotLabel)).toEqual(['Safe Bet', 'Best Match', 'Wild Card']);
     expect(picks.every(pick => pick.explanation.includes(pick.slotLabel))).toBe(true);
+    expect(picks.every(pick => Number.isFinite(pick.confidence))).toBe(true);
+    expect(picks.every(pick => pick.debateLine.includes(pick.item.title))).toBe(true);
   });
 
   it('returns human-readable explanation text for a scorecard', () => {
@@ -94,5 +96,39 @@ describe('recommendationScoring', () => {
 
     expect(scorecard.explanation).toMatch(/Cozy Laugh ranks here because/);
     expect(scorecard.reasons).toContain('under 90 minutes');
+  });
+
+  it('uses explicit taste settings without overriding hard constraints', () => {
+    const shortMovie = makeItem({
+      id: 1,
+      title: 'Short Movie',
+      media_type: 'movie',
+      runtime: 82,
+      genre_ids: [35],
+    });
+    const longHorror = makeItem({
+      id: 2,
+      title: 'Long Horror',
+      media_type: 'movie',
+      runtime: 148,
+      genre_ids: [27],
+      vote_average: 8.8,
+    });
+
+    const ranked = rankRecommendations([longHorror, shortMovie], {
+      mode,
+      constraints: ['no-horror'],
+      tasteSettings: {
+        contentType: 'movie',
+        maxRuntime: 95,
+        avoidHorror: true,
+        hiddenGemBias: false,
+        preferredDecades: [],
+      },
+    });
+
+    expect(ranked[0].item.title).toBe('Short Movie');
+    expect(ranked[0].reasons).toContain('within your runtime comfort zone');
+    expect(ranked[1].penalties).toContain('against your no-horror preference');
   });
 });

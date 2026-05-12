@@ -29,6 +29,19 @@ function getPersonInitials(name = '') {
     .join('');
 }
 
+const POST_WATCH_REACTIONS = [
+  { id: 'loved', label: 'Loved', rating: 5, taste: 'like', note: 'Loved this one.' },
+  { id: 'liked', label: 'Liked', rating: 4, taste: 'like', note: 'Liked this pick.' },
+  { id: 'fine', label: 'Fine', rating: 3, taste: 'neutral', note: 'Fine, but not a standout.' },
+  {
+    id: 'bailed',
+    label: 'Bailed',
+    rating: 2,
+    taste: 'dislike',
+    note: 'Bailed or would not recommend.',
+  },
+];
+
 function MovieDetails() {
   const { id } = useParams();
   const location = useLocation();
@@ -66,7 +79,7 @@ function MovieDetails() {
   const { getRating, setRating, getReview, setReview } = useRatings();
   const { trackRating } = useAchievements();
   const { like, dislike, statusFor } = useTasteProfile();
-  const { region } = useProviderSettings();
+  const { region, myServices } = useProviderSettings();
 
   // Get stored rating/review
   const userRating = getRating(id);
@@ -285,6 +298,52 @@ function MovieDetails() {
     playSound('save');
   }, [id, reviewText, setReview, playSound]);
 
+  const handleNativeShare = useCallback(async () => {
+    const shareTitle = content ? getDisplayTitle(content) : 'MoodReel pick';
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `MoodReel thinks ${shareTitle} is worth considering tonight.`,
+          url,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      playSound('save');
+    } catch {
+      // Share buttons remain available as the fallback.
+    }
+  }, [content, playSound]);
+
+  const handlePostWatchReaction = useCallback(
+    reaction => {
+      if (!isWatched(id, mediaType)) toggleWatched(id, mediaType);
+      if (reaction.rating) setRating(id, reaction.rating);
+      if (reaction.taste === 'like' && content) like(content, mediaType);
+      if (reaction.taste === 'dislike' && content) dislike(content, mediaType);
+      if (reaction.note) setReview(id, reaction.note);
+      playSound('pop');
+    },
+    [
+      content,
+      dislike,
+      id,
+      isWatched,
+      like,
+      mediaType,
+      playSound,
+      setRating,
+      setReview,
+      toggleWatched,
+    ]
+  );
+
   const handleRetry = useCallback(() => {
     setRequestNonce(count => count + 1);
   }, []);
@@ -306,6 +365,47 @@ function MovieDetails() {
       { key: 'buy', label: 'Buy', action: 'Buy on', providers: providerGroups.buy },
     ].filter(section => section.providers.length > 0);
   }, [providerGroups]);
+
+  const tonightVerdict = useMemo(() => {
+    if (!content) return null;
+    const streamProviders = providerGroups?.stream || [];
+    const matchingProviders = streamProviders.filter(provider => myServices.includes(provider.id));
+    const runtimeMinutes = content.runtime || content.episode_run_time?.[0] || 0;
+    const runtimeFit = runtimeMinutes > 0 && runtimeMinutes <= 120;
+    const ratingFit = (content.vote_average || 0) >= 7;
+    const watchlistFit = isInWatchlist(content.id, mediaType);
+    const watched = isWatched(content.id, mediaType);
+    const score = Math.min(
+      98,
+      52 +
+        (matchingProviders.length > 0 ? 22 : streamProviders.length > 0 ? 10 : 0) +
+        (runtimeFit ? 10 : 0) +
+        (ratingFit ? 10 : 0) +
+        (watchlistFit ? 6 : 0) -
+        (watched ? 24 : 0)
+    );
+    const reasons = [];
+    if (matchingProviders.length > 0) {
+      reasons.push(
+        `Streams on ${matchingProviders
+          .slice(0, 2)
+          .map(provider => provider.name)
+          .join(', ')}`
+      );
+    } else if (streamProviders.length > 0) {
+      reasons.push('Streaming availability exists, but not on your selected services yet');
+    } else {
+      reasons.push('No streaming provider data found for your region');
+    }
+    if (runtimeFit) reasons.push('Runtime fits a normal night');
+    if (ratingFit) reasons.push('Strong TMDB rating signal');
+    if (watched) reasons.push('Already watched, so it should not lead Tonight Mode');
+    return {
+      score,
+      label: score >= 84 ? 'Watch tonight' : score >= 70 ? 'Good backup' : 'Maybe later',
+      reasons,
+    };
+  }, [content, isInWatchlist, isWatched, mediaType, myServices, providerGroups]);
 
   const whyYouMightLikeIt = useMemo(() => {
     if (!content) return [];
@@ -532,17 +632,17 @@ function MovieDetails() {
                 <button
                   className="primary-button"
                   onClick={handleToggleWatchlist}
-                  aria-pressed={isInWatchlist(content.id)}
+                  aria-pressed={isInWatchlist(content.id, mediaType)}
                 >
-                  {isInWatchlist(content.id) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
+                  {isInWatchlist(content.id, mediaType) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
                 </button>
 
-                {isInWatchlist(content.id) && (
+                {isInWatchlist(content.id, mediaType) && (
                   <button
-                    className={`watched-btn ${isWatched(content.id) ? 'watched' : ''}`}
-                    onClick={() => toggleWatched(content.id)}
+                    className={`watched-btn ${isWatched(content.id, mediaType) ? 'watched' : ''}`}
+                    onClick={() => toggleWatched(content.id, mediaType)}
                   >
-                    {isWatched(content.id) ? '✅ Watched' : '👁️ Mark as Watched'}
+                    {isWatched(content.id, mediaType) ? '✅ Watched' : '👁️ Mark as Watched'}
                   </button>
                 )}
 
@@ -562,6 +662,13 @@ function MovieDetails() {
                 )}
 
                 <ShareButtons title={title} />
+                <button
+                  type="button"
+                  className="btn-secondary native-share-btn"
+                  onClick={handleNativeShare}
+                >
+                  Share sheet
+                </button>
               </div>
 
               <div className="taste-profile-actions" role="group" aria-label="Taste profile">
@@ -631,6 +738,44 @@ function MovieDetails() {
             </div>
           </div>
         </section>
+
+        {tonightVerdict && (
+          <section
+            className="tonight-verdict-section details-section"
+            aria-labelledby="tonight-verdict-heading"
+          >
+            <header className="details-section-head">
+              <p className="details-kicker">Tonight Verdict</p>
+              <h3 id="tonight-verdict-heading">Should I watch this tonight?</h3>
+            </header>
+            <div className="tonight-verdict-card">
+              <div className="verdict-meter" aria-label={`${tonightVerdict.score}% match`}>
+                <strong>{tonightVerdict.score}%</strong>
+                <span>{tonightVerdict.label}</span>
+              </div>
+              <ul>
+                {tonightVerdict.reasons.map(reason => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+              <div className="post-watch-loop">
+                <span>After watching, teach MoodReel:</span>
+                <div className="post-watch-actions" role="group" aria-label="Post-watch rating">
+                  {POST_WATCH_REACTIONS.map(reaction => (
+                    <button
+                      key={reaction.id}
+                      type="button"
+                      className="post-watch-chip"
+                      onClick={() => handlePostWatchReaction(reaction)}
+                    >
+                      {reaction.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="why-like-section details-section" aria-labelledby="why-like-heading">
           <header className="details-section-head">
@@ -793,9 +938,9 @@ function MovieDetails() {
                 <article className="filmstrip-item" role="listitem" key={item.id}>
                   <MovieCard
                     movie={{ ...item, media_type: mediaType }}
-                    isInWatchlist={isInWatchlist(item.id)}
+                    isInWatchlist={isInWatchlist(item.id, mediaType)}
                     onToggleWatchlist={toggleWatchlist}
-                    isWatched={isWatched(item.id)}
+                    isWatched={isWatched(item.id, mediaType)}
                     onToggleWatched={toggleWatched}
                     displayMode="row"
                     mediaType={mediaType}
