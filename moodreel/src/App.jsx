@@ -12,6 +12,7 @@ import { ToastProvider, useToasts } from './context/ToastContext';
 import TrailerPiP from './components/TrailerPiP';
 import ToastStack from './components/ToastStack';
 import { useUserProfile } from './hooks/useUserProfile';
+import { useWindowSize } from './hooks/useWindowSize';
 import { copyToClipboard } from './utils/clipboard';
 import { safeGetJSON } from './storage/safeStorage';
 import { StorageKeys as SK } from './storage/storageKeys';
@@ -91,6 +92,7 @@ function AppContent() {
   const { newUnlock, unlockedCount, totalCount } = useAchievements();
   const { activeTrailer, closeTrailer } = useTrailer();
   const { pushToast } = useToasts();
+  const { width, isMobile } = useWindowSize();
   const { profile } = useUserProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
@@ -98,6 +100,7 @@ function AppContent() {
   const [isOffline, setIsOffline] = useState(() => (HAS_NAVIGATOR ? !navigator.onLine : false));
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = React.useRef(null);
+  const isBottomNavCompact = isMobile && width <= 380;
   const [apiKeyStatus, setApiKeyStatus] = useState(() => getApiKeyStatus());
   const lastSearchFallbackRef = useRef({ key: '', at: 0 });
 
@@ -650,7 +653,10 @@ function AppContent() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="mobile-bottom-nav" aria-label="Primary navigation">
+      <nav
+        className={`mobile-bottom-nav ${isBottomNavCompact ? 'compact' : ''}`}
+        aria-label="Primary navigation"
+      >
         <Link
           to="/"
           className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}

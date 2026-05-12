@@ -14,6 +14,6 @@
 
 ## Follow-up ideas
 
-- [ ] Consider a dedicated share card exporter for mood-based social previews.
-- [ ] Consolidate remaining CSS transitions from `all` to explicit properties.
-- [ ] Review whether the bottom nav should collapse further on smaller phones.
+- [x] Consider a dedicated share card exporter for mood-based social previews.
+- [x] Consolidate remaining CSS transitions from `all` to explicit properties.
+- [x] Review whether the bottom nav should collapse further on smaller phones.

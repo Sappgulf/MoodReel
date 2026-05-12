@@ -831,6 +831,16 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.search-container .share-card-btn {
+  position: relative;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.09), transparent);
+}
+
+.search-container .share-card-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), var(--color-bg-elevated));
+}
+
 .title-search {
   margin-bottom: var(--spacing-lg);
 }

@@ -894,6 +894,7 @@ function Home() {
       )}
 
       <HomeDiscoveryConsole
+        featuredItem={featuredItem}
         contentType={contentType}
         setContentType={setContentType}
         setRecommendations={setRecommendations}

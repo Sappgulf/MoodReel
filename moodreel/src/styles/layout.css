@@ -371,6 +371,40 @@ main {
     text-transform: uppercase;
     letter-spacing: 0.02em;
   }
+
+  .mobile-bottom-nav.compact {
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    justify-content: stretch;
+  }
+
+  .mobile-bottom-nav.compact .bottom-nav-item {
+    min-width: 0;
+    padding: 4px;
+    flex: 1;
+    gap: 2px;
+    border-radius: 0;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+  }
+
+  .mobile-bottom-nav.compact .bottom-nav-label {
+    font-size: 0;
+    line-height: 0;
+    color: transparent;
+    max-width: 0;
+    overflow: hidden;
+  }
+
+  .mobile-bottom-nav.compact .bottom-nav-icon {
+    font-size: 1.3rem;
+    transform: translateY(-1px);
+  }
+
+  .mobile-bottom-nav.compact .bottom-nav-item.active::after {
+    top: 2px;
+    width: 14px;
+  }
 }
 
 /* =====================================================
