@@ -2,12 +2,13 @@
  * Rate Limiter for TMDB API calls
  *
  * - Regular users: Limited requests per minute
- * - Admin users: Unlimited access (set via localStorage)
+ * - Admin users: Unlimited access (set via stored app preference key)
  *
- * To enable admin mode: `localStorage.setItem('moodreel-admin', 'true')` (canonical key in `storageKeys.js`).
+ * Use `setAdminMode(true)` (canonical key in `storageKeys.js`) to enable admin mode.
  */
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetBoolean, safeGetJSON, safeSetJSON, safeRemove } from '../storage/safeStorage';
 
 const RATE_LIMIT_KEY = SK.RATE_LIMIT;
 const ADMIN_KEY = SK.ADMIN;
@@ -18,11 +19,7 @@ const WINDOW_MS = 60000; // 1 minute window
  * Check if current user is admin (unlimited access)
  */
 export function isAdmin() {
-  try {
-    return localStorage.getItem(ADMIN_KEY) === 'true';
-  } catch {
-    return false;
-  }
+  return safeGetBoolean(ADMIN_KEY, false);
 }
 
 /**
@@ -30,14 +27,10 @@ export function isAdmin() {
  * @param {boolean} enabled - Whether to enable admin mode
  */
 export function setAdminMode(enabled) {
-  try {
-    if (enabled) {
-      localStorage.setItem(ADMIN_KEY, 'true');
-    } else {
-      localStorage.removeItem(ADMIN_KEY);
-    }
-  } catch (e) {
-    console.error('Failed to set admin mode:', e);
+  if (enabled) {
+    safeSetJSON(ADMIN_KEY, true);
+  } else {
+    safeRemove(ADMIN_KEY);
   }
 }
 
@@ -45,31 +38,18 @@ export function setAdminMode(enabled) {
  * Get current rate limit state
  */
 function getRateLimitState() {
-  try {
-    const stored = localStorage.getItem(RATE_LIMIT_KEY);
-    if (stored) {
-      const state = JSON.parse(stored);
-      // Check if window has expired
-      if (Date.now() - state.windowStart > WINDOW_MS) {
-        return { count: 0, windowStart: Date.now() };
-      }
-      return state;
-    }
-  } catch {
-    // Ignore parse errors
+  const state = safeGetJSON(RATE_LIMIT_KEY, { count: 0, windowStart: Date.now() });
+  if (Date.now() - state.windowStart > WINDOW_MS) {
+    return { count: 0, windowStart: Date.now() };
   }
-  return { count: 0, windowStart: Date.now() };
+  return state;
 }
 
 /**
  * Save rate limit state
  */
 function saveRateLimitState(state) {
-  try {
-    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state));
-  } catch {
-    // Ignore save errors
-  }
+  safeSetJSON(RATE_LIMIT_KEY, state);
 }
 
 /**

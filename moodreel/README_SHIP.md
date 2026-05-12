@@ -21,13 +21,13 @@ npm start
 
 ### Local Runtime Key (Optional)
 
-If you want to avoid editing `.env`, set a local-only key in the browser console:
+If you want to avoid editing `.env`, set a local-only key in **Profile → Privacy & Local Data**:
 
-```javascript
-localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY');
-```
+1. Open **Profile → Privacy & Local Data**.
+2. Paste your TMDB key into **TMDB API Key**.
+3. Click **Save local key**.
 
-Reload the page after setting it.
+Reload the app if needed.
 
 ## Scripts
 

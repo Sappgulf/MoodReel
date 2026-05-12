@@ -1,21 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON, safeRemove } from '../storage/safeStorage';
 
 const STORAGE_KEY = SK.MOOD_HISTORY;
 const DATED_STORAGE_KEY = SK.MOOD_HISTORY_DATED;
 const MAX_HISTORY = 10;
 const MAX_DATED_HISTORY = 100;
-const HAS_STORAGE = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
-
 function readStorage(key, fallback) {
-  if (!HAS_STORAGE) return fallback;
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  } catch {
-    return fallback;
-  }
+  return safeGetJSON(key, fallback);
 }
 
 /**
@@ -31,21 +24,11 @@ export function useMoodHistory() {
 
   // Persist to localStorage outside render phase
   useEffect(() => {
-    if (!HAS_STORAGE) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-    } catch {
-      // ignore quota errors
-    }
+    safeSetJSON(STORAGE_KEY, history);
   }, [history]);
 
   useEffect(() => {
-    if (!HAS_STORAGE) return;
-    try {
-      localStorage.setItem(DATED_STORAGE_KEY, JSON.stringify(historyWithDates));
-    } catch {
-      // ignore quota errors
-    }
+    safeSetJSON(DATED_STORAGE_KEY, historyWithDates);
   }, [historyWithDates]);
 
   const addToHistory = useCallback(mood => {
@@ -70,10 +53,8 @@ export function useMoodHistory() {
   const clearHistory = useCallback(() => {
     setHistory([]);
     setHistoryWithDates([]);
-    if (HAS_STORAGE) {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(DATED_STORAGE_KEY);
-    }
+    safeRemove(STORAGE_KEY);
+    safeRemove(DATED_STORAGE_KEY);
   }, []);
 
   return { history, historyWithDates, addToHistory, clearHistory };

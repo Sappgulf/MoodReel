@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetRaw, safeSetRaw } from '../storage/safeStorage';
 
 /**
  * Install prompt banner for PWA
@@ -12,20 +13,12 @@ function InstallPrompt() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   const readDismissPreference = () => {
-    try {
-      const dismissed = localStorage.getItem(SK.INSTALL_DISMISSED);
-      return dismissed ? parseInt(dismissed, 10) : null;
-    } catch {
-      return null;
-    }
+    const dismissed = safeGetRaw(SK.INSTALL_DISMISSED, null);
+    return dismissed ? parseInt(dismissed, 10) : null;
   };
 
   const persistDismissPreference = value => {
-    try {
-      localStorage.setItem(SK.INSTALL_DISMISSED, String(value));
-    } catch {
-      // Ignore environments where localStorage is blocked.
-    }
+    safeSetRaw(SK.INSTALL_DISMISSED, String(value));
   };
 
   useEffect(() => {

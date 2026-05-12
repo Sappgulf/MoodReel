@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 /**
  * Custom hook for managing watchlist with localStorage persistence
@@ -7,57 +8,30 @@ import { StorageKeys as SK } from '../storage/storageKeys';
  */
 export function useWatchlist() {
   const [watchlist, setWatchlist] = useState(() => {
-    try {
-      const saved = localStorage.getItem(SK.WATCHLIST);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    return safeGetJSON(SK.WATCHLIST, []);
   });
 
   const [notes, setNotes] = useState(() => {
-    try {
-      const saved = localStorage.getItem(SK.NOTES);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
+    return safeGetJSON(SK.NOTES, {});
   });
 
   const [watched, setWatched] = useState(() => {
-    try {
-      const saved = localStorage.getItem(SK.WATCHED);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
+    return safeGetJSON(SK.WATCHED, {});
   });
 
   // Persist watchlist
   useEffect(() => {
-    try {
-      localStorage.setItem(SK.WATCHLIST, JSON.stringify(watchlist));
-    } catch (error) {
-      console.error('Failed to save watchlist:', error);
-    }
+    safeSetJSON(SK.WATCHLIST, watchlist);
   }, [watchlist]);
 
   // Persist notes
   useEffect(() => {
-    try {
-      localStorage.setItem(SK.NOTES, JSON.stringify(notes));
-    } catch (error) {
-      console.error('Failed to save notes:', error);
-    }
+    safeSetJSON(SK.NOTES, notes);
   }, [notes]);
 
   // Persist watched
   useEffect(() => {
-    try {
-      localStorage.setItem(SK.WATCHED, JSON.stringify(watched));
-    } catch (error) {
-      console.error('Failed to save watched:', error);
-    }
+    safeSetJSON(SK.WATCHED, watched);
   }, [watched]);
 
   const addToWatchlist = useCallback(item => {
@@ -208,21 +182,12 @@ export function useWatchlist() {
   }, []);
 
   const [favorites, setFavorites] = useState(() => {
-    try {
-      const saved = localStorage.getItem(SK.FAVORITES_LEGACY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    return safeGetJSON(SK.FAVORITES_LEGACY, []);
   });
 
   // Persist favorites
   useEffect(() => {
-    try {
-      localStorage.setItem(SK.FAVORITES_LEGACY, JSON.stringify(favorites));
-    } catch (error) {
-      console.error('Failed to save favorites:', error);
-    }
+    safeSetJSON(SK.FAVORITES_LEGACY, favorites);
   }, [favorites]);
 
   const addToFavorites = useCallback(item => {

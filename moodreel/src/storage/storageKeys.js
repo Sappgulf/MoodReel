@@ -35,4 +35,4 @@ export const StorageKeys = Object.freeze({
 });
 
 /** Increment when migrating persisted payloads (manual or scripted). */
-export const STORAGE_SCHEMA_VERSION = 1;
+export const STORAGE_SCHEMA_VERSION = 2;

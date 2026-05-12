@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetRaw, safeSetRaw } from '../storage/safeStorage';
 
 const HAS_WINDOW = typeof window !== 'undefined';
 
@@ -28,13 +29,13 @@ function getAudioContext() {
  */
 export function useSounds() {
   const isSoundEnabled = useCallback(() => {
-    return localStorage.getItem(SK.SOUNDS) !== 'off';
+    return safeGetRaw(SK.SOUNDS, 'on') !== 'off';
   }, []);
 
   const toggleSounds = useCallback(() => {
-    const current = localStorage.getItem(SK.SOUNDS);
+    const current = safeGetRaw(SK.SOUNDS, 'on');
     const newValue = current === 'off' ? 'on' : 'off';
-    localStorage.setItem(SK.SOUNDS, newValue);
+    safeSetRaw(SK.SOUNDS, newValue);
     return newValue === 'on';
   }, []);
 

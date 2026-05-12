@@ -22,11 +22,12 @@ The Vite dev server runs at http://localhost:3000.
 | `REACT_APP_TMDB_BASE_URL` | Legacy   | CRA-compatible base URL alias.                  |
 | `VITE_VAPID_PUBLIC_KEY`   | No       | Optional web push public VAPID key.             |
 
-For local-only testing without editing `.env`, you can set a browser runtime key:
+For local-only testing without editing `.env`, open **Profile → Privacy & Local Data** and use the
+TMDB API key field:
 
-```javascript
-localStorage.setItem('moodreel-tmdb-api-key', 'YOUR_TMDB_KEY');
-```
+1. Add your TMDB key in the input.
+2. Click **Save local key**.
+3. Return to Discover; the app no longer requires env configuration at runtime for that browser.
 
 ## Scripts
 

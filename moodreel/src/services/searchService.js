@@ -16,6 +16,7 @@ import { tmdbGet, ensureArray, ensureNumber } from './apiClient';
 import { getDisplayTitle, getDisplayOverview, getReleaseYear } from '../utils/mediaUtils';
 import { applySearchRanking } from '../utils/searchRanking';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from './apiErrorUtils';
+import { safeGetRaw, safeSetRaw, safeRemove } from '../storage/safeStorage';
 
 // Cache settings
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
@@ -23,27 +24,21 @@ const CONTENT_DETAILS_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const ACTOR_CREDITS_TTL_MS = 60 * 60 * 1000; // 1 hour
 const CACHE_KEY = SK.SEARCH_CACHE;
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
-const HAS_LOCAL_STORAGE =
-  typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
 // Initialize cache from localStorage
 const searchCache = new Map();
 function persistSearchCache() {
-  if (!HAS_LOCAL_STORAGE) return;
-
   try {
     const obj = Object.fromEntries(searchCache);
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
+    safeSetRaw(CACHE_KEY, JSON.stringify(obj));
   } catch {
     // Ignore localStorage failures in restricted environments.
   }
 }
 
 function hydrateSearchCache() {
-  if (!HAS_LOCAL_STORAGE) return;
-
   try {
-    const saved = window.localStorage.getItem(CACHE_KEY);
+    const saved = safeGetRaw(CACHE_KEY, null);
     if (!saved) return;
 
     const parsed = JSON.parse(saved);
@@ -58,7 +53,7 @@ function hydrateSearchCache() {
       console.warn('Failed to load search cache from localStorage', err);
     }
     try {
-      window.localStorage.removeItem(CACHE_KEY);
+      safeRemove(CACHE_KEY);
     } catch {
       // Ignore cleanup failures.
     }
@@ -677,7 +672,7 @@ export function clearCache() {
   searchCache.clear();
   contentDetailsCache.clear();
   actorCreditsCache.clear();
-  localStorage.removeItem(CACHE_KEY);
+  safeRemove(CACHE_KEY);
 }
 
 /**

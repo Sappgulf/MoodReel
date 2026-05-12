@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 const ACHIEVEMENTS_KEY = SK.ACHIEVEMENTS;
 const STATS_KEY = SK.ACHIEVEMENT_STATS;
@@ -238,74 +239,42 @@ const ACHIEVEMENT_DEFS = [
  */
 export function useAchievements() {
   const [unlockedIds, setUnlockedIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem(ACHIEVEMENTS_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    return safeGetJSON(ACHIEVEMENTS_KEY, []);
   });
 
   const [stats, setStats] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STATS_KEY);
-      return saved
-        ? JSON.parse(saved)
-        : {
-            totalSaved: 0,
-            tvSaved: 0,
-            horrorSaved: 0,
-            romanceSaved: 0,
-            actionSaved: 0,
-            comedySaved: 0,
-            thoughtfulSaved: 0,
-            familySaved: 0,
-            sciFiSaved: 0,
-            animationSaved: 0,
-            surpriseCount: 0,
-            searchStreak: 0,
-            ratingsGiven: 0,
-            ratedMovieIds: [],
-            lastSearchDate: null,
-            nightSearches: 0,
-            earlySearches: 0,
-            uniqueMoods: [],
-            searchedMoods: [],
-          };
-    } catch {
-      return {
-        totalSaved: 0,
-        tvSaved: 0,
-        horrorSaved: 0,
-        romanceSaved: 0,
-        actionSaved: 0,
-        comedySaved: 0,
-        thoughtfulSaved: 0,
-        familySaved: 0,
-        sciFiSaved: 0,
-        animationSaved: 0,
-        surpriseCount: 0,
-        searchStreak: 0,
-        ratingsGiven: 0,
-        ratedMovieIds: [],
-        lastSearchDate: null,
-        nightSearches: 0,
-        earlySearches: 0,
-        uniqueMoods: [],
-        searchedMoods: [],
-      };
-    }
+    return safeGetJSON(STATS_KEY, {
+      totalSaved: 0,
+      tvSaved: 0,
+      horrorSaved: 0,
+      romanceSaved: 0,
+      actionSaved: 0,
+      comedySaved: 0,
+      thoughtfulSaved: 0,
+      familySaved: 0,
+      sciFiSaved: 0,
+      animationSaved: 0,
+      surpriseCount: 0,
+      searchStreak: 0,
+      ratingsGiven: 0,
+      ratedMovieIds: [],
+      lastSearchDate: null,
+      nightSearches: 0,
+      earlySearches: 0,
+      uniqueMoods: [],
+      searchedMoods: [],
+    });
   });
 
   const [newUnlock, setNewUnlock] = useState(null);
 
   // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(unlockedIds));
+    safeSetJSON(ACHIEVEMENTS_KEY, unlockedIds);
   }, [unlockedIds]);
 
   useEffect(() => {
-    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    safeSetJSON(STATS_KEY, stats);
   }, [stats]);
 
   // Check for new achievements

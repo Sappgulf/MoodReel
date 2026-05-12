@@ -15,6 +15,7 @@ import { useUserProfile } from './hooks/useUserProfile';
 import { copyToClipboard } from './utils/clipboard';
 import { safeGetJSON } from './storage/safeStorage';
 import { StorageKeys as SK } from './storage/storageKeys';
+import { getApiKeyStatus } from './services/apiClient';
 
 // Lazy load secondary routes for code-splitting
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
@@ -83,6 +84,7 @@ function GuardedRoute({ children, routeKey }) {
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
+  const routePath = location.pathname;
   const { isDark, toggleTheme } = useTheme();
   const { isSoundEnabled, toggleSounds } = useSounds();
   const soundEnabled = isSoundEnabled();
@@ -96,6 +98,7 @@ function AppContent() {
   const [isOffline, setIsOffline] = useState(() => (HAS_NAVIGATOR ? !navigator.onLine : false));
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = React.useRef(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState(() => getApiKeyStatus());
   const lastSearchFallbackRef = useRef({ key: '', at: 0 });
 
   const openQuickActions = useCallback(() => {
@@ -229,7 +232,6 @@ function AppContent() {
     () => setDocumentTitle(location.pathname),
     [location.pathname, setDocumentTitle]
   );
-  const routePath = location.pathname;
   const offlineSummary = useMemo(() => {
     if (!isOffline) return null;
     return {
@@ -270,7 +272,31 @@ function AppContent() {
     [pushToast]
   );
 
-  // Monitor scroll for header polish
+  // Keep API-key status in sync with profile edits in the same tab.
+  useEffect(() => {
+    if (!HAS_WINDOW) return;
+    setApiKeyStatus(getApiKeyStatus());
+  }, [routePath]);
+
+  useEffect(() => {
+    if (!HAS_WINDOW) return;
+
+    const handleApiKeyUpdate = () => {
+      setApiKeyStatus(getApiKeyStatus());
+    };
+
+    const handleStorage = () => {
+      handleApiKeyUpdate();
+    };
+
+    window.addEventListener('moodreel:api-key-updated', handleApiKeyUpdate);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('moodreel:api-key-updated', handleApiKeyUpdate);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   useEffect(() => {
     if (!HAS_WINDOW) return;
 
@@ -509,6 +535,15 @@ function AppContent() {
           <div className="offline-actions">
             <Link to="/watchlist">Open Watchlist</Link>
             <Link to="/profile">Data Settings</Link>
+          </div>
+        </div>
+      )}
+      {!apiKeyStatus.configured && (
+        <div className="offline-banner" role="status" aria-live="polite">
+          <span>🔐 API key needed</span>
+          <p>TMDB access requires an API key to load catalog data.</p>
+          <div className="offline-actions">
+            <Link to="/profile">Set a local key in Profile</Link>
           </div>
         </div>
       )}

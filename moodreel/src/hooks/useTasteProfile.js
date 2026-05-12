@@ -1,19 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 const STORAGE_KEY = SK.TASTE_PROFILE;
 const SHOW_HIDDEN_KEY = SK.TASTE_SHOW_HIDDEN;
 
 function readStoredJSON(key, fallback) {
-  try {
-    const stored = localStorage.getItem(key);
-    if (!stored) return fallback;
-    const parsed = JSON.parse(stored);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
+  return safeGetJSON(key, fallback);
 }
 
 function getItemKey(itemOrId, mediaType) {
@@ -32,19 +26,11 @@ export function useTasteProfile() {
   const [showHidden, setShowHidden] = useState(() => readStoredJSON(SHOW_HIDDEN_KEY, false));
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-    } catch {
-      // ignore
-    }
+    safeSetJSON(STORAGE_KEY, profile);
   }, [profile]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(SHOW_HIDDEN_KEY, JSON.stringify(showHidden));
-    } catch {
-      // ignore
-    }
+    safeSetJSON(SHOW_HIDDEN_KEY, showHidden);
   }, [showHidden]);
 
   const like = useCallback((item, mediaType) => {

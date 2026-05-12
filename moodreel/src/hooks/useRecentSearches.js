@@ -1,19 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 const RECENT_SEARCHES_KEY = SK.RECENT_SEARCHES;
 const MAX_RECENT_SEARCHES = 10;
 
 function readStoredJSON(key, fallback) {
-  try {
-    const stored = localStorage.getItem(key);
-    if (!stored) return fallback;
-    const parsed = JSON.parse(stored);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
+  return safeGetJSON(key, fallback);
 }
 
 export function useRecentSearches() {
@@ -22,11 +16,7 @@ export function useRecentSearches() {
   );
 
   useEffect(() => {
-    try {
-      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recentSearches));
-    } catch {
-      // ignore quota errors
-    }
+    safeSetJSON(RECENT_SEARCHES_KEY, recentSearches);
   }, [recentSearches]);
 
   const addRecentSearch = useCallback(search => {

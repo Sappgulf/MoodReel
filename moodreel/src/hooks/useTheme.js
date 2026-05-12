@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetBoolean, safeGetRaw, safeSetRaw } from '../storage/safeStorage';
 
 const HAS_WINDOW = typeof window !== 'undefined';
 
@@ -25,16 +26,16 @@ export function useTheme() {
   // Auto-schedule preference
   const [autoSchedule, setAutoSchedule] = useState(() => {
     if (!HAS_WINDOW) return false;
-    return localStorage.getItem(SK.THEME_AUTO) === 'true';
+    return safeGetBoolean(SK.THEME_AUTO, false);
   });
 
   const [isDark, setIsDark] = useState(() => {
     if (!HAS_WINDOW) return true;
     // If auto-schedule is on, use time-based theme
-    if (localStorage.getItem(SK.THEME_AUTO) === 'true') {
+    if (safeGetBoolean(SK.THEME_AUTO, false)) {
       return isNightTime();
     }
-    const saved = localStorage.getItem(SK.THEME);
+    const saved = safeGetRaw(SK.THEME, null);
     if (saved !== null) {
       return saved === 'dark';
     }
@@ -69,7 +70,7 @@ export function useTheme() {
       root.classList.add('light-theme');
     }
     if (!autoSchedule && HAS_WINDOW) {
-      localStorage.setItem(SK.THEME, isDark ? 'dark' : 'light');
+      safeSetRaw(SK.THEME, isDark ? 'dark' : 'light');
     }
   }, [isDark, autoSchedule]);
 
@@ -80,7 +81,7 @@ export function useTheme() {
     const handler = e => {
       if (autoSchedule) {
         setIsDark(isNightTime());
-      } else if (localStorage.getItem(SK.THEME) === null) {
+      } else if (safeGetRaw(SK.THEME, null) === null) {
         setIsDark(e.matches);
       }
     };
@@ -96,14 +97,14 @@ export function useTheme() {
 
   const toggleTheme = useCallback(() => {
     setAutoSchedule(false);
-    if (HAS_WINDOW) localStorage.setItem(SK.THEME_AUTO, 'false');
+    if (HAS_WINDOW) safeSetRaw(SK.THEME_AUTO, 'false');
     setIsDark(prev => !prev);
   }, []);
 
   const toggleAutoSchedule = useCallback(() => {
     setAutoSchedule(prev => {
       const newValue = !prev;
-      if (HAS_WINDOW) localStorage.setItem(SK.THEME_AUTO, String(newValue));
+      if (HAS_WINDOW) safeSetRaw(SK.THEME_AUTO, String(newValue));
       if (newValue) {
         // Apply time-based theme immediately
         setIsDark(isNightTime());

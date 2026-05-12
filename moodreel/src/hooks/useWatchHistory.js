@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 const HISTORY_KEY = SK.WATCH_HISTORY;
 const MAX_HISTORY = 100;
@@ -10,17 +11,12 @@ const MAX_HISTORY = 100;
  */
 export function useWatchHistory() {
   const [history, setHistory] = useState(() => {
-    try {
-      const saved = localStorage.getItem(HISTORY_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    return safeGetJSON(HISTORY_KEY, []);
   });
 
   // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    safeSetJSON(HISTORY_KEY, history);
   }, [history]);
 
   // Add a movie to history

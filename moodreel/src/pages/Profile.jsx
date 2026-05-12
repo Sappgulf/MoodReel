@@ -8,6 +8,7 @@ import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useToasts } from '../context/ToastContext';
+import { clearUserApiKey, getApiKeyStatus, saveUserApiKey } from '../services/apiClient';
 import { calculatePersona } from '../utils/personaUtils';
 import { copyToClipboard } from '../utils/clipboard';
 import { GENRE_MAP } from '../utils/mediaUtils';
@@ -38,6 +39,11 @@ function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(profile);
   const importInputRef = useRef(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState(() => getApiKeyStatus());
+  const [apiKeyInput, setApiKeyInput] = useState(() => {
+    const status = getApiKeyStatus();
+    return status.source === 'user' ? status.value || '' : '';
+  });
 
   const stats = useMemo(() => {
     const genreCounts = {};
@@ -119,6 +125,93 @@ function Profile() {
       duration: 3000,
     });
     window.setTimeout(() => window.location.reload(), 600);
+  };
+
+  const apiKeySourceLabel = useMemo(() => {
+    if (!apiKeyStatus.configured) return 'Not set';
+    if (apiKeyStatus.source === 'environment') return 'Environment variable';
+    if (apiKeyStatus.source === 'bootstrap') return 'Bootstrap config';
+    return 'Stored locally';
+  }, [apiKeyStatus]);
+
+  const isApiKeyEditable = apiKeyStatus.source === 'user' || !apiKeyStatus.configured;
+
+  const apiKeyStatusMessage = useMemo(() => {
+    if (apiKeyStatus.configured) {
+      return `TMDB API key source: ${apiKeySourceLabel}.`;
+    }
+    return 'TMDB API key is not configured yet.';
+  }, [apiKeyStatus, apiKeySourceLabel]);
+
+  const handleSaveApiKey = () => {
+    const previouslyUserStored = apiKeyStatus.source === 'user';
+    const hadInput = apiKeyInput.trim().length > 0;
+    const saved = saveUserApiKey(apiKeyInput);
+    const status = getApiKeyStatus();
+    setApiKeyStatus(status);
+    setApiKeyInput(status.source === 'user' ? status.value || '' : '');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
+    }
+
+    if (!saved && apiKeyInput.trim()) {
+      pushToast({
+        icon: '⚠️',
+        title: 'Key save blocked',
+        message:
+          'Browser storage blocked this save. Use console-only override only when storage is unavailable.',
+        variant: 'error',
+        duration: 4500,
+      });
+      return;
+    }
+
+    if (!hadInput && previouslyUserStored && !status.configured) {
+      pushToast({
+        icon: '🧹',
+        title: 'API key cleared',
+        message: 'Your local TMDB key preference was removed.',
+        variant: 'info',
+        duration: 3200,
+      });
+      return;
+    }
+
+    if (!hadInput && !previouslyUserStored) {
+      pushToast({
+        icon: '⚠️',
+        title: 'No key entered',
+        message: 'Enter a TMDB key to store it locally.',
+        variant: 'error',
+        duration: 2800,
+      });
+      return;
+    }
+
+    pushToast({
+      icon: '🔐',
+      title: 'API key updated',
+      message: saved
+        ? 'TMDB key saved in local browser storage.'
+        : 'Use the input to update your local TMDB key.',
+      variant: saved ? 'info' : 'error',
+      duration: 3200,
+    });
+  };
+
+  const handleClearApiKey = () => {
+    clearUserApiKey();
+    setApiKeyInput('');
+    setApiKeyStatus(getApiKeyStatus());
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
+    }
+    pushToast({
+      icon: '🧹',
+      title: 'API key removed',
+      message: 'Your local TMDB key preference was cleared.',
+      duration: 3000,
+    });
   };
 
   return (
@@ -291,6 +384,42 @@ function Profile() {
             <span>{moodHistory.length} moods</span>
             <span>{watchHistory.length} viewed</span>
             <span>{tasteCounts.liked + tasteCounts.disliked} taste signals</span>
+          </div>
+          <div className="privacy-api-key">
+            <h4>🔐 TMDB API Key</h4>
+            <p>{apiKeyStatusMessage}</p>
+            <label htmlFor="tmdb-api-key-input" className="sr-only">
+              TMDB API key
+            </label>
+            <input
+              id="tmdb-api-key-input"
+              type="password"
+              placeholder={apiKeyInput ? '' : 'Paste TMDB API key'}
+              value={apiKeyInput}
+              onChange={e => setApiKeyInput(e.target.value)}
+              disabled={!isApiKeyEditable}
+              autoComplete="off"
+              aria-label="TMDB API key"
+            />
+            <div className="privacy-actions">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleSaveApiKey}
+                disabled={!isApiKeyEditable}
+              >
+                Save local key
+              </button>
+              {apiKeyStatus.source === 'user' && (
+                <button
+                  type="button"
+                  className="text-button danger-text"
+                  onClick={handleClearApiKey}
+                >
+                  Remove local key
+                </button>
+              )}
+            </div>
           </div>
           <div className="privacy-actions">
             <button type="button" className="secondary-button" onClick={handleExportData}>

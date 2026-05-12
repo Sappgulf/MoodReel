@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { resolvePublicEnv } from '../utils/publicEnv';
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON, safeRemove } from '../storage/safeStorage';
 
 /** VITE_VAPID_PUBLIC_KEY preferred; legacy REACT_APP_VAPID_PUBLIC_KEY supported. */
 function getVapidPublicKey() {
@@ -22,13 +23,9 @@ export function usePushNotifications() {
     }
 
     // Restore subscription from storage
-    try {
-      const saved = localStorage.getItem(SK.PUSH_SUBSCRIPTION);
-      if (saved) {
-        setSubscription(JSON.parse(saved));
-      }
-    } catch {
-      // ignore
+    const restored = safeGetJSON(SK.PUSH_SUBSCRIPTION, null);
+    if (restored) {
+      setSubscription(restored);
     }
   }, []);
 
@@ -71,7 +68,7 @@ export function usePushNotifications() {
 
       const subData = sub.toJSON();
       setSubscription(subData);
-      localStorage.setItem(SK.PUSH_SUBSCRIPTION, JSON.stringify(subData));
+      safeSetJSON(SK.PUSH_SUBSCRIPTION, subData);
 
       return subData;
     } catch (err) {
@@ -91,7 +88,7 @@ export function usePushNotifications() {
       // silently fail if pushManager is unavailable
     }
     setSubscription(null);
-    localStorage.removeItem(SK.PUSH_SUBSCRIPTION);
+    safeRemove(SK.PUSH_SUBSCRIPTION);
   }, []);
 
   const showNotification = useCallback((title, options = {}) => {

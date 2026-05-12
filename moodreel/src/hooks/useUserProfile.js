@@ -1,24 +1,22 @@
 import { useState, useEffect } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 export const useUserProfile = () => {
   const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem(SK.PROFILE);
-    return saved
-      ? JSON.parse(saved)
-      : {
-          username: 'Cinephile',
-          avatar: '🎬',
-          bio: 'Movie lover and vibe seeker.',
-          joinDate: new Date().toISOString(),
-          isPublic: true,
-          theme: 'default',
-        };
+    return safeGetJSON(SK.PROFILE, {
+      username: 'Cinephile',
+      avatar: '🎬',
+      bio: 'Movie lover and vibe seeker.',
+      joinDate: new Date().toISOString(),
+      isPublic: true,
+      theme: 'default',
+    });
   });
 
   useEffect(() => {
-    localStorage.setItem(SK.PROFILE, JSON.stringify(profile));
+    safeSetJSON(SK.PROFILE, profile);
   }, [profile]);
 
   const updateProfile = updates => {

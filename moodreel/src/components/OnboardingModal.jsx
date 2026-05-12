@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
 import { StorageKeys as SK } from '../storage/storageKeys';
+import { safeGetRaw, safeSetRaw } from '../storage/safeStorage';
 
 const slides = [
   {
@@ -41,14 +42,14 @@ function OnboardingModal() {
   const touchStart = useRef(null);
 
   useEffect(() => {
-    const hasOnboarded = localStorage.getItem(SK.ONBOARDED);
+    const hasOnboarded = safeGetRaw(SK.ONBOARDED, null);
     if (!hasOnboarded) {
       setShow(true);
     }
   }, []);
 
   const handleClose = useCallback(() => {
-    localStorage.setItem(SK.ONBOARDED, 'true');
+    safeSetRaw(SK.ONBOARDED, 'true');
     setShow(false);
   }, []);
 

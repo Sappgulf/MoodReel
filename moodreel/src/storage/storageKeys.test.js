@@ -3,7 +3,7 @@ import { StorageKeys, STORAGE_SCHEMA_VERSION } from './storageKeys';
 
 describe('storageKeys', () => {
   it('locks in schema version for migrations', () => {
-    expect(STORAGE_SCHEMA_VERSION).toBe(1);
+    expect(STORAGE_SCHEMA_VERSION).toBe(2);
   });
 
   it('keeps canonical keys stable', () => {

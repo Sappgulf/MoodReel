@@ -1,6 +1,11 @@
-/** Try/catch JSON helpers for restrictive storage environments */
+/**
+ * Try/catch storage helpers for restrictive storage environments.
+ * Includes minimal schema tracking for future-safe migrations.
+ */
 
 const STORAGE_QUOTA_BYTES = 4 * 1024 * 1024; // ~4 MB conservative quota
+const CURRENT_STORAGE_SCHEMA_VERSION = 2;
+const STORAGE_SCHEMA_VERSION_KEY = 'moodreel-storage-schema-version';
 const EVICTABLE_KEYS = [
   'moodreel-search-persistent-cache',
   'moodreel-watch-history',
@@ -52,10 +57,31 @@ function evictOldestIfNeeded() {
   }
 }
 
-export function safeGetJSON(key, fallback) {
+export function safeGetRaw(key, fallback = null) {
   if (typeof window === 'undefined' || !window.localStorage) return fallback;
   try {
     const raw = window.localStorage.getItem(key);
+    return raw === null ? fallback : raw;
+  } catch {
+    return fallback;
+  }
+}
+
+export function safeSetRaw(key, value) {
+  if (typeof window === 'undefined' || !window.localStorage) return false;
+  try {
+    evictOldestIfNeeded();
+    window.localStorage.setItem(key, String(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function safeGetJSON(key, fallback) {
+  if (typeof window === 'undefined' || !window.localStorage) return fallback;
+  try {
+    const raw = safeGetRaw(key, null);
     if (raw === null || raw === undefined) return fallback;
     return JSON.parse(raw);
   } catch {
@@ -64,14 +90,15 @@ export function safeGetJSON(key, fallback) {
 }
 
 export function safeSetJSON(key, value) {
-  if (typeof window === 'undefined' || !window.localStorage) return false;
-  try {
-    evictOldestIfNeeded();
-    window.localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch {
-    return false;
-  }
+  return safeSetRaw(key, JSON.stringify(value));
+}
+
+export function safeGetBoolean(key, fallback = false) {
+  const raw = safeGetRaw(key, null);
+  if (raw === null) return fallback;
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  return fallback;
 }
 
 export function safeRemove(key) {
@@ -81,4 +108,18 @@ export function safeRemove(key) {
   } catch {
     /* ignore */
   }
+}
+
+export function getStorageSchemaVersion() {
+  const raw = safeGetRaw(STORAGE_SCHEMA_VERSION_KEY, null);
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return 0;
+  return parsed;
+}
+
+export function ensureStorageSchemaVersion() {
+  const current = getStorageSchemaVersion();
+  if (current >= CURRENT_STORAGE_SCHEMA_VERSION) return current;
+  safeSetRaw(STORAGE_SCHEMA_VERSION_KEY, String(CURRENT_STORAGE_SCHEMA_VERSION));
+  return CURRENT_STORAGE_SCHEMA_VERSION;
 }

@@ -1,5 +1,5 @@
 import { StorageKeys, STORAGE_SCHEMA_VERSION } from '../storage/storageKeys';
-import { safeRemove } from '../storage/safeStorage';
+import { safeGetRaw, safeSetRaw, safeRemove } from '../storage/safeStorage';
 
 export const PRIVACY_DATA_VERSION = 1;
 
@@ -13,21 +13,24 @@ export function getExportableStorageKeys() {
 
 export function createPrivacyExport({ now = () => new Date() } = {}) {
   const payload = {};
-
-  if (typeof window !== 'undefined' && window.localStorage) {
-    EXPORTABLE_KEYS.forEach(key => {
-      const raw = window.localStorage.getItem(key);
-      if (raw !== null) {
-        payload[key] = raw;
-      }
-    });
-  }
-
-  return {
+  const payloadMeta = {
     app: 'MoodReel',
     version: PRIVACY_DATA_VERSION,
     storageSchemaVersion: STORAGE_SCHEMA_VERSION,
     exportedAt: now().toISOString(),
+  };
+
+  if (typeof window === 'undefined') return { ...payloadMeta, payload };
+
+  EXPORTABLE_KEYS.forEach(key => {
+    const raw = safeGetRaw(key, null);
+    if (raw !== null) {
+      payload[key] = raw;
+    }
+  });
+
+  return {
+    ...payloadMeta,
     payload,
   };
 }
@@ -64,10 +67,10 @@ export function parsePrivacyImport(rawData) {
 
 export function importPrivacyData(rawData) {
   const entries = parsePrivacyImport(rawData);
-  if (typeof window === 'undefined' || !window.localStorage) return 0;
+  if (typeof window === 'undefined') return 0;
 
   entries.forEach(([key, value]) => {
-    window.localStorage.setItem(key, value);
+    safeSetRaw(key, value);
   });
 
   return entries.length;

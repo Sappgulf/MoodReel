@@ -6,37 +6,87 @@ import {
   shouldSkipLog,
 } from './apiErrorUtils';
 import { StorageKeys as SK } from '../storage/storageKeys';
-
-const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env || {} : {};
-const processEnv = typeof process !== 'undefined' ? process.env || {} : {};
-const API_KEY = 'f2b1a353af51ccd27736c209f7ea0ca6';
-const resolveEnv = keys => {
-  for (const key of keys) {
-    if (viteEnv[key] !== undefined) return viteEnv[key];
-    if (processEnv[key] !== undefined) return processEnv[key];
-  }
-  return undefined;
-};
+import { resolvePublicEnv } from '../utils/publicEnv';
+import { safeGetRaw, safeSetRaw, safeRemove } from '../storage/safeStorage';
 
 const API_BASE_URL =
-  resolveEnv(['VITE_TMDB_BASE_URL', 'REACT_APP_TMDB_BASE_URL']) || 'https://api.themoviedb.org/3';
+  resolvePublicEnv(['VITE_TMDB_BASE_URL', 'REACT_APP_TMDB_BASE_URL']) ||
+  'https://api.themoviedb.org/3';
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 1000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
+const API_KEY_SOURCE_USER = 'user';
+const API_KEY_SOURCE_ENV = 'environment';
+const API_KEY_SOURCE_BOOTSTRAP = 'bootstrap';
+const API_KEY_SOURCE_MISSING = 'missing';
+
+function resolveEnvApiKey() {
+  return resolvePublicEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
+}
+
+function resolveBootstrapApiKey() {
+  if (typeof window === 'undefined') return null;
+  return window.__MOODREEL_TMDB_API_KEY__ || null;
+}
+
+function resolveStoredApiKey() {
+  return safeGetRaw(SK.TMDB_API_KEY_USER, null);
+}
+
+export function getApiKeyStatus() {
+  const envApiKey = resolveEnvApiKey();
+  if (envApiKey) {
+    return {
+      configured: true,
+      source: API_KEY_SOURCE_ENV,
+      value: envApiKey,
+      hasKey: true,
+    };
+  }
+
+  const bootstrapApiKey = resolveBootstrapApiKey();
+  if (bootstrapApiKey) {
+    return {
+      configured: true,
+      source: API_KEY_SOURCE_BOOTSTRAP,
+      value: bootstrapApiKey,
+      hasKey: true,
+    };
+  }
+
+  const storedApiKey = resolveStoredApiKey();
+  if (storedApiKey) {
+    return {
+      configured: true,
+      source: API_KEY_SOURCE_USER,
+      value: storedApiKey,
+      hasKey: true,
+    };
+  }
+
+  return {
+    configured: false,
+    source: API_KEY_SOURCE_MISSING,
+    value: null,
+    hasKey: false,
+  };
+}
+
+export function saveUserApiKey(value) {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  if (!trimmed) {
+    safeRemove(SK.TMDB_API_KEY_USER);
+    return false;
+  }
+  return safeSetRaw(SK.TMDB_API_KEY_USER, trimmed);
+}
+
+export function clearUserApiKey() {
+  safeRemove(SK.TMDB_API_KEY_USER);
+}
 
 function getApiKey() {
-  const envApiKey = resolveEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
-  if (envApiKey) return envApiKey;
-  if (API_KEY) return API_KEY;
-
-  if (typeof window === 'undefined') return null;
-  if (window.__MOODREEL_TMDB_API_KEY__) {
-    return window.__MOODREEL_TMDB_API_KEY__;
-  }
-  if (window.localStorage) {
-    return window.localStorage.getItem(SK.TMDB_API_KEY_USER);
-  }
-  return null;
+  return getApiKeyStatus().value;
 }
 
 export class TmdbApiError extends Error {
@@ -239,6 +289,9 @@ const apiClient = {
   isAbortError,
   isExpectedTmdbErrorForLogging,
   shouldSkipLog,
+  getApiKeyStatus,
+  saveUserApiKey,
+  clearUserApiKey,
 };
 
 export default apiClient;
