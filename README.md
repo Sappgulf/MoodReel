@@ -36,6 +36,8 @@ npm run verify
 
 ## iOS
 
+The iOS app now opens on a native Tonight tab with Safe Bet, Best Match, and Wild Card cards. The existing Discover feed remains available as a separate browsing tab.
+
 ```bash
 xcodebuild -project MoodReel-iOS/MoodReel.xcodeproj \
   -scheme MoodReel \

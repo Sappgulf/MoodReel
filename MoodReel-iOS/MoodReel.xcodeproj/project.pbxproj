@@ -22,8 +22,10 @@
 		83770E1616217002D2A9D04A /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798F21EEA5D53E49AAB453FC /* DiscoverView.swift */; };
 		92D166AD3C86B96409842140 /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */; };
 		9BBB97F237B36A98DFE3D395 /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176E42CA88E4FC28F4AAA3A4 /* Movie.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* TonightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F40516273849A5B6C7 /* TonightView.swift */; };
 		B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E482C07B60A067B50F672D /* Theme.swift */; };
 		B86001651F53833059C70623 /* ViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEF7DF4CEC10400E41DD56E /* ViewModifiers.swift */; };
+		B1C2D3E4F5061728394A5B6C /* TonightViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3041526374859A6B7C8 /* TonightViewModel.swift */; };
 		BDA9292CD0650F733ABDADE6 /* MoodReelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66963C603B7E5DB60CCDC095 /* MoodReelApp.swift */; };
 		C6A41E4E2B8D4F4D9E0C92A1 /* TasteProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */; };
 		DA96987D1482B38518FA4FDB /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */; };
@@ -53,7 +55,9 @@
 		7AA4DF8C276F322BA10747CF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		950A606672A209499B19F74E /* APIKeyEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyEntryView.swift; sourceTree = "<group>"; };
+		C1D2E3F40516273849A5B6C7 /* TonightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonightView.swift; sourceTree = "<group>"; };
 		C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasteProfileStore.swift; sourceTree = "<group>"; };
+		D1E2F3041526374859A6B7C8 /* TonightViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonightViewModel.swift; sourceTree = "<group>"; };
 		DF1E97789AFA3B75A8C21A20 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
 		E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		F2E482C07B60A067B50F672D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -114,6 +118,7 @@
 				70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */,
 				213BEF41155E24382B2CCC26 /* MediaDetailViewModel.swift */,
 				C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */,
+				D1E2F3041526374859A6B7C8 /* TonightViewModel.swift */,
 				287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */,
 			);
 			path = ViewModels;
@@ -139,6 +144,7 @@
 				5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */,
 				7AA4DF8C276F322BA10747CF /* RootView.swift */,
 				488644054F8249131C630EF2 /* SettingsView.swift */,
+				C1D2E3F40516273849A5B6C7 /* TonightView.swift */,
 				FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */,
 				5756C3BA57E324D7BFE9E5B8 /* Achievements */,
 				9472897626382405CE2139BB /* Calendar */,
@@ -310,6 +316,8 @@
 				EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */,
 				C6A41E4E2B8D4F4D9E0C92A1 /* TasteProfileStore.swift in Sources */,
 				B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* TonightView.swift in Sources */,
+				B1C2D3E4F5061728394A5B6C /* TonightViewModel.swift in Sources */,
 				B86001651F53833059C70623 /* ViewModifiers.swift in Sources */,
 				516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */,
 				284AADC64A3F8856D8EB4E08 /* WatchlistView.swift in Sources */,

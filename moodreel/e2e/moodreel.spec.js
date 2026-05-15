@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { installTonightTmdbMocks } from './fixtures/tmdb';
 
 test.describe('MoodReel E2E', () => {
   const runMoodSearch = async page => {
@@ -134,6 +135,28 @@ test.describe('MoodReel E2E', () => {
         0
       );
     }
+  });
+
+  test('tonight mode returns three explained mocked picks', async ({ page }) => {
+    await installTonightTmdbMocks(page);
+    await page.addInitScript(() => {
+      window.localStorage.setItem('moodreel-tmdb-api-key', 'test-key');
+    });
+
+    await page.goto('/tonight');
+    await page.getByRole('button', { name: 'Netflix' }).click();
+    await page.getByLabel('Services-only').check();
+    await page.getByRole('button', { name: "Find Tonight's Picks" }).click();
+
+    await expect(page.locator('.tonight-pick-card')).toHaveCount(3, { timeout: 15000 });
+    await expect(page.locator('.tonight-pick-slot')).toHaveText([
+      'Safe Bet',
+      'Best Match',
+      'Wild Card',
+    ]);
+    await expect(page.getByText('Why this pick?')).toHaveCount(3);
+    await expect(page.getByRole('button', { name: /Share or copy/ })).toBeVisible();
+    await expect(page.locator('.vite-error-overlay, [data-nextjs-dialog-overlay]')).toHaveCount(0);
   });
 
   test('theme toggle works', async ({ page }) => {

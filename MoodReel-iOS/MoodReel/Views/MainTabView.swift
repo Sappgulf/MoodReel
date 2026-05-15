@@ -5,10 +5,15 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
+            TonightView()
+                .tabItem {
+                    Label("Tonight", systemImage: "sparkles.tv")
+                }
+
             DiscoverView()
                 .environmentObject(discoverViewModel)
                 .tabItem {
-                    Label("Tonight", systemImage: "sparkles.tv")
+                    Label("Discover", systemImage: "film.stack")
                 }
 
             WatchlistView()

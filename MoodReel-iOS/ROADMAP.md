@@ -6,31 +6,34 @@ MoodReel iOS should match the web product direction: a cinematic decision engine
 
 Current safe parity:
 
-- The main tab is labeled Tonight.
+- The first tab is a dedicated native `TonightView`.
 - DiscoverView exposes mood, content type, rating, sort, and night constraints.
 - The Tonight Mode section renders Safe Bet, Best Match, and Wild Card with confidence and plain-language reasons.
+- Native Tonight Mode supports vibe, mood lane, available-time, content type, Solo / Date / Family / Friends context, safe/balanced/adventurous preference, minimum rating, and hide watched/disliked controls.
+- Native Tonight cards include confidence, reason text, save actions, details navigation, and a share card.
 - TMDB API keys remain Keychain-backed through `APIKeyStore`.
 - `TMDBService` keeps its response cache and URLSession flow intact.
 
-## Next Native Phase
+## Shipped Native Phase
 
-Build a dedicated native Tonight Mode surface without replacing the existing Discover feed:
+The dedicated native Tonight Mode surface now exists without replacing the existing Discover feed:
 
 - `Views/TonightView.swift`
-  - Mood/vibe input.
-  - Available time selector.
-  - Content type segmented control.
-  - Solo / Date / Family / Friends context.
-  - Services-only setting once provider preferences exist natively.
-  - Safe / Balanced / Adventurous preference.
-  - Safe Bet / Best Match / Wild Card cards with reason text and save/detail actions.
+  - Owns the SwiftUI decision flow and first-tab presentation.
+  - Provides mood/vibe input, time selector, content segmented control, viewing context, risk preference, rating, watched/disliked hiding, Safe Bet / Best Match / Wild Card cards, save/detail actions, and sharing.
 
 - `ViewModels/TonightViewModel.swift`
-  - Own a `TonightDecisionPick` model.
-  - Reuse `TMDBService.discover`, `WatchlistStore`, and the existing scoring helpers in `DiscoverViewModel`.
-  - Keep deterministic ranking and avoid network calls from `body`.
+  - Owns the `TonightPick` model and deterministic ranking.
+  - Reuses `TMDBService.discover`, `WatchlistStore`, `TasteProfileStore`, and existing media scoring metadata.
+  - Keeps network calls in explicit async actions, not SwiftUI `body`.
 
 - `Models/TonightDecisionPick.swift` if the model grows beyond a view-model-local struct.
+
+## Next Native Phase
+
+- Add native provider preferences and region/service filtering so Services-only reaches parity with the web `/tonight` flow.
+- Add runtime enrichment from detail calls for the three native picks.
+- Add native UI tests or snapshot coverage for the Tonight tab once the project has a test target.
 
 ## Guardrails
 

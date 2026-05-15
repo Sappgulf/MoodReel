@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-05-15
+
+### Implemented
+
+- **Scope:** iOS native Tonight phase + web E2E hardening
+- **What changed:**
+  - Added a dedicated native `TonightView` and `TonightViewModel` for the iOS app, promoted it to the first tab, and preserved Discover as a separate browsing tab.
+  - Gave native Tonight Mode vibe, mood lane, available-time, content type, Solo/Date/Family/Friends context, safe/balanced/adventurous preference, minimum rating, and watched/disliked hiding controls.
+  - Returned native Safe Bet, Best Match, and Wild Card cards with confidence, reasons, save actions, details navigation, and sharing.
+  - Added deterministic Playwright TMDB fixtures for `/tonight` so E2E can verify the three explained picks without a live TMDB key.
+  - Kept API-key handling in Keychain on iOS and local/env key handling on web; no TMDB key was hardcoded.
+- **Verification performed:** `npm run format:check`, `npm run test:unit`, `npm run build`, `npm run verify`, focused mocked `/tonight` Playwright E2E, XcodeBuildMCP simulator build, and generic iOS simulator `xcodebuild` all passed.
+
 ## 2026-05-14
 
 ### Implemented

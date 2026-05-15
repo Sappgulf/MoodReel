@@ -51,6 +51,8 @@ Playwright browsers are required before E2E on a fresh machine:
 npx playwright install chromium webkit
 ```
 
+The `/tonight` E2E path includes deterministic TMDB fixtures in `e2e/fixtures/tmdb.js`, so the three-pick decision flow can be tested without a live TMDB key.
+
 ## App Structure
 
 ```text
@@ -122,6 +124,8 @@ Vercel is configured for either repo-root or `moodreel/` project roots:
 ## iOS App
 
 The native iOS app lives in `../MoodReel-iOS`.
+
+It opens on a dedicated native Tonight tab, then keeps Discover, Watchlist, Insights, Awards, and Settings as supporting tabs.
 
 ```bash
 xcodebuild -project ../MoodReel-iOS/MoodReel.xcodeproj \

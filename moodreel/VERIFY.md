@@ -46,6 +46,8 @@ npx playwright install chromium webkit
 npm run test:e2e
 ```
 
+The `/tonight` E2E decision-flow test uses deterministic TMDB mocks from `e2e/fixtures/tmdb.js`; it does not require a real TMDB key. Other exploratory E2E flows still need `VITE_TMDB_API_KEY` or a browser-saved local key when they hit live TMDB.
+
 ## iOS Compile Check
 
 ```bash
@@ -63,6 +65,7 @@ xcodebuild -project ../MoodReel-iOS/MoodReel.xcodeproj \
 - Route smoke: open `/`, `/tonight`, `/watchlist`, `/stats`, `/calendar`, `/profile`, `/achievements`, and `/404`.
 - Mood flow: enter mood -> recommendations grid appears.
 - Tonight Mode route: open `/tonight`, enter a vibe, choose time/context/services, click `Find Tonight's Picks`, and confirm Safe Bet / Best Match / Wild Card render with explanations.
+- Mocked Tonight E2E: run `npm run test:e2e -- --project=chromium --grep "tonight mode returns three explained mocked picks"` and confirm the three slots render from fixtures.
 - Home Tonight Mode: choose a “What kind of night is it?” preset and confirm Safe Bet / Best Match / Wild Card render with explanations after a mood search.
 - Constraint chips: toggle under 90, streaming now, family friendly, no horror, hidden gem, high rating, newer, classic, low commitment, and wild card; confirm ranking/filter copy updates without crashing.
 - Pick Between These: compare the three Tonight picks, confirm best-for-tonight/safe/wild reasons, pick one shortlist title, confirm it locks and saves, and swap another out on Home.
