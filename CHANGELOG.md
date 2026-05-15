@@ -1,8 +1,24 @@
 # CHANGELOG
 
+## 2026-05-14
+
+### Implemented
+
+- **Scope:** web + iOS product upgrade
+- **What changed:**
+  - Added a dedicated `/tonight` decision-engine route for vibe, runtime, content type, watching context, services-only, safe/adventurous preference, minimum rating, and watched/disliked hiding.
+  - Upgraded shared recommendation scoring with mood text, provider availability, runtime fit, context, risk preference, services-only filtering, and explicit `explainRecommendation` support.
+  - Kept Home as a lighter discovery entry point with clearer Tonight copy and a primary `Find Tonight's Picks` action.
+  - Made MovieCard metadata and save controls visible without hover dependency.
+  - Added route smoke unit coverage and stronger recommendation scoring tests.
+  - Updated iOS Discover/Tonight parity with Safe Bet / Best Match / Wild Card confidence and reason text while preserving Keychain API key handling and TMDB cache behavior.
+  - Added root README and iOS roadmap documentation for the next native Tonight screen.
+- **Verification performed:** Pending final verification in this branch.
+
 ## 2026-05-11
 
 ### Implemented
+
 - **Scope:** web + iOS product upgrade
 - **What changed:**
   - Re-centered Discover around Tonight Mode: mood presets, constraint chips, Safe Bet / Best Match / Wild Card, and Pick Between These.
@@ -16,12 +32,14 @@
 ## 2026-02-10
 
 ### Planned
+
 - **Scope:** frontend
 - **What will change:** Audit search categorization + ranking for accuracy/performance, then tighten result ranking logic and mood parsing to reduce false matches and unnecessary compute.
 - **Why:** User requested a polish pass and performance-focused improvements to search quality.
 - **Verification performed (baseline):** Ran `npm run test -- --watchAll=false` and `npm run build` in `moodreel/`; both passed before code edits.
 
 ### Implemented
+
 - **Scope:** frontend
 - **What changed:**
   - Improved mood categorization parsing with normalized text handling, token/phrase matching, and removal of reverse-substring matching that could produce false-positive categories.
@@ -32,12 +50,14 @@
 - **Verification performed:** Ran `npm run test -- --watchAll=false` (pass), `npm run build` (pass), and `npm run smoke` (fails in this environment because no local dev server is running and TMDB API key is not configured).
 
 ### Planned
+
 - **Scope:** frontend
 - **What will change:** Refresh the `Global Mood Pulse` card for cleaner typography, proper spacing, and more trustworthy status text; tighten the emoji quick-pick panel with clearer hierarchy and more compact controls.
 - **Why:** Current UI appears unfinished (missing style hooks and crowded text), which hurts clarity and perceived quality.
 - **Verification performed (baseline):** Ran `npm run build` in `moodreel/` to confirm a clean baseline before edits.
 
 ### Implemented
+
 - **Scope:** frontend
 - **What changed:**
   - Reworked `MoodPulse` markup/content to show a professional snapshot layout with explicit percentages, trend cues, and a non-misleading "Updated daily" status.
@@ -49,12 +69,14 @@
 ## 2026-02-17
 
 ### Planned
+
 - **Scope:** iOS frontend
 - **What will change:** Polish discovery UX with richer controls (content-type and quality filters) and clearer browsing states so users can quickly tune recommendations.
 - **Why:** User requested App Store–ready polish and stronger features for the iOS app.
 - **Verification performed (baseline):** Ran `swift --version` (pass) and attempted `xcodebuild -list -project MoodReel-iOS/MoodReel.xcodeproj` (cannot run in this Linux environment because `xcodebuild` is unavailable).
 
 ### Implemented
+
 - **Scope:** iOS frontend
 - **What changed:**
   - Added discover feed refinement controls for content type (all/movies/TV), minimum TMDB rating threshold, and sort mode (trending/top rated/newest).

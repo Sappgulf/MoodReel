@@ -1,10 +1,35 @@
 import { getDisplayTitle, getReleaseYear } from './mediaUtils';
+import { parseMoodToGenres } from './moodParser';
 
 const FAMILY_GENRES = new Set([16, 10751]);
 const HORROR_GENRES = new Set([27]);
 const WILD_GENRES = new Set([14, 878, 9648, 99]);
 const CLASSIC_YEAR = 2005;
 const NEWER_WINDOW_YEARS = 5;
+
+const WATCHING_CONTEXT_PROFILES = Object.freeze({
+  solo: {
+    label: 'Solo',
+    genreBoosts: [18, 53, 9648, 878, 99],
+    textBoosts: ['quiet', 'personal', 'lonely', 'intimate', 'journey', 'mystery'],
+  },
+  date: {
+    label: 'Date',
+    genreBoosts: [10749, 18, 35, 10402],
+    textBoosts: ['love', 'romance', 'relationship', 'beautiful', 'music', 'wedding'],
+  },
+  family: {
+    label: 'Family',
+    genreBoosts: [16, 10751, 35, 12],
+    textBoosts: ['family', 'friendship', 'adventure', 'heartwarming', 'school', 'kids'],
+    avoidGenres: [27],
+  },
+  friends: {
+    label: 'Friends',
+    genreBoosts: [35, 28, 12, 53],
+    textBoosts: ['team', 'friends', 'party', 'game', 'mission', 'heist'],
+  },
+});
 
 export const TASTE_SETTING_DEFAULTS = Object.freeze({
   contentType: 'any',
@@ -131,8 +156,9 @@ function getGenreIds(item) {
 }
 
 function getRuntime(item) {
-  const runtime = item?.runtime ?? item?.runtime_minutes;
-  return Number.isFinite(runtime) ? runtime : null;
+  const runtime = item?.runtime ?? item?.runtime_minutes ?? item?.episode_run_time?.[0];
+  const numericRuntime = Number(runtime);
+  return Number.isFinite(numericRuntime) && numericRuntime > 0 ? numericRuntime : null;
 }
 
 function getText(item) {
@@ -154,6 +180,49 @@ function hasSelectedProvider(providerData, myServices = []) {
 
 function getYear(item) {
   return Number.parseInt(getReleaseYear(item), 10) || 0;
+}
+
+function normalizeTextTokens(value) {
+  if (!value || typeof value !== 'string') return [];
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(token => token.length >= 3);
+}
+
+function getMediaType(item, fallbackType = 'movie') {
+  const rawType = item?.media_type || fallbackType || 'movie';
+  if (rawType === 'movies') return 'movie';
+  if (rawType === 'tvShows' || rawType === 'series') return 'tv';
+  return rawType === 'all' || rawType === 'any' ? item?.media_type || 'movie' : rawType;
+}
+
+function matchesContentType(item, contentType = 'all') {
+  if (!contentType || contentType === 'all' || contentType === 'any') return true;
+  const normalized =
+    contentType === 'movies' ? 'movie' : contentType === 'tvShows' ? 'tv' : contentType;
+  return getMediaType(item, normalized) === normalized;
+}
+
+function getAvailabilityState(providerData, myServices = []) {
+  if (!providerData) return 'unknown';
+  if (!myServices.length) return 'not-configured';
+  return hasSelectedProvider(providerData, myServices) ? 'available' : 'unavailable';
+}
+
+function shouldHideByTaste({
+  key,
+  status,
+  dislikedKeys,
+  watchedKeys,
+  watchHistoryKeys,
+  hideDisliked,
+  hideWatched,
+}) {
+  if (hideDisliked && (status === 'disliked' || dislikedKeys.includes(key))) return true;
+  if (hideWatched && (watchedKeys.includes(key) || watchHistoryKeys.includes(key))) return true;
+  return false;
 }
 
 function pushReason(reasons, reason) {
@@ -204,23 +273,32 @@ function buildDecisionDebate(scorecard, slotLabel) {
 export function scoreRecommendation(item, context = {}) {
   const {
     mode = TONIGHT_MODES[0],
+    moodText = '',
     constraints = [],
     selectedGenres = [],
     providerData = null,
     providerDataByKey = {},
     myServices = [],
+    servicesOnly = false,
     status = 'neutral',
     likedKeys = [],
     dislikedKeys = [],
     savedKeys = [],
     watchedKeys = [],
     watchHistoryKeys = [],
+    hideDisliked = false,
+    hideWatched = false,
     watchlistGenreCounts = {},
     tasteSettings = TASTE_SETTING_DEFAULTS,
-    contentType = 'movie',
+    contentType = 'all',
+    maxRuntime = 0,
+    timeAvailable = 0,
+    watchingContext = 'solo',
+    riskPreference = 'balanced',
     currentYear = new Date().getFullYear(),
   } = context;
-  const key = getRecommendationKey(item, contentType);
+  const itemType = getMediaType(item, contentType);
+  const key = getRecommendationKey(item, itemType);
   const resolvedProviderData = providerData || providerDataByKey[key] || null;
   const constraintSet = new Set(constraints);
   const genreIds = getGenreIds(item);
@@ -232,28 +310,69 @@ export function scoreRecommendation(item, context = {}) {
   const year = getYear(item);
   const reasons = [];
   const penalties = [];
+  const excluded =
+    !matchesContentType(item, contentType) ||
+    shouldHideByTaste({
+      key,
+      status,
+      dislikedKeys,
+      watchedKeys,
+      watchHistoryKeys,
+      hideDisliked,
+      hideWatched,
+    });
   let score = 0;
+
+  if (excluded) {
+    if (!matchesContentType(item, contentType)) penalties.push('outside requested format');
+    if (hideDisliked && (status === 'disliked' || dislikedKeys.includes(key))) {
+      penalties.push('hidden by disliked signal');
+    }
+    if (hideWatched && (watchedKeys.includes(key) || watchHistoryKeys.includes(key))) {
+      penalties.push('hidden because already watched');
+    }
+  }
 
   score += Math.min(Math.max(rating - 5.8, 0), 4.2) * 8;
   score += Math.min(Math.log10(Math.max(voteCount, 1)) * 4, 18);
   score += Math.min(Math.log10(Math.max(popularity, 1)) * 3, 12);
 
+  const moodGenreIds = Array.from(new Set([...parseMoodToGenres(moodText), ...selectedGenres]));
   const modeGenreHits = genreIds.filter(genreId => mode.genreBoosts.includes(genreId)).length;
   if (modeGenreHits > 0) {
     score += modeGenreHits * 18;
     pushReason(reasons, `${mode.label} genre match`);
   }
 
-  const selectedGenreHits = genreIds.filter(genreId => selectedGenres.includes(genreId)).length;
-  if (selectedGenreHits > 0) {
-    score += selectedGenreHits * 8;
-    pushReason(reasons, 'matches your selected genres');
+  const moodGenreHits = genreIds.filter(genreId => moodGenreIds.includes(genreId)).length;
+  if (moodGenreHits > 0) {
+    score += moodGenreHits * 10;
+    pushReason(reasons, 'matches the requested vibe');
   }
 
-  const textHits = mode.textBoosts.filter(token => text.includes(token)).length;
+  const moodTokens = normalizeTextTokens(moodText).slice(0, 8);
+  const textHits =
+    mode.textBoosts.filter(token => text.includes(token)).length +
+    moodTokens.filter(token => text.includes(token)).length;
   if (textHits > 0) {
     score += textHits * 4;
     pushReason(reasons, 'story tone fits the mood');
+  }
+
+  const contextProfile = WATCHING_CONTEXT_PROFILES[watchingContext];
+  if (contextProfile) {
+    const contextGenreHits = genreIds.filter(genreId =>
+      contextProfile.genreBoosts.includes(genreId)
+    ).length;
+    const contextTextHits = contextProfile.textBoosts.filter(token => text.includes(token)).length;
+    if (contextGenreHits > 0 || contextTextHits > 0) {
+      score += contextGenreHits * 10 + contextTextHits * 3;
+      pushReason(reasons, `works for ${contextProfile.label.toLowerCase()} viewing`);
+    }
+    if (contextProfile.avoidGenres?.some(genreId => genreIds.includes(genreId))) {
+      score -= 60;
+      penalties.push(`rough fit for ${contextProfile.label.toLowerCase()} viewing`);
+    }
   }
 
   if (status === 'liked' || likedKeys.includes(key)) {
@@ -273,13 +392,18 @@ export function scoreRecommendation(item, context = {}) {
     penalties.push('already saved');
   }
 
-  const availableOnService = hasSelectedProvider(resolvedProviderData, myServices);
-  if (availableOnService) {
+  const availabilityState = getAvailabilityState(resolvedProviderData, myServices);
+  if (availabilityState === 'available') {
     score += constraintSet.has('streaming-now') ? 34 : 18;
     pushReason(reasons, 'available on your services');
-  } else if (constraintSet.has('streaming-now') && myServices.length > 0 && resolvedProviderData) {
-    score -= 22;
-    penalties.push('not on selected services');
+  } else if (myServices.length > 0) {
+    if (availabilityState === 'unavailable') {
+      score -= servicesOnly || constraintSet.has('streaming-now') ? 40 : 16;
+      penalties.push('not on selected services');
+    } else if (servicesOnly) {
+      score -= 10;
+      penalties.push('availability unknown');
+    }
   }
 
   if (constraintSet.has('under-90')) {
@@ -296,9 +420,28 @@ export function scoreRecommendation(item, context = {}) {
     if (runtime && runtime <= 110) {
       score += 12;
       pushReason(reasons, 'low-commitment runtime');
-    } else if ((item?.media_type || contentType) === 'movie') {
+    } else if (itemType === 'movie') {
       score += 5;
       pushReason(reasons, 'single-sitting pick');
+    }
+  }
+
+  const requestedRuntime = Number(maxRuntime || timeAvailable || 0);
+  if (requestedRuntime > 0) {
+    if (runtime) {
+      if (runtime <= requestedRuntime) {
+        score += runtime <= requestedRuntime - 20 ? 12 : 18;
+        pushReason(reasons, 'fits the time available');
+      } else if (runtime <= requestedRuntime + 15) {
+        score -= 6;
+        penalties.push("slightly over tonight's time");
+      } else {
+        score -= 28;
+        penalties.push('too long for tonight');
+      }
+    } else if (itemType === 'movie') {
+      score -= 4;
+      penalties.push('runtime unknown');
     }
   }
 
@@ -372,13 +515,36 @@ export function scoreRecommendation(item, context = {}) {
     }
   }
 
+  const wantsSafe = riskPreference === 'safe' || riskPreference === 'safer';
+  const wantsAdventure = riskPreference === 'adventurous' || riskPreference === 'wild';
+  const hasWildGenre = genreIds.some(genreId => WILD_GENRES.has(genreId));
+  if (wantsSafe) {
+    if (rating >= 7 && voteCount >= 700) {
+      score += 18;
+      pushReason(reasons, 'safe audience signal');
+    }
+    if (hasWildGenre && voteCount < 450) {
+      score -= 10;
+      penalties.push('too risky for safe mode');
+    }
+  }
+  if (wantsAdventure) {
+    if (hasWildGenre || (popularity < 80 && rating >= 6.7)) {
+      score += 22;
+      pushReason(reasons, 'adventurous pick profile');
+    }
+    if (popularity > 250 && voteCount > 5000) {
+      score -= 8;
+      penalties.push('very obvious pick');
+    }
+  }
+
   score += genreIds.reduce(
     (sum, genreId) => sum + Math.min(watchlistGenreCounts[genreId] || 0, 4) * 3,
     0
   );
 
   const preferredContentType = tasteSettings.contentType || 'any';
-  const itemType = item?.media_type || contentType;
   if (preferredContentType !== 'any') {
     if (preferredContentType === itemType) {
       score += 10;
@@ -392,12 +558,12 @@ export function scoreRecommendation(item, context = {}) {
     }
   }
 
-  const maxRuntime = Number(tasteSettings.maxRuntime || 0);
-  if (maxRuntime > 0 && runtime) {
-    if (runtime <= maxRuntime) {
+  const tasteMaxRuntime = Number(tasteSettings.maxRuntime || 0);
+  if (tasteMaxRuntime > 0 && runtime) {
+    if (runtime <= tasteMaxRuntime) {
       score += 10;
       pushReason(reasons, 'within your runtime comfort zone');
-    } else if (runtime > maxRuntime + 20) {
+    } else if (runtime > tasteMaxRuntime + 20) {
       score -= 14;
       penalties.push('longer than your usual limit');
     }
@@ -438,6 +604,8 @@ export function scoreRecommendation(item, context = {}) {
     item,
     key,
     score,
+    excluded,
+    availabilityState,
     reasons,
     penalties,
     explanation: buildRecommendationExplanation({ item, reasons, penalties }),
@@ -455,9 +623,33 @@ export function buildRecommendationExplanation({ item, reasons = [], penalties =
   return `${prefix}${title} ranks here because ${reasonText}${penaltyText}.`;
 }
 
+export function explainRecommendation(itemOrScorecard, context = {}) {
+  const scorecard =
+    itemOrScorecard && itemOrScorecard.item
+      ? itemOrScorecard
+      : scoreRecommendation(itemOrScorecard, context);
+  return buildRecommendationExplanation({
+    item: scorecard.item,
+    reasons: scorecard.reasons,
+    penalties: scorecard.penalties,
+    slotLabel: context.slotLabel,
+  });
+}
+
 export function rankRecommendations(items, context = {}) {
   const sorted = [...items]
     .map(item => scoreRecommendation(item, context))
+    .filter(scorecard => {
+      if (scorecard.excluded) return false;
+      if (
+        context.servicesOnly &&
+        context.myServices?.length > 0 &&
+        scorecard.availabilityState === 'unavailable'
+      ) {
+        return false;
+      }
+      return true;
+    })
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       const ratingDelta = (b.item.vote_average || 0) - (a.item.vote_average || 0);
@@ -552,6 +744,7 @@ const recommendationScoring = {
   rankRecommendations,
   buildTonightPicks,
   buildRecommendationExplanation,
+  explainRecommendation,
   TASTE_SETTING_DEFAULTS,
 };
 

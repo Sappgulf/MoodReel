@@ -2277,6 +2277,15 @@
   padding: 0 0.35rem;
 }
 
+.recommendation .card-actions {
+  opacity: 1;
+  transform: none;
+}
+
+.recommendation .release-date {
+  letter-spacing: 0;
+}
+
 @media (max-width: 768px) {
   .hero-featured-art-skeleton {
     min-height: 220px;

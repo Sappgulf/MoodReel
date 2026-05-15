@@ -25,6 +25,7 @@ const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcuts
 const QuickActionsModal = lazy(() => import('./components/QuickActionsModal'));
 const MovieDetails = lazy(() => import('./pages/MovieDetails'));
 const Watchlist = lazy(() => import('./pages/Watchlist'));
+const Tonight = lazy(() => import('./pages/Tonight'));
 const Stats = lazy(() => import('./pages/Stats'));
 const MoodCalendar = lazy(() => import('./pages/MoodCalendar'));
 const Achievements = lazy(() => import('./pages/Achievements'));
@@ -119,6 +120,13 @@ function AppContent() {
     };
 
     return [
+      {
+        id: 'tonight',
+        label: 'Open Tonight Mode',
+        description: 'Go straight to the three-pick decision engine.',
+        shortcut: 'G T',
+        onSelect: () => navigate('/tonight'),
+      },
       {
         id: 'discover',
         label: 'Go to Discover',
@@ -220,6 +228,7 @@ function AppContent() {
   const setDocumentTitle = useCallback(path => {
     let title = 'MoodReel';
     if (path === '/') title = 'Discover | MoodReel';
+    else if (path === '/tonight') title = 'Tonight Mode | MoodReel';
     else if (path === '/watchlist') title = 'Watchlist & Favorites | MoodReel';
     else if (/^\/(movie|tv)\/[^/]+/.test(path)) title = 'Movie & TV Details | MoodReel';
     else if (path === '/shared' || path.startsWith('/share/')) title = 'Shared List | MoodReel';
@@ -603,9 +612,16 @@ function AppContent() {
             </button>
           </div>
         </div>
-        <p>Mood, constraints, three confident picks.</p>
+        <p>Tell us the vibe. Get three confident picks.</p>
 
         <nav className="nav-links desktop-nav" aria-label="Primary navigation">
+          <Link
+            to="/tonight"
+            className={`nav-link ${location.pathname === '/tonight' ? 'active' : ''}`}
+            aria-current={location.pathname === '/tonight' ? 'page' : undefined}
+          >
+            Tonight
+          </Link>
           <Link
             to="/"
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
@@ -658,11 +674,11 @@ function AppContent() {
         aria-label="Primary navigation"
       >
         <Link
-          to="/"
-          className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}
-          aria-current={location.pathname === '/' ? 'page' : undefined}
+          to="/tonight"
+          className={`bottom-nav-item ${location.pathname === '/tonight' ? 'active' : ''}`}
+          aria-current={location.pathname === '/tonight' ? 'page' : undefined}
         >
-          <span className="bottom-nav-icon">🎬</span>
+          <span className="bottom-nav-icon">★</span>
           <span className="bottom-nav-label">Tonight</span>
         </Link>
         <Link
@@ -725,6 +741,14 @@ function AppContent() {
               />
               <Route path="/movie" element={<Navigate to="/" replace />} />
               <Route path="/tv" element={<Navigate to="/" replace />} />
+              <Route
+                path="/tonight"
+                element={
+                  <GuardedRoute routeKey={routePath}>
+                    <Tonight />
+                  </GuardedRoute>
+                }
+              />
               <Route
                 path="/movie/:id"
                 element={

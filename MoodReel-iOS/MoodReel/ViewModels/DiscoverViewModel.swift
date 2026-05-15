@@ -84,6 +84,14 @@ final class DiscoverViewModel: ObservableObject {
         }
     }
 
+    struct TonightDecisionPick: Identifiable {
+        let id: String
+        let slotTitle: String
+        let item: MediaResult
+        let confidence: Int
+        let reason: String
+    }
+
     @Published var selectedMood: MoodType = .happy
     @Published var query: String = ""
     @Published var items: [MediaResult] = []
@@ -158,8 +166,32 @@ final class DiscoverViewModel: ObservableObject {
         }
     }
 
+    var tonightDecisionPicks: [TonightDecisionPick] {
+        let topItems = Array(filteredItems.prefix(3))
+        guard !topItems.isEmpty else { return [] }
+
+        let scores = topItems.map { tonightScore(for: $0) }
+        let topScore = scores.max() ?? 1
+        let bottomScore = scores.min() ?? 0
+        let spread = max(topScore - bottomScore, 1)
+
+        return topItems.enumerated().map { index, item in
+            let score = scores[index]
+            let relative = (score - bottomScore) / spread
+            let confidence = min(98, max(58, Int((72 + relative * 24).rounded()) - index))
+
+            return TonightDecisionPick(
+                id: "\(slotTitle(for: index))-\(item.stableIdentifier)",
+                slotTitle: slotTitle(for: index),
+                item: item,
+                confidence: confidence,
+                reason: tonightReason(for: item, slotIndex: index)
+            )
+        }
+    }
+
     var tonightPicks: [MediaResult] {
-        Array(filteredItems.prefix(3))
+        tonightDecisionPicks.map(\.item)
     }
 
     var constraintSummary: String {
@@ -370,6 +402,44 @@ final class DiscoverViewModel: ObservableObject {
         }
 
         return score
+    }
+
+    private func slotTitle(for index: Int) -> String {
+        switch index {
+        case 0: return "Safe Bet"
+        case 1: return "Best Match"
+        default: return "Wild Card"
+        }
+    }
+
+    private func tonightReason(for item: MediaResult, slotIndex: Int) -> String {
+        let genres = item.genreIdsForScoring
+        var reasons: [String] = []
+
+        if !Set(genres).intersection(selectedMood.genreIds).isEmpty {
+            reasons.append("matches \(selectedMood.displayName.lowercased())")
+        }
+        if selectedConstraints.contains(.highRating), item.voteAverage >= 7.4 {
+            reasons.append("strong rating")
+        }
+        if selectedConstraints.contains(.familyFriendly), genres.contains(where: { [16, 10751].contains($0) }) {
+            reasons.append("family-safe signal")
+        }
+        if selectedConstraints.contains(.hiddenGem), item.voteAverage >= 7, item.popularity < 90 {
+            reasons.append("hidden-gem profile")
+        }
+        if selectedConstraints.contains(.wildCard), genres.contains(where: { [14, 878, 9648, 99].contains($0) }) {
+            reasons.append("left-turn energy")
+        }
+        if selectedConstraints.contains(.lowCommitment), item.mediaType == .movie {
+            reasons.append("single-sitting pick")
+        }
+
+        if reasons.isEmpty {
+            reasons.append(slotIndex == 0 ? "broadest safe signal" : "best available fit")
+        }
+
+        return "\(slotTitle(for: slotIndex)): \(reasons.prefix(3).joined(separator: ", "))."
     }
 
     private func recordDiscovery(resultCount: Int) {

@@ -129,7 +129,7 @@ struct SettingsView: View {
                 .font(AppFont.headline())
                 .foregroundStyle(Color.textPrimary)
 
-            Text("MoodReel for iOS recommends movies and shows based on your mood, with watchlist tracking and quick discovery flows.")
+            Text("MoodReel for iOS is aligned around Tonight Mode: choose a mood, apply constraints, and get Safe Bet, Best Match, and Wild Card picks without changing the local Keychain API key flow.")
                 .font(AppFont.body())
                 .foregroundStyle(Color.textSecondary)
 

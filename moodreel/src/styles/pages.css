@@ -3625,6 +3625,436 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   }
 }
 
+/* Dedicated Tonight Mode route */
+
+.tonight-page {
+  display: grid;
+  gap: var(--spacing-xl);
+}
+
+.tonight-hero,
+.tonight-decision-panel,
+.tonight-share-card,
+.tonight-insights-panel,
+.tonight-empty-state {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-3xl);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 215, 0, 0.1), transparent 34%),
+    rgba(255, 255, 255, 0.045);
+  box-shadow: var(--shadow-md);
+}
+
+.tonight-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.28fr);
+  gap: var(--spacing-lg);
+  align-items: end;
+  min-height: clamp(260px, 42vw, 430px);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  overflow: hidden;
+}
+
+.tonight-hero-copy h1 {
+  max-width: 12ch;
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 6.8rem);
+  line-height: 0.9;
+}
+
+.tonight-hero-copy p {
+  max-width: 46rem;
+  margin-top: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.5;
+}
+
+.tonight-hero-proof {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: start;
+  padding: var(--spacing-lg);
+  border: 1px solid rgba(255, 215, 0, 0.24);
+  border-radius: var(--radius-2xl);
+  background: rgba(5, 7, 11, 0.54);
+}
+
+.tonight-hero-proof strong {
+  color: var(--color-gold);
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5rem);
+  line-height: 0.85;
+}
+
+.tonight-hero-proof span {
+  color: var(--color-text-primary);
+  font-weight: 850;
+}
+
+.tonight-hero-proof small {
+  color: var(--color-text-muted);
+}
+
+.tonight-decision-panel {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(130px, 0.7fr));
+  gap: var(--spacing-md);
+  padding: clamp(1rem, 3vw, 1.35rem);
+}
+
+.tonight-field,
+.tonight-control-group {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.tonight-field span,
+.tonight-control-group > span,
+.tonight-service-head span {
+  color: var(--color-gold);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tonight-field input,
+.tonight-field select {
+  min-height: 2.8rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-text-primary);
+  background: rgba(5, 7, 11, 0.54);
+}
+
+.tonight-vibe-field {
+  grid-column: span 2;
+}
+
+.tonight-rating-field {
+  grid-column: span 2;
+}
+
+.tonight-rating-field input {
+  padding-inline: 0;
+}
+
+.tonight-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tonight-segmented button {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.tonight-segmented button:hover,
+.tonight-segmented button.active {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-gold);
+  background: rgba(255, 215, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.tonight-service-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.tonight-service-head,
+.tonight-privacy-row,
+.tonight-share-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.tonight-service-head p,
+.tonight-share-card p {
+  margin-top: 0.25rem;
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+}
+
+.toggle-row,
+.tonight-privacy-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.tonight-privacy-row {
+  grid-column: span 2;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.tonight-submit {
+  align-self: end;
+  justify-content: center;
+  min-height: 2.8rem;
+}
+
+.tonight-loading-grid,
+.tonight-picks-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+.tonight-pick-card {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-3xl);
+  background: rgba(8, 11, 17, 0.82);
+  box-shadow: var(--shadow-md);
+}
+
+.tonight-pick-card-safe {
+  border-color: rgba(74, 222, 128, 0.24);
+}
+
+.tonight-pick-card-best {
+  border-color: rgba(255, 215, 0, 0.34);
+  box-shadow: var(--shadow-gold-sm);
+}
+
+.tonight-pick-card-wild {
+  border-color: rgba(129, 140, 248, 0.28);
+}
+
+.tonight-pick-media {
+  display: block;
+  position: relative;
+  min-height: 12rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tonight-pick-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 12rem;
+  object-fit: cover;
+}
+
+.tonight-pick-body {
+  display: grid;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+}
+
+.tonight-pick-slot-row,
+.tonight-pick-meta,
+.tonight-pick-actions,
+.tonight-pick-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.tonight-pick-slot-row {
+  justify-content: space-between;
+}
+
+.tonight-pick-slot,
+.tonight-pick-confidence,
+.tonight-pick-meta span,
+.tonight-pick-tags span {
+  display: inline-flex;
+  padding: 0.25rem 0.52rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.tonight-pick-slot,
+.tonight-pick-confidence {
+  color: var(--color-gold);
+  border-color: rgba(255, 215, 0, 0.26);
+  text-transform: uppercase;
+}
+
+.tonight-pick-body h2 {
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1;
+}
+
+.tonight-pick-body h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.why-pick-block {
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--spacing-sm);
+  border: 1px solid rgba(255, 215, 0, 0.18);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 215, 0, 0.07);
+}
+
+.why-pick-block span {
+  color: var(--color-gold);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.why-pick-block p,
+.why-pick-block small,
+.tonight-caveat {
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.tonight-caveat {
+  margin: 0;
+}
+
+.tonight-pick-actions {
+  align-items: stretch;
+}
+
+.tonight-pick-actions > * {
+  flex: 1;
+  justify-content: center;
+}
+
+.tonight-share-card,
+.tonight-insights-panel,
+.tonight-empty-state {
+  padding: clamp(1rem, 3vw, 1.35rem);
+}
+
+.tonight-share-card h2,
+.tonight-insights-panel h2,
+.tonight-empty-state h2 {
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+
+.tonight-compare-panel {
+  margin-bottom: 0;
+}
+
+.tonight-compare-grid,
+.tonight-insights-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.tonight-compare-grid article,
+.tonight-insights-grid article {
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tonight-compare-grid span,
+.tonight-insights-grid span {
+  color: var(--color-gold);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tonight-compare-grid strong {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+}
+
+.tonight-compare-grid p,
+.tonight-insights-grid p,
+.tonight-empty-state p {
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1120px) {
+  .tonight-decision-panel,
+  .tonight-picks-grid,
+  .tonight-loading-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tonight-compare-grid,
+  .tonight-insights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .tonight-hero,
+  .tonight-decision-panel,
+  .tonight-picks-grid,
+  .tonight-loading-grid,
+  .tonight-compare-grid,
+  .tonight-insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tonight-vibe-field,
+  .tonight-rating-field,
+  .tonight-privacy-row {
+    grid-column: auto;
+  }
+
+  .tonight-service-head,
+  .tonight-share-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tonight-segmented button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* =====================================================
    MoodReel Decision Engine Upgrade
    ===================================================== */
@@ -3844,6 +4274,123 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   font-size: 0.68rem;
 }
 
+.month-plan-strip {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.58fr) minmax(0, 1.42fr);
+  gap: var(--spacing-md);
+  align-items: stretch;
+  margin: var(--spacing-lg) auto;
+  padding: clamp(1rem, 2.6vw, 1.25rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-3xl);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 44%), rgba(255, 255, 255, 0.035);
+  box-shadow: var(--shadow-md);
+}
+
+.month-plan-copy {
+  min-width: 0;
+}
+
+.month-plan-copy h2 {
+  max-width: 18rem;
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1;
+}
+
+.month-plan-copy p {
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.month-plan-link {
+  margin-top: var(--spacing-sm);
+}
+
+.month-plan-preview {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+}
+
+.month-plan-card {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  min-height: 9rem;
+  padding: 0.78rem;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  color: inherit;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(255, 215, 0, 0.1), transparent 36%),
+    rgba(9, 13, 20, 0.52);
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.month-plan-card:hover,
+.month-plan-card:focus-visible,
+.month-plan-card.active {
+  transform: translateY(-2px);
+  border-color: var(--color-border-gold);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 215, 0, 0.16), transparent 48%),
+    rgba(255, 255, 255, 0.055);
+}
+
+.month-plan-card span,
+.month-plan-card small,
+.month-plan-card em,
+.month-plan-card b {
+  display: block;
+  min-width: 0;
+}
+
+.month-plan-card span {
+  color: var(--color-gold);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.month-plan-card strong {
+  display: -webkit-box;
+  margin-top: 0.35rem;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.16;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.month-plan-card small,
+.month-plan-card em {
+  margin-top: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.month-plan-card b {
+  align-self: end;
+  margin-top: 0.7rem;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
 .streaming-setup-block,
 .taste-editor-grid,
 .preference-toggle-row,
@@ -4041,16 +4588,26 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   .tonight-intelligence-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .month-plan-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .month-plan-preview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
   .tonight-intelligence-grid,
   .maybe-tonight-panel,
+  .month-plan-strip,
   .tonight-verdict-card {
     grid-template-columns: 1fr;
   }
 
   .maybe-tonight-grid,
+  .month-plan-preview,
   .taste-editor-grid {
     grid-template-columns: 1fr;
   }
@@ -4072,6 +4629,11 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   .decision-reroll-chip,
   .not-tonight-chip,
   .post-watch-chip {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .month-plan-card {
     transition: none !important;
     transform: none !important;
   }

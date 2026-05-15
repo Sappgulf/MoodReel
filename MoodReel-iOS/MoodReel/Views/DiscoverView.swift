@@ -397,12 +397,13 @@ struct DiscoverView: View {
                             .foregroundStyle(Color.textSecondary)
                     }
 
-                    ForEach(Array(viewModel.tonightPicks.enumerated()), id: \.element.stableIdentifier) { index, item in
+                    ForEach(viewModel.tonightDecisionPicks) { pick in
+                        let item = pick.item
                         Button {
                             navigationPath.append(item.route)
                         } label: {
                             HStack(spacing: AppSpacing.md) {
-                                Text(tonightSlotTitle(for: index))
+                                Text(pick.slotTitle)
                                     .font(AppFont.captionSmall())
                                     .foregroundStyle(Color.gold)
                                     .frame(width: 76, alignment: .leading)
@@ -412,9 +413,13 @@ struct DiscoverView: View {
                                         .font(AppFont.subheadline())
                                         .foregroundStyle(Color.textPrimary)
                                         .lineLimit(1)
-                                    Text("★ \(item.ratingFormatted) • \(item.mediaType.displayName)")
+                                    Text("★ \(item.ratingFormatted) • \(item.mediaType.displayName) • \(pick.confidence)%")
                                         .font(AppFont.captionSmall())
                                         .foregroundStyle(Color.textMuted)
+                                    Text(pick.reason)
+                                        .font(AppFont.captionSmall())
+                                        .foregroundStyle(Color.textSecondary)
+                                        .lineLimit(2)
                                 }
 
                                 Spacer()
@@ -615,13 +620,6 @@ struct DiscoverView: View {
         }
     }
 
-    private func tonightSlotTitle(for index: Int) -> String {
-        switch index {
-        case 0: return "Safe Bet"
-        case 1: return "Best Match"
-        default: return "Wild Card"
-        }
-    }
 }
 
 #Preview("Discover") {

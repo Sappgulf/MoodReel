@@ -8,7 +8,7 @@ struct MainTabView: View {
             DiscoverView()
                 .environmentObject(discoverViewModel)
                 .tabItem {
-                    Label("Discover", systemImage: "sparkles.tv")
+                    Label("Tonight", systemImage: "sparkles.tv")
                 }
 
             WatchlistView()

@@ -1,5 +1,6 @@
 import {
   buildTonightPicks,
+  explainRecommendation,
   getRecommendationKey,
   rankRecommendations,
   scoreRecommendation,
@@ -95,7 +96,91 @@ describe('recommendationScoring', () => {
     });
 
     expect(scorecard.explanation).toMatch(/Cozy Laugh ranks here because/);
+    expect(explainRecommendation(scorecard, { slotLabel: 'Safe Bet' })).toMatch(
+      /Safe Bet: Cozy Laugh ranks here/
+    );
     expect(scorecard.reasons).toContain('under 90 minutes');
+  });
+
+  it('filters unavailable provider matches when services-only is active', () => {
+    const available = makeItem({ id: 1, title: 'On Netflix' });
+    const unavailable = makeItem({ id: 2, title: 'Not Included' });
+
+    const ranked = rankRecommendations([available, unavailable], {
+      mode,
+      myServices: [8],
+      servicesOnly: true,
+      providerDataByKey: {
+        '1-movie': { flatrate: [{ id: 8 }], rent: [], buy: [] },
+        '2-movie': { flatrate: [{ id: 9 }], rent: [], buy: [] },
+      },
+    });
+
+    expect(ranked.map(scorecard => scorecard.item.title)).toEqual(['On Netflix']);
+    expect(ranked[0].reasons).toContain('available on your services');
+  });
+
+  it('uses available time to prefer runtime fits', () => {
+    const short = makeItem({ id: 1, title: 'Tight 88', runtime: 88, vote_average: 7.1 });
+    const long = makeItem({ id: 2, title: 'Three Hour Epic', runtime: 181, vote_average: 8.9 });
+
+    const ranked = rankRecommendations([long, short], {
+      mode,
+      maxRuntime: 100,
+      riskPreference: 'safe',
+    });
+
+    expect(ranked[0].item.title).toBe('Tight 88');
+    expect(ranked[0].reasons).toContain('fits the time available');
+    expect(ranked[1].penalties).toContain('too long for tonight');
+  });
+
+  it('differentiates safe and adventurous preferences deterministically', () => {
+    const crowdSafe = makeItem({
+      id: 1,
+      title: 'Crowd Safe',
+      genre_ids: [35],
+      vote_average: 7.5,
+      vote_count: 8000,
+      popularity: 260,
+    });
+    const strangeGem = makeItem({
+      id: 2,
+      title: 'Strange Gem',
+      genre_ids: [878],
+      vote_average: 7.1,
+      vote_count: 500,
+      popularity: 35,
+    });
+
+    const safeRanked = rankRecommendations([strangeGem, crowdSafe], {
+      mode,
+      riskPreference: 'safe',
+    });
+    const wildRanked = rankRecommendations([crowdSafe, strangeGem], {
+      mode,
+      riskPreference: 'adventurous',
+    });
+
+    expect(safeRanked[0].item.title).toBe('Crowd Safe');
+    expect(wildRanked[0].item.title).toBe('Strange Gem');
+    expect(wildRanked[0].reasons).toContain('adventurous pick profile');
+  });
+
+  it('can hide disliked and watched titles from the ranked pool', () => {
+    const disliked = makeItem({ id: 1, title: 'Nope' });
+    const watched = makeItem({ id: 2, title: 'Seen It' });
+    const fresh = makeItem({ id: 3, title: 'Fresh' });
+
+    const ranked = rankRecommendations([disliked, watched, fresh], {
+      mode,
+      dislikedKeys: ['1-movie'],
+      watchedKeys: ['2-movie'],
+      hideDisliked: true,
+      hideWatched: true,
+    });
+
+    expect(ranked.map(scorecard => scorecard.item.title)).toEqual(['Fresh']);
   });
 
   it('uses explicit taste settings without overriding hard constraints', () => {

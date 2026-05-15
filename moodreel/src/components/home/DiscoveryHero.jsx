@@ -20,6 +20,7 @@ export default function DiscoveryHero({
   moodInputRef,
   recentMoods,
   playSound,
+  primaryActionLabel = 'Discover',
 }) {
   if (isLoading && !featuredItem) {
     return <DiscoveryHeroSkeleton />;
@@ -95,7 +96,7 @@ export default function DiscoveryHero({
               onClick={handleSearch}
               disabled={isBusy}
             >
-              {isBusy ? 'Searching…' : 'Discover'}
+              {isBusy ? 'Searching...' : primaryActionLabel}
             </button>
             {recentMoods.length > 0 && !mood && (
               <div className="recent-moods">

@@ -1,6 +1,6 @@
 # MoodReel
 
-MoodReel is a Vite + React mood-to-decision engine for finding what to watch tonight. The core loop is mood → constraints → three confident picks → human-readable explanation → trailer/provider detail → save/watch/rate → better future recommendations.
+MoodReel is a Vite + React cinematic decision engine for finding what to watch tonight. The core loop is mood -> constraints -> three confident picks -> human-readable explanation -> trailer/provider detail -> save/watch/rate -> better future recommendations.
 
 ## Quick Start
 
@@ -70,6 +70,7 @@ src/
 │   └── useWatchlist.js
 ├── pages/
 │   ├── Home.jsx
+│   ├── Tonight.jsx
 │   ├── MovieDetails.jsx
 │   ├── Watchlist.jsx
 │   └── ...
@@ -86,7 +87,8 @@ src/
 
 MoodReel is centered on **Tonight Mode**, not generic catalog browsing:
 
-- Start with “What kind of night is it?” mood presets.
+- Use `/tonight` for the dedicated decision flow: vibe, runtime, content type, watching context, services-only, safe/adventurous preference, minimum rating, and hidden watched/disliked signals.
+- Use `/` as the lighter discovery entry point with a hero, quick mood input, spotlight, secondary grid, and advanced controls.
 - Add constraints such as under 90 minutes, streaming now, family friendly, no horror, hidden gem, high rating, newer, classic, low commitment, or wild card.
 - Return a focused shortlist: **Safe Bet**, **Best Match**, and **Wild Card**.
 - Explain every pick with visible ranking reasons such as mood fit, provider availability, rating confidence, taste profile, saved/watched state, and constraint match.

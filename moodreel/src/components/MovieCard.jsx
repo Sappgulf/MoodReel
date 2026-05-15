@@ -34,6 +34,8 @@ const MovieCard = memo(function MovieCard({
   const year = getReleaseYear(movie);
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
   const resolvedMediaType = movie.media_type || mediaType;
+  const typeLabel = resolvedMediaType === 'tv' ? 'TV' : 'Movie';
+  const runtime = movie.runtime || movie.runtime_minutes || movie.episode_run_time?.[0];
   const detailPath = resolvedMediaType === 'tv' ? `/tv/${movie.id}` : `/movie/${movie.id}`;
   const posterPath = movie.poster_path;
 
@@ -325,7 +327,9 @@ const MovieCard = memo(function MovieCard({
         <div className="card-content">
           <div className="card-copy">
             <h2>{title}</h2>
-            <p className="release-date">{year}</p>
+            <p className="release-date">
+              {[year, typeLabel, runtime ? `${runtime} min` : ''].filter(Boolean).join(' / ')}
+            </p>
           </div>
           {isRowMode && movie.overview ? (
             <p className="card-overview">{movie.overview.slice(0, 120)}</p>

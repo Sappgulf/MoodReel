@@ -21,9 +21,13 @@
 - [x] Move recommendation scoring into a pure tested utility.
 - [x] Add media-type-aware watchlist/watched keys for movie-vs-TV collisions.
 - [x] Add iOS Discover parity for Tonight constraints and top-three picks.
+- [x] Add a dedicated `/tonight` decision-engine route with vibe, runtime, content type, watching context, services-only, risk preference, rating, and hide watched/disliked controls.
+- [x] Add route smoke coverage for the main app routes.
+- [x] Upgrade iOS Tonight copy to show Safe Bet / Best Match / Wild Card confidence and reasons.
 
 ## Next phase candidates
 
-- [ ] Add runtime enrichment for Tonight cards when TMDB detail data is already cached.
+- [x] Add runtime/trailer enrichment for Tonight cards when TMDB detail data is available.
 - [ ] Persist preferred Tonight constraints per user profile.
 - [ ] Add Playwright coverage for Pick Between These once stable API-key fixtures are available.
+- [ ] Build the dedicated native `TonightView` and `TonightViewModel` described in `../MoodReel-iOS/ROADMAP.md`.

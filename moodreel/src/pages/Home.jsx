@@ -751,11 +751,11 @@ function Home() {
   const { liked: likedKeys = [], disliked: dislikedKeys = [] } = profile || {};
   const tasteSettings = useMemo(() => safeGetJSON(TASTE_SETTINGS_KEY, TASTE_SETTING_DEFAULTS), []);
 
-  const heroTitle = mood ? `Tuned for “${mood}”` : 'Find the film that fits tonight.';
+  const heroTitle = mood ? `Tuned for "${mood}"` : 'Find what to watch tonight.';
 
   const heroDescription = mood
-    ? 'Your current mood is already shaping the feed. Refine the service, rating, or genre mix, then lock in a pick.'
-    : 'Start with a feeling, narrow the field with filters, and keep the best option one tap away.';
+    ? 'Your current vibe is shaping the feed. Refine the service, rating, or genre mix, then lock in a three-pick shortlist.'
+    : 'Start with a feeling, add a few constraints, and let MoodReel collapse the catalog into Safe Bet, Best Match, and Wild Card.';
 
   const heroMoodLabel = mood || timeContext.suggestion;
 
@@ -1215,6 +1215,7 @@ function Home() {
           setContentType={setContentType}
           setRecommendations={setRecommendations}
           setHasSearched={setHasSearched}
+          primaryActionLabel="Find Tonight's Picks"
         />
 
         {/* Compact Context Toolbar */}

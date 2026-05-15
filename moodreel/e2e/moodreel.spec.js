@@ -100,6 +100,9 @@ test.describe('MoodReel E2E', () => {
   test('navigation works correctly', async ({ page }) => {
     await page.goto('/');
 
+    await page.locator('a[href="/tonight"]:visible').first().click();
+    await expect(page).toHaveURL(/.*\/tonight/);
+
     await page.locator('a[href="/watchlist"]:visible').first().click();
     await expect(page).toHaveURL(/.*\/watchlist/);
 
@@ -108,6 +111,29 @@ test.describe('MoodReel E2E', () => {
 
     await page.locator('a[href="/stats"]:visible').first().click();
     await expect(page).toHaveURL(/.*\/stats/);
+  });
+
+  test('main app routes render meaningful screens', async ({ page }) => {
+    const routes = [
+      '/',
+      '/watchlist',
+      '/tonight',
+      '/stats',
+      '/calendar',
+      '/profile',
+      '/achievements',
+      '/404',
+    ];
+
+    for (const route of routes) {
+      await page.goto(route);
+      await expect(page.locator('#main-content')).toContainText(
+        /MoodReel|Tonight|Watchlist|Stats|Calendar|Profile|Achievements|Page not found/i
+      );
+      await expect(page.locator('.vite-error-overlay, [data-nextjs-dialog-overlay]')).toHaveCount(
+        0
+      );
+    }
   });
 
   test('theme toggle works', async ({ page }) => {
