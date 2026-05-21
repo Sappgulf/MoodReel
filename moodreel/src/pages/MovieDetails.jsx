@@ -66,7 +66,7 @@ function MovieDetails() {
 
   useEffect(() => {
     const controller = new AbortController();
-    let mounted = true;
+    let active = true;
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -86,7 +86,7 @@ function MovieDetails() {
 
       try {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
-        if (!mounted || controller.signal.aborted) return;
+        if (!active) return;
 
         setContent(data.details);
         setSimilar(data.similar.slice(0, 6));
@@ -113,16 +113,14 @@ function MovieDetails() {
         // Track this view in history with credits for DNA feature
         addToHistory({ ...data.details, media_type: mediaType }, data.credits);
       } catch (err) {
-        if (!mounted || controller.signal.aborted) return;
-        if (!isAbortError(err)) {
-          setError(getUserFacingMessage(err) || 'Error fetching details.');
-        }
+        if (!active || isAbortError(err)) return;
+        setError(getUserFacingMessage(err) || 'Error fetching details.');
         if (!shouldSkipLog(err)) {
           // eslint-disable-next-line no-console
           console.error(err);
         }
       } finally {
-        if (mounted) {
+        if (active) {
           setIsLoading(false);
         }
       }
@@ -131,7 +129,7 @@ function MovieDetails() {
     fetchData();
 
     return () => {
-      mounted = false;
+      active = false;
       controller.abort();
     };
   }, [id, mediaType, addToHistory, isValidId, requestNonce]);

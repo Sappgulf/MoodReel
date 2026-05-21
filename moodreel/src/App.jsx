@@ -431,12 +431,7 @@ function AppContent() {
         />
       )}
 
-      {/* Offline Indicator */}
-      {isOffline && (
-        <div className="offline-banner" role="status" aria-live="polite">
-          📡 You are offline. Showing cached results.
-        </div>
-      )}
+      {isOffline && <OfflineScreen />}
 
       <header
         className={`App-header ${isScrolled ? 'scrolled' : ''}`}

@@ -21,7 +21,7 @@ vi.mock('../utils/moodParser', () => ({
   }),
 }));
 
-// Mock apiClient to avoid import.meta parsing issues in Jest
+// Mock apiClient to avoid import.meta parsing issues in Vitest
 vi.mock('./apiClient', () => ({
   tmdbGet: vi.fn(),
   ensureArray: vi.fn(v => (Array.isArray(v) ? v : [])),

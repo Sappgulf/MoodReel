@@ -28,6 +28,7 @@ import {
   fetchTitleProviders,
   getCachedTitleProviders,
 } from '../services/providerService';
+import { itemMatchesSelectedProviders } from '../utils/providerFilter';
 import { applySearchRanking } from '../utils/searchRanking';
 import { copyToClipboard } from '../utils/clipboard';
 import {

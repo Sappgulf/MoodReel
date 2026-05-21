@@ -6,7 +6,7 @@ const COMMUNITY_MOOD_SNAPSHOT = [
   { name: 'Intense', share: 17, color: '#ef4444', trend: 'flat' },
   { name: 'Electric', share: 15, color: '#06b6d4', trend: 'up' },
   { name: 'Dreamy', share: 14, color: '#a855f7', trend: 'flat' },
-  { name: 'Melancholy', share: 11, color: '#64748b', trend: 'down' }
+  { name: 'Melancholy', share: 11, color: '#64748b', trend: 'down' },
 ];
 
 function MoodPulse() {
@@ -31,8 +31,13 @@ function MoodPulse() {
       </div>
 
       <div className="pulse-track" role="list" aria-label="Top moods and share">
-        {visiblePulseData.map((mood) => (
-          <article key={mood.name} className="pulse-item" style={{ '--mood-color': mood.color }} role="listitem">
+        {visiblePulseData.map(mood => (
+          <article
+            key={mood.name}
+            className="pulse-item"
+            style={{ '--mood-color': mood.color }}
+            role="listitem"
+          >
             <div className="pulse-label">
               <span className="mood-name">{mood.name}</span>
               <span className="mood-percentage">{mood.share}%</span>
@@ -41,7 +46,11 @@ function MoodPulse() {
               <div className="pulse-bar" style={{ width: `${mood.share}%` }} />
             </div>
             <span className={`pulse-trend pulse-trend-${mood.trend}`}>
-              {mood.trend === 'up' ? '↑ rising' : mood.trend === 'down' ? '↓ softening' : '→ stable'}
+              {mood.trend === 'up'
+                ? '↑ rising'
+                : mood.trend === 'down'
+                  ? '↓ softening'
+                  : '→ stable'}
             </span>
           </article>
         ))}
@@ -51,7 +60,7 @@ function MoodPulse() {
         <button
           type="button"
           className="show-more-btn"
-          onClick={() => setShowAll((prev) => !prev)}
+          onClick={() => setShowAll(prev => !prev)}
           aria-expanded={showAll}
         >
           {showAll ? '▲ Show fewer moods' : `▼ Show ${hiddenCount} more moods`}

@@ -20,7 +20,7 @@ npm run build
 npm run test:e2e
 ```
 
-Run only in deterministic env (stable TMDB mocking/fixtures or controlled API key).
+Run in CI with mocked TMDB (`e2e/tmdbMock.js` + `VITE_TMDB_API_KEY` in `playwright.config.js`). Detail-page content assertions are covered by manual smoke until Strict Mode dev timing is isolated.
 
 ## Manual smoke checks (web)
 

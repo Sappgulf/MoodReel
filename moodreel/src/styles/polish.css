@@ -1180,3 +1180,105 @@ img:not([loading='lazy']) {
     animation: none !important;
   }
 }
+
+/* Offline full-screen fallback */
+.offline-screen {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-modal) + 2);
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.offline-screen-card {
+  width: min(420px, 100%);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+}
+
+.offline-screen-icon {
+  font-size: 2rem;
+  margin: 0 0 var(--spacing-sm);
+}
+
+.offline-screen-tips {
+  text-align: left;
+  margin: var(--spacing-md) 0 var(--spacing-lg);
+  padding-left: 1.1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Tonight mode */
+.tonight-page {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.tonight-header h1 {
+  margin: 0;
+}
+
+.tonight-subtitle {
+  margin: var(--spacing-xs) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.tonight-controls {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.tonight-field {
+  display: grid;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
+}
+
+.tonight-field input,
+.tonight-field select {
+  width: 100%;
+}
+
+.tonight-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.88rem;
+}
+
+.tonight-hint,
+.tonight-status {
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.tonight-status--error {
+  color: var(--color-error, #f87171);
+}
+
+.tonight-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.tonight-pick-label {
+  font-weight: 700;
+  margin: 0 0 var(--spacing-xs);
+}
+
+.tonight-pick-reason {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  margin: 0 0 var(--spacing-sm);
+}

@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-05-21
+
+### Implemented
+- **Scope:** web tests + iOS docs + E2E
+- **What changed:**
+  - Audit pass: lockfile sync, Tonight repair, offline UX, provider tests, CI E2E mocks.
+  - Follow-up: `modalFocus` unit tests; E2E skip-link, detail, and Tonight smoke; iOS TestFlight + crash docs.
+- **Why it changed:** Ship-ready CI and TestFlight preparation.
+
 ## 2026-05-01
 
 ### Implemented
