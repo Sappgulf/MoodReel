@@ -3,14 +3,11 @@
 ## 2026-05-21
 
 ### Implemented
-- **Scope:** web + CI + docs
+- **Scope:** web tests + iOS docs + E2E
 - **What changed:**
-  - Synced `package-lock.json` with Vitest/jsdom and applied npm audit fixes for axios.
-  - Rebuilt broken `Tonight.jsx` (Tonight Mode) with provider-aware ranking and polished controls.
-  - Added `providerFilter` utility, TMDB watch-provider fixtures, and deterministic provider tests.
-  - Added dedicated offline screen, improved empty-state copy, and bumped service worker cache version.
-  - Migrated push notification config to `VITE_VAPID_PUBLIC_KEY`; updated README/TODO; added Playwright E2E CI job.
-- **Why it changed:** Full audit pass for upgrades, CI reliability, and UX polish.
+  - Audit pass: lockfile sync, Tonight repair, offline UX, provider tests, CI E2E mocks.
+  - Follow-up: `modalFocus` unit tests; E2E skip-link, detail, and Tonight smoke; iOS TestFlight + crash docs.
+- **Why it changed:** Ship-ready CI and TestFlight preparation.
 
 ## 2026-05-01
 

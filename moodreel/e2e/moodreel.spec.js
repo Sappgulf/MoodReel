@@ -88,14 +88,25 @@ test.describe('MoodReel E2E', () => {
     await expect(bottomNav.locator('.bottom-nav-item')).toHaveCount(5);
   });
 
-  test('home search leads to detail page', async ({ page }) => {
+  test('skip link targets main content', async ({ page }) => {
     await page.goto('/');
+    const skip = page.getByRole('link', { name: /Skip to main content/i });
+    await expect(skip).toHaveAttribute('href', '#main-content');
+    await skip.focus();
+    await expect(skip).toBeFocused();
+  });
 
-    await page.locator('.emoji-picker button').first().click();
-    const cardLink = page.locator('.recommendation a').first();
+  test('discover card opens movie detail route', async ({ page }) => {
+    await page.goto('/');
+    const cardLink = page.locator('.recommendation a[href^="/movie/"]').first();
     await expect(cardLink).toBeVisible({ timeout: 15000 });
     await cardLink.click();
-    await page.waitForURL(/\/(movie|tv)\/\d+/, { timeout: 10000 });
-    await expect(page).toHaveURL(/\/(movie|tv)\/\d+/);
+    await expect(page).toHaveURL(/\/movie\/\d+/, { timeout: 15000 });
+  });
+
+  test('tonight mode page loads', async ({ page }) => {
+    await page.goto('/tonight');
+    await expect(page.getByRole('heading', { name: /Tonight Mode/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Get tonight picks/i })).toBeVisible();
   });
 });

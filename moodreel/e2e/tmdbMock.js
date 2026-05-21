@@ -72,7 +72,7 @@ export async function installTmdbMocks(page) {
       });
     }
 
-    if (url.match(/\/movie\/\d+($|\?)/)) {
+    if (/\/movie\/\d+/.test(url) && !url.includes('/watch/providers')) {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -80,7 +80,7 @@ export async function installTmdbMocks(page) {
       });
     }
 
-    if (url.match(/\/tv\/\d+($|\?)/)) {
+    if (/\/tv\/\d+/.test(url) && !url.includes('/watch/providers')) {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -119,5 +119,7 @@ export async function installTmdbMocks(page) {
 export async function prepareAppStorage(page) {
   await page.addInitScript(() => {
     localStorage.setItem('moodreel-onboarded', 'true');
+    localStorage.setItem('moodreel-tmdb-api-key', 'e2e-test-key');
+    window.__MOODREEL_TMDB_API_KEY__ = 'e2e-test-key';
   });
 }

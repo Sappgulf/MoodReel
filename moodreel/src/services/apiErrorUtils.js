@@ -29,7 +29,12 @@ function toUserMessage(err) {
 }
 
 export function isAbortError(err) {
-  return axios.isCancel(err) || err?.name === 'AbortError';
+  return (
+    axios.isCancel(err) ||
+    err?.name === 'AbortError' ||
+    err?.name === 'CanceledError' ||
+    err?.code === 'TMDB_REQUEST_CANCELLED'
+  );
 }
 
 export function getUserFacingMessage(err) {
