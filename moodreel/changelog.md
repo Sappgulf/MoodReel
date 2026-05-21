@@ -14,6 +14,7 @@ Types: Added, Changed, Fixed, Performance, Security.
 - Added: iOS Tonight provider preferences with region, service chips, and services-only filtering.
 - Added: GitHub Actions iOS build job and Playwright coverage for Pick Between These / compare panels.
 - Changed: Extracted Home Tonight setup UI into `HomeTonightSetup` and shared discovery constants.
+- Changed: Split `MovieDetails.jsx` into `useMovieDetails`, presentation components, and pure utils.
 - Changed: ESLint `react-hooks/rules-of-hooks` is now an error.
 - Performance: Hardened persistent search caching by pruning stale entries, enforcing recency-based cache caps, and writing cache cleanups back to localStorage.
 - Fixed: Guarded search cache cleanup for non-browser environments to avoid localStorage reference errors.
