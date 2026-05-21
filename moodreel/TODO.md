@@ -30,6 +30,6 @@
 ## Next phase candidates
 
 - [x] Add runtime/trailer enrichment for Tonight cards when TMDB detail data is available.
-- [ ] Persist preferred Tonight constraints per user profile.
+- [x] Persist preferred Tonight constraints per user profile.
 - [ ] Add Playwright coverage for Pick Between These compare decisions.
 - [ ] Add native provider preferences and region/service filtering for iOS Tonight parity.

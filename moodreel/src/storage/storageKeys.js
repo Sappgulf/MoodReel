@@ -32,6 +32,7 @@ export const StorageKeys = Object.freeze({
   WATCHED: 'moodreel_watched',
   WATCHLIST: 'moodreel_watchlist',
   WATCH_HISTORY: 'moodreel-watch-history',
+  TONIGHT_PREFERENCES: 'moodreel-tonight-preferences',
 });
 
 /** Increment when migrating persisted payloads (manual or scripted). */

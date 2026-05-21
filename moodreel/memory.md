@@ -87,6 +87,7 @@ Rules:
   - `moodreel-my-services`: selected streaming services
   - `moodreel-taste-profile`: liked/disliked IDs
   - `moodreel-tmdb-api-key`: user-supplied TMDB key (excluded from privacy export)
+  - `moodreel-tonight-preferences`: persisted Tonight Mode constraints (vibe, runtime, context, risk, etc.)
 
 ## Architecture
 

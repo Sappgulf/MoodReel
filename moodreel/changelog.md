@@ -10,6 +10,9 @@ Types: Added, Changed, Fixed, Performance, Security.
 - Fixed: Removed duplicate service worker registration from `index.html`; PWA registration now runs only from `App.jsx` with update UX.
 - Changed: CI now runs the bundle size gate (`bundle:check`) after production builds.
 - Changed: Refreshed `agent.md` and `memory.md` to match the Vite/Vitest stack and current TMDB key resolution (no hardcoded keys).
+- Added: Persisted Tonight Mode preferences (vibe, runtime, context, risk, services, rating, hide toggles) via `useTonightPreferences`.
+- Changed: Extracted Home Tonight setup UI into `HomeTonightSetup` and shared discovery constants.
+- Changed: ESLint `react-hooks/rules-of-hooks` is now an error.
 - Performance: Hardened persistent search caching by pruning stale entries, enforcing recency-based cache caps, and writing cache cleanups back to localStorage.
 - Fixed: Guarded search cache cleanup for non-browser environments to avoid localStorage reference errors.
 - Changed: Redesigned the Global Mood Pulse block with proper spacing, clear percentages, and a transparent "Updated daily" snapshot label.

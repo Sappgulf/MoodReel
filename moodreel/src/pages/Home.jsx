@@ -4,11 +4,13 @@ import SurpriseWinnerBanner from '../components/home/SurpriseWinnerBanner';
 import HomeTrendingStrip from '../components/home/HomeTrendingStrip';
 import HomeResultsPanel from '../components/home/HomeResultsPanel';
 import HomeDiscoveryConsole from '../components/home/HomeDiscoveryConsole';
+import HomeTonightSetup from '../components/home/HomeTonightSetup';
 import SaveVibeModal from '../components/SaveVibeModal';
 import MoodPulse from '../components/MoodPulse';
 import EmojiPicker from '../components/EmojiPicker';
 import ShuffleOverlay from '../components/ShuffleOverlay';
 import ErrorState from '../components/ErrorState';
+import { CURATED_COLLECTIONS, DECISION_FEEDBACK, REROLL_INTENTS } from '../constants/homeDiscovery';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAchievements } from '../hooks/useAchievements';
 import { useMoodHistory } from '../hooks/useMoodHistory';
@@ -20,6 +22,7 @@ import { useSurpriseShuffle } from '../hooks/useSurpriseShuffle';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
+import { useTonightPreferences } from '../hooks/useTonightPreferences';
 import { useToasts } from '../context/ToastContext';
 import searchService from '../services/searchService';
 import { safeGetJSON } from '../storage/safeStorage';
@@ -46,104 +49,6 @@ function genreLabelFor(item, genres) {
   return genres.find(genre => genre.id === genreId)?.name || '';
 }
 
-const CURATED_COLLECTIONS = [
-  {
-    id: 'under-90',
-    label: 'Under 90 min',
-    description: 'Fast, low-commitment picks for weeknights.',
-    mood: 'tight paced comfort',
-    filters: { runtime: 'short', sortBy: 'popularity.desc' },
-  },
-  {
-    id: 'visual-comfort',
-    label: 'Visual comfort',
-    description: 'Warm, stylish titles for an easy couch reset.',
-    mood: 'cozy visually beautiful',
-    filters: { runtime: 'any', sortBy: 'vote_average.desc' },
-  },
-  {
-    id: 'crowd-night',
-    label: 'Crowd night',
-    description: 'Popular crowd-pleasers with enough ratings to trust.',
-    mood: 'fun crowd pleasing',
-    filters: { runtime: 'medium', sortBy: 'popularity.desc' },
-  },
-  {
-    id: 'hidden-gems',
-    label: 'Hidden gems',
-    description: 'Higher-rated picks outside the obvious first row.',
-    mood: 'hidden gem',
-    filters: { runtime: 'any', sortBy: 'vote_average.desc' },
-  },
-];
-
-const TOP_STREAMING_SERVICES = [
-  { id: 8, label: 'Netflix' },
-  { id: 9, label: 'Prime' },
-  { id: 337, label: 'Disney+' },
-  { id: 15, label: 'Hulu' },
-  { id: 1899, label: 'Max' },
-  { id: 350, label: 'Apple TV+' },
-  { id: 386, label: 'Peacock' },
-  { id: 531, label: 'Paramount+' },
-];
-
-const HUMAN_MOOD_PRESETS = [
-  {
-    id: 'fried',
-    label: 'Mentally fried',
-    mood: 'low effort comfort funny',
-    constraints: ['low-commitment', 'under-90', 'streaming-now'],
-  },
-  {
-    id: 'date',
-    label: 'Date night',
-    mood: 'date night warm stylish romantic',
-    constraints: ['streaming-now', 'high-rating', 'no-horror'],
-  },
-  {
-    id: 'win',
-    label: 'Need a win',
-    mood: 'uplifting triumphant feel good',
-    constraints: ['high-rating', 'low-commitment'],
-  },
-  {
-    id: 'comfort',
-    label: 'Background comfort',
-    mood: 'cozy familiar comfort comedy',
-    constraints: ['low-commitment', 'streaming-now', 'family-friendly'],
-  },
-  {
-    id: 'feel',
-    label: 'Make me feel something',
-    mood: 'emotional beautiful moving drama',
-    constraints: ['high-rating'],
-  },
-  {
-    id: 'chaos',
-    label: 'Chaos mode',
-    mood: 'weird wild unpredictable late night',
-    constraints: ['wild-card', 'hidden-gem'],
-  },
-];
-
-const DECISION_FEEDBACK = [
-  { id: 'too-long', label: 'Too long' },
-  { id: 'too-dark', label: 'Too dark' },
-  { id: 'seen-it', label: 'Seen it' },
-  { id: 'not-vibe', label: 'Not my vibe' },
-  { id: 'need-lighter', label: 'Need lighter' },
-  { id: 'more-obscure', label: 'More obscure' },
-];
-
-const REROLL_INTENTS = [
-  { id: 'shorter', label: 'Shorter' },
-  { id: 'lighter', label: 'More fun' },
-  { id: 'stranger', label: 'Weirder' },
-  { id: 'acclaimed', label: 'More acclaimed' },
-  { id: 'available', label: 'Only streamable' },
-];
-
 const TASTE_SETTINGS_KEY = 'moodreel-taste-settings';
 
 function getReadableTitle(item) {
@@ -163,6 +68,12 @@ function Home() {
   const { profile, like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } =
     useTasteProfile();
   const { pushToast } = useToasts();
+  const {
+    preferences: tonightPreferences,
+    setPreference: setTonightPreference,
+    setActiveConstraintIds,
+  } = useTonightPreferences();
+  const { tonightMode, activeConstraintIds } = tonightPreferences;
 
   const { isSurpriseLoading, showWinnerInfo, surpriseMovie, closeSurprise, handleSurpriseMe } =
     useSurpriseShuffle({ playSound });
@@ -209,10 +120,6 @@ function Home() {
   const [resultLayout, setResultLayout] = useState('poster');
   const [titleQuery, setTitleQuery] = useState('');
   const [showSaveVibeModal, setShowSaveVibeModal] = useState(false);
-  const [tonightMode, setTonightMode] = useState('easy-win');
-  const [activeConstraintIds, setActiveConstraintIds] = useState(
-    () => TONIGHT_MODES[0].defaultConstraints
-  );
   const [passedDecisionIds, setPassedDecisionIds] = useState([]);
   const [lockedPickId, setLockedPickId] = useState('');
   const [decisionFeedback, setDecisionFeedback] = useState({});
@@ -591,8 +498,7 @@ function Home() {
 
   const handleTonightModeSelect = useCallback(
     mode => {
-      setTonightMode(mode.id);
-      setActiveConstraintIds(mode.defaultConstraints);
+      setTonightPreference('tonightMode', mode.id);
       setPassedDecisionIds([]);
       setLockedPickId('');
       if (!mood.trim()) {
@@ -606,7 +512,7 @@ function Home() {
       setMinRating(prev => Math.max(prev, mode.minRating));
       playSound('pop');
     },
-    [currentYear, mood, playSound, setAdvancedFilters, setMinRating, setMood]
+    [currentYear, mood, playSound, setAdvancedFilters, setMinRating, setMood, setTonightPreference]
   );
 
   const handleConstraintToggle = useCallback(
@@ -648,7 +554,14 @@ function Home() {
       }
       playSound('pop');
     },
-    [currentYear, playSound, setAdvancedFilters, setMinRating, setSelectedGenres]
+    [
+      currentYear,
+      playSound,
+      setActiveConstraintIds,
+      setAdvancedFilters,
+      setMinRating,
+      setSelectedGenres,
+    ]
   );
 
   const handleMoodPreset = useCallback(
@@ -672,7 +585,15 @@ function Home() {
       playSound('pop');
       window.setTimeout(() => handleSearch(), 0);
     },
-    [handleSearch, playSound, setAdvancedFilters, setMinRating, setMood, setSelectedGenres]
+    [
+      handleSearch,
+      playSound,
+      setActiveConstraintIds,
+      setAdvancedFilters,
+      setMinRating,
+      setMood,
+      setSelectedGenres,
+    ]
   );
 
   const timeContext = useMemo(() => {
@@ -1026,6 +947,7 @@ function Home() {
       dislike,
       playSound,
       pushToast,
+      setActiveConstraintIds,
       setAdvancedFilters,
       setMood,
       setSelectedGenres,
@@ -1092,7 +1014,16 @@ function Home() {
         duration: 2600,
       });
     },
-    [contentType, playSound, pushToast, setAdvancedFilters, setMinRating, setMood, tonightPicks]
+    [
+      contentType,
+      playSound,
+      pushToast,
+      setActiveConstraintIds,
+      setAdvancedFilters,
+      setMinRating,
+      setMood,
+      tonightPicks,
+    ]
   );
 
   const handleShareTonight = useCallback(async () => {
@@ -1247,110 +1178,19 @@ function Home() {
           </div>
         </div>
 
-        <div className="tonight-mode-rail" aria-label="Tonight Mode">
-          <div className="tonight-mode-copy">
-            <span>What kind of night is it?</span>
-            <strong>{activeTonightMode.label}</strong>
-            <p>{activeTonightMode.description}</p>
-          </div>
-          <div className="tonight-flow-controls">
-            <div className="tonight-mode-options" role="group" aria-label="Choose tonight mood">
-              {TONIGHT_MODES.map(mode => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  className={`tonight-mode-chip ${tonightMode === mode.id ? 'active' : ''}`}
-                  aria-pressed={tonightMode === mode.id}
-                  onClick={() => handleTonightModeSelect(mode)}
-                >
-                  <span>{mode.eyebrow}</span>
-                  {mode.label}
-                </button>
-              ))}
-            </div>
-            <div className="constraint-chip-row" role="group" aria-label="Tonight constraints">
-              {NIGHT_CONSTRAINTS.map(constraint => {
-                const isActive = activeConstraintIds.includes(constraint.id);
-                return (
-                  <button
-                    key={constraint.id}
-                    type="button"
-                    className={`constraint-chip ${isActive ? 'active' : ''}`}
-                    aria-pressed={isActive}
-                    title={constraint.description}
-                    onClick={() => handleConstraintToggle(constraint)}
-                  >
-                    {constraint.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="tonight-intelligence-grid" aria-label="Tonight setup">
-          <section className="tonight-intel-card no-doomscroll-card">
-            <span>No Doomscroll</span>
-            <strong>Three defensible picks, then feedback.</strong>
-            <p>
-              {decisionStats.pickCount > 0
-                ? `${decisionStats.pickCount} picks ready from ${decisionStats.candidateCount} ranked candidates.`
-                : 'Search a mood and MoodReel will collapse the catalog into a short list.'}
-            </p>
-            {activeConstraintLabels.length > 0 && (
-              <div className="intel-chip-row">
-                {activeConstraintLabels.slice(0, 5).map(label => (
-                  <span key={label}>{label}</span>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="tonight-intel-card service-setup-card">
-            <span>Streaming setup</span>
-            <strong>
-              {myServices.length > 0
-                ? `${myServices.length} service${myServices.length > 1 ? 's' : ''} active`
-                : 'Tell MoodReel what you can watch.'}
-            </strong>
-            <div className="service-quick-grid" role="group" aria-label="Streaming services">
-              {TOP_STREAMING_SERVICES.map(service => (
-                <button
-                  key={service.id}
-                  type="button"
-                  className={`service-quick-chip ${myServices.includes(service.id) ? 'active' : ''}`}
-                  aria-pressed={myServices.includes(service.id)}
-                  onClick={() => toggleService(service.id)}
-                >
-                  {service.label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="tonight-intel-card mood-preset-card">
-            <span>Human presets</span>
-            <strong>Start with the real problem.</strong>
-            <div className="human-mood-grid" role="group" aria-label="Human mood presets">
-              {HUMAN_MOOD_PRESETS.map(preset => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className="human-mood-chip"
-                  onClick={() => handleMoodPreset(preset)}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="tonight-intel-card taste-recap-card">
-            <span>Taste recap</span>
-            <strong>Better future picks</strong>
-            <p>{tasteRecap}</p>
-          </section>
-        </div>
+        <HomeTonightSetup
+          activeTonightMode={activeTonightMode}
+          tonightMode={tonightMode}
+          activeConstraintIds={activeConstraintIds}
+          activeConstraintLabels={activeConstraintLabels}
+          decisionStats={decisionStats}
+          myServices={myServices}
+          tasteRecap={tasteRecap}
+          onTonightModeSelect={handleTonightModeSelect}
+          onConstraintToggle={handleConstraintToggle}
+          onMoodPreset={handleMoodPreset}
+          onToggleService={toggleService}
+        />
 
         {/* Horizontal Curated Collections */}
         {!hasAnySearch && (

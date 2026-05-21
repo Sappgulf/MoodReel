@@ -5,9 +5,12 @@ import ErrorState from '../components/ErrorState';
 import MediaImage from '../components/MediaImage';
 import ProviderBadges from '../components/ProviderBadges';
 import { MovieCardSkeleton } from '../components/Skeleton';
+import { TOP_STREAMING_SERVICES } from '../constants/streamingServices';
+import { RISK_OPTIONS, RUNTIME_OPTIONS, WATCHING_CONTEXTS } from '../constants/tonightOptions';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
+import { useTonightPreferences } from '../hooks/useTonightPreferences';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useToasts } from '../context/ToastContext';
 import { useTrailer } from '../context/TrailerContext';
@@ -27,37 +30,6 @@ import {
 } from '../utils/recommendationScoring';
 
 const TASTE_SETTINGS_KEY = 'moodreel-taste-settings';
-
-const TOP_STREAMING_SERVICES = [
-  { id: 8, label: 'Netflix' },
-  { id: 9, label: 'Prime' },
-  { id: 337, label: 'Disney+' },
-  { id: 15, label: 'Hulu' },
-  { id: 1899, label: 'Max' },
-  { id: 350, label: 'Apple TV+' },
-  { id: 386, label: 'Peacock' },
-  { id: 531, label: 'Paramount+' },
-];
-
-const RUNTIME_OPTIONS = [
-  { value: 0, label: 'Any length', searchRuntime: 'any' },
-  { value: 90, label: '90 min or less', searchRuntime: 'short' },
-  { value: 120, label: 'About 2 hours', searchRuntime: 'medium' },
-  { value: 150, label: 'Epic is fine', searchRuntime: 'long' },
-];
-
-const WATCHING_CONTEXTS = [
-  { id: 'solo', label: 'Solo', mood: 'personal thoughtful absorbing' },
-  { id: 'date', label: 'Date', mood: 'date night warm stylish romantic' },
-  { id: 'family', label: 'Family', mood: 'family friendly funny warm' },
-  { id: 'friends', label: 'Friends', mood: 'crowd pleasing funny energetic' },
-];
-
-const RISK_OPTIONS = [
-  { id: 'safe', label: 'Safer' },
-  { id: 'balanced', label: 'Balanced' },
-  { id: 'adventurous', label: 'More adventurous' },
-];
 
 function getTypeLabel(item) {
   return item?.media_type === 'tv' ? 'TV' : 'Movie';
@@ -199,16 +171,19 @@ export default function Tonight() {
   const { region, setRegion, myServices, toggleService } = useProviderSettings();
   const { watchlist, watchlistKeys, watchedKeys, isInWatchlist, toggleWatchlist } = useWatchlist();
   const { profile } = useTasteProfile();
+  const { preferences, setPreference } = useTonightPreferences();
+  const {
+    mood,
+    runtimeLimit,
+    contentType,
+    watchingContext,
+    riskPreference,
+    servicesOnly,
+    minRating,
+    hideDisliked,
+    hideWatched,
+  } = preferences;
 
-  const [mood, setMood] = useState('cozy crowd pleasing');
-  const [runtimeLimit, setRuntimeLimit] = useState(120);
-  const [contentType, setContentType] = useState('all');
-  const [watchingContext, setWatchingContext] = useState('friends');
-  const [riskPreference, setRiskPreference] = useState('balanced');
-  const [servicesOnly, setServicesOnly] = useState(false);
-  const [minRating, setMinRating] = useState(6.5);
-  const [hideDisliked, setHideDisliked] = useState(true);
-  const [hideWatched, setHideWatched] = useState(true);
   const [picks, setPicks] = useState([]);
   const [scorecards, setScorecards] = useState([]);
   const [providerSnapshot, setProviderSnapshot] = useState({});
@@ -531,7 +506,7 @@ export default function Tonight() {
           <span>Vibe</span>
           <input
             value={mood}
-            onChange={event => setMood(event.target.value)}
+            onChange={event => setPreference('mood', event.target.value)}
             placeholder="low effort, smart, funny, rainy night..."
           />
         </label>
@@ -540,7 +515,7 @@ export default function Tonight() {
           <span>Available time</span>
           <select
             value={runtimeLimit}
-            onChange={event => setRuntimeLimit(Number(event.target.value))}
+            onChange={event => setPreference('runtimeLimit', Number(event.target.value))}
           >
             {RUNTIME_OPTIONS.map(option => (
               <option key={option.value} value={option.value}>
@@ -552,7 +527,10 @@ export default function Tonight() {
 
         <label className="tonight-field">
           <span>Content</span>
-          <select value={contentType} onChange={event => setContentType(event.target.value)}>
+          <select
+            value={contentType}
+            onChange={event => setPreference('contentType', event.target.value)}
+          >
             <option value="all">All</option>
             <option value="movie">Movies</option>
             <option value="tv">TV</option>
@@ -573,7 +551,7 @@ export default function Tonight() {
                 type="button"
                 className={watchingContext === context.id ? 'active' : ''}
                 aria-pressed={watchingContext === context.id}
-                onClick={() => setWatchingContext(context.id)}
+                onClick={() => setPreference('watchingContext', context.id)}
               >
                 {context.label}
               </button>
@@ -590,7 +568,7 @@ export default function Tonight() {
                 type="button"
                 className={riskPreference === option.id ? 'active' : ''}
                 aria-pressed={riskPreference === option.id}
-                onClick={() => setRiskPreference(option.id)}
+                onClick={() => setPreference('riskPreference', option.id)}
               >
                 {option.label}
               </button>
@@ -606,7 +584,7 @@ export default function Tonight() {
             max="9"
             step="0.5"
             value={minRating}
-            onChange={event => setMinRating(Number(event.target.value))}
+            onChange={event => setPreference('minRating', Number(event.target.value))}
           />
         </label>
 
@@ -620,7 +598,7 @@ export default function Tonight() {
               <input
                 type="checkbox"
                 checked={servicesOnly}
-                onChange={event => setServicesOnly(event.target.checked)}
+                onChange={event => setPreference('servicesOnly', event.target.checked)}
               />
               Services-only
             </label>
@@ -645,7 +623,7 @@ export default function Tonight() {
             <input
               type="checkbox"
               checked={hideDisliked}
-              onChange={event => setHideDisliked(event.target.checked)}
+              onChange={event => setPreference('hideDisliked', event.target.checked)}
             />
             Hide disliked
           </label>
@@ -653,7 +631,7 @@ export default function Tonight() {
             <input
               type="checkbox"
               checked={hideWatched}
-              onChange={event => setHideWatched(event.target.checked)}
+              onChange={event => setPreference('hideWatched', event.target.checked)}
             />
             Hide watched
           </label>

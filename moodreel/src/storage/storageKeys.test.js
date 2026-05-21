@@ -10,5 +10,6 @@ describe('storageKeys', () => {
     expect(StorageKeys.WATCHLIST).toBe('moodreel_watchlist');
     expect(StorageKeys.TMDB_API_KEY_USER).toBe('moodreel-tmdb-api-key');
     expect(StorageKeys.SEARCH_CACHE).toBe('moodreel-search-persistent-cache');
+    expect(StorageKeys.TONIGHT_PREFERENCES).toBe('moodreel-tonight-preferences');
   });
 });
