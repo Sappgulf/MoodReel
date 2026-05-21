@@ -147,6 +147,21 @@ export async function installTonightTmdbMocks(page) {
       return;
     }
 
+    if (path === '/search/movie') {
+      await route.fulfill({ json: paginated(movieResults) });
+      return;
+    }
+
+    if (path === '/search/tv') {
+      await route.fulfill({ json: paginated(tvResults) });
+      return;
+    }
+
+    if (path === '/trending/all/day') {
+      await route.fulfill({ json: paginated([...movieResults, ...tvResults]) });
+      return;
+    }
+
     const providerMatch = path.match(/^\/(movie|tv)\/(\d+)\/watch\/providers$/);
     if (providerMatch) {
       await route.fulfill({ json: providers() });

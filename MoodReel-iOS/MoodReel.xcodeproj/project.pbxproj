@@ -32,6 +32,8 @@
 		E40326A5753EB7A5EE67A227 /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */; };
 		EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2536D00C4BA4F422998FD9 /* TMDBService.swift */; };
 		ECE5C170E8584E880E6CA504 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD15519799D5462834EA29A /* MainTabView.swift */; };
+		E1A2B3C4D5E60718293A4B5C /* ProviderPreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E60718293A4B5D /* ProviderPreferencesStore.swift */; };
+		E2A2B3C4D5E60718293A4B5D /* StreamingServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A2B3C4D5E60718293A4B5E /* StreamingServices.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,6 +64,8 @@
 		E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		F2E482C07B60A067B50F672D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistView.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E60718293A4B5D /* ProviderPreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPreferencesStore.swift; sourceTree = "<group>"; };
+		F2A2B3C4D5E60718293A4B5E /* StreamingServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingServices.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -120,6 +124,7 @@
 				C6A41E4D2B8D4F4D9E0C92A1 /* TasteProfileStore.swift */,
 				D1E2F3041526374859A6B7C8 /* TonightViewModel.swift */,
 				287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */,
+				F1A2B3C4D5E60718293A4B5D /* ProviderPreferencesStore.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -171,6 +176,7 @@
 				DF1E97789AFA3B75A8C21A20 /* AppModels.swift */,
 				4AA7B5F43B2A3523C7AAE366 /* MediaRoute.swift */,
 				176E42CA88E4FC28F4AAA3A4 /* Movie.swift */,
+				F2A2B3C4D5E60718293A4B5E /* StreamingServices.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -321,6 +327,8 @@
 				B86001651F53833059C70623 /* ViewModifiers.swift in Sources */,
 				516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */,
 				284AADC64A3F8856D8EB4E08 /* WatchlistView.swift in Sources */,
+				E1A2B3C4D5E60718293A4B5C /* ProviderPreferencesStore.swift in Sources */,
+				E2A2B3C4D5E60718293A4B5D /* StreamingServices.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

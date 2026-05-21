@@ -157,6 +157,7 @@ final class TonightViewModel: ObservableObject {
     @Published var minimumRating: Double = 6.5
     @Published var hideDisliked = true
     @Published var hideWatched = true
+    @Published var servicesOnly = false
     @Published private(set) var picks: [TonightPick] = []
     @Published private(set) var candidateCount = 0
     @Published private(set) var lastUpdatedAt: Date?
@@ -184,7 +185,9 @@ final class TonightViewModel: ObservableObject {
     func findPicks(
         watchlist: [WatchlistItem],
         likedIds: Set<String>,
-        dislikedIds: Set<String>
+        dislikedIds: Set<String>,
+        region: String,
+        selectedServiceIds: Set<Int>
     ) async {
         isLoading = true
         errorMessage = nil
@@ -200,13 +203,24 @@ final class TonightViewModel: ObservableObject {
                 likedIds: likedIds,
                 dislikedIds: dislikedIds
             )
+            let filtered = await applyProviderFilter(
+                to: ranked,
+                region: region,
+                selectedServiceIds: selectedServiceIds
+            )
 
-            candidateCount = ranked.count
-            picks = buildPicks(from: ranked)
+            candidateCount = filtered.count
+            picks = buildPicks(from: filtered)
             lastUpdatedAt = Date()
 
             if picks.count < 3 {
-                errorMessage = "MoodReel needs a broader vibe or fewer filters to make all three picks."
+                if servicesOnly, selectedServiceIds.isEmpty {
+                    errorMessage = "Choose at least one streaming service for services-only picks."
+                } else if servicesOnly {
+                    errorMessage = "MoodReel needs a broader vibe or fewer service filters to make all three picks."
+                } else {
+                    errorMessage = "MoodReel needs a broader vibe or fewer filters to make all three picks."
+                }
             }
         } catch {
             picks = []
@@ -223,6 +237,66 @@ final class TonightViewModel: ObservableObject {
         minimumRating = 6.5
         hideDisliked = true
         hideWatched = true
+        servicesOnly = false
+    }
+
+    private func applyProviderFilter(
+        to ranked: [Scorecard],
+        region: String,
+        selectedServiceIds: Set<Int>
+    ) async -> [Scorecard] {
+        guard servicesOnly else { return ranked }
+        guard !selectedServiceIds.isEmpty else { return [] }
+
+        let lookupItems = ranked.prefix(18)
+        var providersByKey: [String: RegionProviders] = [:]
+
+        await withTaskGroup(of: (String, RegionProviders?).self) { group in
+            for scorecard in lookupItems {
+                let item = scorecard.item
+                let key = item.stableIdentifier
+                group.addTask { [service] in
+                    let providers = await service.watchProviders(for: item.route, region: region)
+                    return (key, providers)
+                }
+            }
+
+            for await (key, providers) in group {
+                if let providers {
+                    providersByKey[key] = providers
+                }
+            }
+        }
+
+        return ranked.compactMap { scorecard -> Scorecard? in
+            guard let providers = providersByKey[scorecard.item.stableIdentifier] else {
+                return nil
+            }
+            guard providers.matchesAnyService(selectedServiceIds) else {
+                return nil
+            }
+
+            var reasons = scorecard.reasons
+            if !reasons.contains(where: { $0.contains("streaming service") }) {
+                reasons.insert("available on your streaming services", at: 0)
+            }
+
+            return Scorecard(
+                item: scorecard.item,
+                score: scorecard.score + 12,
+                safeScore: scorecard.safeScore + 8,
+                wildScore: scorecard.wildScore,
+                reasons: Array(reasons.prefix(4)),
+                caveats: scorecard.caveats
+            )
+        }
+        .sorted { lhs, rhs in
+            if lhs.score != rhs.score { return lhs.score > rhs.score }
+            if lhs.item.voteAverage != rhs.item.voteAverage {
+                return lhs.item.voteAverage > rhs.item.voteAverage
+            }
+            return lhs.item.popularity > rhs.item.popularity
+        }
     }
 
     private func rank(

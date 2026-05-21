@@ -156,7 +156,29 @@ test.describe('MoodReel E2E', () => {
     ]);
     await expect(page.getByText('Why this pick?')).toHaveCount(3);
     await expect(page.getByRole('button', { name: /Share or copy/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Why each pick wins' })).toBeVisible();
+    await expect(page.locator('.tonight-compare-grid article')).toHaveCount(3);
     await expect(page.locator('.vite-error-overlay, [data-nextjs-dialog-overlay]')).toHaveCount(0);
+  });
+
+  test('pick between these locks a home shortlist title', async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'Mobile Safari',
+      'Pick Between These lives in the desktop results panel.'
+    );
+
+    await installTonightTmdbMocks(page);
+    await page.addInitScript(() => {
+      window.localStorage.setItem('moodreel-tmdb-api-key', 'test-key');
+    });
+
+    await page.goto('/');
+    await page.locator('.emoji-picker button').first().click();
+    await page.getByRole('button', { name: "Find Tonight's Picks" }).click();
+    await expect(page.locator('.pick-between-card')).toHaveCount(3, { timeout: 15000 });
+    await page.getByRole('button', { name: 'Pick this' }).first().click();
+    await expect(page.locator('.pick-between-card.locked').first()).toBeVisible();
+    await expect(page.getByText("Tonight's pick locked")).toBeVisible();
   });
 
   test('theme toggle works', async ({ page }) => {

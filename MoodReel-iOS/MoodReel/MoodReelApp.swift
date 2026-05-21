@@ -5,6 +5,7 @@ import UIKit
 struct MoodReelApp: App {
     @StateObject private var watchlistStore = WatchlistStore()
     @StateObject private var tasteProfileStore = TasteProfileStore()
+    @StateObject private var providerPreferencesStore = ProviderPreferencesStore()
 
     init() {
         configureAppearance()
@@ -16,6 +17,7 @@ struct MoodReelApp: App {
             RootView()
                 .environmentObject(watchlistStore)
                 .environmentObject(tasteProfileStore)
+                .environmentObject(providerPreferencesStore)
         }
     }
 

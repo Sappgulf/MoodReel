@@ -9,7 +9,7 @@ Current safe parity:
 - The first tab is a dedicated native `TonightView`.
 - DiscoverView exposes mood, content type, rating, sort, and night constraints.
 - The Tonight Mode section renders Safe Bet, Best Match, and Wild Card with confidence and plain-language reasons.
-- Native Tonight Mode supports vibe, mood lane, available-time, content type, Solo / Date / Family / Friends context, safe/balanced/adventurous preference, minimum rating, and hide watched/disliked controls.
+- Native Tonight Mode supports vibe, mood lane, available-time, content type, Solo / Date / Family / Friends context, safe/balanced/adventurous preference, minimum rating, hide watched/disliked controls, region/service chips, and services-only filtering.
 - Native Tonight cards include confidence, reason text, save actions, details navigation, and a share card.
 - TMDB API keys remain Keychain-backed through `APIKeyStore`.
 - `TMDBService` keeps its response cache and URLSession flow intact.
@@ -31,7 +31,6 @@ The dedicated native Tonight Mode surface now exists without replacing the exist
 
 ## Next Native Phase
 
-- Add native provider preferences and region/service filtering so Services-only reaches parity with the web `/tonight` flow.
 - Add runtime enrichment from detail calls for the three native picks.
 - Add native UI tests or snapshot coverage for the Tonight tab once the project has a test target.
 

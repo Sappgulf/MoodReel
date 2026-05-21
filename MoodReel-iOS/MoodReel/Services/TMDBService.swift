@@ -193,6 +193,18 @@ struct TMDBService {
         )
     }
 
+    func watchProviders(for route: MediaRoute, region: String) async -> RegionProviders? {
+        guard APIKeyStore.shared.isSet else { return nil }
+
+        let pathPrefix = mediaPathPrefix(for: route.mediaType)
+        let response: WatchProvidersResponse? = await requestOptional(
+            endpoint: "/\(pathPrefix)/\(route.mediaId)/watch/providers",
+            params: [:]
+        )
+        let normalizedRegion = region.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return response?.results[normalizedRegion] ?? response?.results.first?.value
+    }
+
     private func similarTitles(for route: MediaRoute) async throws -> [MediaResult] {
         switch route.mediaType {
         case .movie:

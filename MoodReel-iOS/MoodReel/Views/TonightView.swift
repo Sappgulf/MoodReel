@@ -3,6 +3,7 @@ import SwiftUI
 struct TonightView: View {
     @EnvironmentObject private var watchlistStore: WatchlistStore
     @EnvironmentObject private var tasteProfileStore: TasteProfileStore
+    @EnvironmentObject private var providerPreferences: ProviderPreferencesStore
     @StateObject private var viewModel: TonightViewModel
     @State private var navigationPath: [MediaRoute] = []
 
@@ -26,7 +27,6 @@ struct TonightView: View {
                         hero
                         decisionPanel
                         resultSection
-                        nativeParityNote
                     }
                     .padding(AppSpacing.md)
                 }
@@ -170,6 +170,8 @@ struct TonightView: View {
             .foregroundStyle(Color.textSecondary)
             .toggleStyle(.switch)
 
+            providerSetup
+
             HStack(spacing: AppSpacing.sm) {
                 Button {
                     Task { await findPicks() }
@@ -228,6 +230,53 @@ struct TonightView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var providerSetup: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            Text("Streaming setup")
+                .font(AppFont.caption())
+                .foregroundStyle(Color.textMuted)
+
+            HStack(spacing: AppSpacing.sm) {
+                Text("Region")
+                    .font(AppFont.caption())
+                    .foregroundStyle(Color.textSecondary)
+                TextField("US", text: $providerPreferences.region)
+                    .textInputAutocapitalization(.characters)
+                    .autocorrectionDisabled()
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(Color.bgTertiary)
+                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                    .frame(maxWidth: 88)
+            }
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], spacing: 8) {
+                ForEach(StreamingServiceCatalog.topOptions) { service in
+                    let isSelected = providerPreferences.selectedServiceIds.contains(service.id)
+                    Button {
+                        providerPreferences.toggleService(service.id)
+                    } label: {
+                        Text(service.label)
+                            .font(AppFont.caption())
+                            .foregroundStyle(isSelected ? Color.black : Color.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 9)
+                            .background(isSelected ? AnyShapeStyle(AppGradients.gold) : AnyShapeStyle(Color.bgTertiary))
+                            .clipShape(RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(service.label)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
+
+            Toggle("Services-only", isOn: $viewModel.servicesOnly)
+                .font(AppFont.caption())
+                .foregroundStyle(Color.textSecondary)
+                .toggleStyle(.switch)
         }
     }
 
@@ -330,25 +379,13 @@ struct TonightView: View {
         .glassCard(cornerRadius: AppRadius.xl, backgroundOpacity: 1)
     }
 
-    private var nativeParityNote: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Label("Provider availability still lives on details.", systemImage: "play.tv")
-                .font(AppFont.caption())
-                .foregroundStyle(Color.gold)
-            Text("This native phase keeps API keys in Keychain and URLCache intact while moving the main iOS tab to the same Safe Bet, Best Match, Wild Card loop as web. Full service preference filters are the next iOS parity layer.")
-                .font(AppFont.caption())
-                .foregroundStyle(Color.textMuted)
-        }
-        .padding(AppSpacing.md)
-        .background(Color.bgGlass)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
-    }
-
     private func findPicks() async {
         await viewModel.findPicks(
             watchlist: watchlistStore.items,
             likedIds: tasteProfileStore.likedIds,
-            dislikedIds: tasteProfileStore.dislikedIds
+            dislikedIds: tasteProfileStore.dislikedIds,
+            region: providerPreferences.region,
+            selectedServiceIds: providerPreferences.selectedServiceIds
         )
     }
 }
@@ -496,4 +533,5 @@ private struct TonightPickCard: View {
     TonightView()
         .environmentObject(WatchlistStore())
         .environmentObject(TasteProfileStore())
+        .environmentObject(ProviderPreferencesStore())
 }

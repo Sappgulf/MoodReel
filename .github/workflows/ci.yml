@@ -51,3 +51,14 @@ jobs:
 
       - name: Run E2E tests
         run: npm run test:e2e
+
+  ios-build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build iOS app
+        run: |
+          xcodebuild -project MoodReel-iOS/MoodReel.xcodeproj             -scheme MoodReel             -destination 'generic/platform=iOS Simulator'             -configuration Debug             build CODE_SIGNING_ALLOWED=NO
+

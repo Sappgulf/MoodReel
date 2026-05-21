@@ -11,6 +11,8 @@ Types: Added, Changed, Fixed, Performance, Security.
 - Changed: CI now runs the bundle size gate (`bundle:check`) after production builds.
 - Changed: Refreshed `agent.md` and `memory.md` to match the Vite/Vitest stack and current TMDB key resolution (no hardcoded keys).
 - Added: Persisted Tonight Mode preferences (vibe, runtime, context, risk, services, rating, hide toggles) via `useTonightPreferences`.
+- Added: iOS Tonight provider preferences with region, service chips, and services-only filtering.
+- Added: GitHub Actions iOS build job and Playwright coverage for Pick Between These / compare panels.
 - Changed: Extracted Home Tonight setup UI into `HomeTonightSetup` and shared discovery constants.
 - Changed: ESLint `react-hooks/rules-of-hooks` is now an error.
 - Performance: Hardened persistent search caching by pruning stale entries, enforcing recency-based cache caps, and writing cache cleanups back to localStorage.
