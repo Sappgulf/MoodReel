@@ -46,5 +46,8 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Bundle size check
+        run: npm run bundle:check
+
       - name: Run E2E tests
         run: npm run test:e2e

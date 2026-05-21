@@ -7,6 +7,9 @@ Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
 
+- Fixed: Removed duplicate service worker registration from `index.html`; PWA registration now runs only from `App.jsx` with update UX.
+- Changed: CI now runs the bundle size gate (`bundle:check`) after production builds.
+- Changed: Refreshed `agent.md` and `memory.md` to match the Vite/Vitest stack and current TMDB key resolution (no hardcoded keys).
 - Performance: Hardened persistent search caching by pruning stale entries, enforcing recency-based cache caps, and writing cache cleanups back to localStorage.
 - Fixed: Guarded search cache cleanup for non-browser environments to avoid localStorage reference errors.
 - Changed: Redesigned the Global Mood Pulse block with proper spacing, clear percentages, and a transparent "Updated daily" snapshot label.
