@@ -55,7 +55,7 @@ export function usePushNotifications() {
 
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: env.REACT_APP_VAPID_PUBLIC_KEY,
+        applicationServerKey: vapidPublicKey || undefined,
       });
 
       const subData = sub.toJSON();

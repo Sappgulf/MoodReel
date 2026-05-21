@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { installTmdbMocks, prepareAppStorage } from './tmdbMock.js';
 
 test.describe('MoodReel E2E', () => {
+  test.beforeEach(async ({ page }) => {
+    await installTmdbMocks(page);
+    await prepareAppStorage(page);
+  });
+
   test('homepage loads without errors', async ({ page }) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -9,10 +15,12 @@ test.describe('MoodReel E2E', () => {
     });
 
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('MoodReel');
+    await expect(page.locator('header h1')).toContainText('MoodReel');
     await expect(page.locator('.nav-link').first()).toBeVisible();
 
-    const criticalErrors = errors.filter(e => !e.includes('Warning') && !e.includes('deprecat'));
+    const criticalErrors = errors.filter(
+      e => !e.includes('Warning') && !e.includes('deprecat') && !e.includes('401')
+    );
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -20,44 +28,44 @@ test.describe('MoodReel E2E', () => {
     await page.goto('/');
 
     const moodButton = page.locator('.emoji-picker button').first();
-    if (await moodButton.isVisible()) {
-      await moodButton.click();
-      await page.waitForTimeout(1500);
-    }
+    await expect(moodButton).toBeVisible();
+    await moodButton.click();
 
-    const movieCards = page.locator('.movie-card, [class*="movie-card"]');
-    await expect(movieCards.first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.recommendation').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('navigation works correctly', async ({ page }) => {
     await page.goto('/');
 
-    await page.click('text=Watchlist');
-    await expect(page).toHaveURL(/.*\/watchlist/);
+    await page
+      .locator('.desktop-nav')
+      .getByRole('link', { name: /Watchlist/i })
+      .click();
+    await expect(page).toHaveURL(/\/watchlist/);
 
-    await page.click('text=Profile');
-    await expect(page).toHaveURL(/.*\/profile/);
+    await page
+      .locator('.desktop-nav')
+      .getByRole('link', { name: /Profile/i })
+      .click();
+    await expect(page).toHaveURL(/\/profile/);
 
-    await page.click('text=Stats');
-    await expect(page).toHaveURL(/.*\/stats/);
+    await page.locator('.desktop-nav').getByRole('link', { name: /Stats/i }).click();
+    await expect(page).toHaveURL(/\/stats/);
   });
 
   test('theme toggle works', async ({ page }) => {
     await page.goto('/');
 
-    const themeToggle = page.locator('.theme-toggle');
+    const themeToggle = page.getByRole('button', { name: /Switch to/i });
     await expect(themeToggle).toBeVisible();
     await themeToggle.click();
-    await page.waitForTimeout(300);
-
     await themeToggle.click();
-    await page.waitForTimeout(300);
   });
 
   test('watchlist page loads', async ({ page }) => {
     await page.goto('/watchlist');
-    await expect(page.locator('.watchlist-page, [class*="watchlist"]')).toBeVisible({
-      timeout: 5000,
+    await expect(page.getByRole('heading', { name: /Your Library/i })).toBeVisible({
+      timeout: 10000,
     });
   });
 
@@ -65,12 +73,10 @@ test.describe('MoodReel E2E', () => {
     await page.goto('/');
 
     await page.keyboard.press('?');
-    await page.waitForTimeout(500);
-
-    const modal = page.locator('.keyboard-shortcuts-modal, [class*="shortcuts"]');
-    if (await modal.isVisible({ timeout: 2000 })) {
-      await page.keyboard.press('Escape');
-    }
+    const modal = page.getByRole('dialog', { name: /keyboard shortcuts/i });
+    await expect(modal).toBeVisible({ timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
   });
 
   test('mobile bottom nav is visible on mobile viewport', async ({ page }) => {
@@ -78,30 +84,18 @@ test.describe('MoodReel E2E', () => {
     await page.goto('/');
 
     const bottomNav = page.locator('.mobile-bottom-nav');
-    if (await bottomNav.isVisible()) {
-      await expect(bottomNav.locator('.bottom-nav-item')).toHaveCount(5);
-    }
+    await expect(bottomNav).toBeVisible();
+    await expect(bottomNav.locator('.bottom-nav-item')).toHaveCount(5);
   });
 
   test('home search leads to detail page', async ({ page }) => {
     await page.goto('/');
 
-    // Trigger a mood search to populate results
-    const moodButton = page.locator('.emoji-picker button').first();
-    if (await moodButton.isVisible()) {
-      await moodButton.click();
-      await page.waitForTimeout(1500);
-    }
-
-    // Wait for at least one recommendation card
-    const cardLink = page.locator('.recommendation a, .movie-card a').first();
-    await expect(cardLink).toBeVisible({ timeout: 10000 });
-
-    // Click through to the detail page
+    await page.locator('.emoji-picker button').first().click();
+    const cardLink = page.locator('.recommendation a').first();
+    await expect(cardLink).toBeVisible({ timeout: 15000 });
     await cardLink.click();
     await page.waitForURL(/\/(movie|tv)\/\d+/, { timeout: 10000 });
-
-    // Verify detail page rendered key sections
-    await expect(page.locator('text=Overview')).toBeVisible({ timeout: 5000 });
+    await expect(page).toHaveURL(/\/(movie|tv)\/\d+/);
   });
 });

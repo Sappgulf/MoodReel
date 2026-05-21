@@ -1,0 +1,25 @@
+{
+  "movie_us_netflix": {
+    "link": "https://www.themoviedb.org/movie/1/watch",
+    "flatrate": [
+      {
+        "provider_id": 8,
+        "provider_name": "Netflix",
+        "logo_path": "/netflix.jpg",
+        "display_priority": 1
+      }
+    ],
+    "rent": [],
+    "buy": []
+  },
+  "movie_us_multi": {
+    "flatrate": [{ "provider_id": 337, "provider_name": "Disney Plus", "display_priority": 2 }],
+    "rent": [{ "provider_id": 2, "provider_name": "Apple TV", "display_priority": 5 }],
+    "buy": []
+  },
+  "movie_us_none": {
+    "flatrate": [],
+    "rent": [],
+    "buy": [{ "provider_id": 10, "provider_name": "Amazon Video", "display_priority": 3 }]
+  }
+}

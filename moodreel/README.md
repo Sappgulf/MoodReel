@@ -13,13 +13,19 @@ npm run dev
 
 ## Scripts
 
-- `npm run dev` / `npm start` — Vite dev server
+- `npm run dev` / `npm start` — Vite dev server (port 3000)
 - `npm run build` — production build (`build/`)
 - `npm run preview` — preview build
-- `npm run test:unit` — Jest unit tests (legacy CRA runner)
-- `npm run test:e2e` — Playwright E2E
-- `npm run verify` — format check + unit + build
+- `npm run test:unit` — Vitest unit tests
+- `npm run test:e2e` — Playwright E2E (starts dev server)
+- `npm run verify` — format check + unit tests + build
 
-## Notes on test tooling
+## Environment
 
-The app runtime is Vite. Unit tests currently run on the existing `react-scripts` Jest path for compatibility; this is a legacy test runner path, not the production build path.
+| Variable                | Purpose                               |
+| ----------------------- | ------------------------------------- |
+| `VITE_TMDB_API_KEY`     | TMDB API key (required for live data) |
+| `VITE_TMDB_BASE_URL`    | Optional TMDB base URL override       |
+| `VITE_VAPID_PUBLIC_KEY` | Optional web push subscription key    |
+
+Legacy `REACT_APP_*` aliases are still read where noted for migration compatibility.
