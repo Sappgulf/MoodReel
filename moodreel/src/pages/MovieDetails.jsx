@@ -15,6 +15,7 @@ import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
+import { explainRecommendation } from '../utils/recommendationScoring';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
 import {
   getBackdropUrl,
@@ -53,7 +54,6 @@ function MovieDetails() {
   const [actorError, setActorError] = useState('');
   const actorRequestRef = useRef(null);
   const actorRequestIdRef = useRef(0);
-  const detailsRequestIdRef = useRef(0);
 
   const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
@@ -67,8 +67,7 @@ function MovieDetails() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const requestId = detailsRequestIdRef.current + 1;
-    detailsRequestIdRef.current = requestId;
+    let mounted = true;
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -81,16 +80,14 @@ function MovieDetails() {
       setCast([]);
 
       if (!isValidId) {
-        if (requestId === detailsRequestIdRef.current) {
-          setError('Invalid details URL. Please open a valid item.');
-          setIsLoading(false);
-        }
+        setError('Invalid details URL. Please open a valid item.');
+        setIsLoading(false);
         return;
       }
 
       try {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
-        if (requestId !== detailsRequestIdRef.current) return;
+        if (!mounted || controller.signal.aborted) return;
 
         setContent(data.details);
         setSimilar(data.similar.slice(0, 6));
@@ -117,14 +114,16 @@ function MovieDetails() {
         // Track this view in history with credits for DNA feature
         addToHistory({ ...data.details, media_type: mediaType }, data.credits);
       } catch (err) {
-        if (requestId !== detailsRequestIdRef.current || isAbortError(err)) return;
-        setError(getUserFacingMessage(err) || 'Error fetching details.');
+        if (!mounted || controller.signal.aborted) return;
+        if (!isAbortError(err)) {
+          setError(getUserFacingMessage(err) || 'Error fetching details.');
+        }
         if (!shouldSkipLog(err)) {
           // eslint-disable-next-line no-console
           console.error(err);
         }
       } finally {
-        if (requestId === detailsRequestIdRef.current) {
+        if (mounted) {
           setIsLoading(false);
         }
       }
@@ -133,6 +132,7 @@ function MovieDetails() {
     fetchData();
 
     return () => {
+      mounted = false;
       controller.abort();
     };
   }, [id, mediaType, addToHistory, isValidId, requestNonce]);
@@ -301,6 +301,14 @@ function MovieDetails() {
   const runtime = content.runtime || content.episode_run_time?.[0];
   const overview = getDisplayOverview(content);
   const tasteStatus = statusFor(content.id, mediaType);
+  const whyThisFits = explainRecommendation(
+    {
+      ...content,
+      media_type: mediaType,
+      genre_ids: (content.genres || []).map(g => g.id),
+    },
+    {}
+  );
   const tagline = content.tagline ? `“${content.tagline}”` : '';
   const runtimeLabel = runtime ? `${runtime} min` : '';
   const genresText = content.genres?.map(genre => genre.name).join(' • ') || '';
@@ -326,7 +334,7 @@ function MovieDetails() {
         ← Back to Discover
       </Link>
 
-      <article className="movie-details" data-testid="movie-details-ready">
+      <article className="movie-details">
         <section className="movie-details-hero-panel glass-panel">
           <div className="movie-details-header">
             {/* Poster */}
@@ -351,6 +359,11 @@ function MovieDetails() {
               <p className="movie-details-eyebrow">{isTV ? 'TV Title' : 'Movie'}</p>
               <h1>{title}</h1>
               {tagline && <p className="movie-tagline">{tagline}</p>}
+              {whyThisFits && (
+                <p className="why-this-fits" data-testid="why-this-fits">
+                  <span className="why-this-fits-label">Why this fits:</span> {whyThisFits}
+                </p>
+              )}
               <p className="overview">{overview}</p>
 
               <dl className="movie-facts-strip" aria-label="Quick facts">

@@ -31,6 +31,23 @@ export function scoreRecommendation(item, context = {}) {
   }
   if ((context.hiddenKeys || new Set()).has(key)) score -= 80;
 
+  const availableMinutes = context.availableMinutes;
+  if (availableMinutes > 0) {
+    const runtime = num(item.runtime);
+    const isTv = item.media_type === 'tv' || Boolean(item.name && !item.title);
+    if (runtime > 0 && !isTv) {
+      if (runtime <= availableMinutes + 15) {
+        score += 12;
+        reasons.push('Fits your available time');
+      } else if (runtime > availableMinutes + 45) {
+        score -= 18;
+      }
+    } else if (isTv && availableMinutes <= 90) {
+      score += 6;
+      reasons.push('Good for a shorter session (series)');
+    }
+  }
+
   return { score, reasons: reasons.slice(0, 3) };
 }
 

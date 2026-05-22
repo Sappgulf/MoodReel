@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import ProviderBadges from './ProviderBadges';
 import { getDisplayTitle, getPosterUrl, getReleaseYear } from '../utils/mediaUtils';
 import { useSounds } from '../hooks/useSounds';
+import { useTrailer } from '../context/TrailerContext';
+import searchService from '../services/searchService';
 
 /**
  * Premium movie card component with poster, info, watchlist button, and 3D parallax effect
@@ -215,11 +217,18 @@ const MovieCard = memo(function MovieCard({
   return (
     <div
       ref={cardRef}
-      className={`recommendation fade-in parallax-card glint ${modeClassName} stagger-${(index % 5) + 1} ${className}`}
+      className={`recommendation fade-in parallax-card glint ${modeClassName}${whisperClass} stagger-${(index % 5) + 1} ${className}`}
       style={{ ...cardStyle, '--index': index }}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={e => {
+        handleMouseLeave(e);
+        handleWhisperLeave();
+      }}
+      onMouseEnter={e => {
+        handleMouseEnter(e);
+        handleWhisperEnter();
+      }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

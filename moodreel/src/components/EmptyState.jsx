@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { getMoodEmptyState } from '../utils/emptyStatePersonalities';
 
 /**
  * Pre-defined empty state variants for common scenarios
@@ -59,20 +60,6 @@ export const EMPTY_STATE_PRESETS = {
     title: "You're offline",
     description: 'Check your connection and try again.',
     actionText: 'Retry',
-    actionLink: null,
-  },
-  notFound: {
-    icon: '🎬',
-    title: 'Lost in the backlot',
-    description: 'That page does not exist. Head back to Discover or try Tonight Mode.',
-    actionText: 'Back to Discover',
-    actionLink: '/',
-  },
-  tonight: {
-    icon: '🌙',
-    title: 'No picks yet',
-    description: 'Choose a mood preset or type a vibe, then tap Get tonight picks.',
-    actionText: null,
     actionLink: null,
   },
 };

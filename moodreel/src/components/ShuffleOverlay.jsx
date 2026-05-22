@@ -12,6 +12,7 @@ const ShuffleOverlay = ({
   onStop,
   onShuffleAgain,
   onDismiss,
+  onOpenSpinWheel,
 }) => {
   const isVisible = isActive || isLocked;
 
@@ -31,7 +32,7 @@ const ShuffleOverlay = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isVisible, onDismiss, isActive, onStop]);
+  }, [isVisible, onDismiss, onOpenSpinWheel, isActive, onStop]);
 
   if (!isVisible) return null;
 
@@ -139,6 +140,11 @@ const ShuffleOverlay = ({
             <button type="button" className="secondary-button" onClick={onShuffleAgain}>
               Keep shuffling
             </button>
+            {onOpenSpinWheel && (
+              <button type="button" className="secondary-button" onClick={onOpenSpinWheel}>
+                Spin the wheel
+              </button>
+            )}
             <button type="button" className="text-button" onClick={onDismiss}>
               Close
             </button>

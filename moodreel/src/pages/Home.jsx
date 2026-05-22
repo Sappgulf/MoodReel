@@ -10,6 +10,9 @@ import MoodPlaylists from '../components/MoodPlaylists';
 import MoodPulse from '../components/MoodPulse';
 import ShuffleOverlay from '../components/ShuffleOverlay';
 import FilterSummary from '../components/FilterSummary';
+import LivingFilterChips from '../components/LivingFilterChips';
+import ForYouRow from '../components/ForYouRow';
+import SpinWheel from '../components/SpinWheel';
 import { SkeletonGrid, MovieCardSkeleton, DiscoveryHeroSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
@@ -32,6 +35,7 @@ import {
 } from '../services/providerService';
 import { applySearchRanking } from '../utils/searchRanking';
 import { buildDiscoveryParams } from '../utils/searchContext';
+import { getMoodEmptyState } from '../utils/emptyStatePersonalities';
 import { copyToClipboard } from '../utils/clipboard';
 import {
   getBackdropUrl,
@@ -48,7 +52,7 @@ function Home() {
   const { playSound } = useSounds();
   const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } =
     useWatchlist();
-  const { trackSave, trackSurprise } = useAchievements();
+  const { trackSave, trackSurprise, trackSearch, stats: achievementStats } = useAchievements();
   const { history: recentMoods, addToHistory } = useMoodHistory();
   const { savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
@@ -89,6 +93,7 @@ function Home() {
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [shuffleLocked, setShuffleLocked] = useState(false);
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
   const [titleQuery, setTitleQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchScope, setSearchScope] = useState('within');
@@ -143,10 +148,13 @@ function Home() {
   } = useContinuousDiscovery({ getSearchParams, trackSurprise });
 
   const handleSearch = useCallback(() => {
-    if (mood) addToHistory(mood);
-    setVisibleCount(8); // Reset staggered visibility
+    if (mood) {
+      addToHistory(mood);
+      trackSearch(mood);
+    }
+    setVisibleCount(8);
     getRecommendations();
-  }, [mood, addToHistory, getRecommendations]);
+  }, [mood, addToHistory, getRecommendations, trackSearch]);
 
   useEffect(() => {
     setSelectedProviders(myServices);
@@ -155,26 +163,15 @@ function Home() {
   useEffect(() => {
     const handleFocusMood = () => moodInputRef.current?.focus();
     const handleFocusTitle = () => titleSearchRef.current?.focus();
-    const handleApplyMood = event => {
-      const nextMood = event.detail?.mood;
-      if (!nextMood) return;
-      setMood(nextMood);
-      moodInputRef.current?.focus();
-      if (event.detail?.search) {
-        window.setTimeout(() => handleSearch(), 0);
-      }
-    };
 
     window.addEventListener('moodreel:focus-mood-search', handleFocusMood);
     window.addEventListener('moodreel:focus-title-search', handleFocusTitle);
-    window.addEventListener('moodreel:apply-mood', handleApplyMood);
 
     return () => {
       window.removeEventListener('moodreel:focus-mood-search', handleFocusMood);
       window.removeEventListener('moodreel:focus-title-search', handleFocusTitle);
-      window.removeEventListener('moodreel:apply-mood', handleApplyMood);
     };
-  }, [setMood, handleSearch]);
+  }, []);
 
   useEffect(() => {
     if (hasHydratedRef.current) return;
@@ -188,9 +185,17 @@ function Home() {
     const regionParam = params.get('region');
     const servicesParam = params.get('services');
     const scopeParam = params.get('scope');
-    const showHiddenParam = params.get('showHidden');
+    const genresParam = params.get('genres');
+    const vibeLoaded = Boolean(moodParam || genresParam);
 
     if (moodParam) setMood(moodParam);
+    if (genresParam) {
+      const ids = genresParam
+        .split(',')
+        .map(id => parseInt(id, 10))
+        .filter(Boolean);
+      if (ids.length) setSelectedGenres(ids);
+    }
     if (queryParam) setTitleQuery(queryParam);
     if (typeParam) setContentType(typeParam);
     if (scopeParam) setSearchScope(scopeParam);
@@ -222,6 +227,17 @@ function Home() {
     if (moodParam) {
       setTimeout(() => handleSearch(), 0);
     }
+    if (vibeLoaded) {
+      setTimeout(() => {
+        playSound('magic');
+        pushToast({
+          icon: '🔗',
+          title: 'Vibe loaded',
+          message: 'Shared mood and filters applied from your link.',
+          duration: 3200,
+        });
+      }, 400);
+    }
   }, [
     location.search,
     handleSearch,
@@ -233,6 +249,9 @@ function Home() {
     setRegion,
     setSearchScope,
     setShowHidden,
+    playSound,
+    pushToast,
+    setSelectedGenres,
   ]);
 
   useEffect(() => {
@@ -240,6 +259,7 @@ function Home() {
     const params = new URLSearchParams();
 
     if (mood) params.set('mood', mood);
+    if (selectedGenres.length > 0) params.set('genres', selectedGenres.join(','));
     if (titleQuery) params.set('query', titleQuery);
     if (contentType && contentType !== 'all') params.set('type', contentType);
     if (advancedFilters.yearMin && advancedFilters.yearMin > 1900)
@@ -267,6 +287,7 @@ function Home() {
     showHidden,
     location.pathname,
     currentYear,
+    selectedGenres,
   ]);
 
   // Dynamic Mood Themes
@@ -727,6 +748,20 @@ function Home() {
     return () => controller.abort();
   }, [filteredByServices, contentType, getProviderKey, providerSnapshot, region]);
 
+  const forYouPicks = useMemo(() => {
+    if (!hasSearched || filteredByServices.length === 0) return [];
+    const liked = filteredByServices.filter(
+      item => statusFor(item.id, item.media_type || contentType) === 'liked'
+    );
+    const pool = liked.length >= 3 ? liked : filteredByServices;
+    return pool.slice(0, 8);
+  }, [hasSearched, filteredByServices, statusFor, contentType]);
+
+  const spinWheelPool = useMemo(() => {
+    if (filteredByServices.length > 0) return filteredByServices.slice(0, 10);
+    return (recommendations.length > 0 ? recommendations : trending).slice(0, 10);
+  }, [filteredByServices, recommendations, trending]);
+
   const isBusy = isLoading || isSearchingAll;
   const hasAnySearch = hasSearched || (searchScope === 'all' && debouncedQuery);
 
@@ -741,7 +776,19 @@ function Home() {
         onStop={handleLockShuffle}
         onShuffleAgain={handleKeepShuffling}
         onDismiss={closeSurprise}
+        onOpenSpinWheel={() => {
+          setShowSpinWheel(true);
+          playSound('click');
+        }}
       />
+
+      {showSpinWheel && spinWheelPool.length > 0 && (
+        <SpinWheel
+          movies={spinWheelPool}
+          onSelect={() => setShowSpinWheel(false)}
+          onClose={() => setShowSpinWheel(false)}
+        />
+      )}
 
       {shuffleLocked && shufflePick && (
         <div
@@ -776,6 +823,17 @@ function Home() {
               className="surprise-link secondary"
               onClick={e => {
                 e.stopPropagation();
+                setShowSpinWheel(true);
+                playSound('click');
+              }}
+              type="button"
+            >
+              Spin the wheel
+            </button>
+            <button
+              className="surprise-link secondary"
+              onClick={e => {
+                e.stopPropagation();
                 closeSurprise();
               }}
               type="button"
@@ -789,11 +847,33 @@ function Home() {
       {isLoading && !featuredItem ? (
         <DiscoveryHeroSkeleton />
       ) : (
-        <section className={`discovery-hero ${mood ? 'mood-shift' : ''}`}>
+        <section className="discovery-hero">
           <div className="discovery-hero-copy">
             <span className="hero-kicker">MoodReel / discovery engine</span>
             <h2>{heroTitle}</h2>
             <p className="hero-description">{heroDescription}</p>
+            <LivingFilterChips
+              mood={mood}
+              selectedGenres={selectedGenres}
+              selectedProviders={selectedProviders}
+              providerCatalog={providerCatalog}
+              minRating={minRating}
+              advancedFilters={advancedFilters}
+              currentYear={currentYear}
+              onClearMood={() => setMood('')}
+              onRemoveGenre={id => setSelectedGenres(prev => prev.filter(g => g !== id))}
+              onRemoveProvider={id => toggleService(id)}
+              onClearRating={() => setMinRating(0)}
+              onClearYears={() =>
+                setAdvancedFilters(prev => ({
+                  ...prev,
+                  yearMin: 1900,
+                  yearMax: currentYear,
+                }))
+              }
+              onSearch={handleSearch}
+              playSound={playSound}
+            />
             <div className="hero-proof-row">
               <span className="hero-proof">Mood: {heroMoodLabel}</span>
               <span className="hero-proof">
@@ -964,7 +1044,7 @@ function Home() {
         </section>
       )}
 
-      <section className={`discovery-console ${hasAnySearch ? 'search-revealed' : ''}`}>
+      <section className="discovery-console">
         <div className="content-toggle-tabs" role="group" aria-label="Content type">
           {['all', 'movie', 'tv'].map(type => (
             <button
@@ -1242,6 +1322,22 @@ function Home() {
           </div>
         ) : (
           <div className="recommendations-container">
+            {hasAnySearch && forYouPicks.length > 0 && (
+              <ForYouRow
+                items={forYouPicks}
+                isInWatchlist={isInWatchlist}
+                toggleWatchlist={toggleWatchlist}
+                isWatched={isWatched}
+                toggleWatched={toggleWatched}
+                like={like}
+                dislike={dislike}
+                statusFor={statusFor}
+                providerSnapshot={providerSnapshot}
+                getProviderKey={getProviderKey}
+                getCachedTitleProviders={getCachedTitleProviders}
+                region={region}
+              />
+            )}
             {filteredByServices.length > 0 && (
               <div className="results-header">
                 <div className="results-meta">
@@ -1309,13 +1405,12 @@ function Home() {
                   onDislike={dislike}
                   tasteStatus={statusFor(rec.id, rec.media_type)}
                   index={idx}
+                  trailerWhisper
                 />
               ))}
               {hasAnySearch && !isBusy && filteredByServices.length === 0 && (
                 <EmptyState
-                  icon="✨"
-                  title="No results found"
-                  description="Try a different mood or clear your filters!"
+                  mood={mood}
                   onActionClick={() => setMood('')}
                   actionText="Clear Search"
                 />

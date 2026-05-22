@@ -127,7 +127,7 @@ export default function Tonight() {
       });
     }
 
-    const ranked = rankRecommendations(pool, { providerMatches });
+    const ranked = rankRecommendations(pool, { providerMatches, availableMinutes: availableTime });
     const next = pickTonightSlots(ranked, mode);
     setPicks(next);
     if (next.length > 0 && navigator.vibrate) navigator.vibrate([40, 30, 40]);
