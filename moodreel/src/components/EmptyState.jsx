@@ -57,9 +57,22 @@ export const EMPTY_STATE_PRESETS = {
   network: {
     icon: '📡',
     title: "You're offline",
-    description:
-      'Live search is paused. Cached pages, your watchlist, and saved preferences still work.',
-    actionText: 'Try again',
+    description: 'Check your connection and try again.',
+    actionText: 'Retry',
+    actionLink: null,
+  },
+  notFound: {
+    icon: '🎬',
+    title: 'Lost in the backlot',
+    description: 'That page does not exist. Head back to Discover or try Tonight Mode.',
+    actionText: 'Back to Discover',
+    actionLink: '/',
+  },
+  tonight: {
+    icon: '🌙',
+    title: 'No picks yet',
+    description: 'Choose a mood preset or type a vibe, then tap Get tonight picks.',
+    actionText: null,
     actionLink: null,
   },
 };

@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import EmptyState from '../components/EmptyState';
 import MovieCard from '../components/MovieCard';
 import { useMovieDiscovery } from '../hooks/useMovieDiscovery';
 import { useProviderSettings } from '../hooks/useProviderSettings';
@@ -135,6 +137,9 @@ export default function Tonight() {
 
   return (
     <section className="page-enter tonight-page" aria-labelledby="tonight-heading">
+      <Link to="/" className="back-button">
+        ← Back to Discover
+      </Link>
       <header className="tonight-header">
         <h1 id="tonight-heading">Tonight Mode</h1>
         <p className="tonight-subtitle">
@@ -212,7 +217,9 @@ export default function Tonight() {
         </button>
       </div>
 
-      {isLoading && <p className="tonight-status">Finding picks for tonight…</p>}
+      {isLoading && (
+        <p className="tonight-status tonight-status--loading">Finding picks for tonight…</p>
+      )}
       {error && (
         <p className="tonight-status tonight-status--error" role="alert">
           {error}
@@ -225,9 +232,7 @@ export default function Tonight() {
         </p>
       )}
 
-      {!isLoading && !error && picks.length === 0 && (
-        <p className="tonight-hint">Set your mood and tap &ldquo;Get tonight picks&rdquo;.</p>
-      )}
+      {!isLoading && !error && picks.length === 0 && <EmptyState variant="tonight" />}
 
       <div className="movie-grid tonight-grid">
         {picks.map((item, index) => {

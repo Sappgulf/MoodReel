@@ -119,4 +119,10 @@ test.describe('MoodReel E2E', () => {
     await expect(page.getByRole('heading', { name: /Tonight Mode/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Get tonight picks/i })).toBeVisible();
   });
+  test('not found page offers discover and tonight', async ({ page }) => {
+    await page.goto('/this-route-does-not-exist');
+    await expect(page.getByRole('heading', { name: /Lost in the backlot/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Back to Discover/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Tonight Mode/i })).toBeVisible();
+  });
 });

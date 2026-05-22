@@ -7,6 +7,7 @@ import { useWatchHistory } from '../hooks/useWatchHistory';
 import { GENRE_MAP } from '../utils/mediaUtils';
 import GenrePieChart from '../components/GenrePieChart';
 import CountUp from '../components/CountUp';
+import EmptyState from '../components/EmptyState';
 
 // Colors for genre chart
 const genreColors = [

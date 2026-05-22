@@ -61,12 +61,26 @@ function NotFoundPage() {
   }, []);
 
   return (
-    <section className="page-enter" aria-label="Page not found">
-      <h2>Page not found</h2>
-      <p>We couldn&apos;t find the page you requested.</p>
-      <Link ref={notFoundLinkRef} to="/" className="primary-button">
-        Return to Discover
-      </Link>
+    <section className="page-enter not-found-page" aria-label="Page not found">
+      <div className="not-found-visual" aria-hidden="true">
+        🎬
+      </div>
+      <h1>Lost in the backlot</h1>
+      <p>We couldn&apos;t find that page. Try one of these instead.</p>
+      <div className="not-found-actions">
+        <Link ref={notFoundLinkRef} to="/" className="primary-button">
+          Back to Discover
+        </Link>
+        <Link to="/tonight" className="secondary-button">
+          Tonight Mode
+        </Link>
+      </div>
+      <nav className="not-found-links" aria-label="Popular pages">
+        <Link to="/watchlist">Watchlist</Link>
+        <Link to="/stats">Stats</Link>
+        <Link to="/profile">Profile</Link>
+        <Link to="/calendar">Calendar</Link>
+      </nav>
     </section>
   );
 }
