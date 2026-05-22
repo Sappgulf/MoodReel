@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useToasts } from '../context/ToastContext';
 
 function ToastStack() {
   const { toasts, dismissToast } = useToasts();
+  const [exitingIds, setExitingIds] = useState(() => new Set());
+
+  const handleDismiss = useCallback(
+    id => {
+      setExitingIds(prev => new Set(prev).add(id));
+      window.setTimeout(() => {
+        dismissToast(id);
+        setExitingIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 280);
+    },
+    [dismissToast]
+  );
+
   if (!toasts || toasts.length === 0) return null;
 
   return (
@@ -10,9 +27,9 @@ function ToastStack() {
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className={`toast ${toast.variant ? `toast-${toast.variant}` : ''}`}
+          className={`toast ${toast.variant ? `toast-${toast.variant}` : ''} ${exitingIds.has(toast.id) ? 'toast-exit' : ''}`}
           role="status"
-          aria-label={`Dismiss ${toast.title || 'notification'}`}
+          style={toast.duration ? { '--toast-duration': `${toast.duration}ms` } : undefined}
         >
           <div className="toast-icon" aria-hidden="true">
             {toast.icon || '✅'}
@@ -25,11 +42,11 @@ function ToastStack() {
           <button
             className="toast-dismiss"
             type="button"
-            aria-label="Dismiss"
+            aria-label={`Dismiss ${toast.title || 'notification'}`}
             onClick={e => {
               e.preventDefault();
               e.stopPropagation();
-              dismissToast(toast.id);
+              handleDismiss(toast.id);
             }}
           >
             ✕

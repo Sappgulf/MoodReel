@@ -155,15 +155,26 @@ function Home() {
   useEffect(() => {
     const handleFocusMood = () => moodInputRef.current?.focus();
     const handleFocusTitle = () => titleSearchRef.current?.focus();
+    const handleApplyMood = event => {
+      const nextMood = event.detail?.mood;
+      if (!nextMood) return;
+      setMood(nextMood);
+      moodInputRef.current?.focus();
+      if (event.detail?.search) {
+        window.setTimeout(() => handleSearch(), 0);
+      }
+    };
 
     window.addEventListener('moodreel:focus-mood-search', handleFocusMood);
     window.addEventListener('moodreel:focus-title-search', handleFocusTitle);
+    window.addEventListener('moodreel:apply-mood', handleApplyMood);
 
     return () => {
       window.removeEventListener('moodreel:focus-mood-search', handleFocusMood);
       window.removeEventListener('moodreel:focus-title-search', handleFocusTitle);
+      window.removeEventListener('moodreel:apply-mood', handleApplyMood);
     };
-  }, []);
+  }, [setMood, handleSearch]);
 
   useEffect(() => {
     if (hasHydratedRef.current) return;
@@ -778,7 +789,7 @@ function Home() {
       {isLoading && !featuredItem ? (
         <DiscoveryHeroSkeleton />
       ) : (
-        <section className="discovery-hero">
+        <section className={`discovery-hero ${mood ? 'mood-shift' : ''}`}>
           <div className="discovery-hero-copy">
             <span className="hero-kicker">MoodReel / discovery engine</span>
             <h2>{heroTitle}</h2>
@@ -953,7 +964,7 @@ function Home() {
         </section>
       )}
 
-      <section className="discovery-console">
+      <section className={`discovery-console ${hasAnySearch ? 'search-revealed' : ''}`}>
         <div className="content-toggle-tabs" role="group" aria-label="Content type">
           {['all', 'movie', 'tv'].map(type => (
             <button

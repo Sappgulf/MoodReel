@@ -61,26 +61,12 @@ function NotFoundPage() {
   }, []);
 
   return (
-    <section className="page-enter not-found-page" aria-label="Page not found">
-      <div className="not-found-visual" aria-hidden="true">
-        🎬
-      </div>
-      <h1>Lost in the backlot</h1>
-      <p>We couldn&apos;t find that page. Try one of these instead.</p>
-      <div className="not-found-actions">
-        <Link ref={notFoundLinkRef} to="/" className="primary-button">
-          Back to Discover
-        </Link>
-        <Link to="/tonight" className="secondary-button">
-          Tonight Mode
-        </Link>
-      </div>
-      <nav className="not-found-links" aria-label="Popular pages">
-        <Link to="/watchlist">Watchlist</Link>
-        <Link to="/stats">Stats</Link>
-        <Link to="/profile">Profile</Link>
-        <Link to="/calendar">Calendar</Link>
-      </nav>
+    <section className="page-enter" aria-label="Page not found">
+      <h2>Page not found</h2>
+      <p>We couldn&apos;t find the page you requested.</p>
+      <Link ref={notFoundLinkRef} to="/" className="primary-button">
+        Return to Discover
+      </Link>
     </section>
   );
 }
@@ -397,6 +383,7 @@ function AppContent() {
   // Show achievement toast in global toast stack
   useEffect(() => {
     if (!newUnlock) return;
+    playSound('magic');
     pushToast({
       icon: newUnlock.icon,
       label: 'Achievement Unlocked',
@@ -405,7 +392,7 @@ function AppContent() {
       variant: 'achievement',
       duration: 4000,
     });
-  }, [newUnlock, pushToast]);
+  }, [newUnlock, pushToast, playSound]);
 
   return (
     <div className="App">
@@ -499,7 +486,7 @@ function AppContent() {
             </button>
           </div>
         </div>
-        {routePath === '/' && <p className="header-tagline">Discover films that match your mood</p>}
+        <p>Discover films that match your mood</p>
 
         <nav className="nav-links desktop-nav" aria-label="Primary navigation">
           <Link
@@ -508,13 +495,6 @@ function AppContent() {
             aria-current={location.pathname === '/' ? 'page' : undefined}
           >
             🎬 Discover
-          </Link>
-          <Link
-            to="/tonight"
-            className={`nav-link nav-link--featured ${location.pathname === '/tonight' ? 'active' : ''}`}
-            aria-current={location.pathname === '/tonight' ? 'page' : undefined}
-          >
-            🌙 Tonight
           </Link>
           <Link
             to="/watchlist"
@@ -531,13 +511,6 @@ function AppContent() {
             🏆 {unlockedCount}/{totalCount}
           </Link>
           <Link
-            to="/stats"
-            className={`nav-link ${location.pathname === '/stats' ? 'active' : ''}`}
-            aria-current={location.pathname === '/stats' ? 'page' : undefined}
-          >
-            📊 Stats
-          </Link>
-          <Link
             to="/profile"
             className={`nav-link ${location.pathname === '/profile' ? 'active' : ''}`}
             title="My Profile"
@@ -545,11 +518,16 @@ function AppContent() {
           >
             <span className="nav-avatar">{profile.avatar}</span> Profile
           </Link>
-        </nav>
-        <nav className="nav-links desktop-nav-secondary" aria-label="More pages">
+          <Link
+            to="/stats"
+            className={`nav-link ${location.pathname === '/stats' ? 'active' : ''}`}
+            aria-current={location.pathname === '/stats' ? 'page' : undefined}
+          >
+            📊 Stats
+          </Link>
           <Link
             to="/calendar"
-            className={`nav-link nav-link--subtle ${location.pathname === '/calendar' ? 'active' : ''}`}
+            className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}
             aria-current={location.pathname === '/calendar' ? 'page' : undefined}
           >
             📅 Calendar
@@ -568,14 +546,6 @@ function AppContent() {
           <span className="bottom-nav-label">Discover</span>
         </Link>
         <Link
-          to="/tonight"
-          className={`bottom-nav-item ${location.pathname === '/tonight' ? 'active' : ''}`}
-          aria-current={location.pathname === '/tonight' ? 'page' : undefined}
-        >
-          <span className="bottom-nav-icon">🌙</span>
-          <span className="bottom-nav-label">Tonight</span>
-        </Link>
-        <Link
           to="/watchlist"
           className={`bottom-nav-item ${location.pathname === '/watchlist' ? 'active' : ''}`}
           aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
@@ -584,20 +554,28 @@ function AppContent() {
           <span className="bottom-nav-label">Watchlist</span>
         </Link>
         <Link
-          to="/achievements"
-          className={`bottom-nav-item ${location.pathname === '/achievements' ? 'active' : ''}`}
-          aria-current={location.pathname === '/achievements' ? 'page' : undefined}
-        >
-          <span className="bottom-nav-icon">🏆</span>
-          <span className="bottom-nav-label">Awards</span>
-        </Link>
-        <Link
           to="/profile"
           className={`bottom-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
           aria-current={location.pathname === '/profile' ? 'page' : undefined}
         >
           <span className="bottom-nav-icon">{profile.avatar}</span>
           <span className="bottom-nav-label">Profile</span>
+        </Link>
+        <Link
+          to="/stats"
+          className={`bottom-nav-item ${location.pathname === '/stats' ? 'active' : ''}`}
+          aria-current={location.pathname === '/stats' ? 'page' : undefined}
+        >
+          <span className="bottom-nav-icon">📊</span>
+          <span className="bottom-nav-label">Stats</span>
+        </Link>
+        <Link
+          to="/calendar"
+          className={`bottom-nav-item ${location.pathname === '/calendar' ? 'active' : ''}`}
+          aria-current={location.pathname === '/calendar' ? 'page' : undefined}
+        >
+          <span className="bottom-nav-icon">📅</span>
+          <span className="bottom-nav-label">Calendar</span>
         </Link>
       </nav>
 

@@ -77,6 +77,34 @@ export function useSounds() {
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.05);
             break;
+          case 'pop': {
+            const popOsc = audioContext.createOscillator();
+            const popGain = audioContext.createGain();
+            popOsc.connect(popGain);
+            popGain.connect(audioContext.destination);
+            popOsc.type = 'sine';
+            popOsc.frequency.setValueAtTime(520, audioContext.currentTime);
+            popOsc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.08);
+            popGain.gain.setValueAtTime(0.08, audioContext.currentTime);
+            popGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+            popOsc.start();
+            popOsc.stop(audioContext.currentTime + 0.12);
+            break;
+          }
+          case 'magic': {
+            const magicOsc = audioContext.createOscillator();
+            const magicGain = audioContext.createGain();
+            magicOsc.connect(magicGain);
+            magicGain.connect(audioContext.destination);
+            magicOsc.type = 'triangle';
+            magicOsc.frequency.setValueAtTime(440, audioContext.currentTime);
+            magicOsc.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.15);
+            magicGain.gain.setValueAtTime(0.06, audioContext.currentTime);
+            magicGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            magicOsc.start();
+            magicOsc.stop(audioContext.currentTime + 0.2);
+            break;
+          }
           default:
             break;
         }

@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import EmptyState from '../components/EmptyState';
 import MovieCard from '../components/MovieCard';
+import { SkeletonGrid } from '../components/Skeleton';
 import { useMovieDiscovery } from '../hooks/useMovieDiscovery';
 import { useProviderSettings } from '../hooks/useProviderSettings';
+import { useWatchlist } from '../hooks/useWatchlist';
+import { useSounds } from '../hooks/useSounds';
 import { fetchTitleProviders, getCachedTitleProviders } from '../services/providerService';
 import { itemMatchesSelectedProviders } from '../utils/providerFilter';
 import { explainRecommendation, rankRecommendations } from '../utils/recommendationScoring';
@@ -34,6 +35,8 @@ function pickTonightSlots(ranked, mode) {
 }
 
 export default function Tonight() {
+  const { playSound } = useSounds();
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const [mood, setMood] = useState('cozy');
   const [availableTime, setAvailableTime] = useState(120);
   const [servicesOnly, setServicesOnly] = useState(true);
@@ -92,6 +95,8 @@ export default function Tonight() {
   }, [providerMap, myServices]);
 
   const runTonight = useCallback(() => {
+    playSound('click');
+    if (navigator.vibrate) navigator.vibrate(15);
     setDiscoveryMood(mood.trim());
     setDiscoveryType(contentType);
     setSelectedProviders(servicesOnly ? myServices : []);
@@ -106,6 +111,7 @@ export default function Tonight() {
     setDiscoveryMood,
     setDiscoveryType,
     setSelectedProviders,
+    playSound,
   ]);
 
   useEffect(() => {
@@ -122,7 +128,9 @@ export default function Tonight() {
     }
 
     const ranked = rankRecommendations(pool, { providerMatches });
-    setPicks(pickTonightSlots(ranked, mode));
+    const next = pickTonightSlots(ranked, mode);
+    setPicks(next);
+    if (next.length > 0 && navigator.vibrate) navigator.vibrate([40, 30, 40]);
   }, [
     recommendations,
     isLoading,
@@ -137,9 +145,6 @@ export default function Tonight() {
 
   return (
     <section className="page-enter tonight-page" aria-labelledby="tonight-heading">
-      <Link to="/" className="back-button">
-        ← Back to Discover
-      </Link>
       <header className="tonight-header">
         <h1 id="tonight-heading">Tonight Mode</h1>
         <p className="tonight-subtitle">
@@ -154,7 +159,10 @@ export default function Tonight() {
               key={preset}
               type="button"
               className={`tonight-preset-chip ${mood === preset ? 'active' : ''}`}
-              onClick={() => setMood(preset)}
+              onClick={() => {
+                setMood(preset);
+                playSound('pop');
+              }}
             >
               {preset}
             </button>
@@ -218,7 +226,10 @@ export default function Tonight() {
       </div>
 
       {isLoading && (
-        <p className="tonight-status tonight-status--loading">Finding picks for tonight…</p>
+        <>
+          <p className="tonight-status">Finding picks for tonight…</p>
+          <SkeletonGrid count={3} />
+        </>
       )}
       {error && (
         <p className="tonight-status tonight-status--error" role="alert">
@@ -232,7 +243,9 @@ export default function Tonight() {
         </p>
       )}
 
-      {!isLoading && !error && picks.length === 0 && <EmptyState variant="tonight" />}
+      {!isLoading && !error && picks.length === 0 && (
+        <p className="tonight-hint">Set your mood and tap &ldquo;Get tonight picks&rdquo;.</p>
+      )}
 
       <div className="movie-grid tonight-grid">
         {picks.map((item, index) => {
@@ -243,7 +256,13 @@ export default function Tonight() {
               <p className="tonight-pick-reason">
                 {explainRecommendation(item, { providerMatches })}
               </p>
-              <MovieCard movie={item} onToggleWatchlist={() => {}} isInWatchlist={false} />
+              <MovieCard
+                movie={item}
+                index={index}
+                onToggleWatchlist={toggleWatchlist}
+                isInWatchlist={isInWatchlist(item.id)}
+                mediaType={item.media_type}
+              />
             </article>
           );
         })}
