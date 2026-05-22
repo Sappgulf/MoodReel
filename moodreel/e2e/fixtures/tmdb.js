@@ -111,7 +111,22 @@ function detailsFor(mediaType, id) {
         },
       ],
     },
-    credits: { cast: [] },
+    credits: {
+      cast: [
+        {
+          id: 9001,
+          name: 'Avery Stone',
+          character: 'Lead',
+          profile_path: '/avery-stone.jpg',
+        },
+        {
+          id: 9002,
+          name: 'Mara Chen',
+          character: 'Scene Partner',
+          profile_path: '/mara-chen.jpg',
+        },
+      ],
+    },
     similar: { results: [] },
     'watch/providers': providers(),
   };

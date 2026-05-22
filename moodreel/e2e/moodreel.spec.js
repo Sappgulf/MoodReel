@@ -11,9 +11,11 @@ test.describe('MoodReel E2E', () => {
   };
 
   test.beforeEach(async ({ page }) => {
+    await installTonightTmdbMocks(page);
     await page.addInitScript(() => {
       window.localStorage.setItem('moodreel-onboarded', 'true');
       window.localStorage.setItem('moodreel-install-dismissed', 'true');
+      window.localStorage.setItem('moodreel-tmdb-api-key', 'test-key');
     });
   });
 
@@ -138,11 +140,6 @@ test.describe('MoodReel E2E', () => {
   });
 
   test('tonight mode returns three explained mocked picks', async ({ page }) => {
-    await installTonightTmdbMocks(page);
-    await page.addInitScript(() => {
-      window.localStorage.setItem('moodreel-tmdb-api-key', 'test-key');
-    });
-
     await page.goto('/tonight');
     await page.getByRole('button', { name: 'Netflix' }).click();
     await page.getByLabel('Services-only').check();
@@ -166,11 +163,6 @@ test.describe('MoodReel E2E', () => {
       testInfo.project.name === 'Mobile Safari',
       'Pick Between These lives in the desktop results panel.'
     );
-
-    await installTonightTmdbMocks(page);
-    await page.addInitScript(() => {
-      window.localStorage.setItem('moodreel-tmdb-api-key', 'test-key');
-    });
 
     await page.goto('/');
     await page.locator('.emoji-picker button').first().click();
