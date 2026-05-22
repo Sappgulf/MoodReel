@@ -9,6 +9,7 @@ import AdvancedFilters from '../components/AdvancedFilters';
 import MoodPlaylists from '../components/MoodPlaylists';
 import MoodPulse from '../components/MoodPulse';
 import ShuffleOverlay from '../components/ShuffleOverlay';
+import FilterSummary from '../components/FilterSummary';
 import { SkeletonGrid, MovieCardSkeleton, DiscoveryHeroSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
@@ -18,6 +19,7 @@ import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
 import { useSounds } from '../hooks/useSounds';
 import { useMovieDiscovery } from '../hooks/useMovieDiscovery';
+import { useContinuousDiscovery } from '../hooks/useContinuousDiscovery';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
@@ -28,8 +30,8 @@ import {
   fetchTitleProviders,
   getCachedTitleProviders,
 } from '../services/providerService';
-import { itemMatchesSelectedProviders } from '../utils/providerFilter';
 import { applySearchRanking } from '../utils/searchRanking';
+import { buildDiscoveryParams } from '../utils/searchContext';
 import { copyToClipboard } from '../utils/clipboard';
 import {
   getBackdropUrl,
@@ -46,7 +48,7 @@ function Home() {
   const { playSound } = useSounds();
   const { isInWatchlist, toggleWatchlist, addToWatchlist, isWatched, toggleWatched } =
     useWatchlist();
-  const { trackSave } = useAchievements();
+  const { trackSave, trackSurprise } = useAchievements();
   const { history: recentMoods, addToHistory } = useMoodHistory();
   const { savePlaylist } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
@@ -68,6 +70,7 @@ function Home() {
     contentType,
     setContentType,
     matchType,
+    setMatchType,
     hasMore,
     minRating,
     setMinRating,
@@ -85,9 +88,7 @@ function Home() {
   const [genres, setGenres] = useState([]);
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [isSurpriseLoading, setIsSurpriseLoading] = useState(false);
-  const [showWinnerInfo, setShowWinnerInfo] = useState(false);
-  const [surpriseMovie, setSurpriseMovie] = useState(null);
+  const [shuffleLocked, setShuffleLocked] = useState(false);
   const [titleQuery, setTitleQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchScope, setSearchScope] = useState('within');
@@ -97,14 +98,49 @@ function Home() {
   const [providerSnapshot, setProviderSnapshot] = useState({});
   const [providerCatalog, setProviderCatalog] = useState([]);
   const [resultLayout, setResultLayout] = useState('poster');
-  const surpriseSessionRef = useRef(0);
-  const surpriseRevealTimerRef = useRef(null);
-
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
   const hasHydratedRef = useRef(false);
   const moodInputRef = useRef(null);
   const titleSearchRef = useRef(null);
+
+  const discoveryParams = useMemo(
+    () =>
+      buildDiscoveryParams({
+        mood,
+        contentType,
+        selectedGenres,
+        selectedProviders,
+        minRating,
+        matchType,
+        region,
+        advancedFilters,
+      }),
+    [
+      mood,
+      contentType,
+      selectedGenres,
+      selectedProviders,
+      minRating,
+      matchType,
+      region,
+      advancedFilters,
+    ]
+  );
+
+  const getSearchParams = useCallback(() => discoveryParams, [discoveryParams]);
+
+  const {
+    isShuffling,
+    shufflePick,
+    shuffleCount,
+    startShuffle,
+    stopShuffle,
+    shuffleAgain,
+    isExploring,
+    startExplore,
+    stopExplore,
+  } = useContinuousDiscovery({ getSearchParams, trackSurprise });
 
   const handleSearch = useCallback(() => {
     if (mood) addToHistory(mood);
@@ -267,14 +303,6 @@ function Home() {
   }, [fetchTrending]);
 
   useEffect(() => {
-    return () => {
-      if (surpriseRevealTimerRef.current) {
-        clearTimeout(surpriseRevealTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     setProviderSnapshot({});
   }, [region]);
 
@@ -435,56 +463,41 @@ function Home() {
     [setMood, setSelectedGenres]
   );
 
-  const handleSurpriseMe = useCallback(async () => {
-    if (isSurpriseLoading) return;
+  const handleSurpriseMe = useCallback(() => {
+    if (isShuffling) return;
     playSound('click');
     if (navigator.vibrate) navigator.vibrate(20);
-    surpriseSessionRef.current += 1;
-    const sessionId = surpriseSessionRef.current;
-    setSurpriseMovie(null);
-    setShowWinnerInfo(false);
-    setIsSurpriseLoading(true);
-    // Shuffle duration
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    if (sessionId !== surpriseSessionRef.current) return;
-    try {
-      const randomPick = await searchService.fetchRandomDiscovery();
-      if (sessionId !== surpriseSessionRef.current) return;
-      if (randomPick) {
-        setSurpriseMovie(randomPick);
-        // Keep overlay open for "Winner" reveal
-        if (surpriseRevealTimerRef.current) {
-          clearTimeout(surpriseRevealTimerRef.current);
-        }
-        surpriseRevealTimerRef.current = setTimeout(() => {
-          if (sessionId !== surpriseSessionRef.current) return;
-          surpriseRevealTimerRef.current = null;
-          setIsSurpriseLoading(false);
-          setShowWinnerInfo(true);
-          if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Victory buzz
-        }, 500);
-      } else {
-        if (sessionId === surpriseSessionRef.current) {
-          setIsSurpriseLoading(false);
-        }
-      }
-    } catch (err) {
-      if (sessionId !== surpriseSessionRef.current) return;
-      console.error('Surprise me failed:', err);
-      setIsSurpriseLoading(false);
-    }
-  }, [isSurpriseLoading, playSound]);
+    setShuffleLocked(false);
+    startShuffle();
+  }, [isShuffling, playSound, startShuffle]);
+
+  const handleLockShuffle = useCallback(() => {
+    stopShuffle();
+    setShuffleLocked(true);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  }, [stopShuffle]);
+
+  const handleKeepShuffling = useCallback(() => {
+    setShuffleLocked(false);
+    shuffleAgain();
+  }, [shuffleAgain]);
 
   const closeSurprise = useCallback(() => {
-    surpriseSessionRef.current += 1;
-    if (surpriseRevealTimerRef.current) {
-      clearTimeout(surpriseRevealTimerRef.current);
-      surpriseRevealTimerRef.current = null;
+    stopShuffle();
+    setShuffleLocked(false);
+  }, [stopShuffle]);
+
+  const handleToggleExplore = useCallback(() => {
+    if (isExploring) {
+      stopExplore();
+      return;
     }
-    setIsSurpriseLoading(false);
-    setSurpriseMovie(null);
-    setShowWinnerInfo(false);
-  }, []);
+    startExplore({
+      loadMore: loadMoreResults,
+      hasMore: () => hasMore,
+      canLoad: () => hasSearched && searchScope !== 'all',
+    });
+  }, [isExploring, stopExplore, startExplore, loadMoreResults, hasMore, hasSearched, searchScope]);
 
   const handleSwipeRight = useCallback(
     movie => {
@@ -543,16 +556,15 @@ function Home() {
   const handleClearFilters = useCallback(() => {
     setSelectedGenres([]);
     setMinRating(0);
+    setMatchType('all');
     setAdvancedFilters({
       yearMin: 1900,
       yearMax: currentYear,
       sortBy: 'popularity.desc',
-      matchType: 'all',
       runtime: 'any',
-      region: 'US',
     });
     playSound('pop');
-  }, [setSelectedGenres, setMinRating, setAdvancedFilters, currentYear, playSound]);
+  }, [setSelectedGenres, setMinRating, setMatchType, setAdvancedFilters, currentYear, playSound]);
 
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
@@ -710,14 +722,17 @@ function Home() {
   return (
     <main className="page-enter">
       <ShuffleOverlay
-        isActive={isSurpriseLoading}
-        isWinner={showWinnerInfo}
-        winnerItem={surpriseMovie}
+        isActive={isShuffling}
+        isLocked={shuffleLocked}
+        currentPick={shufflePick}
+        shuffleCount={shuffleCount}
         results={trending.length > 0 ? trending : recommendations}
+        onStop={handleLockShuffle}
+        onShuffleAgain={handleKeepShuffling}
         onDismiss={closeSurprise}
       />
 
-      {showWinnerInfo && surpriseMovie && (
+      {shuffleLocked && shufflePick && (
         <div
           className="surprise-banner"
           role="button"
@@ -729,18 +744,18 @@ function Home() {
               closeSurprise();
             }
           }}
-          aria-label={`Surprise pick: ${surpriseMovie.title || surpriseMovie.name}. Press Enter to dismiss.`}
+          aria-label={`Surprise pick: ${shufflePick.title || shufflePick.name}. Press Enter to dismiss.`}
         >
           <span className="surprise-icon" aria-hidden="true">
             🎉
           </span>
           <div className="surprise-content">
             <p>We found a gem for you!</p>
-            <h3>{surpriseMovie.title || surpriseMovie.name}</h3>
+            <h3>{shufflePick.title || shufflePick.name}</h3>
           </div>
           <div className="surprise-actions">
             <Link
-              to={`/${surpriseMovie.media_type || 'movie'}/${surpriseMovie.id}`}
+              to={`/${shufflePick.media_type || 'movie'}/${shufflePick.id}`}
               className="surprise-link primary"
               onClick={e => e.stopPropagation()}
             >
@@ -797,9 +812,9 @@ function Home() {
                 type="button"
                 className="secondary-button"
                 onClick={handleSurpriseMe}
-                disabled={isSurpriseLoading}
+                disabled={isShuffling}
               >
-                {isSurpriseLoading ? 'Shuffling…' : 'Surprise Me'}
+                {isShuffling ? 'Shuffling…' : 'Surprise Me'}
               </button>
               <button
                 type="button"
@@ -873,12 +888,12 @@ function Home() {
             </div>
             <div className="hero-actions">
               <button
-                className={`surprise-pill ${isSurpriseLoading ? 'shuffle-anim' : ''}`}
+                className={`surprise-pill ${isShuffling ? 'shuffle-anim' : ''}`}
                 type="button"
                 onClick={handleSurpriseMe}
-                disabled={isSurpriseLoading}
+                disabled={isShuffling}
               >
-                {isSurpriseLoading ? '🎲 Shuffling…' : '🔥 Surprise Me'}
+                {isShuffling ? '🎲 Shuffling…' : '🔥 Surprise Me'}
               </button>
             </div>
           </div>
@@ -1106,6 +1121,18 @@ function Home() {
           />
         )}
 
+        <FilterSummary
+          mood={mood}
+          selectedGenres={selectedGenres}
+          selectedProviders={selectedProviders}
+          providerCatalog={providerCatalog}
+          minRating={minRating}
+          matchType={matchType}
+          contentType={contentType}
+          advancedFilters={advancedFilters}
+          myServices={myServices}
+        />
+
         <button
           className="filters-toggle"
           type="button"
@@ -1117,6 +1144,25 @@ function Home() {
 
         {showFilters && (
           <div className={`filters-wrapper ${activeFilterCount > 0 ? 'has-filters' : ''}`}>
+            <div className="genre-match-toggle" role="group" aria-label="Category match mode">
+              <span className="genre-match-label">Categories match:</span>
+              <button
+                type="button"
+                className={matchType === 'all' ? 'active' : ''}
+                aria-pressed={matchType === 'all'}
+                onClick={() => setMatchType('all')}
+              >
+                All (AND)
+              </button>
+              <button
+                type="button"
+                className={matchType === 'any' ? 'active' : ''}
+                aria-pressed={matchType === 'any'}
+                onClick={() => setMatchType('any')}
+              >
+                Any (OR)
+              </button>
+            </div>
             <div className="genre-filters">
               <h3>Genres:</h3>
               <div className="genre-buttons">
@@ -1212,9 +1258,21 @@ function Home() {
                     </label>
                   </div>
                 </div>
-                <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>
-                  ✨ Save Vibe
-                </button>
+                <div className="results-header-actions">
+                  {hasMore && searchScope !== 'all' && (
+                    <button
+                      type="button"
+                      className={`btn-secondary btn-sm explore-toggle ${isExploring ? 'active' : ''}`}
+                      onClick={handleToggleExplore}
+                      aria-pressed={isExploring}
+                    >
+                      {isExploring ? '⏸ Stop exploring' : '▶ Keep exploring'}
+                    </button>
+                  )}
+                  <button className="btn-secondary btn-sm save-vibe-btn" onClick={handleSaveVibe}>
+                    ✨ Save Vibe
+                  </button>
+                </div>
               </div>
             )}
             <div

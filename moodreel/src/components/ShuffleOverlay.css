@@ -123,11 +123,38 @@
   bottom: clamp(1rem, 2vw, 1.4rem);
   transform: translateX(-50%);
   z-index: 2;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 0.65rem;
   width: min(92vw, 32rem);
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.shuffle-stop-btn {
+  width: 100%;
+  max-width: 18rem;
+}
+
+.shuffle-winner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.shuffle-item--live {
+  animation: floatWinner 2s ease-in-out infinite alternate;
+}
+
+.shuffle-pick-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: 0.25rem;
 }
 
 .shuffle-overlay-hint {
