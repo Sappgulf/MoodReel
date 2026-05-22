@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2026-05-22
+
+### Implemented
+- **Scope:** web + iOS + CI
+- **What changed:**
+  - Fixed broken `Tonight.jsx` on `main` and rebuilt Tonight Mode (runtime scoring, taste/watchlist, provider status, share card).
+  - Unified media keys (`movie:id`) with taste-profile migration so likes/dislikes affect ranking.
+  - Added TMDB mock fixtures (`VITE_MOCK_TMDB`), Vitest scope fixes, and CI `web-e2e` job.
+  - Added iOS Tonight tab with recommendation scoring parity.
+  - Onboarding region/services setup slide; Prettier pass across web app.
+- **Verification performed:** `npm run verify` in `moodreel/` (39 unit tests, build).
+
 ## 2026-05-01
 
 ### Implemented
