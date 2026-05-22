@@ -526,29 +526,59 @@ export async function fetchGenres(type = 'movie', signal) {
   return ensureArray(response.genres);
 }
 
+function pickRandomFromPool(results, mediaType, excludeKeys) {
+  const pool = results
+    .map(item => normalizeMediaItem(item, mediaType))
+    .filter(item => !excludeKeys.has(`${item.media_type}:${item.id}`));
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 /**
- * Fetch a random discovery result (True Random)
+ * Fetch a random discovery result using the same filters as mood search.
+ * Keeps drawing until excludeKeys are exhausted or attempts run out.
  */
-export async function fetchRandomDiscovery(signal) {
-  const type = Math.random() > 0.5 ? 'movie' : 'tv';
-  const page = Math.floor(Math.random() * 20) + 1;
+export async function fetchRandomDiscovery(params = {}, options = {}) {
+  const { excludeKeys = new Set(), signal } = options;
+  const type = params.type || 'all';
+  const types = type === 'all' ? ['movie', 'tv'] : [type];
+  const hasCriteria =
+    (params.query || '').trim().length > 0 ||
+    (params.genres || []).length > 0 ||
+    parseMoodToGenres(params.query || '').length > 0;
 
-  const response = await tmdbGet(`/discover/${type}`, {
-    signal,
-    params: {
-      language: 'en-US',
-      sort_by: 'popularity.desc',
-      include_adult: false,
-      'vote_count.gte': 100,
-      'vote_average.gte': 6.0,
-      page,
-    },
-  });
-  const results = ensureArray(response.results);
-  if (results.length === 0) return null;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const mediaType = types[Math.floor(Math.random() * types.length)];
+    const page = Math.floor(Math.random() * 12) + 1;
 
-  const randomItem = results[Math.floor(Math.random() * results.length)];
-  return normalizeMediaItem(randomItem, type);
+    try {
+      if (hasCriteria) {
+        const request = buildApiRequest({ ...params, page }, mediaType);
+        const response = await tmdbGet(request.path, { params: request.params, signal });
+        const pick = pickRandomFromPool(ensureArray(response.results), mediaType, excludeKeys);
+        if (pick) return pick;
+      } else {
+        const response = await tmdbGet(`/discover/${mediaType}`, {
+          signal,
+          params: {
+            language: 'en-US',
+            sort_by: params.sortBy || 'popularity.desc',
+            include_adult: false,
+            'vote_count.gte': 100,
+            'vote_average.gte': params.minRating > 0 ? params.minRating : 6.0,
+            page,
+            watch_region: params.region || 'US',
+          },
+        });
+        const pick = pickRandomFromPool(ensureArray(response.results), mediaType, excludeKeys);
+        if (pick) return pick;
+      }
+    } catch (err) {
+      if (isAbortError(err)) throw err;
+    }
+  }
+
+  return null;
 }
 
 /**
