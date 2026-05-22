@@ -2,9 +2,9 @@
 
 ## P0 — must fix before sharing
 
-- Replace legacy `react-scripts` unit test runner with Vitest to remove dual-tooling drift.
-- Add deterministic provider/filter integration tests with TMDB fixtures.
-- Add CI-safe E2E strategy (mocked API or nightly key-injected run).
+- ~~Replace legacy `react-scripts` unit test runner with Vitest~~ (Vitest + `e2e/` excluded).
+- ~~Add deterministic provider/filter integration tests with TMDB fixtures.~~ (`VITE_MOCK_TMDB`)
+- ~~Add CI-safe E2E strategy~~ (`web-e2e` job, mock env).
 
 ## P1 — quality polish
 

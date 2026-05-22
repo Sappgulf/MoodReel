@@ -7,6 +7,10 @@ Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
 
+- Added: Canonical `movie:id` media keys with taste-profile migration from legacy keys.
+- Added: Tonight Mode polish (runtime scoring, watchlist/taste, provider status, share card, URL state).
+- Added: TMDB mock fixtures and CI E2E job (`VITE_MOCK_TMDB`).
+- Added: Onboarding region/services setup; iOS Tonight tab + scoring parity.
 - Changed: Redesigned the Global Mood Pulse block with proper spacing, clear percentages, and a transparent "Updated daily" snapshot label.
 - Changed: Tightened the emoji quick-pick UI with clearer header guidance, active-count feedback, and improved grid/button styling.
 - Added: "Clear All Filters" button in Home search.
