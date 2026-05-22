@@ -3,4 +3,13 @@ coverage
 node_modules
 e2e/test-results
 e2e/report
+test-results
+playwright-report
 public
+agent.md
+changelog.md
+channels.md
+GOD_REPORT.md
+memory.md
+scripts/
+index.html

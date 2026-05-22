@@ -32,6 +32,12 @@ npm run build
 3. Run on iOS Simulator.
 4. Validate API-key gate, Discover, Watchlist, Detail, and Settings key reset.
 
+### iOS shipping docs
+
+- TestFlight preflight: `MoodReel-iOS/TESTFLIGHT.md`
+- Crash reporting plan: `MoodReel-iOS/CRASH_REPORTING.md`
+- Feature roadmap: `MoodReel-iOS/ROADMAP.md`
+
 ## Environment and API key
 
 - Web expects `VITE_TMDB_API_KEY`.

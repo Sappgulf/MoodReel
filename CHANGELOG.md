@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 2026-05-22
+
+### Implemented
+- **Scope:** web E2E + iOS Tonight Mode
+- **What changed:**
+  - Movie detail page: request-id fetch guard, `data-testid="movie-details-ready"`, inflight abort cleanup in `searchService`.
+  - Playwright: Fight Club detail content assertion (`/movie/550`).
+  - iOS: `RecommendationScoring`, `TonightViewModel`, `TonightView`, Tonight tab in `MainTabView`.
+- **Why:** User asked for full detail-page E2E and iOS Tonight parity with web.
+
 ## 2026-05-01
 
 ### Implemented

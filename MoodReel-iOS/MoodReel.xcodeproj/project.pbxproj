@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		08568088B348945BAEA53AF8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488644054F8249131C630EF2 /* SettingsView.swift */; };
+		A1EE4820F4B3C6D21ABF0F10 /* RecommendationScoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1EE4820F4B3C6D21ABF0F11 /* RecommendationScoring.swift */; };
+		B2FF5931A5C4D7E32BC1A021 /* TonightViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2FF5931A5C4D7E32BC1A022 /* TonightViewModel.swift */; };
+		C3AA6A42B6D5E8F43CD2B132 /* TonightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AA6A42B6D5E8F43CD2B133 /* TonightView.swift */; };
 		200BBDD5103916F8C74D5F4F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA4DF8C276F322BA10747CF /* RootView.swift */; };
 		284AADC64A3F8856D8EB4E08 /* WatchlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */; };
 		296F9263972459E7E300AD9C /* APIKeyEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950A606672A209499B19F74E /* APIKeyEntryView.swift */; };

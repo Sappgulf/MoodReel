@@ -1,9 +1,10 @@
 # MoodReel iOS Roadmap
 
 ## Tonight Mode parity
-1. Add `TonightViewModel` with local scoring parity against web `recommendationScoring`.
-2. Add `TonightView` with mood/time/group/safety controls.
-3. Present 3 cards: Safe Bet, Best Match, Wild Card with "Why this pick?" labels.
+1. ~~Add `TonightViewModel` with local scoring parity against web `recommendationScoring`.~~ Done (`TonightViewModel`, `RecommendationScoring`).
+2. ~~Add `TonightView` with mood/time/group/safety controls.~~ Done (mood, time, content filter, pick style).
+3. ~~Present 3 cards: Safe Bet, Best Match, Wild Card with "Why this pick?" labels.~~ Done.
+4. Provider-aware filtering (services-only) — deferred until iOS provider settings ship.
 
 ## Taste graph + provider setup
 1. Extend `WatchlistStore` to persist liked/disliked keys by media type.

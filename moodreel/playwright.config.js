@@ -26,5 +26,8 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    env: {
+      VITE_TMDB_API_KEY: 'e2e-test-key',
+    },
   },
 });

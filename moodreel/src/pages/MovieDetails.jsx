@@ -15,6 +15,7 @@ import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { Skeleton } from '../components/Skeleton';
 import searchService from '../services/searchService';
+import { explainRecommendation } from '../utils/recommendationScoring';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
 import {
   getBackdropUrl,
@@ -300,6 +301,14 @@ function MovieDetails() {
   const runtime = content.runtime || content.episode_run_time?.[0];
   const overview = getDisplayOverview(content);
   const tasteStatus = statusFor(content.id, mediaType);
+  const whyThisFits = explainRecommendation(
+    {
+      ...content,
+      media_type: mediaType,
+      genre_ids: (content.genres || []).map(g => g.id),
+    },
+    {}
+  );
   const tagline = content.tagline ? `“${content.tagline}”` : '';
   const runtimeLabel = runtime ? `${runtime} min` : '';
   const genresText = content.genres?.map(genre => genre.name).join(' • ') || '';
@@ -350,6 +359,11 @@ function MovieDetails() {
               <p className="movie-details-eyebrow">{isTV ? 'TV Title' : 'Movie'}</p>
               <h1>{title}</h1>
               {tagline && <p className="movie-tagline">{tagline}</p>}
+              {whyThisFits && (
+                <p className="why-this-fits" data-testid="why-this-fits">
+                  <span className="why-this-fits-label">Why this fits:</span> {whyThisFits}
+                </p>
+              )}
               <p className="overview">{overview}</p>
 
               <dl className="movie-facts-strip" aria-label="Quick facts">

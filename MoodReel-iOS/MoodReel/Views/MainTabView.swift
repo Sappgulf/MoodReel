@@ -11,6 +11,11 @@ struct MainTabView: View {
                     Label("Discover", systemImage: "sparkles.tv")
                 }
 
+            TonightView()
+                .tabItem {
+                    Label("Tonight", systemImage: "moon.stars.fill")
+                }
+
             WatchlistView()
                 .tabItem {
                     Label("Watchlist", systemImage: "bookmark.fill")

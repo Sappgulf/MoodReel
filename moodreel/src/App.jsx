@@ -77,7 +77,7 @@ function AppContent() {
   const { isDark, toggleTheme } = useTheme();
   const { isSoundEnabled, toggleSounds } = useSounds();
   const soundEnabled = isSoundEnabled();
-  const { newUnlock, unlockedCount, totalCount } = useAchievements();
+  const { newUnlock, unlockedCount, totalCount, stats: achievementStats } = useAchievements();
   const { activeTrailer, closeTrailer } = useTrailer();
   const { pushToast } = useToasts();
   const { profile } = useUserProfile();
@@ -87,6 +87,7 @@ function AppContent() {
   const [isOffline, setIsOffline] = useState(() => (HAS_NAVIGATOR ? !navigator.onLine : false));
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = React.useRef(null);
+  const gChordRef = React.useRef(null);
   const lastSearchFallbackRef = useRef({ key: '', at: 0 });
 
   const openQuickActions = useCallback(() => {
@@ -365,11 +366,56 @@ function AppContent() {
       if (!isEditable && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && key === 'm') {
         toggleSounds();
       }
+
+      if (!isEditable && !isOverlayOpen && !e.ctrlKey && !e.metaKey && !e.altKey && key === 'g') {
+        gChordRef.current = Date.now();
+        return;
+      }
+      if (
+        gChordRef.current &&
+        Date.now() - gChordRef.current < 1200 &&
+        !isEditable &&
+        !isOverlayOpen
+      ) {
+        if (key === 'd') {
+          e.preventDefault();
+          navigate('/');
+          gChordRef.current = null;
+        } else if (key === 'w') {
+          e.preventDefault();
+          navigate('/watchlist');
+          gChordRef.current = null;
+        } else if (key === 't') {
+          e.preventDefault();
+          navigate('/tonight');
+          gChordRef.current = null;
+        } else if (key === 's') {
+          e.preventDefault();
+          navigate('/stats');
+          gChordRef.current = null;
+        } else if (key === 'c') {
+          e.preventDefault();
+          navigate('/calendar');
+          gChordRef.current = null;
+        } else if (key === 'p') {
+          e.preventDefault();
+          navigate('/profile');
+          gChordRef.current = null;
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOverlayOpen, openQuickActions, showQuickActions, showShortcuts, toggleSounds, toggleTheme]);
+  }, [
+    isOverlayOpen,
+    openQuickActions,
+    showQuickActions,
+    showShortcuts,
+    toggleSounds,
+    toggleTheme,
+    navigate,
+  ]);
 
   // Trigger confetti on achievement unlock
   useEffect(() => {
@@ -383,6 +429,7 @@ function AppContent() {
   // Show achievement toast in global toast stack
   useEffect(() => {
     if (!newUnlock) return;
+    playSound('magic');
     pushToast({
       icon: newUnlock.icon,
       label: 'Achievement Unlocked',
@@ -391,7 +438,7 @@ function AppContent() {
       variant: 'achievement',
       duration: 4000,
     });
-  }, [newUnlock, pushToast]);
+  }, [newUnlock, pushToast, playSound]);
 
   return (
     <div className="App">
@@ -496,6 +543,13 @@ function AppContent() {
             🎬 Discover
           </Link>
           <Link
+            to="/tonight"
+            className={`nav-link nav-link--featured ${location.pathname === '/tonight' ? 'active' : ''}`}
+            aria-current={location.pathname === '/tonight' ? 'page' : undefined}
+          >
+            🌙 Tonight
+          </Link>
+          <Link
             to="/watchlist"
             className={`nav-link ${location.pathname === '/watchlist' ? 'active' : ''}`}
             aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
@@ -504,7 +558,7 @@ function AppContent() {
           </Link>
           <Link
             to="/achievements"
-            className={`nav-link ${location.pathname === '/achievements' ? 'active' : ''}`}
+            className={`nav-link ${(achievementStats?.searchStreak || 0) >= 2 ? 'nav-link--streak' : ''} ${location.pathname === '/achievements' ? 'active' : ''}`}
             aria-current={location.pathname === '/achievements' ? 'page' : undefined}
           >
             🏆 {unlockedCount}/{totalCount}
@@ -543,6 +597,14 @@ function AppContent() {
         >
           <span className="bottom-nav-icon">🎬</span>
           <span className="bottom-nav-label">Discover</span>
+        </Link>
+        <Link
+          to="/tonight"
+          className={`bottom-nav-item bottom-nav-item--featured ${location.pathname === '/tonight' ? 'active' : ''}`}
+          aria-current={location.pathname === '/tonight' ? 'page' : undefined}
+        >
+          <span className="bottom-nav-icon">🌙</span>
+          <span className="bottom-nav-label">Tonight</span>
         </Link>
         <Link
           to="/watchlist"

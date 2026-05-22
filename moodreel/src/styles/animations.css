@@ -4,114 +4,115 @@
 
 /* Page Level Transitions */
 @keyframes pageEnter {
-    from {
-        opacity: 0;
-        transform: scale(0.96) translateY(20px);
-        filter: blur(8px);
-    }
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(20px);
+    filter: blur(8px);
+  }
 
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-        filter: blur(0);
-    }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
 }
 
 .page-enter {
-    animation: pageEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    will-change: transform, opacity;
+  animation: pageEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  will-change: transform, opacity;
 }
 
 /* Card Glint Effect */
 @keyframes glint {
-    0% {
-        transform: translateX(-150%) skewX(-25deg);
-    }
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+  }
 
-    100% {
-        transform: translateX(150%) skewX(-25deg);
-    }
+  100% {
+    transform: translateX(150%) skewX(-25deg);
+  }
 }
 
 .glint-container {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 .glint::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 200%;
-    height: 100%;
-    background: linear-gradient(to right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.05) 45%,
-            rgba(255, 255, 255, 0.15) 50%,
-            rgba(255, 255, 255, 0.05) 55%,
-            rgba(255, 255, 255, 0) 100%);
-    z-index: 2;
-    transform: translateX(-150%) skewX(-20deg);
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 45%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  z-index: 2;
+  transform: translateX(-150%) skewX(-20deg);
+  pointer-events: none;
 }
 
 .parallax-card:hover .glint::after {
-    animation: glint 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-    will-change: transform;
+  animation: glint 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
 }
 
 /* Reel Shuffle Animation */
 @keyframes reelShuffle {
-    0% {
-        transform: translateY(0);
-    }
+  0% {
+    transform: translateY(0);
+  }
 
-    10% {
-        transform: translateY(-5%);
-    }
+  10% {
+    transform: translateY(-5%);
+  }
 
-    90% {
-        transform: translateY(-95%);
-    }
+  90% {
+    transform: translateY(-95%);
+  }
 
-    100% {
-        transform: translateY(-100%);
-    }
+  100% {
+    transform: translateY(-100%);
+  }
 }
 
 .shuffle-anim {
-    animation: reelShuffle 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: reelShuffle 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 /* Pulse for Buttons */
 @keyframes buttonPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
-    }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
+  }
 
-    70% {
-        box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
-    }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+  }
 
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
-    }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+  }
 }
 
 .pulse-button {
-    animation: buttonPulse 2s infinite;
+  animation: buttonPulse 2s infinite;
 }
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

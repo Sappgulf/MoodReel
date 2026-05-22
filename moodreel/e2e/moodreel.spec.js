@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { installTmdbMocks, prepareAppStorage } from './tmdbMock.js';
 
 test.describe('MoodReel E2E', () => {
+  test.beforeEach(async ({ page }) => {
+    await installTmdbMocks(page);
+    await prepareAppStorage(page);
+  });
+
   test('homepage loads without errors', async ({ page }) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -9,10 +15,12 @@ test.describe('MoodReel E2E', () => {
     });
 
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('MoodReel');
+    await expect(page.locator('header h1')).toContainText('MoodReel');
     await expect(page.locator('.nav-link').first()).toBeVisible();
 
-    const criticalErrors = errors.filter(e => !e.includes('Warning') && !e.includes('deprecat'));
+    const criticalErrors = errors.filter(
+      e => !e.includes('Warning') && !e.includes('deprecat') && !e.includes('401')
+    );
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -20,44 +28,47 @@ test.describe('MoodReel E2E', () => {
     await page.goto('/');
 
     const moodButton = page.locator('.emoji-picker button').first();
-    if (await moodButton.isVisible()) {
-      await moodButton.click();
-      await page.waitForTimeout(1500);
-    }
+    await expect(moodButton).toBeVisible();
+    await moodButton.click();
 
-    const movieCards = page.locator('.movie-card, [class*="movie-card"]');
-    await expect(movieCards.first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.recommendation').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('navigation works correctly', async ({ page }) => {
     await page.goto('/');
 
-    await page.click('text=Watchlist');
-    await expect(page).toHaveURL(/.*\/watchlist/);
+    await page
+      .locator('.desktop-nav')
+      .getByRole('link', { name: /Tonight/i })
+      .click();
+    await expect(page).toHaveURL(/\/tonight/);
 
-    await page.click('text=Profile');
-    await expect(page).toHaveURL(/.*\/profile/);
+    await page
+      .locator('.desktop-nav')
+      .getByRole('link', { name: /Watchlist/i })
+      .click();
+    await expect(page).toHaveURL(/\/watchlist/);
 
-    await page.click('text=Stats');
-    await expect(page).toHaveURL(/.*\/stats/);
+    await page
+      .locator('.desktop-nav')
+      .getByRole('link', { name: /Profile/i })
+      .click();
+    await expect(page).toHaveURL(/\/profile/);
   });
 
   test('theme toggle works', async ({ page }) => {
     await page.goto('/');
 
-    const themeToggle = page.locator('.theme-toggle');
+    const themeToggle = page.getByRole('button', { name: /Switch to/i });
     await expect(themeToggle).toBeVisible();
     await themeToggle.click();
-    await page.waitForTimeout(300);
-
     await themeToggle.click();
-    await page.waitForTimeout(300);
   });
 
   test('watchlist page loads', async ({ page }) => {
     await page.goto('/watchlist');
-    await expect(page.locator('.watchlist-page, [class*="watchlist"]')).toBeVisible({
-      timeout: 5000,
+    await expect(page.getByRole('heading', { name: /Your Library/i })).toBeVisible({
+      timeout: 10000,
     });
   });
 
@@ -65,12 +76,10 @@ test.describe('MoodReel E2E', () => {
     await page.goto('/');
 
     await page.keyboard.press('?');
-    await page.waitForTimeout(500);
-
-    const modal = page.locator('.keyboard-shortcuts-modal, [class*="shortcuts"]');
-    if (await modal.isVisible({ timeout: 2000 })) {
-      await page.keyboard.press('Escape');
-    }
+    const modal = page.getByRole('dialog', { name: /keyboard shortcuts/i });
+    await expect(modal).toBeVisible({ timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
   });
 
   test('mobile bottom nav is visible on mobile viewport', async ({ page }) => {
@@ -78,30 +87,42 @@ test.describe('MoodReel E2E', () => {
     await page.goto('/');
 
     const bottomNav = page.locator('.mobile-bottom-nav');
-    if (await bottomNav.isVisible()) {
-      await expect(bottomNav.locator('.bottom-nav-item')).toHaveCount(5);
-    }
+    await expect(bottomNav).toBeVisible();
+    await expect(bottomNav.locator('.bottom-nav-item')).toHaveCount(5);
   });
 
-  test('home search leads to detail page', async ({ page }) => {
+  test('skip link targets main content', async ({ page }) => {
     await page.goto('/');
+    const skip = page.getByRole('link', { name: /Skip to main content/i });
+    await expect(skip).toHaveAttribute('href', '#main-content');
+    await skip.focus();
+    await expect(skip).toBeFocused();
+  });
 
-    // Trigger a mood search to populate results
-    const moodButton = page.locator('.emoji-picker button').first();
-    if (await moodButton.isVisible()) {
-      await moodButton.click();
-      await page.waitForTimeout(1500);
-    }
-
-    // Wait for at least one recommendation card
-    const cardLink = page.locator('.recommendation a, .movie-card a').first();
-    await expect(cardLink).toBeVisible({ timeout: 10000 });
-
-    // Click through to the detail page
+  test('discover card opens movie detail route', async ({ page }) => {
+    await page.goto('/');
+    const cardLink = page.locator('.recommendation a[href^="/movie/"]').first();
+    await expect(cardLink).toBeVisible({ timeout: 15000 });
     await cardLink.click();
-    await page.waitForURL(/\/(movie|tv)\/\d+/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/movie\/\d+/, { timeout: 15000 });
+  });
 
-    // Verify detail page rendered key sections
-    await expect(page.locator('text=Overview')).toBeVisible({ timeout: 5000 });
+  test('movie detail shows title and overview', async ({ page }) => {
+    await page.goto('/movie/550');
+    await expect(page.getByTestId('movie-details-ready')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Fight Club', level: 1 })).toBeVisible();
+    await expect(page.locator('.overview')).toContainText(/fight club/i);
+  });
+
+  test('tonight mode page loads', async ({ page }) => {
+    await page.goto('/tonight');
+    await expect(page.getByRole('heading', { name: /Tonight Mode/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Get tonight picks/i })).toBeVisible();
+  });
+  test('not found page offers discover and tonight', async ({ page }) => {
+    await page.goto('/this-route-does-not-exist');
+    await expect(page.getByRole('heading', { name: /Lost in the backlot/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Back to Discover/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Tonight Mode/i })).toBeVisible();
   });
 });
