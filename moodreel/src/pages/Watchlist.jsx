@@ -2,12 +2,14 @@ import React, { useState, useCallback, useMemo, useEffect, useRef, useDeferredVa
 import { Link, useNavigate } from 'react-router-dom';
 import { useWatchlist } from '../hooks/useWatchlist';
 import MovieCard from '../components/MovieCard';
+import MediaImage from '../components/MediaImage';
 import { SkeletonGrid } from '../components/Skeleton';
 import SpinWheel from '../components/SpinWheel';
 import EmptyState from '../components/EmptyState';
 import searchService from '../services/searchService';
 import { shouldSkipLog } from '../services/apiErrorUtils';
 import { copyToClipboard, encodeSharePayload } from '../utils/clipboard';
+import { getDisplayTitle, getReleaseYear } from '../utils/mediaUtils';
 
 /**
  * Watchlist page with export/import, notes, watched tracking, random picker, matchmaker
@@ -381,6 +383,49 @@ function Watchlist() {
         </div>
       </div>
 
+      {/* Random Pick Result */}
+      {randomPick && (
+        <div className="random-pick-banner">
+          <Link
+            to={`/${randomPick.media_type || 'movie'}/${randomPick.id}`}
+            className="random-pick-art"
+            aria-label={`Open ${getDisplayTitle(randomPick)} details`}
+          >
+            {randomPick.poster_path || randomPick.backdrop_path ? (
+              <MediaImage
+                path={randomPick.poster_path || randomPick.backdrop_path}
+                type={randomPick.poster_path ? 'poster' : 'backdrop'}
+                size={randomPick.poster_path ? 'w185' : 'w780'}
+                alt=""
+                loading="eager"
+              />
+            ) : (
+              <span className="pick-icon" aria-hidden="true">
+                🎲
+              </span>
+            )}
+          </Link>
+          <div className="pick-content">
+            <p>Tonight's pick:</p>
+            <h3>{getDisplayTitle(randomPick)}</h3>
+            <span>
+              {[
+                getReleaseYear(randomPick),
+                (randomPick.media_type || 'movie') === 'tv' ? 'Series' : 'Film',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+          </div>
+          <Link
+            to={`/${randomPick.media_type || 'movie'}/${randomPick.id}`}
+            className="view-pick-btn"
+          >
+            View Details →
+          </Link>
+        </div>
+      )}
+
       {maybeTonightItems.length > 0 && (
         <section className="maybe-tonight-panel" aria-labelledby="maybe-tonight-heading">
           <div className="maybe-tonight-copy">
@@ -527,20 +572,6 @@ function Watchlist() {
           ) : (
             <SkeletonGrid count={4} />
           )}
-        </div>
-      )}
-
-      {/* Random Pick Result */}
-      {randomPick && (
-        <div className="random-pick-banner">
-          <span className="pick-icon">🎲</span>
-          <div className="pick-content">
-            <p>Tonight's pick:</p>
-            <h3>{randomPick.title}</h3>
-          </div>
-          <Link to={`/${randomPick.media_type}/${randomPick.id}`} className="view-pick-btn">
-            View Details →
-          </Link>
         </div>
       )}
 

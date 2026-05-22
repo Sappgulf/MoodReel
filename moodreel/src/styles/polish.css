@@ -1225,13 +1225,12 @@ a {
    19. Surprise Banner Polish
    ===================================================== */
 .surprise-banner {
-  cursor: pointer;
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
-.surprise-banner:focus-visible {
+.surprise-banner:focus-within {
   outline: 2px solid var(--color-gold);
   outline-offset: 2px;
 }

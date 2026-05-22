@@ -123,6 +123,7 @@ function Home() {
   const [passedDecisionIds, setPassedDecisionIds] = useState([]);
   const [lockedPickId, setLockedPickId] = useState('');
   const [decisionFeedback, setDecisionFeedback] = useState({});
+  const [isWinnerOverlayOpen, setIsWinnerOverlayOpen] = useState(false);
 
   const loadMoreRef = useRef(null);
   const searchControllerRef = useRef(null);
@@ -1057,11 +1058,35 @@ function Home() {
       ...(profile?.disliked || []),
       ...watchHistory.slice(0, 30).map(item => `${item.id}-${item.media_type || 'movie'}`),
     ];
+    const artworkCandidates = filteredByServices.filter(
+      item => item?.poster_path || item?.backdrop_path
+    );
+    const fallbackArtworkCandidates = recommendations.filter(
+      item => item?.poster_path || item?.backdrop_path
+    );
     handleSurpriseMe({
-      candidates: filteredByServices.length > 0 ? filteredByServices : trending,
+      candidates:
+        artworkCandidates.length > 0
+          ? artworkCandidates
+          : fallbackArtworkCandidates.length > 0
+            ? fallbackArtworkCandidates
+            : trending,
       avoidKeys,
     });
-  }, [filteredByServices, handleSurpriseMe, profile, trending, watchHistory]);
+  }, [filteredByServices, handleSurpriseMe, profile, recommendations, trending, watchHistory]);
+
+  useEffect(() => {
+    setIsWinnerOverlayOpen(Boolean(showWinnerInfo));
+  }, [showWinnerInfo, surpriseMovie?.id, surpriseMovie?.media_type]);
+
+  const handleShuffleDismiss = useCallback(() => {
+    if (showWinnerInfo) {
+      setIsWinnerOverlayOpen(false);
+      return;
+    }
+
+    closeSurprise();
+  }, [closeSurprise, showWinnerInfo]);
 
   useEffect(() => {
     if (filteredByServices.length === 0) return;
@@ -1104,10 +1129,10 @@ function Home() {
     <main className="page-enter discovery-page">
       <ShuffleOverlay
         isActive={isSurpriseLoading}
-        isWinner={showWinnerInfo}
+        isWinner={showWinnerInfo && isWinnerOverlayOpen}
         winnerItem={surpriseMovie}
         results={trending.length > 0 ? trending : recommendations}
-        onDismiss={closeSurprise}
+        onDismiss={handleShuffleDismiss}
       />
 
       {showWinnerInfo && surpriseMovie && (
