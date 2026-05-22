@@ -4,114 +4,114 @@ const RECENT_SEARCHES_KEY = 'moodreel-recent-searches';
 const MAX_RECENT_SEARCHES = 10;
 
 function readStoredJSON(key, fallback) {
-    try {
-        const stored = localStorage.getItem(key);
-        if (!stored) return fallback;
-        const parsed = JSON.parse(stored);
-        return parsed ?? fallback;
-    } catch {
-        return fallback;
-    }
+  try {
+    const stored = localStorage.getItem(key);
+    if (!stored) return fallback;
+    const parsed = JSON.parse(stored);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 export function useRecentSearches() {
-    const [recentSearches, setRecentSearches] = useState(() => 
-        readStoredJSON(RECENT_SEARCHES_KEY, [])
-    );
+  const [recentSearches, setRecentSearches] = useState(() =>
+    readStoredJSON(RECENT_SEARCHES_KEY, [])
+  );
 
-    useEffect(() => {
-        try {
-            localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recentSearches));
-        } catch {
-            // ignore quota errors
-        }
-    }, [recentSearches]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recentSearches));
+    } catch {
+      // ignore quota errors
+    }
+  }, [recentSearches]);
 
-    const addRecentSearch = useCallback((search) => {
-        if (!search || search.trim().length < 2) return;
-        
-        setRecentSearches(prev => {
-            const cleaned = search.trim();
-            const filtered = prev.filter(s => s.toLowerCase() !== cleaned.toLowerCase());
-            return [cleaned, ...filtered].slice(0, MAX_RECENT_SEARCHES);
-        });
-    }, []);
+  const addRecentSearch = useCallback(search => {
+    if (!search || search.trim().length < 2) return;
 
-    const clearRecentSearches = useCallback(() => {
-        setRecentSearches([]);
-    }, []);
+    setRecentSearches(prev => {
+      const cleaned = search.trim();
+      const filtered = prev.filter(s => s.toLowerCase() !== cleaned.toLowerCase());
+      return [cleaned, ...filtered].slice(0, MAX_RECENT_SEARCHES);
+    });
+  }, []);
 
-    return {
-        recentSearches,
-        addRecentSearch,
-        clearRecentSearches
-    };
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+  }, []);
+
+  return {
+    recentSearches,
+    addRecentSearch,
+    clearRecentSearches,
+  };
 }
 
 export function useVoiceSearch() {
-    const [isListening, setIsListening] = useState(false);
-    const [transcript, setTranscript] = useState('');
-    const [isSupported, setIsSupported] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [isSupported, setIsSupported] = useState(false);
 
-    useEffect(() => {
-        setIsSupported('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
-    }, []);
+  useEffect(() => {
+    setIsSupported('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
+  }, []);
 
-    const startListening = useCallback(() => {
-        if (!isSupported) return;
+  const startListening = useCallback(() => {
+    if (!isSupported) return;
 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
 
-        recognition.onstart = () => {
-            setIsListening(true);
-            setTranscript('');
-        };
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-        recognition.onresult = (event) => {
-            let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const result = event.results[i];
-                if (result.isFinal) {
-                    finalTranscript += result[0].transcript;
-                }
-            }
-            if (finalTranscript) {
-                setTranscript(finalTranscript);
-            }
-        };
-
-        recognition.onerror = (event) => {
-            console.debug('Speech recognition error:', event.error);
-            setIsListening(false);
-        };
-
-        recognition.onend = () => {
-            setIsListening(false);
-        };
-
-        recognition.start();
-        
-        return () => {
-            recognition.stop();
-        };
-    }, [isSupported]);
-
-    const stopListening = useCallback(() => {
-        setIsListening(false);
-    }, []);
-
-    return {
-        isListening,
-        transcript,
-        isSupported,
-        startListening,
-        stopListening
+    recognition.onstart = () => {
+      setIsListening(true);
+      setTranscript('');
     };
+
+    recognition.onresult = event => {
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        setTranscript(finalTranscript);
+      }
+    };
+
+    recognition.onerror = event => {
+      console.debug('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+
+    return () => {
+      recognition.stop();
+    };
+  }, [isSupported]);
+
+  const stopListening = useCallback(() => {
+    setIsListening(false);
+  }, []);
+
+  return {
+    isListening,
+    transcript,
+    isSupported,
+    startListening,
+    stopListening,
+  };
 }
 
 export default useRecentSearches;

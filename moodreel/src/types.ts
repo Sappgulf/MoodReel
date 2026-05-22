@@ -157,5 +157,5 @@ export const GENRE_MAP: Record<number, string> = {
   10770: 'TV Movie',
   53: 'Thriller',
   10752: 'War',
-  37: 'Western'
+  37: 'Western',
 };
