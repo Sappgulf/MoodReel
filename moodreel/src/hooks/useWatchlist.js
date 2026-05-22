@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { getMediaKey, getMediaType, normalizeMediaKey } from '../utils/mediaKeys';
 
 const WATCHLIST_KEY = 'moodreel_watchlist';
 const NOTES_KEY = 'moodreel_notes';
 const WATCHED_KEY = 'moodreel_watched';
 const FAVORITES_KEY = 'moodreel_favorites';
 
-const getMediaType = value => value?.media_type || 'movie';
-const getMediaKey = value => `${getMediaType(value)}:${value.id}`;
 const toLegacyId = key => key.split(':')[1];
 
 const migrateKeyedObject = (source, watchlistItems) => {
@@ -239,8 +238,15 @@ export function useWatchlist() {
     [isFavorite, removeFromFavorites, addToFavorites]
   );
 
+  const watchedKeys = useMemo(
+    () => new Set(Object.keys(watched).map(normalizeMediaKey).filter(Boolean)),
+    [watched]
+  );
+
   return {
     watchlist,
+    watched,
+    watchedKeys,
     favorites,
     addToWatchlist,
     removeFromWatchlist,

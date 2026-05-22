@@ -18,12 +18,12 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return actions;
 
-    return actions.filter((action) => {
+    return actions.filter(action => {
       const haystack = [
         action.label,
         action.description,
         action.shortcut,
-        ...(action.keywords || [])
+        ...(action.keywords || []),
       ]
         .filter(Boolean)
         .join(' ')
@@ -38,22 +38,25 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
 
   if (!isOpen) return null;
 
-  const selectAction = (action) => {
+  const selectAction = action => {
     if (!action) return;
     action.onSelect?.();
     onClose();
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = e => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev + 1) % Math.max(filteredActions.length, 1));
+      setSelectedIndex(prev => (prev + 1) % Math.max(filteredActions.length, 1));
       return;
     }
 
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev - 1 + Math.max(filteredActions.length, 1)) % Math.max(filteredActions.length, 1));
+      setSelectedIndex(
+        prev =>
+          (prev - 1 + Math.max(filteredActions.length, 1)) % Math.max(filteredActions.length, 1)
+      );
       return;
     }
 
@@ -70,29 +73,34 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
   };
 
   return (
+    <div
+      className="quick-actions-backdrop"
+      role="presentation"
+      data-app-modal="true"
+      onClick={onClose}
+    >
       <div
-        className="quick-actions-backdrop"
-        role="presentation"
+        ref={dialogRef}
         data-app-modal="true"
-        onClick={onClose}
-      >
-        <div
-          ref={dialogRef}
-          data-app-modal="true"
-          className="quick-actions-modal"
-          role="dialog"
+        className="quick-actions-modal"
+        role="dialog"
         aria-modal="true"
         aria-labelledby="quick-actions-title"
         aria-describedby="quick-actions-description"
         tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <div className="quick-actions-header">
           <div>
             <p className="quick-actions-kicker">Command palette</p>
             <h2 id="quick-actions-title">{title}</h2>
           </div>
-          <button type="button" className="quick-actions-close" onClick={onClose} aria-label="Close quick actions">
+          <button
+            type="button"
+            className="quick-actions-close"
+            onClick={onClose}
+            aria-label="Close quick actions"
+          >
             ✕
           </button>
         </div>
@@ -102,7 +110,7 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
           className="quick-actions-input"
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Search actions, navigation, or shortcuts..."
           aria-label="Search quick actions"
@@ -128,14 +136,16 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
                 </span>
                 <span className="quick-action-meta">
                   {action.shortcut && <kbd>{action.shortcut}</kbd>}
-                  {action.tone && <span className={`quick-action-tone quick-action-tone-${action.tone}`}>{action.tone}</span>}
+                  {action.tone && (
+                    <span className={`quick-action-tone quick-action-tone-${action.tone}`}>
+                      {action.tone}
+                    </span>
+                  )}
                 </span>
               </button>
             ))
           ) : (
-            <div className="quick-actions-empty">
-              No actions match “{query}”.
-            </div>
+            <div className="quick-actions-empty">No actions match “{query}”.</div>
           )}
         </div>
       </div>

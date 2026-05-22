@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "provider_id": 8,
+      "provider_name": "Netflix",
+      "logo_path": "/t2yyOv40HZeVlLjYsCsPHnWLk4W.jpg",
+      "display_priority": 1
+    },
+    {
+      "provider_id": 337,
+      "provider_name": "Disney Plus",
+      "logo_path": "/dgPueyEdOwpQ10fjuhL2xF6Khcm.jpg",
+      "display_priority": 2
+    }
+  ]
+}

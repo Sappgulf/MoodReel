@@ -1,0 +1,43 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "id": 550,
+      "media_type": "movie",
+      "title": "Fight Club",
+      "overview": "An insomniac office worker forms an underground fight club.",
+      "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrDu3JIy.jpg",
+      "vote_average": 8.4,
+      "popularity": 120,
+      "genre_ids": [18, 53],
+      "release_date": "1999-10-15",
+      "runtime": 139
+    },
+    {
+      "id": 13,
+      "media_type": "movie",
+      "title": "Forrest Gump",
+      "overview": "The presidencies of Kennedy and Johnson unfold through the perspective of an Alabama man.",
+      "poster_path": "/arw2vcBveWOVZ6J5StZe0hCuUk4.jpg",
+      "vote_average": 8.5,
+      "popularity": 95,
+      "genre_ids": [35, 18],
+      "release_date": "1994-07-06",
+      "runtime": 142
+    },
+    {
+      "id": 680,
+      "media_type": "movie",
+      "title": "Pulp Fiction",
+      "overview": "The lives of two mob hitmen, a boxer, and more intertwine in Los Angeles.",
+      "poster_path": "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
+      "vote_average": 8.5,
+      "popularity": 110,
+      "genre_ids": [80, 53],
+      "release_date": "1994-10-14",
+      "runtime": 154
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 3
+}

@@ -161,10 +161,22 @@ export function ensureArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function isMockMode() {
+  return resolveEnv(['VITE_MOCK_TMDB']) === 'true';
+}
+
 export async function tmdbGet(
   path,
   { params = {}, signal, cache = false, ttlMs = DEFAULT_TTL_MS, retries = MAX_RETRIES } = {}
 ) {
+  if (isMockMode()) {
+    const { getTmdbFixture } = await import('./tmdbFixtures.js');
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
+    return getTmdbFixture(path);
+  }
+
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new TmdbApiError({

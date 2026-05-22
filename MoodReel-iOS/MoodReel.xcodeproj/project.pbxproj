@@ -29,6 +29,9 @@
 		E40326A5753EB7A5EE67A227 /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5273963177C4E9D16E8CDB65 /* MediaDetailView.swift */; };
 		EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2536D00C4BA4F422998FD9 /* TMDBService.swift */; };
 		ECE5C170E8584E880E6CA504 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD15519799D5462834EA29A /* MainTabView.swift */; };
+		F1A2B3C41D5E6F708192A3B4 /* TonightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C51D5E6F708192A3B4 /* TonightView.swift */; };
+		F1A2B3C61D5E6F708192A3B4 /* TonightViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C71D5E6F708192A3B4 /* TonightViewModel.swift */; };
+		F1A2B3C81D5E6F708192A3B4 /* RecommendationScoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C91D5E6F708192A3B4 /* RecommendationScoring.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +59,9 @@
 		E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
 		F2E482C07B60A067B50F672D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		FFD7100D14EA3CB72DBB09E6 /* WatchlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchlistView.swift; sourceTree = "<group>"; };
+		F1A2B3C51D5E6F708192A3B4 /* TonightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonightView.swift; sourceTree = "<group>"; };
+		F1A2B3C71D5E6F708192A3B4 /* TonightViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TonightViewModel.swift; sourceTree = "<group>"; };
+		F1A2B3C91D5E6F708192A3B4 /* RecommendationScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationScoring.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -111,6 +117,7 @@
 			children = (
 				70D89820E4D93A4A909C1E8A /* DiscoverViewModel.swift */,
 				213BEF41155E24382B2CCC26 /* MediaDetailViewModel.swift */,
+				F1A2B3C71D5E6F708192A3B4 /* TonightViewModel.swift */,
 				287D988EDFE8B528D6CFC4DA /* WatchlistStore.swift */,
 			);
 			path = ViewModels;
@@ -120,6 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				2C2536D00C4BA4F422998FD9 /* TMDBService.swift */,
+				F1A2B3C91D5E6F708192A3B4 /* RecommendationScoring.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -130,6 +138,7 @@
 				E1E39CB25B65E8CD4F70C7C7 /* AchievementsView.swift */,
 				950A606672A209499B19F74E /* APIKeyEntryView.swift */,
 				798F21EEA5D53E49AAB453FC /* DiscoverView.swift */,
+				F1A2B3C51D5E6F708192A3B4 /* TonightView.swift */,
 				7BB75DB7A69A36700C8F5D6A /* InsightsView.swift */,
 				0AD15519799D5462834EA29A /* MainTabView.swift */,
 				20D5E04B3ECDBD792226E2E1 /* MediaCardView.swift */,
@@ -305,6 +314,9 @@
 				08568088B348945BAEA53AF8 /* SettingsView.swift in Sources */,
 				808DAA8FA8228F27F31BA962 /* TMDBConfig.swift in Sources */,
 				EB67D598615EEF49A1D5DD82 /* TMDBService.swift in Sources */,
+				F1A2B3C81D5E6F708192A3B4 /* RecommendationScoring.swift in Sources */,
+				F1A2B3C61D5E6F708192A3B4 /* TonightViewModel.swift in Sources */,
+				F1A2B3C41D5E6F708192A3B4 /* TonightView.swift in Sources */,
 				B2E093AB4B3C6C21ABF0F315 /* Theme.swift in Sources */,
 				B86001651F53833059C70623 /* ViewModifiers.swift in Sources */,
 				516D8865A4F2BC6B8ADC58F2 /* WatchlistStore.swift in Sources */,

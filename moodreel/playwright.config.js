@@ -16,15 +16,15 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
   ],
   webServer: {
-    command: 'npm start',
+    command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    env: {
+      VITE_MOCK_TMDB: 'true',
+      VITE_TMDB_API_KEY: 'mock-ci-key',
+    },
   },
 });

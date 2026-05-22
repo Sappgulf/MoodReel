@@ -1,47 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09090b" />
+    <meta
+      name="description"
+      content="MoodReel - Discover movies and TV shows that match your mood. Get personalized recommendations based on how you're feeling."
+    />
+    <meta
+      name="keywords"
+      content="movies, TV shows, mood, recommendations, streaming, what to watch"
+    />
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#09090b" />
-  <meta name="description"
-    content="MoodReel - Discover movies and TV shows that match your mood. Get personalized recommendations based on how you're feeling." />
-  <meta name="keywords" content="movies, TV shows, mood, recommendations, streaming, what to watch" />
+    <!-- Content Security Policy -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://image.tmdb.org https://www.youtube.com https://i.ytimg.com data: blob:; connect-src 'self' https://api.themoviedb.org; font-src 'self' https://fonts.gstatic.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https://www.youtube.com; worker-src 'self'; manifest-src 'self';"
+    />
 
-  <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://image.tmdb.org https://www.youtube.com https://i.ytimg.com data: blob:; connect-src 'self' https://api.themoviedb.org; font-src 'self' https://fonts.gstatic.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' https://www.youtube.com; worker-src 'self'; manifest-src 'self';" />
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MoodReel" />
 
-  <!-- PWA manifest -->
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="MoodReel" />
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="MoodReel – Discover Movies & TV by Mood" />
+    <meta
+      property="og:description"
+      content="Find the perfect movie or TV show for your mood. Personalized recommendations at your fingertips."
+    />
+    <meta property="og:site_name" content="MoodReel" />
+    <meta property="og:image" content="/og_preview.png" />
 
-  <!-- Open Graph / Social -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="MoodReel – Discover Movies & TV by Mood" />
-  <meta property="og:description"
-    content="Find the perfect movie or TV show for your mood. Personalized recommendations at your fingertips." />
-  <meta property="og:site_name" content="MoodReel" />
-  <meta property="og:image" content="/og_preview.png" />
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MoodReel – Discover Movies & TV by Mood" />
+    <meta name="twitter:description" content="Find the perfect movie or TV show for your mood." />
+    <meta name="twitter:image" content="/og_preview.png" />
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="MoodReel – Discover Movies & TV by Mood" />
-  <meta name="twitter:description" content="Find the perfect movie or TV show for your mood." />
-  <meta name="twitter:image" content="/og_preview.png" />
-
-  <title>MoodReel – Discover Movies & TV by Mood</title>
-</head>
+    <title>MoodReel – Discover Movies & TV by Mood</title>
+  </head>
 
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-
-
-</body>
-
+  </body>
 </html>

@@ -1,9 +1,16 @@
+import { getMediaKey } from './mediaKeys';
+
 const num = (v, d = 0) => (Number.isFinite(v) ? v : d);
+
+function getRuntimeMinutes(item) {
+  const runtime = item?.runtime ?? item?.episode_run_time?.[0];
+  return Number.isFinite(runtime) ? runtime : null;
+}
 
 export function scoreRecommendation(item, context = {}) {
   let score = num(item.vote_average) * 8 + Math.min(num(item.popularity) / 10, 20);
   const reasons = [];
-  const key = `${item.media_type || 'movie'}:${item.id}`;
+  const key = getMediaKey(item);
 
   if ((context.selectedGenres || []).some(g => (item.genre_ids || []).includes(g))) {
     score += 18;
@@ -17,9 +24,24 @@ export function scoreRecommendation(item, context = {}) {
     score += 16;
     reasons.push('Similar to titles you liked');
   }
-  if ((context.watchlistKeys || new Set()).has(key)) score += 6;
+  if ((context.watchlistKeys || new Set()).has(key)) {
+    score += 6;
+    reasons.push('On your watchlist');
+  }
   if ((context.favoriteKeys || new Set()).has(key)) score += 6;
   if (num(item.vote_average) >= 7.5) reasons.push('High audience rating');
+
+  const availableMinutes = context.availableMinutes;
+  const runtime = getRuntimeMinutes(item);
+  if (availableMinutes && runtime) {
+    if (runtime <= availableMinutes) {
+      score += 12;
+      reasons.push('Fits your available time');
+    } else if (runtime > availableMinutes + 25) {
+      score -= 18;
+      reasons.push('Longer than your time window');
+    }
+  }
 
   if ((context.dislikedKeys || new Set()).has(key)) {
     score -= 50;
