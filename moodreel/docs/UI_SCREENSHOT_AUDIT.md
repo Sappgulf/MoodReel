@@ -11,18 +11,18 @@ SCREENSHOT_DIR=./screenshots-audit CI=true npx playwright test e2e/screenshot-au
 
 ## Screenshots
 
-| # | Desktop / Mobile | Route |
-|---|------------------|-------|
-| 01 | discover | `/` (mood selected) |
-| 02 | tonight | `/tonight` (cozy + picks) |
-| 03 | watchlist | `/watchlist` |
-| 04 | achievements | `/achievements` |
-| 05 | profile | `/profile` (Explore hub) |
-| 06 | stats | `/stats` |
-| 07 | calendar | `/calendar` |
-| 08 | movie-detail | `/movie/550` |
-| 09 | not-found | invalid URL |
-| 10 | keyboard-shortcuts | `/` + `?` |
+| #   | Desktop / Mobile   | Route                     |
+| --- | ------------------ | ------------------------- |
+| 01  | discover           | `/` (mood selected)       |
+| 02  | tonight            | `/tonight` (cozy + picks) |
+| 03  | watchlist          | `/watchlist`              |
+| 04  | achievements       | `/achievements`           |
+| 05  | profile            | `/profile` (Explore hub)  |
+| 06  | stats              | `/stats`                  |
+| 07  | calendar           | `/calendar`               |
+| 08  | movie-detail       | `/movie/550`              |
+| 09  | not-found          | invalid URL               |
+| 10  | keyboard-shortcuts | `/` + `?`                 |
 
 Paths: `screenshots-audit/desktop/`, `screenshots-audit/mobile/`
 
