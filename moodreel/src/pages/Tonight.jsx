@@ -32,7 +32,7 @@ function pickTonightSlots(ranked, mode) {
 }
 
 export default function Tonight() {
-  const [mood, setMood] = useState('');
+  const [mood, setMood] = useState('cozy');
   const [availableTime, setAvailableTime] = useState(120);
   const [servicesOnly, setServicesOnly] = useState(true);
   const [contentType, setContentType] = useState('all');
@@ -143,6 +143,18 @@ export default function Tonight() {
       </header>
 
       <div className="glass-panel tonight-controls">
+        <div className="tonight-mood-presets" role="group" aria-label="Quick mood presets">
+          {['cozy', 'excited', 'romantic', 'scary', 'nostalgic', 'curious'].map(preset => (
+            <button
+              key={preset}
+              type="button"
+              className={`tonight-preset-chip ${mood === preset ? 'active' : ''}`}
+              onClick={() => setMood(preset)}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
         <label className="tonight-field">
           <span>Mood</span>
           <input

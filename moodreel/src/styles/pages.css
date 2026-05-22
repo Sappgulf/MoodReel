@@ -2472,6 +2472,63 @@
   margin: 0 auto;
 }
 
+.profile-hub {
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.profile-hub-title {
+  margin: 0 0 var(--spacing-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.profile-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.profile-hub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.profile-hub-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-gold);
+}
+
+.profile-hub-card--featured {
+  border-color: var(--color-border-gold);
+  background: var(--gradient-gold-soft);
+}
+
+.profile-hub-icon {
+  font-size: 1.5rem;
+}
+
+.profile-hub-label {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.profile-hub-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
 .profile-hero {
   padding: var(--spacing-xl);
   margin-bottom: var(--spacing-xl);

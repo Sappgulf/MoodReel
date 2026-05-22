@@ -65,6 +65,26 @@ function Profile() {
 
   return (
     <div className="profile-page penthouse-container">
+      <nav className="profile-hub glass-card" aria-label="Explore more">
+        <h2 className="profile-hub-title">Explore</h2>
+        <div className="profile-hub-grid">
+          <Link to="/stats" className="profile-hub-card">
+            <span className="profile-hub-icon">📊</span>
+            <span className="profile-hub-label">Stats</span>
+            <span className="profile-hub-desc">Taste trends & genres</span>
+          </Link>
+          <Link to="/calendar" className="profile-hub-card">
+            <span className="profile-hub-icon">📅</span>
+            <span className="profile-hub-label">Calendar</span>
+            <span className="profile-hub-desc">30-day mood history</span>
+          </Link>
+          <Link to="/tonight" className="profile-hub-card profile-hub-card--featured">
+            <span className="profile-hub-icon">🌙</span>
+            <span className="profile-hub-label">Tonight</span>
+            <span className="profile-hub-desc">3 smart picks</span>
+          </Link>
+        </div>
+      </nav>
       <div className="profile-hero glass-card">
         <div className="profile-header">
           <div className="avatar-container big-avatar">

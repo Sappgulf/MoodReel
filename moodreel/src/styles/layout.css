@@ -50,8 +50,37 @@
   margin: 0;
 }
 
-.App-header p {
-  display: none;
+.App-header .header-tagline {
+  display: block;
+  max-width: 1400px;
+  margin: 0.35rem auto 0;
+  padding: 0 var(--spacing-xl);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.nav-link--featured {
+  border: 1px solid var(--color-border-gold);
+  background: var(--gradient-gold-soft);
+}
+
+.nav-link--featured.active {
+  color: var(--color-bg-primary);
+  background: var(--gradient-gold);
+}
+
+.desktop-nav-secondary {
+  margin-top: 0.5rem;
+  margin-left: var(--spacing-xl);
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.nav-link--subtle {
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 .header-controls {

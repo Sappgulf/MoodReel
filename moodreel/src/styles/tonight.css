@@ -1,0 +1,175 @@
+/* Tonight Mode — curated picks experience */
+
+.tonight-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tonight-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.tonight-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  margin: 0 0 var(--spacing-sm);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tonight-subtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 1.05rem;
+  max-width: 52ch;
+}
+
+.tonight-controls {
+  display: grid;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-xl);
+}
+
+.tonight-mood-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.tonight-preset-chip {
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.tonight-preset-chip:hover {
+  border-color: var(--color-border-gold);
+  color: var(--color-text-primary);
+}
+
+.tonight-preset-chip.active {
+  border-color: var(--color-border-gold);
+  background: var(--gradient-gold-soft);
+  color: var(--color-gold);
+}
+
+.tonight-field {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.tonight-field span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tonight-field input,
+.tonight-field select {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+.tonight-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.tonight-controls .primary-button {
+  justify-self: start;
+  margin-top: var(--spacing-sm);
+}
+
+.tonight-status {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+.tonight-status--error {
+  color: var(--color-error);
+}
+
+.tonight-hint {
+  margin: 0 0 var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.tonight-grid {
+  display: grid;
+  gap: var(--spacing-xl);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.tonight-pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.tonight-pick:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-gold);
+}
+
+.tonight-pick-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.tonight-pick-reason {
+  margin: 0 0 var(--spacing-sm);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+@media (min-width: 900px) {
+  .tonight-controls {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tonight-mood-presets,
+  .tonight-controls .primary-button,
+  .tonight-checkbox {
+    grid-column: 1 / -1;
+  }
+}

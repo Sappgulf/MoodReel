@@ -39,6 +39,12 @@ test.describe('MoodReel E2E', () => {
 
     await page
       .locator('.desktop-nav')
+      .getByRole('link', { name: /Tonight/i })
+      .click();
+    await expect(page).toHaveURL(/\/tonight/);
+
+    await page
+      .locator('.desktop-nav')
       .getByRole('link', { name: /Watchlist/i })
       .click();
     await expect(page).toHaveURL(/\/watchlist/);
@@ -48,9 +54,6 @@ test.describe('MoodReel E2E', () => {
       .getByRole('link', { name: /Profile/i })
       .click();
     await expect(page).toHaveURL(/\/profile/);
-
-    await page.locator('.desktop-nav').getByRole('link', { name: /Stats/i }).click();
-    await expect(page).toHaveURL(/\/stats/);
   });
 
   test('theme toggle works', async ({ page }) => {
