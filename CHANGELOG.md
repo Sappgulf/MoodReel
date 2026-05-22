@@ -1,13 +1,14 @@
 # CHANGELOG
 
-## 2026-05-21
+## 2026-05-22
 
 ### Implemented
-- **Scope:** web tests + iOS docs + E2E
+- **Scope:** web E2E + iOS Tonight Mode
 - **What changed:**
-  - Audit pass: lockfile sync, Tonight repair, offline UX, provider tests, CI E2E mocks.
-  - Follow-up: `modalFocus` unit tests; E2E skip-link, detail, and Tonight smoke; iOS TestFlight + crash docs.
-- **Why it changed:** Ship-ready CI and TestFlight preparation.
+  - Movie detail page: request-id fetch guard, `data-testid="movie-details-ready"`, inflight abort cleanup in `searchService`.
+  - Playwright: Fight Club detail content assertion (`/movie/550`).
+  - iOS: `RecommendationScoring`, `TonightViewModel`, `TonightView`, Tonight tab in `MainTabView`.
+- **Why:** User asked for full detail-page E2E and iOS Tonight parity with web.
 
 ## 2026-05-01
 

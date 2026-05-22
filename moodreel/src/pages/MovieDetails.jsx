@@ -53,6 +53,7 @@ function MovieDetails() {
   const [actorError, setActorError] = useState('');
   const actorRequestRef = useRef(null);
   const actorRequestIdRef = useRef(0);
+  const detailsRequestIdRef = useRef(0);
 
   const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
@@ -66,7 +67,8 @@ function MovieDetails() {
 
   useEffect(() => {
     const controller = new AbortController();
-    let active = true;
+    const requestId = detailsRequestIdRef.current + 1;
+    detailsRequestIdRef.current = requestId;
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -79,14 +81,16 @@ function MovieDetails() {
       setCast([]);
 
       if (!isValidId) {
-        setError('Invalid details URL. Please open a valid item.');
-        setIsLoading(false);
+        if (requestId === detailsRequestIdRef.current) {
+          setError('Invalid details URL. Please open a valid item.');
+          setIsLoading(false);
+        }
         return;
       }
 
       try {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
-        if (!active) return;
+        if (requestId !== detailsRequestIdRef.current) return;
 
         setContent(data.details);
         setSimilar(data.similar.slice(0, 6));
@@ -113,14 +117,14 @@ function MovieDetails() {
         // Track this view in history with credits for DNA feature
         addToHistory({ ...data.details, media_type: mediaType }, data.credits);
       } catch (err) {
-        if (!active || isAbortError(err)) return;
+        if (requestId !== detailsRequestIdRef.current || isAbortError(err)) return;
         setError(getUserFacingMessage(err) || 'Error fetching details.');
         if (!shouldSkipLog(err)) {
           // eslint-disable-next-line no-console
           console.error(err);
         }
       } finally {
-        if (active) {
+        if (requestId === detailsRequestIdRef.current) {
           setIsLoading(false);
         }
       }
@@ -129,7 +133,6 @@ function MovieDetails() {
     fetchData();
 
     return () => {
-      active = false;
       controller.abort();
     };
   }, [id, mediaType, addToHistory, isValidId, requestNonce]);
@@ -323,7 +326,7 @@ function MovieDetails() {
         ← Back to Discover
       </Link>
 
-      <article className="movie-details">
+      <article className="movie-details" data-testid="movie-details-ready">
         <section className="movie-details-hero-panel glass-panel">
           <div className="movie-details-header">
             {/* Poster */}

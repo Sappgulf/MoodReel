@@ -104,6 +104,13 @@ test.describe('MoodReel E2E', () => {
     await expect(page).toHaveURL(/\/movie\/\d+/, { timeout: 15000 });
   });
 
+  test('movie detail shows title and overview', async ({ page }) => {
+    await page.goto('/movie/550');
+    await expect(page.getByTestId('movie-details-ready')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Fight Club', level: 1 })).toBeVisible();
+    await expect(page.locator('.overview')).toContainText(/fight club/i);
+  });
+
   test('tonight mode page loads', async ({ page }) => {
     await page.goto('/tonight');
     await expect(page.getByRole('heading', { name: /Tonight Mode/i })).toBeVisible();

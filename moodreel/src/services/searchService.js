@@ -620,6 +620,15 @@ export async function fetchContentDetails(id, mediaType = 'movie', signal) {
   })();
 
   contentDetailsInflight.set(cacheKey, requestPromise);
+  signal?.addEventListener(
+    'abort',
+    () => {
+      if (contentDetailsInflight.get(cacheKey) === requestPromise) {
+        contentDetailsInflight.delete(cacheKey);
+      }
+    },
+    { once: true }
+  );
   return requestPromise;
 }
 
