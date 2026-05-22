@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('MoodReel E2E', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('moodreel-onboarded', 'true');
+    });
+  });
+
   test('homepage loads without errors', async ({ page }) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -25,7 +31,7 @@ test.describe('MoodReel E2E', () => {
       await page.waitForTimeout(1500);
     }
 
-    const movieCards = page.locator('.movie-card, [class*="movie-card"]');
+    const movieCards = page.locator('.recommendation, .movie-card, .swipe-card');
     await expect(movieCards.first()).toBeVisible({ timeout: 10000 });
   });
 
@@ -56,7 +62,7 @@ test.describe('MoodReel E2E', () => {
 
   test('watchlist page loads', async ({ page }) => {
     await page.goto('/watchlist');
-    await expect(page.locator('.watchlist-page, [class*="watchlist"]')).toBeVisible({
+    await expect(page.locator('.watchlist-page')).toBeVisible({
       timeout: 5000,
     });
   });
@@ -67,7 +73,7 @@ test.describe('MoodReel E2E', () => {
     await page.keyboard.press('?');
     await page.waitForTimeout(500);
 
-    const modal = page.locator('.keyboard-shortcuts-modal, [class*="shortcuts"]');
+    const modal = page.locator('.shortcuts-modal');
     if (await modal.isVisible({ timeout: 2000 })) {
       await page.keyboard.press('Escape');
     }
@@ -102,6 +108,7 @@ test.describe('MoodReel E2E', () => {
     await page.waitForURL(/\/(movie|tv)\/\d+/, { timeout: 10000 });
 
     // Verify detail page rendered key sections
-    await expect(page.locator('text=Overview')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.movie-details')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.movie-details .overview')).toBeVisible({ timeout: 5000 });
   });
 });

@@ -575,7 +575,7 @@ export async function fetchContentDetails(id, mediaType = 'movie', signal) {
     return cached;
   }
 
-  if (contentDetailsInflight.has(cacheKey)) {
+  if (!signal && contentDetailsInflight.has(cacheKey)) {
     return contentDetailsInflight.get(cacheKey);
   }
 
@@ -619,7 +619,9 @@ export async function fetchContentDetails(id, mediaType = 'movie', signal) {
     }
   })();
 
-  contentDetailsInflight.set(cacheKey, requestPromise);
+  if (!signal) {
+    contentDetailsInflight.set(cacheKey, requestPromise);
+  }
   return requestPromise;
 }
 
