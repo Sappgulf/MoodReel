@@ -50,6 +50,15 @@ function getTrailer(videos = []) {
   );
 }
 
+function formatConfidenceLabel(value) {
+  const score = Number(value);
+  if (!Number.isFinite(score)) return 'Review score';
+  if (score >= 92) return 'Lock this in';
+  if (score >= 85) return 'Confident';
+  if (score >= 78) return 'Strong';
+  return 'Room for risk';
+}
+
 function mergeDetails(item, detailsBundle) {
   if (!detailsBundle?.details) return item;
   const details = detailsBundle.details;
@@ -89,6 +98,9 @@ function TonightPickCard({
   const runtime = getRuntime(item);
   const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
   const detailPath = `/${item.media_type || 'movie'}/${item.id}`;
+  const confidence = Number.isFinite(Number(pick.confidence)) ? Math.round(pick.confidence) : 0;
+  const confidenceLabel = pick.confidenceLabel || formatConfidenceLabel(confidence);
+  const topReasons = pick.reasons?.slice(0, 2) || [];
 
   return (
     <article className={`tonight-pick-card tonight-pick-card-${pick.slot}`}>
@@ -105,7 +117,14 @@ function TonightPickCard({
       <div className="tonight-pick-body">
         <div className="tonight-pick-slot-row">
           <span className="tonight-pick-slot">{pick.slotLabel}</span>
-          <span className="tonight-pick-confidence">{pick.confidence || 0}% match</span>
+          <div className="tonight-pick-confidence-group">
+            <span className="tonight-pick-confidence">{confidence}% match</span>
+            <span className="tonight-pick-confidence-label">{confidenceLabel}</span>
+          </div>
+        </div>
+
+        <div className="tonight-confidence-track" aria-hidden="true">
+          <span className="tonight-confidence-fill" style={{ width: `${confidence}%` }} />
         </div>
 
         <h2>
@@ -128,6 +147,14 @@ function TonightPickCard({
           <p>{pick.explanation || getDisplayOverview(item)}</p>
           {pick.debateLine && <small>{pick.debateLine}</small>}
         </div>
+
+        {topReasons.length > 0 && (
+          <div className="tonight-pick-reason-grid">
+            {topReasons.map((reason, index) => (
+              <span key={`${pick.slot}-${index}`}>✦ {reason}</span>
+            ))}
+          </div>
+        )}
 
         {pick.tags?.length > 0 && (
           <div className="tonight-pick-tags">
@@ -301,7 +328,8 @@ export default function Tonight() {
           page: 1,
           multiPage: true,
         },
-        controller.signal
+        controller.signal,
+        { tasteProfile: profile }
       );
 
       if (result.error && !result.results?.length) {

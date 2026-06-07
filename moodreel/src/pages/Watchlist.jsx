@@ -14,6 +14,24 @@ import { getDisplayTitle, getReleaseYear } from '../utils/mediaUtils';
 /**
  * Watchlist page with export/import, notes, watched tracking, random picker, matchmaker
  */
+
+function formatRecencyLabel(watchlist = []) {
+  const latest = watchlist.reduce((best, item) => {
+    const at = Number(item.addedAt);
+    return Number.isFinite(at) && at > best ? at : best;
+  }, 0);
+
+  if (!latest) return 'No saved items yet';
+
+  const ageMs = Date.now() - latest;
+  if (ageMs < 60 * 60 * 1000) return 'Last save: under 1 hour ago';
+  if (ageMs < 24 * 60 * 60 * 1000) {
+    return `Last save: ${Math.floor(ageMs / (60 * 60 * 1000))}h ago`;
+  }
+  const days = Math.floor(ageMs / (24 * 60 * 60 * 1000));
+  return `Last save: ${days}d ago`;
+}
+
 function Watchlist() {
   const {
     watchlist,
@@ -95,14 +113,6 @@ function Watchlist() {
   }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
 
   const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
-  const libraryStats = useMemo(
-    () => [
-      { label: 'Saved', value: watchlist.length },
-      { label: 'Watched', value: watchedCount },
-      { label: 'Favorites', value: favorites.length },
-    ],
-    [favorites.length, watchedCount, watchlist.length]
-  );
 
   const maybeTonightItems = useMemo(() => {
     return watchlist
@@ -114,6 +124,17 @@ function Watchlist() {
       })
       .slice(0, 3);
   }, [isWatched, watchlist]);
+
+  const watchlistFreshness = useMemo(() => formatRecencyLabel(watchlist), [watchlist]);
+  const libraryStats = useMemo(
+    () => [
+      { label: 'Saved', value: watchlist.length },
+      { label: 'Watched', value: watchedCount },
+      { label: 'Favorites', value: favorites.length },
+      { label: 'Tonight-ready', value: maybeTonightItems.length },
+    ],
+    [favorites.length, maybeTonightItems.length, watchedCount, watchlist.length]
+  );
 
   // Import from JSON file
   const handleImportFile = useCallback(
@@ -312,6 +333,7 @@ function Watchlist() {
           <p className="page-subtitle">
             Keep the short list clean, sortable, and ready for tonight.
           </p>
+          <p className="watchlist-recency">{watchlistFreshness}</p>
           <div className="watchlist-tabs" role="group" aria-label="Watchlist views">
             <button
               type="button"
@@ -333,7 +355,12 @@ function Watchlist() {
         </div>
         <div className="watchlist-summary" aria-label="Library summary">
           {libraryStats.map(stat => (
-            <div key={stat.label} className="watchlist-summary-item">
+            <div
+              key={stat.label}
+              className={`watchlist-summary-item ${
+                stat.label === 'Tonight-ready' ? 'watchlist-summary-item-ready' : ''
+              }`}
+            >
               <strong>{stat.value}</strong>
               <span>{stat.label}</span>
             </div>

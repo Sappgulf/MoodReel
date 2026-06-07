@@ -22,6 +22,7 @@ import { safeGetRaw, safeSetRaw, safeRemove } from '../storage/safeStorage';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour (matched Home.js)
 const CONTENT_DETAILS_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const ACTOR_CREDITS_TTL_MS = 60 * 60 * 1000; // 1 hour
+const SEARCH_CACHE_MAX_ENTRIES = 80;
 const CACHE_KEY = SK.SEARCH_CACHE;
 const SEARCH_FALLBACK_EVENT = 'moodreel:search-fallback';
 
@@ -57,6 +58,16 @@ function hydrateSearchCache() {
     } catch {
       // Ignore cleanup failures.
     }
+  }
+}
+
+function enforceSearchCacheLimit() {
+  if (searchCache.size <= SEARCH_CACHE_MAX_ENTRIES) return;
+
+  const ordered = [...searchCache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp);
+  const removeCount = searchCache.size - SEARCH_CACHE_MAX_ENTRIES;
+  for (let i = 0; i < removeCount; i += 1) {
+    searchCache.delete(ordered[i]?.[0]);
   }
 }
 
@@ -178,17 +189,32 @@ function isUnreachableTmdbError(err) {
   return shouldSkipLog(err);
 }
 
+function applyTasteProfileToSearchResult(result, normalizedQuery, tasteProfile = null) {
+  if (!result || !Array.isArray(result.results)) {
+    return result;
+  }
+
+  const moodGenres = parseMoodToGenres((normalizedQuery || '').trim());
+
+  return {
+    ...result,
+    results: applySearchRanking(
+      result.results,
+      normalizedQuery,
+      getTieBreakers,
+      moodGenres,
+      tasteProfile
+    ),
+  };
+}
+
 /**
  * Set cache entry
  */
 function setCache(key, data) {
   searchCache.set(key, { data, timestamp: Date.now() });
 
-  // Limit cache size to prevent memory bloat (keep last 50 entries)
-  if (searchCache.size > 50) {
-    const oldestKey = searchCache.keys().next().value;
-    searchCache.delete(oldestKey);
-  }
+  enforceSearchCacheLimit();
 
   persistSearchCache();
 }
@@ -321,7 +347,7 @@ async function fetchMediaType(params, mediaType, signal) {
 /**
  * Main search function
  */
-export async function search(params, signal) {
+export async function search(params, signal, { tasteProfile } = {}) {
   const normalizedQuery = (params.query || '').trim();
 
   // Validate: need at least a query or genre selection
@@ -340,11 +366,12 @@ export async function search(params, signal) {
   // Cache and inflight hits should not consume the client-side rate limit.
   const cached = getCached(cacheKey);
   if (cached) {
-    return cached;
+    return applyTasteProfileToSearchResult(cached, normalizedQuery, tasteProfile);
   }
 
   if (inflightRequests.has(cacheKey)) {
-    return inflightRequests.get(cacheKey);
+    const inFlightResult = await inflightRequests.get(cacheKey);
+    return applyTasteProfileToSearchResult(inFlightResult, normalizedQuery, tasteProfile);
   }
 
   // Check rate limit
@@ -510,7 +537,8 @@ export async function search(params, signal) {
   })();
 
   inflightRequests.set(cacheKey, requestPromise);
-  return requestPromise;
+  const result = await requestPromise;
+  return applyTasteProfileToSearchResult(result, normalizedQuery, tasteProfile);
 }
 
 /**

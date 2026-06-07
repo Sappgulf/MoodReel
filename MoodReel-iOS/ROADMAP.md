@@ -33,6 +33,9 @@ The dedicated native Tonight Mode surface now exists without replacing the exist
 
 - Add runtime enrichment from detail calls for the three native picks.
 - Add native UI tests or snapshot coverage for the Tonight tab once the project has a test target.
+- Mirror web confidence polish: add native confidence label + compact evidence chips on each Tonight card.
+- Add Tonight-ready lane metadata for saved titles (e.g., un-watched top-3 cards in a quick-take strip).
+- Add lightweight screenshot workflow for native nightly parity verification.
 
 ## Guardrails
 

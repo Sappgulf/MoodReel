@@ -32,4 +32,18 @@ describe('searchRanking', () => {
 
     expect(ranked[0].title).toBe('Spider Woman');
   });
+
+  it('uses taste profile to promote liked titles and de-prioritize disliked titles', () => {
+    const tasteSample = [
+      { id: 1, title: 'night watch', media_type: 'movie', popularity: 10 },
+      { id: 2, title: 'night shift', media_type: 'movie', popularity: 10 },
+      { id: 3, title: 'night owl', media_type: 'movie', popularity: 10 },
+    ];
+    const ranked = applySearchRanking(tasteSample, 'night', null, [], {
+      liked: ['2-movie'],
+      disliked: ['3-movie'],
+    });
+
+    expect(ranked.map(item => item.id)).toEqual([2, 1, 3]);
+  });
 });

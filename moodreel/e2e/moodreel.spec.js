@@ -158,6 +158,55 @@ test.describe('MoodReel E2E', () => {
     await expect(page.locator('.vite-error-overlay, [data-nextjs-dialog-overlay]')).toHaveCount(0);
   });
 
+  test('title search respects taste profile ranking', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'moodreel-taste-profile',
+        JSON.stringify({
+          liked: ['102-movie'],
+          disliked: ['101-movie'],
+        })
+      );
+    });
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Search all' }).click();
+    await page.locator('#title-search-input').fill('zz');
+    await expect(page.locator('.swipe-card, .recommendations .recommendation').first()).toBeVisible(
+      {
+        timeout: 10000,
+      }
+    );
+
+    await expect(
+      page.locator('.recommendations .recommendation h2, .swipe-card h3').first()
+    ).toHaveText('Gold Room Mystery');
+    await expect(
+      page.locator('.recommendations .recommendation h2, .swipe-card h3').first()
+    ).not.toHaveText('Cozy Signal');
+  });
+
+  test('main routes expose stable route-specific structure', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('h1')).toContainText('MoodReel');
+
+    await page.goto('/tonight');
+    await expect(page.getByRole('heading', { name: /Find what to watch tonight/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Find Tonight's Picks/i })).toBeVisible();
+
+    await page.goto('/stats');
+    await expect(page.locator('h1')).toContainText('MoodReel');
+    await expect(page.locator('#main-content')).toContainText('Your Watch Stats');
+
+    await page.goto('/profile');
+    await expect(page.locator('main')).toContainText('Privacy & Local Data');
+
+    await page.goto('/calendar');
+    await expect(page.locator('#main-content')).toBeVisible();
+    await page.goto('/achievements');
+    await expect(page.locator('#main-content')).toBeVisible();
+  });
+
   test('pick between these locks a home shortlist title', async ({ page }, testInfo) => {
     test.skip(
       testInfo.project.name === 'Mobile Safari',

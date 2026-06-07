@@ -2049,9 +2049,9 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 
 .watchlist-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--spacing-xs);
-  min-width: min(100%, 320px);
+  min-width: min(100%, 420px);
   padding: var(--spacing-xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -2081,6 +2081,18 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.watchlist-summary-item-ready {
+  border: 1px solid rgba(255, 215, 0, 0.32);
+  background: linear-gradient(160deg, rgba(255, 215, 0, 0.14), var(--color-bg-elevated));
+}
+
+.watchlist-recency {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 500;
 }
 
 .watchlist-tabs {
@@ -2155,6 +2167,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 
   .watchlist-summary {
     width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .watchlist-tabs .tab-btn {
@@ -4021,6 +4034,62 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   color: var(--color-gold);
   border-color: rgba(255, 215, 0, 0.26);
   text-transform: uppercase;
+}
+
+.tonight-pick-confidence-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tonight-pick-confidence-label {
+  display: inline-flex;
+  padding: 0.22rem 0.48rem;
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+  background: rgba(255, 215, 0, 0.1);
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.tonight-confidence-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.18);
+}
+
+.tonight-confidence-fill {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-text-gold), #ffe58f);
+  transition: width var(--transition-base);
+}
+
+.tonight-pick-reason-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tonight-pick-reason-grid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.22rem 0.48rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .tonight-pick-body h2 {

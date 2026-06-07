@@ -45,7 +45,35 @@ function getRankScore(title, queryTokens, normalizedQuery, genres = [], moodGenr
   return score;
 }
 
-export function applySearchRanking(results, query, getTieBreakers, moodGenres = []) {
+function getTasteProfileKeys(profile = {}) {
+  return {
+    liked: new Set(Array.isArray(profile.liked) ? profile.liked : []),
+    disliked: new Set(Array.isArray(profile.disliked) ? profile.disliked : []),
+  };
+}
+
+function getItemProfileKey(item) {
+  const mediaType = item?.media_type || 'movie';
+  return `${item?.id}-${mediaType}`;
+}
+
+function getTasteScore(item, tasteProfile = null) {
+  if (!tasteProfile) return 0;
+  const { liked, disliked } = getTasteProfileKeys(tasteProfile);
+  const key = getItemProfileKey(item);
+
+  if (liked.has(key)) return -0.8;
+  if (disliked.has(key)) return 1.8;
+  return 0;
+}
+
+export function applySearchRanking(
+  results,
+  query,
+  getTieBreakers,
+  moodGenres = [],
+  tasteProfile = null
+) {
   if (!query) return results;
   const normalizedQuery = normalize(query);
   if (!normalizedQuery) return results;
@@ -60,10 +88,14 @@ export function applySearchRanking(results, query, getTieBreakers, moodGenres = 
       item.genre_ids || [],
       moodGenres
     ),
+    tasteScore: getTasteScore(item, tasteProfile),
   }));
 
   ranked.sort((a, b) => {
-    if (a.score !== b.score) return a.score - b.score;
+    const adjustedScoreA = a.score + a.tasteScore;
+    const adjustedScoreB = b.score + b.tasteScore;
+
+    if (adjustedScoreA !== adjustedScoreB) return adjustedScoreA - adjustedScoreB;
 
     // Secondary sort: Popularity (heavy weight)
     const aPop = a.item.popularity || 0;

@@ -123,7 +123,7 @@ describe('searchService', () => {
   });
 
   describe('search caching', () => {
-    it('returns cached results before consuming another rate-limit slot', async () => {
+    it('returns cached results and does not re-call tmdbGet', async () => {
       tmdbGet.mockResolvedValue({
         results: [
           {
@@ -145,7 +145,47 @@ describe('searchService', () => {
       const second = await search(params);
 
       expect(first.results).toHaveLength(1);
-      expect(second).toBe(first);
+      expect(second).toEqual(first);
+      expect(tmdbGet).toHaveBeenCalledTimes(1);
+      expect(canMakeRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it('applies taste profile ranking per request for the same cached query', async () => {
+      tmdbGet.mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            title: 'night watch',
+            overview: 'The first result',
+            vote_average: 7,
+            vote_count: 50,
+            popularity: 10,
+          },
+          {
+            id: 2,
+            title: 'night shift',
+            overview: 'The second result',
+            vote_average: 7,
+            vote_count: 50,
+            popularity: 10,
+          },
+        ],
+        page: 1,
+        total_pages: 1,
+        total_results: 2,
+      });
+
+      const params = { query: 'night', type: 'movie' };
+      const neutral = await search(params);
+      const personalized = await search(params, undefined, {
+        tasteProfile: {
+          liked: ['2-movie'],
+          disliked: ['1-movie'],
+        },
+      });
+
+      expect(neutral.results.map(item => item.id)).toEqual([1, 2]);
+      expect(personalized.results.map(item => item.id)).toEqual([2, 1]);
       expect(tmdbGet).toHaveBeenCalledTimes(1);
       expect(canMakeRequest).toHaveBeenCalledTimes(1);
     });

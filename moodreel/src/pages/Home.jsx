@@ -103,7 +103,7 @@ function Home() {
     fetchTrending,
     search: getRecommendations,
     loadMore: loadMoreResults,
-  } = useMovieDiscovery(currentYear, region);
+  } = useMovieDiscovery(currentYear, region, [], { tasteProfile: profile });
 
   const [visibleCount, setVisibleCount] = useState(8);
 
@@ -248,7 +248,8 @@ function Home() {
             page: 1,
             multiPage: true,
           },
-          controller.signal
+          controller.signal,
+          { tasteProfile: profile }
         );
 
         if (result.error) {
@@ -266,9 +267,8 @@ function Home() {
         setIsSearchingAll(false);
       }
     },
-    [contentType, selectedProviders, minRating, matchType, region, advancedFilters]
+    [contentType, selectedProviders, minRating, matchType, region, advancedFilters, profile]
   );
-
   useEffect(() => {
     if (searchScope !== 'all') {
       setSearchResults([]);
@@ -699,10 +699,16 @@ function Home() {
         const title = (item.title || item.name || '').toLowerCase();
         return title.includes(debouncedQuery.toLowerCase());
       });
-      return applySearchRanking(filtered, debouncedQuery, tieBreakers, selectedGenres);
+      return applySearchRanking(filtered, debouncedQuery, tieBreakers, selectedGenres, profile);
     }
     if (debouncedQuery && searchScope === 'all') {
-      return applySearchRanking(searchResults, debouncedQuery, tieBreakers, selectedGenres);
+      return applySearchRanking(
+        searchResults,
+        debouncedQuery,
+        tieBreakers,
+        selectedGenres,
+        profile
+      );
     }
     return filteredRecommendations;
   }, [
@@ -712,6 +718,7 @@ function Home() {
     searchScope,
     tieBreakers,
     selectedGenres,
+    profile,
   ]);
 
   const rankedScorecards = useMemo(() => {

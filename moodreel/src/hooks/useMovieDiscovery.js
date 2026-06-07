@@ -2,7 +2,12 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import searchService from '../services/searchService';
 import { getUserFacingMessage, shouldSkipLog } from '../services/apiErrorUtils';
 
-export function useMovieDiscovery(currentYear, region = 'US', initialProviders = []) {
+export function useMovieDiscovery(
+  currentYear,
+  region = 'US',
+  initialProviders = [],
+  { tasteProfile } = {}
+) {
   const [mood, setMood] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [trending, setTrending] = useState([]);
@@ -92,7 +97,8 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
           page: 1,
           multiPage: true,
         },
-        controller.signal
+        controller.signal,
+        { tasteProfile }
       );
 
       if (result.error) {
@@ -148,7 +154,8 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
           ...advancedFilters,
           page: nextPage,
         },
-        controller.signal
+        controller.signal,
+        { tasteProfile }
       );
 
       if (result.results.length > 0) {
@@ -174,6 +181,7 @@ export function useMovieDiscovery(currentYear, region = 'US', initialProviders =
     }
   }, [
     hasMore,
+    tasteProfile,
     page,
     mood,
     contentType,

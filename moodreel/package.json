@@ -12,6 +12,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
+    "browsers:ensure": "npx playwright install chromium webkit",
     "build": "vite build && node scripts/inject-sw-version.cjs",
     "analyze": "ANALYZE=1 vite build && node scripts/inject-sw-version.cjs",
     "preview": "vite preview",
@@ -24,7 +25,9 @@
     "smoke": "node scripts/smoke.js",
     "bundle:check": "node scripts/check-bundle-size.cjs",
     "verify": "npm run lint && npm run test:run && npm run build && npm run bundle:check",
+    "verify:full": "npm run verify && npm run test:e2e",
     "lint": "eslint src --max-warnings 0",
+    "screenshots:polish": "node scripts/capture-polish-screenshots.js",
     "typecheck": "tsc --noEmit",
     "prepare": "cd .. && node moodreel/node_modules/husky/bin.js || true",
     "format": "prettier --write .",

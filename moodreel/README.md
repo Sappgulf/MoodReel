@@ -41,13 +41,17 @@ TMDB API key field:
 | `npm run test:run` / `npm run test:unit` | Run Vitest unit tests once.                         |
 | `npm run test:ci`                        | Run Vitest with coverage.                           |
 | `npm run test:e2e`                       | Run Playwright E2E tests.                           |
+| `npm run browsers:ensure`                | Install required Playwright browsers locally.       |
 | `npm run bundle:check`                   | Check production bundle size.                       |
 | `npm run analyze`                        | Build with Rollup visualizer output in `build/`.    |
 | `npm run verify`                         | Run lint, unit tests, build, and bundle check.      |
+| `npm run verify:full`                    | Run verify plus E2E validation.                     |
+| `npm run screenshots:polish`             | Capture key route screenshots.                      |
 
 Playwright browsers are required before E2E on a fresh machine:
 
 ```bash
+npm run browsers:ensure
 npx playwright install chromium webkit
 ```
 
