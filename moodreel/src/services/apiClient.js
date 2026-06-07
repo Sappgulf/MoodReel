@@ -12,13 +12,23 @@ import { safeGetRaw, safeSetRaw, safeRemove } from '../storage/safeStorage';
 const API_BASE_URL =
   resolvePublicEnv(['VITE_TMDB_BASE_URL', 'REACT_APP_TMDB_BASE_URL']) ||
   'https://api.themoviedb.org/3';
+const PROXY_URL = '/api/tmdb';
 const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 1000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 const API_KEY_SOURCE_USER = 'user';
 const API_KEY_SOURCE_ENV = 'environment';
 const API_KEY_SOURCE_BOOTSTRAP = 'bootstrap';
+const API_KEY_SOURCE_PROXY = 'proxy';
 const API_KEY_SOURCE_MISSING = 'missing';
+
+let proxyAvailable = true;
+
+function shouldUseProxy() {
+  if (!proxyAvailable) return false;
+  if (import.meta.env.DEV) return false;
+  return typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+}
 
 function resolveEnvApiKey() {
   return resolvePublicEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
@@ -34,6 +44,15 @@ function resolveStoredApiKey() {
 }
 
 export function getApiKeyStatus() {
+  if (shouldUseProxy()) {
+    return {
+      configured: true,
+      source: API_KEY_SOURCE_PROXY,
+      value: null,
+      hasKey: true,
+    };
+  }
+
   const envApiKey = resolveEnvApiKey();
   if (envApiKey) {
     return {
@@ -138,6 +157,7 @@ function getCached(key, ttlMs) {
 }
 
 function setCached(key, data) {
+  memoryCache.delete(key);
   memoryCache.set(key, { data, timestamp: Date.now() });
   if (memoryCache.size > 100) {
     const oldestKey = memoryCache.keys().next().value;
@@ -175,7 +195,7 @@ function normalizeApiError(err, path) {
       message: 'TMDB API unavailable.',
       path,
       status,
-      isRetryable: true,
+      retryable: true,
       cause: err,
     });
   }
@@ -206,22 +226,37 @@ export function ensureArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function buildProxyUrl(path, params) {
+  const url = new URL(PROXY_URL, window.location.origin);
+  url.searchParams.set('path', path);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  return url.toString();
+}
+
 export async function tmdbGet(
   path,
   { params = {}, signal, cache = false, ttlMs = DEFAULT_TTL_MS, retries = MAX_RETRIES } = {}
 ) {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new TmdbApiError({
-      code: 'TMDB_API_KEY_MISSING',
-      message: 'TMDB API unavailable. Configure your API key.',
-      path,
-      status: 401,
-      retryable: false,
-    });
+  const useProxy = shouldUseProxy();
+
+  if (!useProxy) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      throw new TmdbApiError({
+        code: 'TMDB_API_KEY_MISSING',
+        message: 'TMDB API unavailable. Configure your API key.',
+        path,
+        status: 401,
+        retryable: false,
+      });
+    }
   }
 
-  const finalParams = { ...params, api_key: apiKey };
+  const finalParams = useProxy ? { ...params } : { ...params, api_key: getApiKey() };
   const cacheKey = cache ? getCacheKey(path, finalParams) : null;
 
   if (cache && cacheKey) {
@@ -229,14 +264,25 @@ export async function tmdbGet(
     if (cached) return cached;
   }
 
-  let lastError;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const response = await axios.get(`${API_BASE_URL}${path}`, {
-        params: finalParams,
+  const makeRequest = async () => {
+    if (useProxy) {
+      const url = buildProxyUrl(path, finalParams);
+      return axios.get(url, {
         signal,
         timeout: DEFAULT_REQUEST_TIMEOUT_MS,
       });
+    }
+    return axios.get(`${API_BASE_URL}${path}`, {
+      params: finalParams,
+      signal,
+      timeout: DEFAULT_REQUEST_TIMEOUT_MS,
+    });
+  };
+
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await makeRequest();
 
       if (cache && cacheKey) {
         setCached(cacheKey, response.data);
@@ -251,25 +297,25 @@ export async function tmdbGet(
       const normalized = normalizeApiError(err, path);
       lastError = normalized;
 
-      const errorMsg = normalized.message;
-      const fullUrl = err?.config?.url ? `${err.config.url}` : API_BASE_URL + path;
-      const isDev = process.env.NODE_ENV !== 'production';
-      if (isDev && !shouldSkipLog(normalized)) {
+      if (useProxy && normalized.status === 404) {
+        proxyAvailable = false;
+      }
+
+      if (import.meta.env.DEV && !shouldSkipLog(normalized)) {
         console.error(
-          `TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${errorMsg}`,
+          `TMDB API Error [${path}] (attempt ${attempt + 1}/${retries + 1}): ${normalized.message}`,
           {
             code: normalized.code,
             status: normalized.status,
-            url: fullUrl,
-            params: normalizeParams(finalParams),
             retryAfter: normalized.retryAfter,
           }
         );
       }
 
       if (attempt < retries && isRetryableError(normalized)) {
-        const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
-        if (isDev) {
+        const serverDelay = normalized.retryAfter ? normalized.retryAfter * 1000 : 0;
+        const delay = Math.max(serverDelay, BASE_RETRY_DELAY_MS * Math.pow(2, attempt));
+        if (import.meta.env.DEV) {
           console.debug(`Retrying in ${delay}ms...`);
         }
         await sleep(delay);

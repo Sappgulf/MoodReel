@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
@@ -7,8 +8,57 @@ const analyze = process.env.ANALYZE === '1';
 
 export default defineConfig({
   plugins: [
-    react({
-      include: /\.(js|jsx|ts|tsx)$/,
+    react(),
+    VitePWA({
+      registerType: 'prompt',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.themoviedb\.org\/.*/i,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /^https:\/\/image\.tmdb\.org\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tmdb-images',
+              expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: 'MoodReel',
+        short_name: 'MoodReel',
+        description: 'Discover movies and TV shows that match your mood.',
+        theme_color: '#09090b',
+        background_color: '#09090b',
+        display: 'standalone',
+        display_override: ['standalone', 'minimal-ui'],
+        scope: '/',
+        start_url: '/',
+        lang: 'en',
+        categories: ['entertainment', 'movies', 'utilities'],
+        icons: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: '/maskable-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+      },
     }),
     ...(analyze
       ? [
@@ -20,7 +70,6 @@ export default defineConfig({
         ]
       : []),
   ],
-  oxc: false,
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -32,7 +81,19 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
-    sourcemap: true,
+    sourcemap: false,
+    target: 'es2020',
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom')) return 'vendor';
+          if (id.includes('node_modules/react')) return 'vendor';
+          if (id.includes('node_modules/react-router')) return 'router';
+          if (id.includes('node_modules/axios')) return 'data';
+        },
+      },
+    },
   },
   test: {
     globals: true,

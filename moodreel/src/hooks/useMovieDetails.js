@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 
 import { useWatchlist } from './useWatchlist';
@@ -9,7 +9,7 @@ import { useTrailer } from '../context/TrailerContext';
 import { useSounds } from './useSounds';
 import { useTasteProfile } from './useTasteProfile';
 import { useProviderSettings } from './useProviderSettings';
-import { useModalDialog } from './useModalDialog';
+import { useActorFilmography } from './useActorFilmography';
 import searchService from '../services/searchService';
 import { getUserFacingMessage, isAbortError, shouldSkipLog } from '../services/apiErrorUtils';
 import { getDisplayTitle } from '../utils/mediaUtils';
@@ -44,14 +44,7 @@ export function useMovieDetails() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewText, setReviewText] = useState('');
   const [showTrailerModal, setShowTrailerModal] = useState(false);
-  const [selectedActor, setSelectedActor] = useState(null);
-  const [actorFilmography, setActorFilmography] = useState([]);
-  const [actorLoading, setActorLoading] = useState(false);
-  const [actorError, setActorError] = useState('');
   const [isLimitedDetails, setIsLimitedDetails] = useState(false);
-  const actorRequestRef = useRef(null);
-  const actorRequestIdRef = useRef(0);
-  const actorDialogCloseRef = useRef(null);
 
   const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
@@ -59,8 +52,24 @@ export function useMovieDetails() {
   const { like, dislike, statusFor } = useTasteProfile();
   const { region, myServices } = useProviderSettings();
 
+  const {
+    selectedActor,
+    actorFilmography,
+    actorLoading,
+    actorError,
+    actorDialogRef,
+    actorDialogCloseRef,
+    handleActorClick,
+    closeActorModal,
+  } = useActorFilmography({ contentId: id });
+
   const userRating = getRating(id);
   const userReview = getReview(id);
+
+  const routedItemKey = useMemo(
+    () => (routedItem ? `${routedItem.id}-${routedItem.media_type}` : null),
+    [routedItem]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -152,7 +161,7 @@ export function useMovieDetails() {
       mounted = false;
       controller.abort();
     };
-  }, [id, mediaType, addToHistory, isValidId, requestNonce, routedItem]);
+  }, [id, mediaType, addToHistory, isValidId, requestNonce, routedItemKey, routedItem]);
 
   useEffect(() => {
     if (!allProviders) {
@@ -171,75 +180,6 @@ export function useMovieDetails() {
     const savedReview = getReview(id);
     setReviewText(savedReview || '');
   }, [id, getReview]);
-
-  useEffect(() => {
-    return () => {
-      actorRequestRef.current?.abort();
-    };
-  }, []);
-
-  const handleActorClick = useCallback(
-    async actor => {
-      if (!actor?.id) return;
-
-      const currentRequestId = ++actorRequestIdRef.current;
-      actorRequestRef.current?.abort();
-      const controller = new AbortController();
-      actorRequestRef.current = controller;
-
-      setSelectedActor(actor);
-      setActorError('');
-      setActorLoading(true);
-      setActorFilmography([]);
-
-      try {
-        const response = await searchService.fetchActorCredits(actor.id, controller.signal);
-        if (currentRequestId !== actorRequestIdRef.current || controller.signal.aborted) return;
-
-        const credits = response
-          .filter(c => c.id !== parseInt(id, 10) && (c.poster_path || c.backdrop_path))
-          .sort((a, b) => b.popularity - a.popularity)
-          .slice(0, 12);
-
-        if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-          setActorFilmography(credits);
-        }
-      } catch (err) {
-        if (isAbortError(err)) {
-          return;
-        }
-
-        if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-          setActorError(
-            getUserFacingMessage(err) || 'Could not load actor filmography. Please try again.'
-          );
-          setActorFilmography([]);
-        }
-        if (!shouldSkipLog(err)) {
-          console.error('Error fetching actor filmography:', err);
-        }
-      } finally {
-        if (currentRequestId === actorRequestIdRef.current && !controller.signal.aborted) {
-          setActorLoading(false);
-        }
-      }
-    },
-    [id]
-  );
-
-  const closeActorModal = useCallback(() => {
-    actorRequestRef.current?.abort();
-    setSelectedActor(null);
-    setActorFilmography([]);
-    setActorLoading(false);
-    setActorError('');
-  }, []);
-
-  const { dialogRef: actorDialogRef } = useModalDialog({
-    isOpen: Boolean(selectedActor),
-    onClose: closeActorModal,
-    focusRef: actorDialogCloseRef,
-  });
 
   const handleToggleWatchlist = useCallback(() => {
     if (content) {

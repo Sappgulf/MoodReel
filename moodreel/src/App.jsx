@@ -369,40 +369,6 @@ function AppContent() {
 
     let refreshing = false;
 
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(registration => {
-        const notifyUpdate = waitingWorker => {
-          if (!waitingWorker) return;
-          pushToast({
-            icon: '⬆️',
-            title: 'Update ready',
-            message:
-              'Fresh polish is available: offline shell, smarter shuffle, and data controls.',
-            duration: 0,
-            action: {
-              label: 'Reload',
-              onClick: () => waitingWorker.postMessage({ type: 'SKIP_WAITING' }),
-            },
-          });
-        };
-
-        notifyUpdate(registration.waiting);
-
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              notifyUpdate(newWorker);
-            }
-          });
-        });
-      })
-      .catch(() => {
-        // PWA registration is progressive enhancement.
-      });
-
     const handleControllerChange = () => {
       if (refreshing) return;
       refreshing = true;
@@ -413,7 +379,7 @@ function AppContent() {
     return () => {
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
     };
-  }, [pushToast]);
+  }, []);
 
   // Global keyboard shortcuts
   useEffect(() => {

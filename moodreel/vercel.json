@@ -11,12 +11,18 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "same-origin" },
+        {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=()"
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; connect-src 'self' https://api.themoviedb.org; img-src 'self' https://image.tmdb.org https://www.youtube.com https://i.ytimg.com data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; media-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; worker-src 'self'; manifest-src 'self';"
+          "value": "default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://image.tmdb.org https://www.youtube.com https://i.ytimg.com data: blob:; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; media-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self';"
         }
       ]
     }

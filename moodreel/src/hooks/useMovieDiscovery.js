@@ -130,6 +130,7 @@ export function useMovieDiscovery(
     matchType,
     advancedFilters,
     region,
+    tasteProfile,
   ]);
 
   const loadMore = useCallback(async () => {
