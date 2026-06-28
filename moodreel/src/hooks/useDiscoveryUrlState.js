@@ -16,7 +16,7 @@ export function useDiscoveryUrlState({
   setRegion,
   myServices,
   setMyServices,
-  selectedGenres,
+  selectedGenres: _selectedGenres,
   setSelectedGenres,
   searchScope,
   setSearchScope,
