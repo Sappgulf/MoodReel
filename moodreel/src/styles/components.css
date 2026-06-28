@@ -1007,6 +1007,19 @@
   flex-shrink: 0;
 }
 
+.results-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2xs);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.share-vibe-btn {
+  flex-shrink: 0;
+}
+
 .show-hidden-toggle {
   display: flex;
   align-items: center;

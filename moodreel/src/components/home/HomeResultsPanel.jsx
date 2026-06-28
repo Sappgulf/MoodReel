@@ -35,6 +35,7 @@ export default function HomeResultsPanel({
   statusFor,
   getRecommendationReason,
   handleSaveVibe,
+  handleShareVibe,
   setMood,
   handleClearFilters,
   hasMore,
@@ -240,13 +241,24 @@ export default function HomeResultsPanel({
                   </label>
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn-secondary btn-sm save-vibe-btn"
-                onClick={handleSaveVibe}
-              >
-                ✨ Save Vibe
-              </button>
+              <div className="results-actions">
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm save-vibe-btn"
+                  onClick={handleSaveVibe}
+                >
+                  ✨ Save Vibe
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm share-vibe-btn"
+                  onClick={handleShareVibe}
+                  aria-label="Copy shareable link for this vibe"
+                  title="Copy a shareable link for this vibe"
+                >
+                  🔗 Share Vibe
+                </button>
+              </div>
             </div>
           )}
           <div

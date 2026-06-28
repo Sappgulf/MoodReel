@@ -714,6 +714,46 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   margin-bottom: var(--spacing-md);
 }
 
+.continue-watching-section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.continue-watching-section .section-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.continue-watching-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.continue-watching-section .section-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.on-my-services-section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.on-my-services-section .section-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.on-my-services-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.on-my-services-section .section-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
 /* Surprise Banner */
 .surprise-banner {
   position: fixed;

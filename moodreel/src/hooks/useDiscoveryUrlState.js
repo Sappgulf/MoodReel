@@ -16,6 +16,8 @@ export function useDiscoveryUrlState({
   setRegion,
   myServices,
   setMyServices,
+  selectedGenres,
+  setSelectedGenres,
   searchScope,
   setSearchScope,
   showHidden,
@@ -40,6 +42,35 @@ export function useDiscoveryUrlState({
     const servicesParam = params.get('services');
     const scopeParam = params.get('scope');
     const showHiddenParam = params.get('showHidden');
+
+    // Shared vibe takes precedence over inline URL params. SharedList
+    // stashes a decoded vibe payload in sessionStorage before redirecting
+    // here, and we rehydrate it as if the user typed it in themselves.
+    let sharedVibe = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = window.sessionStorage.getItem('moodreel:shared-vibe');
+        if (raw) {
+          sharedVibe = JSON.parse(raw);
+          window.sessionStorage.removeItem('moodreel:shared-vibe');
+        }
+      } catch (err) {
+        console.warn('Could not read shared vibe', err);
+      }
+    }
+
+    if (sharedVibe?.filters) {
+      const f = sharedVibe.filters;
+      if (f.mood) setMood(f.mood);
+      if (f.contentType) setContentType(f.contentType);
+      if (Array.isArray(f.selectedGenres)) setSelectedGenres(f.selectedGenres);
+      if (Array.isArray(f.selectedProviders)) setMyServices(f.selectedProviders);
+      if (typeof f.minRating === 'number') setMinRating(f.minRating);
+      if (f.advancedFilters) setAdvancedFilters(prev => ({ ...prev, ...f.advancedFilters }));
+      hasHydratedRef.current = true;
+      if (f.mood) setShouldRunHydratedSearch(true);
+      return;
+    }
 
     if (moodParam) setMood(moodParam);
     if (queryParam) setTitleQuery(queryParam);
@@ -82,6 +113,7 @@ export function useDiscoveryUrlState({
     setMyServices,
     setRegion,
     setSearchScope,
+    setSelectedGenres,
     setShowHidden,
     setTitleQuery,
   ]);

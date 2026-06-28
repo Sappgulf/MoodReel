@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DiscoveryHero from '../components/home/DiscoveryHero';
 import SurpriseWinnerBanner from '../components/home/SurpriseWinnerBanner';
 import HomeTrendingStrip from '../components/home/HomeTrendingStrip';
+import ContinueWatchingStrip from '../components/home/ContinueWatchingStrip';
+import OnMyServicesStrip from '../components/home/OnMyServicesStrip';
 import HomeResultsPanel from '../components/home/HomeResultsPanel';
 import HomeDiscoveryConsole from '../components/home/HomeDiscoveryConsole';
 import HomeTonightSetup from '../components/home/HomeTonightSetup';
@@ -12,6 +14,7 @@ import ShuffleOverlay from '../components/ShuffleOverlay';
 import ErrorState from '../components/ErrorState';
 import { CURATED_COLLECTIONS, DECISION_FEEDBACK, REROLL_INTENTS } from '../constants/homeDiscovery';
 import { useWatchlist } from '../hooks/useWatchlist';
+import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useAchievements } from '../hooks/useAchievements';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
@@ -63,7 +66,8 @@ function Home() {
     useWatchlist();
   const { trackSave } = useAchievements();
   const { history: recentMoods, addToHistory } = useMoodHistory();
-  const { playlists: _playlists, savePlaylist } = useCustomPlaylists();
+  const { history: watchHistoryEntries } = useWatchHistory();
+  const { playlists: _playlists, savePlaylist, shareableVibeUrl } = useCustomPlaylists();
   const { region, setRegion, myServices, setMyServices, toggleService } = useProviderSettings();
   const { profile, like, dislike, statusFor, showHidden, setShowHidden, tasteCounts } =
     useTasteProfile();
@@ -169,6 +173,8 @@ function Home() {
     setRegion,
     myServices,
     setMyServices,
+    selectedGenres,
+    setSelectedGenres,
     searchScope,
     setSearchScope,
     showHidden,
@@ -476,6 +482,55 @@ function Home() {
     });
     playSound('pop');
   }, [setSelectedGenres, setMinRating, setAdvancedFilters, currentYear, playSound]);
+
+  const handleShareVibe = useCallback(async () => {
+    if (!mood && selectedGenres.length === 0) {
+      pushToast({
+        icon: '⚠️',
+        title: 'Nothing to share',
+        message: 'Pick a mood or genre first.',
+        variant: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+    const shareName = mood ? `${mood.charAt(0).toUpperCase()}${mood.slice(1)}` : 'Mood vibe';
+    const url = shareableVibeUrl(shareName, {
+      mood,
+      contentType,
+      selectedGenres,
+      selectedProviders,
+      minRating,
+      advancedFilters,
+    });
+    try {
+      await copyToClipboard(url);
+      pushToast({
+        icon: '🔗',
+        title: 'Vibe link copied',
+        message: `Share "${shareName}" with anyone.`,
+        duration: 3200,
+      });
+    } catch (err) {
+      console.error('Share vibe failed:', err);
+      pushToast({
+        icon: '⚠️',
+        title: 'Copy failed',
+        message: 'Your browser blocked clipboard access.',
+        variant: 'error',
+        duration: 4000,
+      });
+    }
+  }, [
+    mood,
+    contentType,
+    selectedGenres,
+    selectedProviders,
+    minRating,
+    advancedFilters,
+    shareableVibeUrl,
+    pushToast,
+  ]);
 
   const handleCollectionSelect = useCallback(
     collection => {
@@ -1268,6 +1323,35 @@ function Home() {
         statusFor={statusFor}
       />
 
+      <ContinueWatchingStrip
+        history={watchHistoryEntries}
+        hasAnySearch={hasAnySearch}
+        isInWatchlist={isInWatchlist}
+        toggleWatchlist={toggleWatchlist}
+        isWatched={isWatched}
+        toggleWatched={toggleWatched}
+        like={like}
+        dislike={dislike}
+        statusFor={statusFor}
+      />
+
+      <OnMyServicesStrip
+        recommendations={recommendations}
+        hasAnySearch={hasAnySearch}
+        myServices={myServices}
+        providerSnapshot={providerSnapshot}
+        getProviderKey={getProviderKey}
+        contentType={contentType}
+        region={region}
+        isInWatchlist={isInWatchlist}
+        toggleWatchlist={toggleWatchlist}
+        isWatched={isWatched}
+        toggleWatched={toggleWatched}
+        like={like}
+        dislike={dislike}
+        statusFor={statusFor}
+      />
+
       {/* Mood Pulse — compact sidebar feel */}
       {!hasAnySearch && (
         <div className="mood-pulse-inline">
@@ -1364,6 +1448,7 @@ function Home() {
         statusFor={statusFor}
         getRecommendationReason={getRecommendationReason}
         handleSaveVibe={handleSaveVibe}
+        handleShareVibe={handleShareVibe}
         setMood={setMood}
         handleClearFilters={handleClearFilters}
         hasMore={hasMore}

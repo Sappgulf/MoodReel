@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { decodeSharePayload } from '../utils/clipboard';
 
 /**
- * Shared Watchlist View
- * Displays a watchlist shared via URL parameter
+ * Shared Watchlist or Vibe View
+ * - Watchlist shares (legacy): list of saved items
+ * - Vibe shares: encoded filter set, immediately redirects to /
+ *   after capturing the filters in sessionStorage so Home can apply them
  */
 function SharedList() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [sharedItems, setSharedItems] = useState([]);
   const [sharedBy, setSharedBy] = useState('');
   const [error, setError] = useState('');
+  const [vibeApplied, setVibeApplied] = useState(false);
   const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
 
   useEffect(() => {
@@ -22,20 +26,35 @@ function SharedList() {
       return;
     }
 
+    let decoded;
     try {
-      const decodedList = decodeSharePayload(data);
-
-      if (decodedList.items && Array.isArray(decodedList.items)) {
-        setSharedItems(decodedList.items);
-        setSharedBy(decodedList.sharedBy || 'A friend');
-      } else {
-        setError('Invalid list format');
-      }
+      decoded = decodeSharePayload(data);
     } catch (e) {
-      console.error('Error parsing shared list:', e);
+      console.error('Error parsing shared payload:', e);
       setError('Could not decode shared list');
+      return;
     }
-  }, [searchParams]);
+
+    if (decoded && decoded.type === 'vibe' && decoded.filters) {
+      try {
+        sessionStorage.setItem('moodreel:shared-vibe', JSON.stringify(decoded));
+      } catch (err) {
+        console.warn('Could not persist shared vibe', err);
+      }
+      if (!vibeApplied) {
+        setVibeApplied(true);
+        navigate('/', { replace: true });
+      }
+      return;
+    }
+
+    if (decoded && decoded.items && Array.isArray(decoded.items)) {
+      setSharedItems(decoded.items);
+      setSharedBy(decoded.sharedBy || 'A friend');
+    } else {
+      setError('Invalid list format');
+    }
+  }, [searchParams, navigate, vibeApplied]);
 
   if (error) {
     return (
@@ -58,7 +77,7 @@ function SharedList() {
       </Link>
 
       <div className="shared-header">
-        <h2>🎬 {sharedBy}'s Watchlist</h2>
+        <h2>🎬 {sharedBy}&apos;s Watchlist</h2>
         <p className="shared-subtitle">
           {sharedItems.length} {sharedItems.length === 1 ? 'title' : 'titles'} shared with you
         </p>

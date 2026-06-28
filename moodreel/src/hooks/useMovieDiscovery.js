@@ -66,72 +66,79 @@ export function useMovieDiscovery(
     }
   }, []);
 
-  const search = useCallback(async () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    if (loadMoreControllerRef.current) {
-      loadMoreControllerRef.current.abort();
-    }
-    loadMoreInFlightRef.current = false;
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setError('');
-    setIsLoading(true);
-    setPage(1);
-    setHasSearched(true);
-
-    try {
-      const result = await searchService.search(
-        {
-          query: mood,
-          type: contentType,
-          genres: selectedGenres,
-          providers: selectedProviders,
-          minRating,
-          matchType,
-          region,
-          ...advancedFilters,
-          page: 1,
-          multiPage: true,
-        },
-        controller.signal,
-        { tasteProfile }
-      );
-
-      if (result.error) {
-        setError(result.error);
+  const search = useCallback(
+    async (overrides = {}) => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
+      if (loadMoreControllerRef.current) {
+        loadMoreControllerRef.current.abort();
+      }
+      loadMoreInFlightRef.current = false;
 
-      if (result.results && result.results.length > 0) {
-        setRecommendations(result.results);
-        setHasMore(result.hasMore);
-        setPage(result.page || 1);
-      } else if (result.error) {
-        setRecommendations([]);
-        setHasMore(false);
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      const effectiveMood = overrides.mood ?? mood;
+      const effectiveContentType = overrides.contentType ?? contentType;
+      const effectiveGenres = overrides.selectedGenres ?? selectedGenres;
+
+      setError('');
+      setIsLoading(true);
+      setPage(1);
+      setHasSearched(true);
+
+      try {
+        const result = await searchService.search(
+          {
+            query: effectiveMood,
+            type: effectiveContentType,
+            genres: effectiveGenres,
+            providers: selectedProviders,
+            minRating,
+            matchType,
+            region,
+            ...advancedFilters,
+            page: 1,
+            multiPage: true,
+          },
+          controller.signal,
+          { tasteProfile }
+        );
+
+        if (result.error) {
+          setError(result.error);
+        }
+
+        if (result.results && result.results.length > 0) {
+          setRecommendations(result.results);
+          setHasMore(result.hasMore);
+          setPage(result.page || 1);
+        } else if (result.error) {
+          setRecommendations([]);
+          setHasMore(false);
+        }
+      } catch (err) {
+        if (!shouldSkipLog(err)) {
+          console.error('Error searching titles:', err);
+          setError(getUserFacingMessage(err));
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      if (!shouldSkipLog(err)) {
-        console.error('Error searching titles:', err);
-        setError(getUserFacingMessage(err));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    mood,
-    contentType,
-    selectedGenres,
-    selectedProviders,
-    minRating,
-    matchType,
-    advancedFilters,
-    region,
-    tasteProfile,
-  ]);
+    },
+    [
+      mood,
+      contentType,
+      selectedGenres,
+      selectedProviders,
+      minRating,
+      matchType,
+      advancedFilters,
+      region,
+      tasteProfile,
+    ]
+  );
 
   const loadMore = useCallback(async () => {
     if (!hasMore || loadMoreInFlightRef.current) return;

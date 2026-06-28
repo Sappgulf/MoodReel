@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
 
 const CHART_COLORS = [
   '#FFD700',
@@ -18,66 +18,42 @@ const CHART_COLORS = [
   '#3F51B5',
 ];
 
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const angleRad = ((angleDeg - 90) * Math.PI) / 180;
+  return {
+    x: cx + r * Math.cos(angleRad),
+    y: cy + r * Math.sin(angleRad),
+  };
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+}
+
 /**
- * GenrePieChart - Canvas-based pie chart for genre visualization
+ * GenrePieChart - SVG donut chart for genre visualization
+ * Renders each genre as an arc segment with a soft gap between slices.
  */
 function GenrePieChart({ data, size = 200 }) {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || data.length === 0) return;
-
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 5;
-
-    // Calculate total for percentages
+  const segments = useMemo(() => {
     const total = data.reduce((sum, item) => sum + item.count, 0);
-    if (total === 0) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw segments
-    let currentAngle = -Math.PI / 2; // Start at top
-
-    data.forEach((item, index) => {
-      const segmentAngle = (item.count / total) * Math.PI * 2;
-
-      // Draw segment
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + segmentAngle);
-      ctx.closePath();
-      ctx.fillStyle = CHART_COLORS[index % CHART_COLORS.length];
-      ctx.fill();
-
-      // Add shine effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      currentAngle += segmentAngle;
+    if (total === 0) return [];
+    let current = 0;
+    return data.map((item, index) => {
+      const start = (current / total) * 360;
+      current += item.count;
+      const end = (current / total) * 360;
+      const safeEnd = end - start <= 0.5 ? start + 0.5 : end;
+      return {
+        ...item,
+        color: CHART_COLORS[index % CHART_COLORS.length],
+        path: describeArc(size / 2, size / 2, size / 2 - 4, start, safeEnd),
+      };
     });
-
-    // Draw center hole (donut style)
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius * 0.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#09090b';
-    ctx.fill();
-
-    // Draw center text
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 18px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(total.toString(), centerX, centerY - 8);
-    ctx.fillStyle = '#a1a1aa';
-    ctx.font = '11px Inter, sans-serif';
-    ctx.fillText('titles', centerX, centerY + 10);
-  }, [data]);
+  }, [data, size]);
 
   if (data.length === 0) {
     return (
@@ -87,9 +63,66 @@ function GenrePieChart({ data, size = 200 }) {
     );
   }
 
+  const total = data.reduce((sum, item) => sum + item.count, 0);
+
   return (
     <div className="pie-chart-wrapper">
-      <canvas ref={canvasRef} width={size} height={size} className="pie-chart-canvas" />
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="pie-chart-canvas"
+        role="img"
+        aria-label={`Genre breakdown: ${data
+          .slice(0, 6)
+          .map(d => `${d.name} ${d.count}`)
+          .join(', ')}`}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={size / 2 - 4}
+          fill="var(--color-bg-primary, #09090b)"
+          stroke="var(--color-border, rgba(255,255,255,0.1))"
+          strokeWidth="1"
+        />
+        {segments.map(seg => (
+          <path
+            key={seg.name}
+            d={seg.path}
+            fill={seg.color}
+            stroke="var(--color-bg-primary, #09090b)"
+            strokeWidth="1.5"
+          >
+            <title>
+              {seg.name}: {seg.count}
+            </title>
+          </path>
+        ))}
+        <text
+          x={size / 2}
+          y={size / 2 - 6}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="var(--color-gold, #FFD700)"
+          fontSize="18"
+          fontWeight="700"
+          fontFamily="Inter, sans-serif"
+        >
+          {total}
+        </text>
+        <text
+          x={size / 2}
+          y={size / 2 + 12}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="var(--color-text-on-dark-muted, #a1a1aa)"
+          fontSize="11"
+          fontFamily="Inter, sans-serif"
+        >
+          titles
+        </text>
+      </svg>
       <div className="pie-chart-legend">
         {data.slice(0, 6).map((item, index) => (
           <div key={item.name} className="legend-item">
