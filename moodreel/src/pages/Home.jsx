@@ -1449,6 +1449,21 @@ function Home() {
         getRecommendationReason={getRecommendationReason}
         handleSaveVibe={handleSaveVibe}
         handleShareVibe={handleShareVibe}
+        scheduleVibeUrl={
+          hasAnySearch
+            ? shareableVibeUrl(
+                mood ? `${mood.charAt(0).toUpperCase()}${mood.slice(1)} vibe` : 'MoodReel vibe',
+                {
+                  mood,
+                  contentType,
+                  selectedGenres,
+                  selectedProviders,
+                  minRating,
+                  advancedFilters,
+                }
+              )
+            : ''
+        }
         setMood={setMood}
         handleClearFilters={handleClearFilters}
         hasMore={hasMore}

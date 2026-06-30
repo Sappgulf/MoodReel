@@ -13,6 +13,7 @@ import { calculatePersona } from '../utils/personaUtils';
 import { copyToClipboard } from '../utils/clipboard';
 import { GENRE_MAP } from '../utils/mediaUtils';
 import { clearMoodReelData, downloadPrivacyExport, importPrivacyData } from '../utils/privacyData';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
 
 const AVATARS = ['🎬', '🍿', '⭐', '🎭', '🎥', '🎞️', '🎟️', '📺', '🎧', '🎮', '💡', '✨'];
@@ -61,6 +62,7 @@ function Profile() {
   const { pushToast } = useToasts();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(profile);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [tasteSettings, setTasteSettings] = useState(() =>
     safeGetJSON(TASTE_SETTINGS_KEY, DEFAULT_TASTE_SETTINGS)
   );
@@ -159,11 +161,11 @@ function Profile() {
   };
 
   const handleResetLocalData = () => {
-    const shouldReset = window.confirm(
-      'Reset all local MoodReel data on this device? This clears profile, saved vibes, watchlist, ratings, history, and preferences.'
-    );
-    if (!shouldReset) return;
+    setShowResetConfirm(true);
+  };
 
+  const confirmResetLocalData = () => {
+    setShowResetConfirm(false);
     clearMoodReelData();
     pushToast({
       icon: '🧹',
@@ -609,6 +611,17 @@ function Profile() {
       >
         🔗 Share My Vibe
       </button>
+
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        mode="confirm"
+        title="Reset local MoodReel data?"
+        message="This clears profile, saved vibes, watchlist, ratings, history, and preferences on this device."
+        confirmLabel="Reset everything"
+        destructive
+        onConfirm={confirmResetLocalData}
+        onCancel={() => setShowResetConfirm(false)}
+      />
     </div>
   );
 }

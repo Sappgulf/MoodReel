@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useCustomPlaylists } from '../hooks/useCustomPlaylists';
 import { copyToClipboard } from '../utils/clipboard';
+import ConfirmDialog from './ConfirmDialog';
 
 /**
  * Pre-defined mood playlists with curated genre/keyword combinations
@@ -99,22 +100,38 @@ function MoodPlaylists({ onSelectPlaylist }) {
     [onSelectPlaylist]
   );
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
+
   const handleDelete = (e, id) => {
     e.stopPropagation();
-    if (window.confirm('Delete this custom vibe?')) {
-      deletePlaylist(id);
-    }
+    setConfirmDeleteId(id);
   };
+
+  const confirmDelete = useCallback(() => {
+    if (confirmDeleteId) deletePlaylist(confirmDeleteId);
+    setConfirmDeleteId(null);
+  }, [confirmDeleteId, deletePlaylist]);
 
   const handleRename = (e, playlist) => {
     e.stopPropagation();
-    const name = window.prompt('Rename this saved vibe:', playlist.rawName || playlist.name);
-    if (!name?.trim()) return;
-    updatePlaylist(playlist.originalId, {
-      name: name.trim(),
-      desc: `Custom vibes for ${name.trim()}`,
-    });
+    setRenameTarget(playlist);
+    setRenameValue(playlist.rawName || playlist.name);
   };
+
+  const confirmRename = useCallback(() => {
+    const name = renameValue.trim();
+    if (!name || !renameTarget) {
+      setRenameTarget(null);
+      return;
+    }
+    updatePlaylist(renameTarget.originalId, {
+      name,
+      desc: `Custom vibes for ${name}`,
+    });
+    setRenameTarget(null);
+  }, [renameTarget, renameValue, updatePlaylist]);
 
   const handleMove = (e, id, direction) => {
     e.stopPropagation();
@@ -261,6 +278,35 @@ function MoodPlaylists({ onSelectPlaylist }) {
             : `▼ Show ${hiddenPlaylistCount} more playlists`}
         </button>
       )}
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        mode="confirm"
+        title="Delete this custom vibe?"
+        message="This will remove the saved vibe permanently."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
+      <ConfirmDialog
+        isOpen={!!renameTarget}
+        mode="prompt"
+        title="Rename saved vibe"
+        confirmLabel="Rename"
+        initialValue={renameValue}
+        placeholder="Vibe name"
+        onConfirm={name => {
+          if (typeof name === 'string' && name.trim() && renameTarget) {
+            updatePlaylist(renameTarget.originalId, {
+              name: name.trim(),
+              desc: `Custom vibes for ${name.trim()}`,
+            });
+          }
+          setRenameTarget(null);
+        }}
+        onCancel={() => setRenameTarget(null)}
+      />
     </div>
   );
 }

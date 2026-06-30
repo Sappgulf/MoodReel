@@ -134,9 +134,31 @@ final class TonightViewModel: ObservableObject {
         let item: MediaResult
         let confidence: Int
         let reason: String
+        let reasons: [String]
         let caveat: String?
 
         var slotTitle: String { slot.title }
+
+        var confidenceLabel: ConfidenceLabel {
+            ConfidenceLabel.label(for: confidence)
+        }
+
+        var accessibilitySummary: String {
+            var parts: [String] = []
+            parts.append("\(slot.title): \(item.displayTitle).")
+            parts.append("Confidence \(confidence) percent.")
+            if !reasons.isEmpty {
+                parts.append("Why: \(reasons.joined(separator: ", ")).")
+            }
+            if let caveat, !caveat.isEmpty {
+                parts.append("Caveat: \(caveat).")
+            }
+            return parts.joined(separator: " ")
+        }
+
+        static func formatConfidenceLabel(score: Double) -> String {
+            ConfidenceLabel.formatConfidenceLabel(score: score)
+        }
     }
 
     private struct Scorecard {
@@ -487,6 +509,7 @@ final class TonightViewModel: ObservableObject {
             item: scorecard.item,
             confidence: confidence,
             reason: reason(for: scorecard, slot: slot),
+            reasons: Array(scorecard.reasons.prefix(2)),
             caveat: scorecard.caveats.first
         )
     }

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import MediaImage from '../MediaImage';
 import MovieCard from '../MovieCard';
@@ -6,6 +7,7 @@ import EmptyState from '../EmptyState';
 import { SkeletonGrid, MovieCardSkeleton } from '../Skeleton';
 import { getDisplayOverview, getDisplayTitle, getReleaseYear } from '../../utils/mediaUtils';
 import { getRecommendationKey } from '../../utils/recommendationScoring';
+import { downloadVibeIcs } from '../../utils/icsExport';
 
 export default function HomeResultsPanel({
   isBusy,
@@ -36,6 +38,7 @@ export default function HomeResultsPanel({
   getRecommendationReason,
   handleSaveVibe,
   handleShareVibe,
+  scheduleVibeUrl,
   setMood,
   handleClearFilters,
   hasMore,
@@ -58,6 +61,14 @@ export default function HomeResultsPanel({
   onRerollCandidate,
   onShareTonight,
 }) {
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleWhen, setScheduleWhen] = useState(() => {
+    const d = new Date(Date.now() + 60 * 60 * 1000);
+    d.setMinutes(0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  });
+  const [scheduleDuration, setScheduleDuration] = useState(120);
+
   return (
     <div aria-live="polite">
       {isBusy && filteredByServices.length === 0 ? (
@@ -258,7 +269,65 @@ export default function HomeResultsPanel({
                 >
                   🔗 Share Vibe
                 </button>
+                {scheduleVibeUrl && (
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm schedule-vibe-btn"
+                    onClick={() => setScheduleOpen(true)}
+                    aria-label="Schedule this vibe on your calendar"
+                    title="Add to your calendar"
+                  >
+                    📅 Schedule
+                  </button>
+                )}
               </div>
+              {scheduleVibeUrl && scheduleOpen && (
+                <div className="schedule-vibe-form">
+                  <label>
+                    When
+                    <input
+                      type="datetime-local"
+                      value={scheduleWhen}
+                      onChange={e => setScheduleWhen(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Minutes
+                    <input
+                      type="number"
+                      min="30"
+                      max="300"
+                      step="15"
+                      value={scheduleDuration}
+                      onChange={e => setScheduleDuration(Number(e.target.value))}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn-primary btn-sm"
+                    onClick={() => {
+                      const when = scheduleWhen ? new Date(scheduleWhen) : new Date();
+                      downloadVibeIcs({
+                        title: 'Watch a MoodReel vibe',
+                        startAt: when,
+                        durationMinutes: scheduleDuration,
+                        description: `Open MoodReel to see the picks: ${scheduleVibeUrl}`,
+                        url: scheduleVibeUrl,
+                      });
+                      setScheduleOpen(false);
+                    }}
+                  >
+                    Add to calendar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm"
+                    onClick={() => setScheduleOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
           )}
           <div

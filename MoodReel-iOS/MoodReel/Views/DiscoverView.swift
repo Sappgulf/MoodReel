@@ -3,6 +3,8 @@ import UIKit
 
 struct DiscoverView: View {
     @EnvironmentObject private var watchlistStore: WatchlistStore
+    @EnvironmentObject private var tasteProfileStore: TasteProfileStore
+    @EnvironmentObject private var providerPreferences: ProviderPreferencesStore
     @EnvironmentObject private var viewModel: DiscoverViewModel
     @State private var navigationPath: [MediaRoute] = []
     @State private var surpriseMessage: String?
@@ -32,6 +34,29 @@ struct DiscoverView: View {
                         moodScroller
                         controlsRow
                         quickFiltersRow
+
+                        if shouldShowContinueWatching {
+                            ContinueWatchingRail(
+                                watchlist: watchlistStore.items,
+                                dislikedIds: tasteProfileStore.dislikedIds,
+                                onTap: { item in
+                                    navigationPath.append(item.route)
+                                }
+                            )
+                            .revealOnAppear()
+                        }
+
+                        if shouldShowOnMyServices {
+                            OnMyServicesRail(
+                                serviceIds: providerPreferences.selectedServiceIds,
+                                region: providerPreferences.region,
+                                onTap: { item in
+                                    navigationPath.append(item.route)
+                                }
+                            )
+                            .revealOnAppear()
+                        }
+
                         tonightPicksSection
                         resultsSection
                     }
@@ -291,10 +316,54 @@ struct DiscoverView: View {
             .foregroundStyle(Color.textSecondary)
             .buttonStyle(.plain)
 
+            Button {
+                shareCurrentVibe()
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+                    .font(AppFont.caption())
+            }
+            .foregroundStyle(Color.gold)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Share this vibe")
+
             Spacer()
 
             surpriseButton
         }
+    }
+
+    private var shouldShowContinueWatching: Bool {
+        watchlistStore.items.contains { item in
+            let key = "\(item.mediaId)-\(item.mediaType.rawValue)"
+            return !item.isWatched
+                && !tasteProfileStore.dislikedIds.contains(key)
+        }
+    }
+
+    private var shouldShowOnMyServices: Bool {
+        !providerPreferences.selectedServiceIds.isEmpty
+    }
+
+    private func shareCurrentVibe() {
+        let serviceIds = providerPreferences.selectedServiceIds
+            .sorted()
+
+        let name = "\(viewModel.selectedMood.emoji) \(viewModel.selectedMood.displayName) vibe"
+
+        guard let url = VibeShareEncoder.buildShareURL(
+            name: name,
+            mood: viewModel.selectedMood,
+            contentFilter: viewModel.contentFilter,
+            minRating: viewModel.minRating,
+            serviceIds: serviceIds
+        ) else {
+            showFeedback("Couldn't build share link")
+            return
+        }
+
+        UIPasteboard.general.string = url
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        showFeedback("Vibe link copied to clipboard")
     }
 
     private var quickFiltersRow: some View {
@@ -625,6 +694,8 @@ struct DiscoverView: View {
 #Preview("Discover") {
     DiscoverView()
         .environmentObject(WatchlistStore())
+        .environmentObject(TasteProfileStore())
+        .environmentObject(ProviderPreferencesStore())
         .environmentObject(DiscoverViewModel())
 }
 

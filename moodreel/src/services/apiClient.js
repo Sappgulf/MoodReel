@@ -24,10 +24,14 @@ const API_KEY_SOURCE_MISSING = 'missing';
 
 let proxyAvailable = true;
 
+// In dev, Vite's dev-server proxy serves /api/tmdb (see vite.config.js),
+// which keeps the browser on a same-origin path so CSP `connect-src
+// 'self'` allows the requests. In production, the same /api/tmdb path
+// is served by the Vercel serverless function. We therefore prefer
+// the proxy in BOTH environments when it's available.
 function shouldUseProxy() {
   if (!proxyAvailable) return false;
-  if (import.meta.env.DEV) return false;
-  return typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+  return typeof window !== 'undefined';
 }
 
 function resolveEnvApiKey() {

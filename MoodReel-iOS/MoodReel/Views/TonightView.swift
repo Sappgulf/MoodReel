@@ -415,13 +415,24 @@ private struct TonightPickCard: View {
 
                     Spacer()
 
-                    Text("\(pick.confidence)%")
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.black)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
-                        .background(AppGradients.gold)
-                        .clipShape(Capsule())
+                    HStack(spacing: 6) {
+                        Text("\(pick.confidence)%")
+                            .font(AppFont.caption())
+                            .foregroundStyle(Color.black)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(AppGradients.gold)
+                            .clipShape(Capsule())
+
+                        Text(pick.confidenceLabel.title)
+                            .font(AppFont.captionSmall())
+                            .foregroundStyle(pick.confidenceLabel.color)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(pick.confidenceLabel.color.opacity(0.14))
+                            .clipShape(Capsule())
+                            .accessibilityLabel(pick.confidenceLabel.accessibilityLabel)
+                    }
                 }
 
                 HStack(spacing: AppSpacing.sm) {
@@ -444,6 +455,10 @@ private struct TonightPickCard: View {
                             .font(AppFont.captionSmall())
                             .foregroundStyle(Color.textMuted)
                     }
+                }
+
+                if !pick.reasons.isEmpty {
+                    evidenceChips(for: pick.reasons)
                 }
 
                 HStack(spacing: AppSpacing.sm) {
@@ -477,7 +492,7 @@ private struct TonightPickCard: View {
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous))
         .goldBorder(cornerRadius: AppRadius.xl, opacity: pick.slot == .best ? 0.48 : 0.28)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(pick.slotTitle), \(pick.item.displayTitle), \(pick.confidence) percent match")
+        .accessibilityLabel(accessibilitySummary)
     }
 
     private var backdrop: some View {
@@ -518,6 +533,20 @@ private struct TonightPickCard: View {
         }
     }
 
+    private var accessibilitySummary: String {
+        var parts: [String] = [
+            pick.slotTitle,
+            pick.item.displayTitle,
+            "\(pick.confidence) percent match",
+            pick.confidenceLabel.accessibilityLabel,
+        ]
+        if !pick.reasons.isEmpty {
+            let evidence = pick.reasons.map { "Evidence: \($0)" }.joined(separator: ", ")
+            parts.append(evidence)
+        }
+        return parts.joined(separator: ", ")
+    }
+
     private func pill(_ text: String) -> some View {
         Text(text)
             .font(AppFont.captionSmall())
@@ -526,6 +555,31 @@ private struct TonightPickCard: View {
             .padding(.vertical, 4)
             .background(Color.bgTertiary)
             .clipShape(Capsule())
+    }
+
+    private func evidenceChips(for reasons: [String]) -> some View {
+        HStack(spacing: 6) {
+            ForEach(Array(reasons.enumerated()), id: \.offset) { _, reason in
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 8, weight: .bold))
+                    Text(reason)
+                        .lineLimit(1)
+                }
+                .font(AppFont.captionSmall())
+                .foregroundStyle(Color.gold)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background(Color.gold.opacity(0.10))
+                .overlay(
+                    Capsule()
+                        .stroke(Color.gold.opacity(0.28), lineWidth: 0.5)
+                )
+                .clipShape(Capsule())
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Evidence: \(reason)")
+            }
+        }
     }
 }
 

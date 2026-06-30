@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import { useWatchlist } from '../hooks/useWatchlist';
-import { decodeSharePayload } from '../utils/clipboard';
+import { decodeSharePayload, encodeSharePayload } from '../utils/clipboard';
 
 /**
  * Shared Watchlist or Vibe View
@@ -10,6 +10,56 @@ import { decodeSharePayload } from '../utils/clipboard';
  * - Vibe shares: encoded filter set, immediately redirects to /
  *   after capturing the filters in sessionStorage so Home can apply them
  */
+function updateVibeOgMeta(decoded) {
+  if (typeof document === 'undefined') return;
+  const title = decoded?.name || 'A MoodReel vibe';
+  const mood = decoded?.filters?.mood || '';
+  const description = mood
+    ? `A "${mood}" vibe curated on MoodReel. Tap to discover the picks.`
+    : 'A curated vibe on MoodReel. Tap to discover the picks.';
+  const params = new URLSearchParams();
+  params.set('title', title);
+  if (mood) params.set('mood', String(mood).slice(0, 32));
+  const genres = Array.isArray(decoded?.filters?.selectedGenres)
+    ? decoded.filters.selectedGenres
+    : [];
+  if (genres.length) params.set('genres', genres.join(','));
+  const moodEmoji = emojiForMood(mood);
+  params.set('emoji', moodEmoji);
+  const ogImage = `${window.location.origin}/api/og-vibe?${params.toString()}`;
+
+  setMeta('meta[property="og:title"]', title);
+  setMeta('meta[property="og:description"]', description);
+  setMeta('meta[property="og:image"]', ogImage);
+  setMeta('meta[name="twitter:title"]', title);
+  setMeta('meta[name="twitter:description"]', description);
+  setMeta('meta[name="twitter:image"]', ogImage);
+}
+
+function setMeta(selector, content) {
+  const el = document.head.querySelector(selector);
+  if (!el) return;
+  el.setAttribute('content', content);
+}
+
+function emojiForMood(mood) {
+  if (!mood || typeof mood !== 'string') return '🎬';
+  const n = mood.toLowerCase();
+  if (/happy|joy|fun|comedy|laugh|uplift/.test(n)) return '😄';
+  if (/sad|drama|emotion|tear|cry/.test(n)) return '😢';
+  if (/scary|horror|thriller|creep|dark/.test(n)) return '😱';
+  if (/romance|love|date|romantic/.test(n)) return '💕';
+  if (/sci-?fi|space|future/.test(n)) return '🚀';
+  if (/action|fight|adrenalin|thrill/.test(n)) return '⚔️';
+  if (/fantasy|magic|wizard/.test(n)) return '🧙';
+  if (/mystery|whodunit/.test(n)) return '🔍';
+  if (/family|kid/.test(n)) return '👨‍👩‍👧';
+  if (/cozy|comfy|warm|comfort/.test(n)) return '☕';
+  if (/documentary/.test(n)) return '📚';
+  if (/noir|crime/.test(n)) return '🕵️';
+  return '🎬';
+}
+
 function SharedList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -36,6 +86,9 @@ function SharedList() {
     }
 
     if (decoded && decoded.type === 'vibe' && decoded.filters) {
+      // Briefly surface the shared vibe via <meta> tags so social
+      // link previews show the right title + image before the redirect.
+      updateVibeOgMeta(decoded);
       try {
         sessionStorage.setItem('moodreel:shared-vibe', JSON.stringify(decoded));
       } catch (err) {

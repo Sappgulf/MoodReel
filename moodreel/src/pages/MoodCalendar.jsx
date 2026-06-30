@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMoodHistory } from '../hooks/useMoodHistory';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 // Mood to color mapping
 const moodColors = {
@@ -92,12 +93,10 @@ function MoodCalendar() {
   // Get week labels
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   const handleClearHistory = () => {
-    if (
-      window.confirm('Are you sure you want to clear your mood history? This cannot be undone.')
-    ) {
-      clearHistory();
-    }
+    setShowClearConfirm(true);
   };
 
   return (
@@ -248,6 +247,20 @@ function MoodCalendar() {
       <Link to="/stats" className="view-stats-link">
         📊 View Full Stats →
       </Link>
+
+      <ConfirmDialog
+        isOpen={showClearConfirm}
+        mode="confirm"
+        title="Clear mood history?"
+        message="This removes all saved mood searches on this device. This cannot be undone."
+        confirmLabel="Clear history"
+        destructive
+        onConfirm={() => {
+          clearHistory();
+          setShowClearConfirm(false);
+        }}
+        onCancel={() => setShowClearConfirm(false)}
+      />
     </div>
   );
 }

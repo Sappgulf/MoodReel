@@ -13,6 +13,24 @@ function createPlaylistId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function emojiForMood(mood) {
+  if (!mood || typeof mood !== 'string') return '🎬';
+  const normalized = mood.toLowerCase();
+  if (/happy|joy|fun|comedy|laugh|uplift/.test(normalized)) return '😄';
+  if (/sad|drama|emotion|tear|cry/.test(normalized)) return '😢';
+  if (/scary|horror|thriller|creep|dark/.test(normalized)) return '😱';
+  if (/romance|love|date|romantic/.test(normalized)) return '💕';
+  if (/sci-?fi|space|future/.test(normalized)) return '🚀';
+  if (/action|fight|adrenalin|thrill/.test(normalized)) return '⚔️';
+  if (/fantasy|magic|wizard/.test(normalized)) return '🧙';
+  if (/mystery|whodunit/.test(normalized)) return '🔍';
+  if (/family|kid/.test(normalized)) return '👨‍👩‍👧';
+  if (/cozy|comfy|warm|comfort/.test(normalized)) return '☕';
+  if (/documentary/.test(normalized)) return '📚';
+  if (/noir|crime/.test(normalized)) return '🕵️';
+  return '🎬';
+}
+
 export function useCustomPlaylists() {
   const [playlists, setPlaylists] = useState(() => {
     return safeGetJSON(CUSTOM_PLAYLISTS_KEY, []);
@@ -85,6 +103,23 @@ export function useCustomPlaylists() {
     return `${origin}/shared?data=${encoded}`;
   }, []);
 
+  const shareableVibePreview = useCallback((name, filters) => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams();
+    const title = name || 'A MoodReel vibe';
+    params.set('title', title);
+    if (filters?.mood) {
+      params.set('mood', String(filters.mood).slice(0, 32));
+    }
+    if (Array.isArray(filters?.selectedGenres) && filters.selectedGenres.length > 0) {
+      params.set('genres', filters.selectedGenres.join(','));
+    }
+    // Pick an emoji that matches the mood where we can.
+    const moodEmoji = emojiForMood(filters?.mood);
+    params.set('emoji', moodEmoji);
+    return `${window.location.origin}/api/og-vibe?${params.toString()}`;
+  }, []);
+
   return {
     playlists,
     savePlaylist,
@@ -92,6 +127,7 @@ export function useCustomPlaylists() {
     movePlaylist,
     deletePlaylist,
     shareableVibeUrl,
+    shareableVibePreview,
   };
 }
 
