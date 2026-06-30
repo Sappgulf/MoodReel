@@ -120,18 +120,21 @@ function MoodPlaylists({ onSelectPlaylist }) {
     setRenameValue(playlist.rawName || playlist.name);
   };
 
-  const confirmRename = useCallback(() => {
-    const name = renameValue.trim();
-    if (!name || !renameTarget) {
+  const confirmRename = useCallback(
+    name => {
+      const trimmed = typeof name === 'string' ? name.trim() : '';
+      if (!trimmed || !renameTarget) {
+        setRenameTarget(null);
+        return;
+      }
+      updatePlaylist(renameTarget.originalId, {
+        name: trimmed,
+        desc: `Custom vibes for ${trimmed}`,
+      });
       setRenameTarget(null);
-      return;
-    }
-    updatePlaylist(renameTarget.originalId, {
-      name,
-      desc: `Custom vibes for ${name}`,
-    });
-    setRenameTarget(null);
-  }, [renameTarget, renameValue, updatePlaylist]);
+    },
+    [renameTarget, updatePlaylist]
+  );
 
   const handleMove = (e, id, direction) => {
     e.stopPropagation();
@@ -296,15 +299,7 @@ function MoodPlaylists({ onSelectPlaylist }) {
         confirmLabel="Rename"
         initialValue={renameValue}
         placeholder="Vibe name"
-        onConfirm={name => {
-          if (typeof name === 'string' && name.trim() && renameTarget) {
-            updatePlaylist(renameTarget.originalId, {
-              name: name.trim(),
-              desc: `Custom vibes for ${name.trim()}`,
-            });
-          }
-          setRenameTarget(null);
-        }}
+        onConfirm={confirmRename}
         onCancel={() => setRenameTarget(null)}
       />
     </div>

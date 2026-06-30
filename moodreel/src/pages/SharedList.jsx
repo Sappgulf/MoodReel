@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import { useWatchlist } from '../hooks/useWatchlist';
-import { decodeSharePayload, encodeSharePayload } from '../utils/clipboard';
+import { decodeSharePayload } from '../utils/clipboard';
 
 /**
  * Shared Watchlist or Vibe View

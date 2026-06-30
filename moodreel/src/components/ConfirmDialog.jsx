@@ -23,7 +23,7 @@ function ConfirmDialog({
   onCancel,
 }) {
   const [value, setValue] = React.useState(initialValue);
-  const { dialogRef, focusRef } = useModalDialog({ isOpen });
+  const { dialogRef } = useModalDialog({ isOpen });
   const inputRef = React.useRef(null);
   React.useEffect(() => {
     if (isOpen && mode === 'prompt' && inputRef.current) {
