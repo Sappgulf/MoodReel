@@ -46,7 +46,8 @@ export function useMovieDetails() {
   const [showTrailerModal, setShowTrailerModal] = useState(false);
   const [isLimitedDetails, setIsLimitedDetails] = useState(false);
 
-  const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
+  const { watchlist, favorites, isInWatchlist, toggleWatchlist, isWatched, toggleWatched } =
+    useWatchlist();
   const { getRating, setRating, getReview, setReview } = useRatings();
   const { trackRating } = useAchievements();
   const { like, dislike, statusFor } = useTasteProfile();
@@ -66,10 +67,15 @@ export function useMovieDetails() {
   const userRating = getRating(id);
   const userReview = getReview(id);
 
-  const routedItemKey = useMemo(
-    () => (routedItem ? `${routedItem.id}-${routedItem.media_type}` : null),
-    [routedItem]
-  );
+  const localFallbackItem = useMemo(() => {
+    if (routedItem) return { ...routedItem, media_type: mediaType };
+
+    const matchesIdAndType = item =>
+      String(item?.id) === String(id) && (item?.media_type || mediaType) === mediaType;
+    const savedItem = watchlist.find(matchesIdAndType) || favorites.find(matchesIdAndType);
+
+    return savedItem ? { ...savedItem, media_type: mediaType } : null;
+  }, [favorites, id, mediaType, routedItem, watchlist]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,8 +103,7 @@ export function useMovieDetails() {
         const data = await searchService.fetchContentDetails(id, mediaType, controller.signal);
         if (!mounted || controller.signal.aborted) return;
 
-        const details =
-          data.details || (routedItem ? { ...routedItem, media_type: mediaType } : null);
+        const details = data.details || localFallbackItem;
         if (!details) {
           setError(
             'This title did not return usable details. Please try again or pick another result.'
@@ -130,8 +135,8 @@ export function useMovieDetails() {
         addToHistory({ ...details, media_type: mediaType }, credits);
       } catch (err) {
         if (!mounted || controller.signal.aborted) return;
-        if (routedItem) {
-          setContent({ ...routedItem, media_type: mediaType });
+        if (localFallbackItem) {
+          setContent(localFallbackItem);
           setIsLimitedDetails(true);
           setSimilar([]);
           setProviders(null);
@@ -139,7 +144,7 @@ export function useMovieDetails() {
           setTrailer(null);
           setCast([]);
           setDirector(null);
-          addToHistory({ ...routedItem, media_type: mediaType }, { cast: [], crew: [] });
+          addToHistory(localFallbackItem, { cast: [], crew: [] });
           return;
         }
         if (!isAbortError(err)) {
@@ -161,7 +166,7 @@ export function useMovieDetails() {
       mounted = false;
       controller.abort();
     };
-  }, [id, mediaType, addToHistory, isValidId, requestNonce, routedItemKey, routedItem]);
+  }, [id, mediaType, addToHistory, isValidId, requestNonce, localFallbackItem]);
 
   useEffect(() => {
     if (!allProviders) {

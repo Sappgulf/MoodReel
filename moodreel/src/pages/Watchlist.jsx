@@ -318,16 +318,20 @@ function Watchlist() {
 
   // Notes editing
   const startEditNote = useCallback(
-    movieId => {
-      setEditingNote(movieId);
-      setNoteText(getNote(movieId));
+    item => {
+      setEditingNote({
+        id: item.id,
+        mediaType: item.media_type || 'movie',
+        key: `${item.id}-${item.media_type || 'movie'}`,
+      });
+      setNoteText(getNote(item.id, item.media_type));
     },
     [getNote]
   );
 
   const saveNote = useCallback(() => {
     if (editingNote) {
-      setNote(editingNote, noteText);
+      setNote(editingNote.id, noteText, editingNote.mediaType);
       setEditingNote(null);
       setNoteText('');
     }
@@ -455,18 +459,19 @@ function Watchlist() {
               <button className="export-json-btn" onClick={exportData}>
                 📥 Export JSON
               </button>
-              <button className="import-btn" onClick={() => fileInputRef.current?.click()}>
-                {importStatus || '📤 Import'}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                style={{ display: 'none' }}
-                onChange={handleImportFile}
-              />
             </>
           )}
+          <button className="import-btn" onClick={() => fileInputRef.current?.click()}>
+            {importStatus || '📤 Import'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            aria-label="Import watchlist backup file"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
         </div>
       </div>
 
@@ -768,7 +773,8 @@ function Watchlist() {
           </p>
           <div className={`watchlist-grid ${layoutMode === 'rows' ? 'watchlist-grid-rows' : ''}`}>
             {visibleItems.map(item => {
-              const note = getNote(item.id);
+              const note = getNote(item.id, item.media_type);
+              const noteKey = `${item.id}-${item.media_type || 'movie'}`;
               return (
                 <div
                   key={`${item.id}-${item.media_type || 'movie'}`}
@@ -797,7 +803,7 @@ function Watchlist() {
 
                   {/* Note section */}
                   <div className="movie-note">
-                    {editingNote === item.id ? (
+                    {editingNote?.key === noteKey ? (
                       <div className="note-editor">
                         <textarea
                           value={noteText}
@@ -815,14 +821,14 @@ function Watchlist() {
                         </div>
                       </div>
                     ) : note ? (
-                      <div className="note-display" onClick={() => startEditNote(item.id)}>
+                      <div className="note-display" onClick={() => startEditNote(item)}>
                         📝 {note}
                       </div>
                     ) : (
                       <button
                         type="button"
                         className="add-note-btn"
-                        onClick={() => startEditNote(item.id)}
+                        onClick={() => startEditNote(item)}
                       >
                         + Add note
                       </button>

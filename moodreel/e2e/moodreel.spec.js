@@ -295,6 +295,58 @@ test.describe('MoodReel E2E', () => {
     await expect(page.getByRole('heading', { name: 'Your watchlist is empty' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Discover Movies' })).toBeInViewport();
     await expect(page.getByRole('group', { name: 'Watchlist layout' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Import/ })).toBeVisible();
+  });
+
+  test('empty watchlist can import a valid backup and reject malformed backup', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('moodreel_watchlist');
+      window.localStorage.removeItem('moodreel_notes');
+      window.localStorage.removeItem('moodreel_watched');
+    });
+
+    await page.goto('/watchlist');
+    await page.setInputFiles('input[aria-label="Import watchlist backup file"]', {
+      name: 'bad-watchlist.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify({ watchlist: { id: 101 } })),
+    });
+    await expect(page.getByRole('button', { name: /Failed/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Your watchlist is empty' })).toBeVisible();
+
+    await page.setInputFiles('input[aria-label="Import watchlist backup file"]', {
+      name: 'moodreel-watchlist.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(
+        JSON.stringify({
+          watchlist: [
+            {
+              id: 909,
+              media_type: 'movie',
+              title: 'Imported Night',
+              genre_ids: [35],
+              vote_average: 8.1,
+              poster_path: '/imported-night.jpg',
+              release_date: '2026-02-14',
+              addedAt: 1710000000000,
+            },
+          ],
+          notes: { '909-movie': 'Imported from backup.' },
+          watched: { '909-movie': 1710000000000 },
+        })
+      ),
+    });
+
+    await expect(page.getByText('Imported Night')).toBeVisible();
+    await expect(page.getByText('Imported from backup.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Imported!/ })).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(() => JSON.parse(localStorage.getItem('moodreel_watchlist') || '[]')[0].id)
+      )
+      .toBe(909);
   });
 
   test('watchlist lanes, notes, watched state, and matchmaker work', async ({ page }) => {
@@ -527,6 +579,52 @@ test.describe('MoodReel E2E', () => {
 
     await page.getByRole('button', { name: 'Copy link' }).click();
     await expect(page.getByRole('button', { name: 'Link copied!' })).toBeVisible();
+  });
+
+  test('saved detail page falls back to local card data when live details fail', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'moodreel_watchlist',
+        JSON.stringify([
+          {
+            id: 909,
+            media_type: 'movie',
+            title: 'Saved Offline Pick',
+            overview: 'A saved title that should remain usable without live details.',
+            poster_path: '/saved-offline.jpg',
+            vote_average: 7.9,
+            release_date: '2025-04-18',
+            genre_ids: [35],
+            addedAt: 1710000000000,
+          },
+        ])
+      );
+    });
+    await page.unroute('**/api/tmdb**');
+    await page.unroute('https://api.themoviedb.org/3/**');
+    await page.route('**/api/tmdb**', route =>
+      route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ status_message: 'Invalid API key' }),
+      })
+    );
+    await page.route('https://api.themoviedb.org/3/**', route =>
+      route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ status_message: 'Invalid API key' }),
+      })
+    );
+
+    await page.goto('/movie/909');
+    await expect(page.locator('.movie-details')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Saved Offline Pick' })).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('Limited details');
+    await expect(page.getByRole('button', { name: /In Watchlist/ })).toBeVisible();
+    await expect(page.locator('.shareable-vibe-card')).toBeVisible();
   });
 
   test('PWA manifest exposes installable shell metadata', async ({ page, request }) => {

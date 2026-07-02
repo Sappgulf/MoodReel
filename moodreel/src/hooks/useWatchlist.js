@@ -10,6 +10,18 @@ function getMediaKey(itemOrId, mediaType) {
   return `${itemOrId}-${mediaType || 'movie'}`;
 }
 
+function isPlainObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isImportableItem(item) {
+  return (
+    isPlainObject(item) &&
+    (typeof item.id === 'number' || typeof item.id === 'string') &&
+    (typeof item.title === 'string' || typeof item.name === 'string')
+  );
+}
+
 /**
  * Custom hook for managing watchlist with localStorage persistence
  * Includes notes, watched status, and genre tracking
@@ -198,10 +210,31 @@ export function useWatchlist() {
   const importData = useCallback(jsonData => {
     try {
       const data = JSON.parse(jsonData);
-      if (data.watchlist) setWatchlist(data.watchlist);
-      if (data.notes) setNotes(data.notes);
-      if (data.watched) setWatched(data.watched);
-      return true;
+      if (!isPlainObject(data)) return false;
+
+      let imported = false;
+
+      if (data.watchlist !== undefined) {
+        if (!Array.isArray(data.watchlist) || !data.watchlist.every(isImportableItem)) {
+          return false;
+        }
+        setWatchlist(data.watchlist);
+        imported = true;
+      }
+
+      if (data.notes !== undefined) {
+        if (!isPlainObject(data.notes)) return false;
+        setNotes(data.notes);
+        imported = true;
+      }
+
+      if (data.watched !== undefined) {
+        if (!isPlainObject(data.watched)) return false;
+        setWatched(data.watched);
+        imported = true;
+      }
+
+      return imported;
     } catch (e) {
       console.error('Import failed:', e);
       return false;

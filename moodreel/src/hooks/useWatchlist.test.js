@@ -226,4 +226,39 @@ describe('useWatchlist', () => {
       expect(localStorage.setItem).toHaveBeenCalledWith(StorageKeys.WATCHLIST, expect.any(String));
     });
   });
+
+  describe('importData', () => {
+    it('imports a valid watchlist backup', () => {
+      const { result } = renderHook(() => useWatchlist());
+
+      act(() => {
+        const success = result.current.importData(
+          JSON.stringify({
+            watchlist: [mockMovie],
+            notes: { '123-movie': 'Friday pick' },
+            watched: { '123-movie': 1710000000000 },
+          })
+        );
+        expect(success).toBe(true);
+      });
+
+      expect(result.current.watchlist).toHaveLength(1);
+      expect(result.current.getNote(123, 'movie')).toBe('Friday pick');
+      expect(result.current.isWatched(123, 'movie')).toBe(true);
+    });
+
+    it('rejects malformed watchlist backup shapes', () => {
+      const { result } = renderHook(() => useWatchlist());
+
+      act(() => {
+        expect(result.current.importData(JSON.stringify({ watchlist: { id: 123 } }))).toBe(false);
+        expect(result.current.importData(JSON.stringify({ watchlist: [{ id: 123 }] }))).toBe(false);
+        expect(result.current.importData(JSON.stringify({ notes: [] }))).toBe(false);
+        expect(result.current.importData(JSON.stringify({ watched: [] }))).toBe(false);
+        expect(result.current.importData(JSON.stringify({ exportedAt: '2026-07-02' }))).toBe(false);
+      });
+
+      expect(result.current.watchlist).toHaveLength(0);
+    });
+  });
 });
