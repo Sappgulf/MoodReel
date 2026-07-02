@@ -254,8 +254,14 @@ function OnboardingModal() {
           ))}
         </div>
 
-        <button type="button" className="onboarding-next" onClick={handleNext}>
-          {currentSlide === slides.length - 1 ? "Let's Go! 🚀" : 'Next →'}
+        <button
+          type="button"
+          className="onboarding-next"
+          onClick={handleNext}
+          aria-label={currentSlide === slides.length - 1 ? 'Finish onboarding' : undefined}
+        >
+          {currentSlide === slides.length - 1 ? "Let's Go!" : 'Next →'}
+          {currentSlide === slides.length - 1 && <span aria-hidden="true"> 🚀</span>}
         </button>
       </div>
     </div>

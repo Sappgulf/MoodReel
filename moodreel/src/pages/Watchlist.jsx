@@ -83,6 +83,7 @@ function Watchlist() {
   const fileInputRef = useRef(null);
   const randomPickTimerRef = useRef(null);
   const navigate = useNavigate();
+  const hasSavedItems = watchlist.length > 0 || favorites.length > 0;
 
   // Sort and filter watchlist
   const sortedList = useMemo(() => {
@@ -384,7 +385,7 @@ function Watchlist() {
   }, []);
 
   return (
-    <div className="watchlist-page">
+    <div className={`watchlist-page ${!hasSavedItems ? 'watchlist-page-empty' : ''}`}>
       <div className="watchlist-header">
         <div className="watchlist-header-copy">
           <p className="details-kicker">Library</p>
@@ -544,7 +545,7 @@ function Watchlist() {
       )}
 
       {/* Watchlist Search */}
-      {(watchlist.length > 0 || favorites.length > 0) && (
+      {hasSavedItems && (
         <div className="watchlist-search-wrapper">
           <span className="search-icon-hint">🔍</span>
           <input
@@ -568,22 +569,24 @@ function Watchlist() {
         </div>
       )}
 
-      <div className="watchlist-layout-toggle" role="group" aria-label="Watchlist layout">
-        <button
-          type="button"
-          className={`watchlist-layout-btn ${layoutMode === 'grid' ? 'active' : ''}`}
-          onClick={() => setLayoutMode('grid')}
-        >
-          🖼️ Poster Board
-        </button>
-        <button
-          type="button"
-          className={`watchlist-layout-btn ${layoutMode === 'rows' ? 'active' : ''}`}
-          onClick={() => setLayoutMode('rows')}
-        >
-          🎬 Film Log
-        </button>
-      </div>
+      {hasSavedItems && (
+        <div className="watchlist-layout-toggle" role="group" aria-label="Watchlist layout">
+          <button
+            type="button"
+            className={`watchlist-layout-btn ${layoutMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setLayoutMode('grid')}
+          >
+            🖼️ Poster Board
+          </button>
+          <button
+            type="button"
+            className={`watchlist-layout-btn ${layoutMode === 'rows' ? 'active' : ''}`}
+            onClick={() => setLayoutMode('rows')}
+          >
+            🎬 Film Log
+          </button>
+        </div>
+      )}
 
       {activeTab === 'watchlist' && watchlist.length > 0 && (
         <div className="watchlist-lane-filter" role="group" aria-label="Watchlist priority lanes">

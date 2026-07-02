@@ -50,9 +50,50 @@ test.describe('MoodReel E2E', () => {
       await page.getByRole('button', { name: 'Next →' }).click();
     }
 
-    await page.getByRole('button', { name: /Let's Go/ }).click();
+    await page.getByRole('button', { name: 'Finish onboarding' }).click();
     await expect(onboarding).toBeHidden();
     await expect(page.locator('h1')).toContainText('MoodReel');
+  });
+
+  test('onboarding starter preferences are persisted', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('moodreel-onboarded');
+      window.localStorage.removeItem('moodreel-my-services');
+      window.localStorage.removeItem('moodreel-taste-settings');
+      window.localStorage.setItem('moodreel-install-dismissed', 'true');
+    });
+
+    await page.goto('/');
+    for (let i = 0; i < 3; i += 1) {
+      await page.getByRole('button', { name: 'Next →' }).click();
+    }
+
+    await page.getByLabel('Format').selectOption('movie');
+    await page.getByLabel('Runtime').selectOption('90');
+    await page.getByLabel('Avoid horror').check();
+    await page.getByLabel('Starter preferences').getByRole('button', { name: 'Netflix' }).click();
+    await page.getByRole('button', { name: 'Next →' }).click();
+    await page.getByRole('button', { name: 'Finish onboarding' }).click();
+
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          onboarded: localStorage.getItem('moodreel-onboarded'),
+          services: JSON.parse(localStorage.getItem('moodreel-my-services') || '[]'),
+          taste: JSON.parse(localStorage.getItem('moodreel-taste-settings') || '{}'),
+        }))
+      )
+      .toEqual({
+        onboarded: 'true',
+        services: [8],
+        taste: {
+          contentType: 'movie',
+          maxRuntime: 90,
+          avoidHorror: true,
+          hiddenGemBias: false,
+          preferredDecades: [],
+        },
+      });
   });
 
   test('mood selection updates results', async ({ page }) => {
@@ -241,6 +282,18 @@ test.describe('MoodReel E2E', () => {
     await expect(page.locator('.watchlist-page')).toBeVisible({
       timeout: 5000,
     });
+  });
+
+  test('empty watchlist keeps the next action in view', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('moodreel_watchlist');
+      window.localStorage.removeItem('moodreel_favorites');
+    });
+
+    await page.goto('/watchlist');
+    await expect(page.getByRole('heading', { name: 'Your watchlist is empty' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Discover Movies' })).toBeInViewport();
+    await expect(page.getByRole('group', { name: 'Watchlist layout' })).toHaveCount(0);
   });
 
   test('profile exposes local privacy controls', async ({ page }) => {
