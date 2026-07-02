@@ -239,6 +239,8 @@ function Profile() {
   }, [apiKeyStatus]);
 
   const isApiKeyEditable = apiKeyStatus.source === 'user' || !apiKeyStatus.configured;
+  const canSaveApiKey =
+    isApiKeyEditable && (apiKeyInput.trim().length > 0 || apiKeyStatus.source === 'user');
 
   const apiKeyStatusMessage = useMemo(() => {
     if (apiKeyStatus.configured) {
@@ -652,7 +654,7 @@ function Profile() {
                 type="button"
                 className="secondary-button"
                 onClick={handleSaveApiKey}
-                disabled={!isApiKeyEditable}
+                disabled={!canSaveApiKey}
               >
                 Save local key
               </button>

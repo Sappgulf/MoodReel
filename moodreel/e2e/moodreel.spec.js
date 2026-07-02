@@ -305,6 +305,40 @@ test.describe('MoodReel E2E', () => {
     await expect(page.getByRole('button', { name: 'Reset local data' })).toBeVisible();
   });
 
+  test('profile local TMDB key controls save and test failures clearly', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('moodreel-tmdb-api-key');
+    });
+    await page.route('https://api.themoviedb.org/3/configuration**', route =>
+      route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ status_message: 'Invalid API key' }),
+      })
+    );
+
+    await page.goto('/profile');
+    const apiKeyInput = page.getByLabel('TMDB API key');
+    const saveButton = page.getByRole('button', { name: 'Save local key' });
+    const testButton = page.getByRole('button', { name: 'Test connection' });
+
+    await expect(saveButton).toBeDisabled();
+    await expect(testButton).toBeDisabled();
+
+    await apiKeyInput.fill('bad-local-key');
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
+    await expect(testButton).toBeEnabled();
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem('moodreel-tmdb-api-key')))
+      .toBe('bad-local-key');
+
+    await testButton.click();
+    await expect(page.locator('.api-key-test-status.fail')).toContainText(
+      'TMDB rejected this key.'
+    );
+  });
+
   test('keyboard shortcut opens modal', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'Mobile Safari', 'Keyboard shortcuts are desktop-only.');
 
