@@ -55,6 +55,30 @@ describe('privacyData', () => {
     );
   });
 
+  it('rejects malformed import payloads', () => {
+    expect(() => parsePrivacyImport('{bad json')).toThrow();
+    expect(() => parsePrivacyImport(JSON.stringify({ app: 'MoodReel', payload: null }))).toThrow(
+      /MoodReel/
+    );
+    expect(() =>
+      parsePrivacyImport(JSON.stringify({ app: 'MoodReel', payload: ['not', 'an', 'object'] }))
+    ).toThrow(/MoodReel/);
+  });
+
+  it('does not import sensitive API key material even from MoodReel exports', () => {
+    const raw = JSON.stringify({
+      app: 'MoodReel',
+      payload: {
+        [SK.WATCHLIST]: '[]',
+        [SK.TMDB_API_KEY_USER]: 'should-not-import',
+      },
+    });
+
+    expect(importPrivacyData(raw)).toBe(1);
+    expect(window.localStorage.getItem(SK.WATCHLIST)).toBe('[]');
+    expect(window.localStorage.getItem(SK.TMDB_API_KEY_USER)).toBeNull();
+  });
+
   it('clears MoodReel-owned local data', () => {
     window.localStorage.setItem(SK.WATCHLIST, '[]');
     window.localStorage.setItem('unrelated', 'keep');

@@ -53,7 +53,13 @@ export function downloadPrivacyExport() {
 
 export function parsePrivacyImport(rawData) {
   const parsed = JSON.parse(rawData);
-  if (!parsed || parsed.app !== 'MoodReel' || typeof parsed.payload !== 'object') {
+  if (
+    !parsed ||
+    parsed.app !== 'MoodReel' ||
+    typeof parsed.payload !== 'object' ||
+    parsed.payload === null ||
+    Array.isArray(parsed.payload)
+  ) {
     throw new Error('This does not look like a MoodReel data export.');
   }
 

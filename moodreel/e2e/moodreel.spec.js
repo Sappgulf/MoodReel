@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import fs from 'node:fs/promises';
 import { installTonightTmdbMocks } from './fixtures/tmdb';
 
 test.describe('MoodReel E2E', () => {
@@ -296,6 +297,80 @@ test.describe('MoodReel E2E', () => {
     await expect(page.getByRole('group', { name: 'Watchlist layout' })).toHaveCount(0);
   });
 
+  test('watchlist lanes, notes, watched state, and matchmaker work', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'moodreel_watchlist',
+        JSON.stringify([
+          {
+            id: 101,
+            media_type: 'movie',
+            title: 'Cozy Signal',
+            genre_ids: [35, 10751],
+            vote_average: 7.8,
+            poster_path: '/cozy-signal.jpg',
+            release_date: '2024-02-02',
+            addedAt: 3,
+          },
+          {
+            id: 102,
+            media_type: 'movie',
+            title: 'Gold Room Mystery',
+            genre_ids: [9648, 53],
+            vote_average: 7.4,
+            poster_path: '/gold-room.jpg',
+            release_date: '2023-10-13',
+            addedAt: 2,
+          },
+          {
+            id: 103,
+            media_type: 'movie',
+            title: 'Left Turn Cinema',
+            genre_ids: [878, 35],
+            vote_average: 7.1,
+            poster_path: '/left-turn.jpg',
+            release_date: '2022-06-17',
+            addedAt: 1,
+          },
+        ])
+      );
+    });
+
+    await page.goto('/watchlist');
+    await expect(page.getByRole('group', { name: 'Watchlist priority lanes' })).toBeVisible();
+    await page.getByRole('button', { name: /With friends/ }).click();
+    await expect(page.locator('.watchlist-item')).toHaveCount(2);
+
+    await page.getByRole('button', { name: 'Film Log' }).click();
+    await expect(page.locator('.watchlist-grid-rows')).toBeVisible();
+
+    await page.getByRole('button', { name: '+ Add note' }).first().click();
+    await page.locator('.note-editor textarea').fill('Save for Friday night.');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('Save for Friday night.')).toBeVisible();
+
+    await page
+      .getByRole('button', { name: /Mark as watched/i })
+      .first()
+      .click();
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          Object.keys(JSON.parse(localStorage.getItem('moodreel_watched') || '{}'))
+        )
+      )
+      .toHaveLength(1);
+
+    await page
+      .getByRole('group', { name: 'Watchlist priority lanes' })
+      .getByRole('button', { name: /All/ })
+      .click();
+    await page.getByRole('button', { name: 'Matchmaker' }).click();
+    await page.getByPlaceholder("Paste friend's watchlist here...").fill('Cozy Signal');
+    await page.getByRole('button', { name: 'Find Matches' }).click();
+    await expect(page.getByText('Found 1 movie in common!')).toBeVisible();
+  });
+
   test('profile exposes local privacy controls', async ({ page }) => {
     await page.goto('/profile');
 
@@ -337,6 +412,31 @@ test.describe('MoodReel E2E', () => {
     await expect(page.locator('.api-key-test-status.fail')).toContainText(
       'TMDB rejected this key.'
     );
+  });
+
+  test('profile export omits API keys and rejects invalid backups', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('moodreel_watchlist', JSON.stringify([{ id: 101 }]));
+      window.localStorage.setItem('moodreel-tmdb-api-key', 'secret-key');
+    });
+
+    await page.goto('/profile');
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export data' }).click();
+    const download = await downloadPromise;
+    const exportPath = await download.path();
+    const exportText = await fs.readFile(exportPath, 'utf8');
+    const exportJson = JSON.parse(exportText);
+
+    expect(exportJson.payload['moodreel_watchlist']).toBe(JSON.stringify([{ id: 101 }]));
+    expect(exportJson.payload['moodreel-tmdb-api-key']).toBeUndefined();
+
+    await page.setInputFiles('input[aria-label="Import MoodReel backup file"]', {
+      name: 'not-moodreel.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify({ app: 'Other', payload: {} })),
+    });
+    await expect(page.getByText('Import failed')).toBeVisible();
   });
 
   test('keyboard shortcut opens modal', async ({ page }, testInfo) => {
@@ -398,5 +498,52 @@ test.describe('MoodReel E2E', () => {
     // Verify detail page rendered key sections
     await expect(page.locator('.movie-details')).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Cast' })).toBeVisible();
+  });
+
+  test('detail page supports taste, rating, review, and share controls', async ({ page }) => {
+    await page.goto('/movie/101');
+    await expect(page.locator('.movie-details')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByLabel('Detail score')).toBeVisible();
+    await expect(page.locator('.shareable-vibe-card')).toBeVisible();
+
+    await page.getByRole('button', { name: /Add to Watchlist/ }).click();
+    await expect(page.getByRole('button', { name: /In Watchlist/ })).toBeVisible();
+    await page.getByRole('button', { name: /Mark as Watched/ }).click();
+    await expect(page.getByRole('button', { name: /Watched/ })).toBeVisible();
+
+    await page
+      .getByRole('group', { name: 'Taste profile' })
+      .getByRole('button', { name: '👍 Like' })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('moodreel-taste-profile'))))
+      .toMatchObject({ liked: ['101-movie'] });
+
+    await page.getByRole('button', { name: '4 stars' }).click();
+    await page.getByRole('button', { name: /Write a Review/ }).click();
+    await page.getByPlaceholder('What did you think of this movie?').fill('Great couch pick.');
+    await page.getByRole('button', { name: 'Save Review' }).click();
+    await expect(page.getByText('"Great couch pick."')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Copy link' }).click();
+    await expect(page.getByRole('button', { name: 'Link copied!' })).toBeVisible();
+  });
+
+  test('PWA manifest exposes installable shell metadata', async ({ page, request }) => {
+    await page.goto('/');
+    const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href');
+    expect(manifestHref).toBe('/manifest.json');
+
+    const manifest = await (await request.get(manifestHref)).json();
+    expect(manifest.name).toBe('MoodReel');
+    expect(manifest.description).toContain('movies and TV shows');
+    expect(manifest.display).toBe('standalone');
+    expect(manifest.icons).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ sizes: '192x192', type: 'image/png' }),
+        expect.objectContaining({ sizes: '512x512', type: 'image/png' }),
+        expect.objectContaining({ purpose: 'maskable' }),
+      ])
+    );
   });
 });

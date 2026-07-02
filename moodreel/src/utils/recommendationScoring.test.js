@@ -240,4 +240,61 @@ describe('recommendationScoring', () => {
     expect(ranked[0].reasons).toContain('within your runtime comfort zone');
     expect(ranked[1].penalties).toContain('against your no-horror preference');
   });
+
+  it('keeps provider availability ahead of a better-rated unavailable title in services-only mode', () => {
+    const available = makeItem({
+      id: 1,
+      title: 'Actually Streamable',
+      vote_average: 7.1,
+      vote_count: 400,
+      genre_ids: [35],
+    });
+    const unavailable = makeItem({
+      id: 2,
+      title: 'Better But Elsewhere',
+      vote_average: 9.1,
+      vote_count: 12000,
+      popularity: 500,
+      genre_ids: [35],
+    });
+
+    const ranked = rankRecommendations([unavailable, available], {
+      mode,
+      servicesOnly: true,
+      myServices: [8],
+      providerDataByKey: {
+        '1-movie': { flatrate: [{ id: 8 }], rent: [], buy: [] },
+        '2-movie': { flatrate: [{ id: 9 }], rent: [], buy: [] },
+      },
+    });
+
+    expect(ranked).toHaveLength(1);
+    expect(ranked[0].item.title).toBe('Actually Streamable');
+  });
+
+  it('respects family context by downranking horror even when ratings are strong', () => {
+    const horror = makeItem({
+      id: 1,
+      title: 'Award Horror',
+      genre_ids: [27],
+      vote_average: 9.2,
+      vote_count: 20000,
+      popularity: 900,
+    });
+    const family = makeItem({
+      id: 2,
+      title: 'Family Adventure',
+      genre_ids: [10751, 12],
+      vote_average: 7.1,
+      vote_count: 500,
+    });
+
+    const ranked = rankRecommendations([horror, family], {
+      mode,
+      watchingContext: 'family',
+    });
+
+    expect(ranked[0].item.title).toBe('Family Adventure');
+    expect(ranked[1].penalties).toContain('rough fit for family viewing');
+  });
 });
