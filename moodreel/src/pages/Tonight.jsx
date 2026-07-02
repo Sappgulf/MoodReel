@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import ErrorState from '../components/ErrorState';
 import MediaImage from '../components/MediaImage';
 import ProviderBadges from '../components/ProviderBadges';
+import ScoreBreakdown from '../components/ScoreBreakdown';
 import { MovieCardSkeleton } from '../components/Skeleton';
 import { TOP_STREAMING_SERVICES } from '../constants/streamingServices';
 import { RISK_OPTIONS, RUNTIME_OPTIONS, WATCHING_CONTEXTS } from '../constants/tonightOptions';
@@ -23,6 +24,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { getDisplayOverview, getDisplayTitle, getReleaseYear } from '../utils/mediaUtils';
 import {
   buildTonightPicks,
+  buildScoreBreakdown,
   getRecommendationKey,
   rankRecommendations,
   TONIGHT_MODES,
@@ -155,6 +157,8 @@ function TonightPickCard({
             ))}
           </div>
         )}
+
+        <ScoreBreakdown rows={buildScoreBreakdown(pick)} title="Why it ranked" />
 
         {pick.tags?.length > 0 && (
           <div className="tonight-pick-tags">

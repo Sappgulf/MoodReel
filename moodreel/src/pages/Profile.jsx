@@ -56,6 +56,22 @@ const DEFAULT_TASTE_SETTINGS = {
 
 const DECADE_OPTIONS = [1970, 1980, 1990, 2000, 2010, 2020];
 
+function getApiTestFailureCopy(error) {
+  if (error?.code === 'TMDB_API_KEY_MISSING') {
+    return 'No TMDB key is available in this browser or deployment.';
+  }
+  if (error?.status === 401 || error?.code === 'TMDB_HTTP_401') {
+    return 'TMDB rejected this key. Check for a copied space or expired key.';
+  }
+  if (error?.status === 429 || error?.code === 'TMDB_HTTP_429') {
+    return 'TMDB rate limited the test. Wait a moment and try again.';
+  }
+  if (error?.code === 'TMDB_NETWORK_ERROR') {
+    return 'MoodReel could not reach TMDB from this browser.';
+  }
+  return error?.message || 'Check the key and try again.';
+}
+
 function Profile() {
   const { profile, updateProfile } = useUserProfile();
   const { exp, level, progressToNextLevel, achievements } = useAchievements();
@@ -78,6 +94,7 @@ function Profile() {
     return status.source === 'user' ? status.value || '' : '';
   });
   const [apiKeyTestStatus, setApiKeyTestStatus] = useState('idle');
+  const [apiKeyTestMessage, setApiKeyTestMessage] = useState('');
 
   const stats = useMemo(() => {
     const genreCounts = {};
@@ -238,6 +255,7 @@ function Profile() {
     setApiKeyStatus(status);
     setApiKeyInput(status.source === 'user' ? status.value || '' : '');
     setApiKeyTestStatus('idle');
+    setApiKeyTestMessage('');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
     }
@@ -292,6 +310,7 @@ function Profile() {
     setApiKeyInput('');
     setApiKeyStatus(getApiKeyStatus());
     setApiKeyTestStatus('idle');
+    setApiKeyTestMessage('');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
     }
@@ -309,6 +328,7 @@ function Profile() {
       await testTmdbConnection();
       setApiKeyStatus(getApiKeyStatus());
       setApiKeyTestStatus('pass');
+      setApiKeyTestMessage('Connection verified.');
       pushToast({
         icon: '✅',
         title: 'TMDB connection works',
@@ -316,12 +336,14 @@ function Profile() {
         duration: 3200,
       });
     } catch (error) {
+      const message = getApiTestFailureCopy(error);
       setApiKeyStatus(getApiKeyStatus());
       setApiKeyTestStatus('fail');
+      setApiKeyTestMessage(message);
       pushToast({
         icon: '⚠️',
         title: 'TMDB test failed',
-        message: error?.message || 'Check the key and try again.',
+        message,
         variant: 'error',
         duration: 4500,
       });
@@ -654,11 +676,7 @@ function Profile() {
             </div>
             {apiKeyTestStatus !== 'idle' && (
               <p className={`api-key-test-status ${apiKeyTestStatus}`}>
-                {apiKeyTestStatus === 'pass'
-                  ? 'Connection verified.'
-                  : apiKeyTestStatus === 'fail'
-                    ? 'Connection failed. Check the key or proxy configuration.'
-                    : 'Checking TMDB...'}
+                {apiKeyTestStatus === 'testing' ? 'Checking TMDB...' : apiKeyTestMessage}
               </p>
             )}
           </div>

@@ -32,6 +32,17 @@ function formatRecencyLabel(watchlist = []) {
   return `Last save: ${days}d ago`;
 }
 
+function getWatchlistLane(item, isWatchedItem, isFavoriteItem) {
+  const rating = item.vote_average || 0;
+  const genres = item.genre_ids || [];
+  if (isWatchedItem) return 'watched';
+  if (isFavoriteItem) return 'tonight';
+  if (genres.some(id => [35, 12, 28, 16, 10751].includes(id))) return 'with-friends';
+  if (genres.some(id => [18, 10749, 10402].includes(id))) return 'comfort';
+  if (rating >= 7.4 || genres.some(id => [99, 9648, 878].includes(id))) return 'deep-focus';
+  return 'weekend';
+}
+
 function Watchlist() {
   const {
     watchlist,
@@ -64,6 +75,7 @@ function Watchlist() {
   const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
   const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
   const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' | 'rows'
+  const [activeLane, setActiveLane] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
@@ -81,6 +93,18 @@ function Watchlist() {
     if (deferredSearchTerm.trim()) {
       const query = deferredSearchTerm.toLowerCase().trim();
       list = list.filter(m => (m.title || '').toLowerCase().includes(query));
+    }
+
+    if (activeLane !== 'all') {
+      list = list.filter(
+        item =>
+          activeLane ===
+          getWatchlistLane(
+            item,
+            isWatched(item.id, item.media_type),
+            isFavorite(item.id, item.media_type)
+          )
+      );
     }
 
     // Apply sorting
@@ -110,7 +134,17 @@ function Watchlist() {
       list = list.filter(m => !isWatched(m.id, m.media_type));
     }
     return list;
-  }, [watchlist, favorites, activeTab, showWatched, isWatched, sortBy, deferredSearchTerm]);
+  }, [
+    watchlist,
+    favorites,
+    activeTab,
+    showWatched,
+    isWatched,
+    isFavorite,
+    activeLane,
+    sortBy,
+    deferredSearchTerm,
+  ]);
 
   const watchedCount = useMemo(() => getWatchedCount(), [getWatchedCount]);
 
@@ -135,6 +169,31 @@ function Watchlist() {
     ],
     [favorites.length, maybeTonightItems.length, watchedCount, watchlist.length]
   );
+  const laneStats = useMemo(() => {
+    const lanes = [
+      { id: 'all', label: 'All' },
+      { id: 'tonight', label: 'Tonight' },
+      { id: 'weekend', label: 'Weekend' },
+      { id: 'with-friends', label: 'With friends' },
+      { id: 'comfort', label: 'Comfort' },
+      { id: 'deep-focus', label: 'Deep focus' },
+    ];
+    return lanes.map(lane => ({
+      ...lane,
+      count:
+        lane.id === 'all'
+          ? watchlist.length
+          : watchlist.filter(
+              item =>
+                lane.id ===
+                getWatchlistLane(
+                  item,
+                  isWatched(item.id, item.media_type),
+                  isFavorite(item.id, item.media_type)
+                )
+            ).length,
+    }));
+  }, [isFavorite, isWatched, watchlist]);
 
   // Import from JSON file
   const handleImportFile = useCallback(
@@ -314,7 +373,7 @@ function Watchlist() {
   // Reset pagination when list changes
   useEffect(() => {
     setVisibleCount(12);
-  }, [activeTab, sortBy, showWatched, deferredSearchTerm]);
+  }, [activeTab, sortBy, showWatched, activeLane, deferredSearchTerm]);
 
   const visibleItems = useMemo(() => {
     return sortedList.slice(0, visibleCount);
@@ -526,6 +585,22 @@ function Watchlist() {
         </button>
       </div>
 
+      {activeTab === 'watchlist' && watchlist.length > 0 && (
+        <div className="watchlist-lane-filter" role="group" aria-label="Watchlist priority lanes">
+          {laneStats.map(lane => (
+            <button
+              key={lane.id}
+              type="button"
+              className={activeLane === lane.id ? 'active' : ''}
+              aria-pressed={activeLane === lane.id}
+              onClick={() => setActiveLane(lane.id)}
+            >
+              {lane.label} <span>{lane.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Watched Filter */}
       {activeTab === 'watchlist' && watchlist.length > 0 && (
         <div className="watched-filter">
@@ -697,11 +772,13 @@ function Watchlist() {
                   className={`watchlist-item ${layoutMode === 'rows' ? 'watchlist-item-row' : ''}`}
                 >
                   <div className="watchlist-lane-chip">
-                    {isWatched(item.id, item.media_type)
-                      ? 'Watched'
-                      : isFavorite(item.id, item.media_type)
-                        ? 'Watch soon'
-                        : 'Maybe tonight'}
+                    {getWatchlistLane(
+                      item,
+                      isWatched(item.id, item.media_type),
+                      isFavorite(item.id, item.media_type)
+                    )
+                      .replace('-', ' ')
+                      .replace(/\b\w/g, letter => letter.toUpperCase())}
                   </div>
                   <MovieCard
                     movie={item}

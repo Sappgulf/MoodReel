@@ -1,4 +1,5 @@
 import {
+  buildScoreBreakdown,
   buildTonightPicks,
   explainRecommendation,
   getRecommendationKey,
@@ -100,6 +101,29 @@ describe('recommendationScoring', () => {
       /Safe Bet: Cozy Laugh ranks here/
     );
     expect(scorecard.reasons).toContain('under 90 minutes');
+  });
+
+  it('builds visible score breakdown rows from scorecard signals', () => {
+    const rows = buildScoreBreakdown({
+      item: makeItem({
+        id: 44,
+        title: 'Transparent Pick',
+        vote_average: 8.1,
+        vote_count: 900,
+      }),
+      confidence: 91,
+      availabilityState: 'available',
+      reasons: ['matches the requested vibe', 'available on your services'],
+      penalties: [],
+    });
+
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Mood match', value: 'Strong' }),
+        expect.objectContaining({ label: 'Availability', value: 'On your services' }),
+        expect.objectContaining({ label: 'Decision score', value: '91%' }),
+      ])
+    );
   });
 
   it('filters unavailable provider matches when services-only is active', () => {

@@ -1,5 +1,6 @@
 import MediaImage from '../MediaImage';
 import ShareButtons from '../ShareButtons';
+import ShareableVibeCard from '../ShareableVibeCard';
 import StarRating from '../StarRating';
 import { formatStarRating } from '../../utils/movieDetailsUtils';
 import { getDisplayOverview, getDisplayTitle } from '../../utils/mediaUtils';
@@ -158,6 +159,8 @@ export default function MovieDetailsHeroPanel({
               Share sheet
             </button>
           </div>
+
+          <ShareableVibeCard item={content} caption="Shareable vibe card" />
 
           <div className="taste-profile-actions" role="group" aria-label="Taste profile">
             <button

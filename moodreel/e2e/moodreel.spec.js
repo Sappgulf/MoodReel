@@ -151,6 +151,8 @@ test.describe('MoodReel E2E', () => {
       'Best Match',
       'Wild Card',
     ]);
+    await expect(page.getByLabel('Why it ranked')).toHaveCount(3);
+    await expect(page.getByText('Decision score')).toHaveCount(3);
     await expect(page.getByText('Why this pick?')).toHaveCount(3);
     await expect(page.getByRole('button', { name: /Share or copy/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Why each pick wins' })).toBeVisible();

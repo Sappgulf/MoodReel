@@ -1,4 +1,5 @@
 import { POST_WATCH_REACTIONS } from '../../constants/movieDetails';
+import ScoreBreakdown from '../ScoreBreakdown';
 
 export default function MovieDetailsInsights({
   tonightVerdict,
@@ -27,6 +28,41 @@ export default function MovieDetailsInsights({
                 <li key={reason}>{reason}</li>
               ))}
             </ul>
+            <ScoreBreakdown
+              title="Detail score"
+              rows={[
+                {
+                  label: 'Availability',
+                  value: tonightVerdict.reasons.some(reason => /streams on/i.test(reason))
+                    ? 'On your services'
+                    : 'Check providers',
+                  tone: tonightVerdict.reasons.some(reason => /streams on/i.test(reason))
+                    ? 'positive'
+                    : 'neutral',
+                },
+                {
+                  label: 'Runtime',
+                  value: tonightVerdict.reasons.some(reason => /runtime/i.test(reason))
+                    ? 'Night-friendly'
+                    : 'Review first',
+                  tone: 'neutral',
+                },
+                {
+                  label: 'Rating',
+                  value: tonightVerdict.reasons.some(reason => /rating/i.test(reason))
+                    ? 'Strong signal'
+                    : 'Mixed signal',
+                  tone: tonightVerdict.reasons.some(reason => /rating/i.test(reason))
+                    ? 'positive'
+                    : 'neutral',
+                },
+                {
+                  label: 'Tonight score',
+                  value: `${tonightVerdict.score}%`,
+                  tone: tonightVerdict.score >= 80 ? 'positive' : 'neutral',
+                },
+              ]}
+            />
             <div className="post-watch-loop">
               <span>After watching, teach MoodReel:</span>
               <div className="post-watch-actions" role="group" aria-label="Post-watch rating">

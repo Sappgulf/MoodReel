@@ -259,6 +259,53 @@ function getDecisionTags(scorecard) {
   return tags.slice(0, 4);
 }
 
+export function buildScoreBreakdown(scorecard = {}) {
+  const item = scorecard.item || {};
+  const rating = item.vote_average || 0;
+  const voteCount = item.vote_count || 0;
+  const reasons = scorecard.reasons || [];
+  const penalties = scorecard.penalties || [];
+  const confidence = Number(scorecard.confidence);
+
+  return [
+    {
+      label: 'Mood match',
+      value: reasons.some(reason => /mood|vibe|genre|tone/i.test(reason)) ? 'Strong' : 'Learning',
+      tone: 'positive',
+    },
+    {
+      label: 'Availability',
+      value:
+        scorecard.availabilityState === 'available'
+          ? 'On your services'
+          : scorecard.availabilityState === 'unavailable'
+            ? 'Not selected'
+            : 'Unknown',
+      tone: scorecard.availabilityState === 'available' ? 'positive' : 'neutral',
+    },
+    {
+      label: 'Rating confidence',
+      value: rating ? `${rating.toFixed(1)} TMDB · ${voteCount || 0} votes` : 'No rating yet',
+      tone: rating >= 7 ? 'positive' : 'neutral',
+    },
+    {
+      label: 'Taste fit',
+      value:
+        reasons.find(reason => /you|your|preference|liked/i.test(reason)) ||
+        penalties.find(reason => /you|your|watched|saved/i.test(reason)) ||
+        'More signals needed',
+      tone: penalties.some(reason => /disliked|watched|saved|preference/i.test(reason))
+        ? 'caution'
+        : 'neutral',
+    },
+    {
+      label: 'Decision score',
+      value: Number.isFinite(confidence) ? `${Math.round(confidence)}%` : 'Preview',
+      tone: Number.isFinite(confidence) && confidence >= 80 ? 'positive' : 'neutral',
+    },
+  ];
+}
+
 function buildDecisionDebate(scorecard, slotLabel) {
   const title = getDisplayTitle(scorecard.item);
   if (slotLabel === 'Safe Bet') {
@@ -745,6 +792,7 @@ const recommendationScoring = {
   buildTonightPicks,
   buildRecommendationExplanation,
   explainRecommendation,
+  buildScoreBreakdown,
   TASTE_SETTING_DEFAULTS,
 };
 

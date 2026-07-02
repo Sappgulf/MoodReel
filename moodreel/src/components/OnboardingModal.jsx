@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
+import { TOP_STREAMING_SERVICES } from '../constants/streamingServices';
 import { StorageKeys as SK } from '../storage/storageKeys';
-import { safeGetRaw, safeSetRaw } from '../storage/safeStorage';
+import { safeGetRaw, safeSetJSON, safeSetRaw } from '../storage/safeStorage';
+
+const TASTE_SETTINGS_KEY = 'moodreel-taste-settings';
 
 const slides = [
   {
@@ -21,9 +24,11 @@ const slides = [
     description: 'On mobile, swipe right to save movies to your watchlist, left to pass.',
   },
   {
-    icon: '🏆',
-    title: 'Earn Achievements',
-    description: 'Unlock badges as you explore! Check your progress in the Achievements page.',
+    icon: '🎛️',
+    title: 'Tune the first picks',
+    description:
+      'Choose your format, runtime comfort, and streaming services so Tonight Mode starts smarter.',
+    setup: true,
   },
   {
     icon: '📱',
@@ -38,6 +43,13 @@ const slides = [
 function OnboardingModal() {
   const [show, setShow] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [starterPrefs, setStarterPrefs] = useState({
+    contentType: 'any',
+    maxRuntime: 0,
+    avoidHorror: false,
+    hiddenGemBias: false,
+    services: [],
+  });
 
   const touchStart = useRef(null);
 
@@ -49,9 +61,17 @@ function OnboardingModal() {
   }, []);
 
   const handleClose = useCallback(() => {
+    safeSetJSON(TASTE_SETTINGS_KEY, {
+      contentType: starterPrefs.contentType,
+      maxRuntime: starterPrefs.maxRuntime,
+      avoidHorror: starterPrefs.avoidHorror,
+      hiddenGemBias: starterPrefs.hiddenGemBias,
+      preferredDecades: [],
+    });
+    safeSetJSON(SK.MY_SERVICES, starterPrefs.services);
     safeSetRaw(SK.ONBOARDED, 'true');
     setShow(false);
-  }, []);
+  }, [starterPrefs]);
 
   const handleNext = useCallback(() => {
     setCurrentSlide(prev => {
@@ -94,6 +114,19 @@ function OnboardingModal() {
   if (!show) return null;
 
   const slide = slides[currentSlide];
+
+  const updateStarterPref = (key, value) => {
+    setStarterPrefs(prev => ({ ...prev, [key]: value }));
+  };
+
+  const toggleStarterService = id => {
+    setStarterPrefs(prev => ({
+      ...prev,
+      services: prev.services.includes(id)
+        ? prev.services.filter(serviceId => serviceId !== id)
+        : [...prev.services, id],
+    }));
+  };
 
   // Swipe support for mobile
   const handleTouchStart = e => {
@@ -148,6 +181,64 @@ function OnboardingModal() {
           <div className="onboarding-icon">{slide.icon}</div>
           <h2 id="onboarding-title">{slide.title}</h2>
           <p id="onboarding-description">{slide.description}</p>
+          {slide.setup && (
+            <div className="onboarding-setup" aria-label="Starter preferences">
+              <label>
+                Format
+                <select
+                  value={starterPrefs.contentType}
+                  onChange={e => updateStarterPref('contentType', e.target.value)}
+                >
+                  <option value="any">Movies and TV</option>
+                  <option value="movie">Movies first</option>
+                  <option value="tv">Series first</option>
+                </select>
+              </label>
+              <label>
+                Runtime
+                <select
+                  value={starterPrefs.maxRuntime}
+                  onChange={e => updateStarterPref('maxRuntime', Number(e.target.value))}
+                >
+                  <option value={0}>No limit</option>
+                  <option value={90}>90 minutes</option>
+                  <option value={110}>110 minutes</option>
+                  <option value={130}>130 minutes</option>
+                </select>
+              </label>
+              <div className="onboarding-toggle-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={starterPrefs.avoidHorror}
+                    onChange={e => updateStarterPref('avoidHorror', e.target.checked)}
+                  />
+                  Avoid horror
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={starterPrefs.hiddenGemBias}
+                    onChange={e => updateStarterPref('hiddenGemBias', e.target.checked)}
+                  />
+                  Prefer hidden gems
+                </label>
+              </div>
+              <div className="onboarding-service-grid" role="group" aria-label="Streaming services">
+                {TOP_STREAMING_SERVICES.slice(0, 6).map(service => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    className={starterPrefs.services.includes(service.id) ? 'active' : ''}
+                    aria-pressed={starterPrefs.services.includes(service.id)}
+                    onClick={() => toggleStarterService(service.id)}
+                  >
+                    {service.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="onboarding-dots" role="tablist" aria-label="Onboarding progress">
