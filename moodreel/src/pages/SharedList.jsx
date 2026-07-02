@@ -143,17 +143,20 @@ function SharedList() {
 
       {sharedItems.length > 0 ? (
         <div className="recommendations shared-grid">
-          {sharedItems.map(movie => (
-            <MovieCard
-              key={movie.id}
-              movie={movie}
-              isInWatchlist={isInWatchlist(movie.id)}
-              onToggleWatchlist={toggleWatchlist}
-              isWatched={isWatched(movie.id)}
-              onToggleWatched={toggleWatched}
-              mediaType={movie.media_type || 'movie'}
-            />
-          ))}
+          {sharedItems.map(movie => {
+            const mediaType = movie.media_type || 'movie';
+            return (
+              <MovieCard
+                key={`${movie.id}-${mediaType}`}
+                movie={{ ...movie, media_type: mediaType }}
+                isInWatchlist={isInWatchlist(movie.id, mediaType)}
+                onToggleWatchlist={toggleWatchlist}
+                isWatched={isWatched(movie.id, mediaType)}
+                onToggleWatched={toggleWatched}
+                mediaType={mediaType}
+              />
+            );
+          })}
         </div>
       ) : (
         <p className="loading-text">Loading shared list...</p>

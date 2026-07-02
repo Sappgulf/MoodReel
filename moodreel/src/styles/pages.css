@@ -2475,6 +2475,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
   margin-bottom: var(--spacing-xl);
+  scroll-margin-block: 6rem;
 }
 
 .matchmaker-panel textarea {
@@ -2487,6 +2488,18 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   margin: var(--spacing-sm) 0;
   resize: vertical;
   font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .matchmaker-panel {
+    scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+    scroll-margin-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .matchmaker-panel .primary-button {
+    scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+    scroll-margin-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* Search icon hint inside search wrapper */

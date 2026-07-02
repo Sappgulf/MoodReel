@@ -11,6 +11,9 @@ test.describe('MoodReel E2E', () => {
       .click();
   };
 
+  const encodeShareData = payload =>
+    Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+
   test.beforeEach(async ({ page }) => {
     await installTonightTmdbMocks(page);
     await page.addInitScript(() => {
@@ -489,6 +492,59 @@ test.describe('MoodReel E2E', () => {
       buffer: Buffer.from(JSON.stringify({ app: 'Other', payload: {} })),
     });
     await expect(page.getByText('Import failed')).toBeVisible();
+  });
+
+  test('shared watchlist keeps movie and TV ids separate when adding titles', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'moodreel_watchlist',
+        JSON.stringify([
+          {
+            id: 777,
+            media_type: 'movie',
+            title: 'Same Id Movie',
+            poster_path: '/same-id-movie.jpg',
+            vote_average: 7.1,
+            release_date: '2024-01-01',
+            addedAt: 1710000000000,
+          },
+        ])
+      );
+      window.localStorage.setItem('moodreel_watched', JSON.stringify({ '777-movie': 1710001 }));
+    });
+
+    const sharedData = encodeShareData({
+      sharedBy: 'Casey',
+      items: [
+        {
+          id: 777,
+          media_type: 'tv',
+          title: 'Same Id Show',
+          poster_path: '/same-id-show.jpg',
+          vote_average: 8.4,
+          first_air_date: '2025-03-03',
+        },
+      ],
+    });
+
+    await page.goto(`/shared?data=${sharedData}`);
+    await expect(page.getByRole('heading', { name: "🎬 Casey's Watchlist" })).toBeVisible();
+    await expect(page.getByText('Same Id Show')).toBeVisible();
+
+    const sharedCard = page.locator('.recommendation').filter({ hasText: 'Same Id Show' });
+    await expect(sharedCard.getByRole('button', { name: 'Add to watchlist' })).toBeVisible();
+    await expect(sharedCard.getByRole('button', { name: 'Mark as watched' })).toBeVisible();
+    await sharedCard.getByRole('button', { name: 'Add to watchlist' }).click();
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          JSON.parse(localStorage.getItem('moodreel_watchlist') || '[]').map(
+            item => `${item.id}-${item.media_type || 'movie'}`
+          )
+        )
+      )
+      .toEqual(['777-movie', '777-tv']);
   });
 
   test('keyboard shortcut opens modal', async ({ page }, testInfo) => {
