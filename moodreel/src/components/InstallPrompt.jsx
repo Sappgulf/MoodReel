@@ -33,7 +33,9 @@ function InstallPrompt() {
 
   const readDismissPreference = () => {
     const dismissed = safeGetRaw(SK.INSTALL_DISMISSED, null);
-    return dismissed ? parseInt(dismissed, 10) : null;
+    if (!dismissed) return null;
+    const timestamp = parseInt(dismissed, 10);
+    return Number.isFinite(timestamp) ? timestamp : Date.now();
   };
 
   const persistDismissPreference = value => {

@@ -24,7 +24,7 @@
     "test:e2e:ui": "playwright test --ui",
     "smoke": "node scripts/smoke.js",
     "bundle:check": "node scripts/check-bundle-size.cjs",
-    "verify": "npm run lint && npm run test:run && npm run build && npm run bundle:check",
+    "verify": "npm run lint && npm run typecheck && npm run test:run && npm run build && npm run bundle:check",
     "verify:full": "npm run verify && npm run test:e2e",
     "lint": "eslint src --max-warnings 0",
     "screenshots:polish": "node scripts/capture-polish-screenshots.js",

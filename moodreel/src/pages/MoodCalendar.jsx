@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import ConfirmDialog from '../components/ConfirmDialog';
+import EmptyState from '../components/EmptyState';
 
 // Mood to color mapping
 const moodColors = {
@@ -234,14 +235,13 @@ function MoodCalendar() {
 
       {/* Empty state */}
       {history.length === 0 && (
-        <div className="empty-state">
-          <div className="icon">📅</div>
-          <h3>No mood history yet</h3>
-          <p>Start searching for movies by mood to see your calendar fill up!</p>
-          <Link to="/" className="primary-button">
-            Start Exploring
-          </Link>
-        </div>
+        <EmptyState variant="calendar">
+          <div className="empty-state-steps" aria-label="Mood calendar examples">
+            <span>cozy mystery</span>
+            <span>date night</span>
+            <span>mind-bending sci-fi</span>
+          </div>
+        </EmptyState>
       )}
 
       <Link to="/stats" className="view-stats-link">

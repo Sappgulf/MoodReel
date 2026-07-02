@@ -24,39 +24,7 @@ const API_KEY_SOURCE_MISSING = 'missing';
 
 let proxyAvailable = true;
 
-// In dev, Vite's dev-server proxy serves /api/tmdb (see vite.config.js),
-// which keeps the browser on a same-origin path so CSP `connect-src
-// 'self'` allows the requests. In production, the same /api/tmdb path
-// is served by the Vercel serverless function. We therefore prefer
-// the proxy in BOTH environments when it's available.
-function shouldUseProxy() {
-  if (!proxyAvailable) return false;
-  return typeof window !== 'undefined';
-}
-
-function resolveEnvApiKey() {
-  return resolvePublicEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
-}
-
-function resolveBootstrapApiKey() {
-  if (typeof window === 'undefined') return null;
-  return window.__MOODREEL_TMDB_API_KEY__ || null;
-}
-
-function resolveStoredApiKey() {
-  return safeGetRaw(SK.TMDB_API_KEY_USER, null);
-}
-
-export function getApiKeyStatus() {
-  if (shouldUseProxy()) {
-    return {
-      configured: true,
-      source: API_KEY_SOURCE_PROXY,
-      value: null,
-      hasKey: true,
-    };
-  }
-
+function resolveClientApiKeyStatus() {
   const envApiKey = resolveEnvApiKey();
   if (envApiKey) {
     return {
@@ -95,6 +63,50 @@ export function getApiKeyStatus() {
   };
 }
 
+// Use the same-origin proxy only when no client-side key is configured.
+// This keeps server-key deployments private while preserving the documented
+// local/Profile key workflow for development and personal use.
+function shouldUseProxy() {
+  if (!proxyAvailable) return false;
+  if (typeof window === 'undefined') return false;
+  if (import.meta.env.DEV) return false;
+  return !resolveClientApiKeyStatus().hasKey;
+}
+
+function resolveEnvApiKey() {
+  return resolvePublicEnv(['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']);
+}
+
+function resolveBootstrapApiKey() {
+  if (typeof window === 'undefined') return null;
+  return window.__MOODREEL_TMDB_API_KEY__ || null;
+}
+
+function resolveStoredApiKey() {
+  return safeGetRaw(SK.TMDB_API_KEY_USER, null);
+}
+
+export function getApiKeyStatus() {
+  const clientStatus = resolveClientApiKeyStatus();
+  if (clientStatus.hasKey) return clientStatus;
+
+  if (shouldUseProxy()) {
+    return {
+      configured: true,
+      source: API_KEY_SOURCE_PROXY,
+      value: null,
+      hasKey: true,
+    };
+  }
+
+  return {
+    configured: false,
+    source: API_KEY_SOURCE_MISSING,
+    value: null,
+    hasKey: false,
+  };
+}
+
 export function saveUserApiKey(value) {
   const trimmed = typeof value === 'string' ? value.trim() : '';
   if (!trimmed) {
@@ -109,7 +121,15 @@ export function clearUserApiKey() {
 }
 
 function getApiKey() {
-  return getApiKeyStatus().value;
+  return resolveClientApiKeyStatus().value;
+}
+
+export async function testTmdbConnection() {
+  await tmdbGet('/configuration', {
+    retries: 0,
+    cache: false,
+  });
+  return true;
 }
 
 export class TmdbApiError extends Error {
@@ -342,6 +362,7 @@ const apiClient = {
   getApiKeyStatus,
   saveUserApiKey,
   clearUserApiKey,
+  testTmdbConnection,
 };
 
 export default apiClient;

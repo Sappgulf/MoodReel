@@ -31,22 +31,22 @@ TMDB API key field:
 
 ## Scripts
 
-| Command                                  | Description                                         |
-| ---------------------------------------- | --------------------------------------------------- |
-| `npm run dev` / `npm start`              | Start Vite on http://localhost:3000.                |
-| `npm run build`                          | Build production assets into `build/`.              |
-| `npm run preview`                        | Serve the production build locally.                 |
-| `npm run lint`                           | Run ESLint over `src/`.                             |
-| `npm run typecheck`                      | Run TypeScript contract checks with `tsc --noEmit`. |
-| `npm run test:run` / `npm run test:unit` | Run Vitest unit tests once.                         |
-| `npm run test:ci`                        | Run Vitest with coverage.                           |
-| `npm run test:e2e`                       | Run Playwright E2E tests.                           |
-| `npm run browsers:ensure`                | Install required Playwright browsers locally.       |
-| `npm run bundle:check`                   | Check production bundle size.                       |
-| `npm run analyze`                        | Build with Rollup visualizer output in `build/`.    |
-| `npm run verify`                         | Run lint, unit tests, build, and bundle check.      |
-| `npm run verify:full`                    | Run verify plus E2E validation.                     |
-| `npm run screenshots:polish`             | Capture key route screenshots.                      |
+| Command                                  | Description                                               |
+| ---------------------------------------- | --------------------------------------------------------- |
+| `npm run dev` / `npm start`              | Start Vite on http://localhost:3000.                      |
+| `npm run build`                          | Build production assets into `build/`.                    |
+| `npm run preview`                        | Serve the production build locally.                       |
+| `npm run lint`                           | Run ESLint over `src/`.                                   |
+| `npm run typecheck`                      | Run TypeScript contract checks with `tsc --noEmit`.       |
+| `npm run test:run` / `npm run test:unit` | Run Vitest unit tests once.                               |
+| `npm run test:ci`                        | Run Vitest with coverage.                                 |
+| `npm run test:e2e`                       | Run Playwright E2E tests.                                 |
+| `npm run browsers:ensure`                | Install required Playwright browsers locally.             |
+| `npm run bundle:check`                   | Check production bundle size.                             |
+| `npm run analyze`                        | Build with Rollup visualizer output in `build/`.          |
+| `npm run verify`                         | Run lint, typecheck, unit tests, build, and bundle check. |
+| `npm run verify:full`                    | Run verify plus E2E validation.                           |
+| `npm run screenshots:polish`             | Capture key route screenshots.                            |
 
 Playwright browsers are required before E2E on a fresh machine:
 
@@ -103,11 +103,13 @@ MoodReel is centered on **Tonight Mode**, not generic catalog browsing:
 ## Verification
 
 ```bash
-npm run verify
-npm run typecheck
 npm run format:check
+npm run verify
+npm audit --audit-level=moderate
 npm run test:e2e
 ```
+
+Use `docs/RELEASE_CHECKLIST.md` for the full product, accessibility, PWA, and browser smoke checklist.
 
 ## Performance Notes
 

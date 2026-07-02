@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAchievements } from '../hooks/useAchievements';
+import EmptyState from '../components/EmptyState';
 
 /**
  * Achievements page showing all badges and progress
@@ -80,14 +81,17 @@ function Achievements() {
 
       {/* Empty state */}
       {unlockedCount === 0 && (
-        <div className="empty-state">
-          <div className="icon">🏆</div>
-          <h3>Start Earning Achievements</h3>
-          <p>Save movies, rate them, and explore to unlock badges!</p>
-          <Link to="/" className="primary-button">
-            Start Exploring
-          </Link>
-        </div>
+        <EmptyState
+          variant="achievements"
+          title="Start earning achievements"
+          description="Save, rate, search, and try Tonight Mode to unlock your first badges."
+        >
+          <div className="empty-state-steps" aria-label="Achievement starters">
+            <span>Save a pick</span>
+            <span>Rate a title</span>
+            <span>Try a new mood</span>
+          </div>
+        </EmptyState>
       )}
     </div>
   );

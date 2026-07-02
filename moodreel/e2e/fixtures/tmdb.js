@@ -133,9 +133,12 @@ function detailsFor(mediaType, id) {
 }
 
 export async function installTonightTmdbMocks(page) {
-  await page.route('https://api.themoviedb.org/3/**', async route => {
+  const fulfillTmdbRoute = async route => {
     const url = new URL(route.request().url());
-    const path = url.pathname.replace('/3', '');
+    const path =
+      url.pathname === '/api/tmdb'
+        ? url.searchParams.get('path') || '/'
+        : url.pathname.replace('/3', '');
 
     if (path === '/genre/movie/list' || path === '/genre/tv/list') {
       await route.fulfill({
@@ -190,5 +193,8 @@ export async function installTonightTmdbMocks(page) {
     }
 
     await route.fulfill({ json: paginated([]) });
-  });
+  };
+
+  await page.route('**/api/tmdb**', fulfillTmdbRoute);
+  await page.route('https://api.themoviedb.org/3/**', fulfillTmdbRoute);
 }

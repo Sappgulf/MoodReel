@@ -8,7 +8,12 @@ import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useToasts } from '../context/ToastContext';
-import { clearUserApiKey, getApiKeyStatus, saveUserApiKey } from '../services/apiClient';
+import {
+  clearUserApiKey,
+  getApiKeyStatus,
+  saveUserApiKey,
+  testTmdbConnection,
+} from '../services/apiClient';
 import { calculatePersona } from '../utils/personaUtils';
 import { copyToClipboard } from '../utils/clipboard';
 import { GENRE_MAP } from '../utils/mediaUtils';
@@ -72,6 +77,7 @@ function Profile() {
     const status = getApiKeyStatus();
     return status.source === 'user' ? status.value || '' : '';
   });
+  const [apiKeyTestStatus, setApiKeyTestStatus] = useState('idle');
 
   const stats = useMemo(() => {
     const genreCounts = {};
@@ -95,6 +101,38 @@ function Profile() {
   const safeLevelProgress = Math.max(0, Math.min(100, Number(progressToNextLevel) || 0));
   const unlockedCount = achievements.filter(a => a.unlocked).length;
   const topGenreNames = stats.genreData.slice(0, 3).map(genre => genre.name);
+  const setupChecklist = useMemo(
+    () => [
+      {
+        label: 'TMDB connected',
+        done: apiKeyStatus.configured,
+        action: 'Save or test a local key',
+      },
+      {
+        label: 'Streaming services selected',
+        done: myServices.length > 0,
+        action: 'Pick the services you already use',
+      },
+      {
+        label: 'Taste profile trained',
+        done: tasteCounts.liked + tasteCounts.disliked >= 3,
+        action: 'Like or dislike a few titles',
+      },
+      {
+        label: 'Watchlist started',
+        done: watchlist.length > 0,
+        action: 'Save at least one title',
+      },
+    ],
+    [
+      apiKeyStatus.configured,
+      myServices.length,
+      tasteCounts.disliked,
+      tasteCounts.liked,
+      watchlist.length,
+    ]
+  );
+  const setupCompleteCount = setupChecklist.filter(item => item.done).length;
 
   useEffect(() => {
     safeSetJSON(TASTE_SETTINGS_KEY, tasteSettings);
@@ -199,6 +237,7 @@ function Profile() {
     const status = getApiKeyStatus();
     setApiKeyStatus(status);
     setApiKeyInput(status.source === 'user' ? status.value || '' : '');
+    setApiKeyTestStatus('idle');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
     }
@@ -252,6 +291,7 @@ function Profile() {
     clearUserApiKey();
     setApiKeyInput('');
     setApiKeyStatus(getApiKeyStatus());
+    setApiKeyTestStatus('idle');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
     }
@@ -261,6 +301,31 @@ function Profile() {
       message: 'Your local TMDB key preference was cleared.',
       duration: 3000,
     });
+  };
+
+  const handleTestApiKey = async () => {
+    setApiKeyTestStatus('testing');
+    try {
+      await testTmdbConnection();
+      setApiKeyStatus(getApiKeyStatus());
+      setApiKeyTestStatus('pass');
+      pushToast({
+        icon: '✅',
+        title: 'TMDB connection works',
+        message: 'MoodReel can reach TMDB with the current configuration.',
+        duration: 3200,
+      });
+    } catch (error) {
+      setApiKeyStatus(getApiKeyStatus());
+      setApiKeyTestStatus('fail');
+      pushToast({
+        icon: '⚠️',
+        title: 'TMDB test failed',
+        message: error?.message || 'Check the key and try again.',
+        variant: 'error',
+        duration: 4500,
+      });
+    }
   };
 
   return (
@@ -508,6 +573,30 @@ function Profile() {
           </div>
         </div>
 
+        <div className="setup-card glass-card">
+          <div className="settings-row-head">
+            <h3>✅ Setup Checklist</h3>
+            <span>
+              {setupCompleteCount}/{setupChecklist.length}
+            </span>
+          </div>
+          <p>
+            These steps make recommendations sharper, keep Tonight Mode practical, and make the
+            installed app feel complete.
+          </p>
+          <div className="setup-checklist">
+            {setupChecklist.map(item => (
+              <div key={item.label} className={`setup-check ${item.done ? 'done' : ''}`}>
+                <span aria-hidden="true">{item.done ? '✓' : '○'}</span>
+                <div>
+                  <strong>{item.label}</strong>
+                  <small>{item.done ? 'Ready' : item.action}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="privacy-card glass-card">
           <h3>🔒 Privacy & Local Data</h3>
           <p>
@@ -545,6 +634,14 @@ function Profile() {
               >
                 Save local key
               </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleTestApiKey}
+                disabled={!apiKeyStatus.configured || apiKeyTestStatus === 'testing'}
+              >
+                {apiKeyTestStatus === 'testing' ? 'Testing...' : 'Test connection'}
+              </button>
               {apiKeyStatus.source === 'user' && (
                 <button
                   type="button"
@@ -555,6 +652,15 @@ function Profile() {
                 </button>
               )}
             </div>
+            {apiKeyTestStatus !== 'idle' && (
+              <p className={`api-key-test-status ${apiKeyTestStatus}`}>
+                {apiKeyTestStatus === 'pass'
+                  ? 'Connection verified.'
+                  : apiKeyTestStatus === 'fail'
+                    ? 'Connection failed. Check the key or proxy configuration.'
+                    : 'Checking TMDB...'}
+              </p>
+            )}
           </div>
           <div className="privacy-actions">
             <button type="button" className="secondary-button" onClick={handleExportData}>

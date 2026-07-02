@@ -660,7 +660,29 @@ function Watchlist() {
           }
           actionLink="/"
           actionText="Discover Movies"
-        />
+        >
+          <div className="empty-state-steps" aria-label="Watchlist starters">
+            {activeTab === 'favorites' ? (
+              <>
+                <span>Open a detail page</span>
+                <span>Tap favorite</span>
+                <span>Build a favorites lane</span>
+              </>
+            ) : watchlist.length === 0 ? (
+              <>
+                <span>Search a mood</span>
+                <span>Save 3 options</span>
+                <span>Use Quick Pick tonight</span>
+              </>
+            ) : (
+              <>
+                <span>Clear search</span>
+                <span>Show all</span>
+                <span>Try another sort</span>
+              </>
+            )}
+          </div>
+        </EmptyState>
       ) : (
         <>
           <p className="watchlist-count">

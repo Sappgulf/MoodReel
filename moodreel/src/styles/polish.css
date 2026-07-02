@@ -584,8 +584,7 @@
 .install-prompt {
   position: fixed;
   bottom: calc(var(--toast-bottom-offset, 0px) + var(--spacing-md));
-  left: 50%;
-  transform: translateX(-50%);
+  right: var(--spacing-lg);
   z-index: 9000;
   display: flex;
   align-items: center;
@@ -594,8 +593,10 @@
   border-radius: var(--radius-xl);
   background: var(--color-bg-chrome-strong);
   border: 1px solid var(--color-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-shadow: var(--shadow-lg);
-  max-width: min(560px, 92vw);
+  width: min(430px, calc(100vw - (var(--spacing-lg) * 2)));
   color: var(--color-text-primary);
   font-size: 0.9rem;
 }
@@ -661,7 +662,9 @@
 @media (max-width: 480px) {
   .install-prompt {
     flex-wrap: wrap;
-    bottom: calc(var(--toast-bottom-offset, 0px) + var(--spacing-sm));
+    right: var(--spacing-sm);
+    bottom: calc(var(--toast-bottom-offset, 0px) + 5.75rem);
+    width: calc(100vw - (var(--spacing-sm) * 2));
   }
 }
 

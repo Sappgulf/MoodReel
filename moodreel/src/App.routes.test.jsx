@@ -17,6 +17,7 @@ vi.mock('./services/apiClient', () => ({
     hasKey: true,
   })),
   saveUserApiKey: vi.fn(() => true),
+  testTmdbConnection: vi.fn(async () => true),
   tmdbGet: vi.fn(async path => {
     if (path.includes('/genre/')) return { genres: [] };
     if (path.includes('/watch/providers')) return { results: [] };

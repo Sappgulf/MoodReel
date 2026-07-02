@@ -8,6 +8,7 @@ import { GENRE_MAP } from '../utils/mediaUtils';
 import MediaImage from '../components/MediaImage';
 import GenrePieChart from '../components/GenrePieChart';
 import CountUp from '../components/CountUp';
+import EmptyState from '../components/EmptyState';
 
 // Colors for genre chart
 const genreColors = [
@@ -374,14 +375,13 @@ function Stats() {
 
       {/* Empty State */}
       {stats.totalMovies === 0 && stats.searchCount === 0 && (
-        <div className="empty-state">
-          <div className="icon">📊</div>
-          <h3>No stats yet</h3>
-          <p>Start discovering and saving movies to see your stats!</p>
-          <Link to="/" className="primary-button">
-            Start Exploring
-          </Link>
-        </div>
+        <EmptyState variant="stats">
+          <div className="empty-state-steps" aria-label="How to build your stats">
+            <span>Search a mood</span>
+            <span>Save a title</span>
+            <span>Rate what you watched</span>
+          </div>
+        </EmptyState>
       )}
     </div>
   );
