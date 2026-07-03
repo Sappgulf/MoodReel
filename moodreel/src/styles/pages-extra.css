@@ -13,9 +13,10 @@
 }
 
 .page-subtitle {
-  font-size: 1.1rem;
+  font-size: var(--text-md);
   color: var(--color-text-secondary);
   margin-top: 4px;
+  line-height: var(--leading-normal);
 }
 
 .page-hero-chip {

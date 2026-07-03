@@ -11,10 +11,29 @@ import { TrailerProvider, useTrailer } from './context/TrailerContext';
 import { ToastProvider, useToasts } from './context/ToastContext';
 import TrailerPiP from './components/TrailerPiP';
 import ToastStack from './components/ToastStack';
-import { useUserProfile } from './hooks/useUserProfile';
 import { useWindowSize } from './hooks/useWindowSize';
 import { copyToClipboard } from './utils/clipboard';
 import { safeGetJSON } from './storage/safeStorage';
+import {
+  AlertTriangle,
+  BarChart3,
+  Calendar,
+  Clapperboard,
+  Heart,
+  Keyboard,
+  Link2,
+  Lock,
+  Moon,
+  Radio,
+  Search,
+  Star,
+  Sun,
+  Trophy,
+  User,
+  Volume2,
+  VolumeX,
+  WifiOff,
+} from 'lucide-react';
 import { StorageKeys as SK } from './storage/storageKeys';
 import { getApiKeyStatus } from './services/apiClient';
 
@@ -40,19 +59,19 @@ const SEARCH_FALLBACK_TOASTS = {
   'search-stale-cache': {
     title: 'Using cached results',
     message: 'Search results are coming from cached data until connectivity returns.',
-    icon: '🛰️',
+    icon: Radio,
     variant: 'info',
   },
   'search-service-unavailable': {
     title: 'Search service unavailable',
     message: 'Live search could not be reached. Showing cached/offline behavior where possible.',
-    icon: '⚠️',
+    icon: AlertTriangle,
     variant: 'error',
   },
   'search-no-match-fallback': {
     title: 'No exact mood match found',
     message: 'Showing trending content as a fallback for this search.',
-    icon: '🔎',
+    icon: Search,
     variant: 'info',
   },
 };
@@ -94,7 +113,6 @@ function AppContent() {
   const { activeTrailer, closeTrailer } = useTrailer();
   const { pushToast } = useToasts();
   const { width, isMobile } = useWindowSize();
-  const { profile } = useUserProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -201,14 +219,13 @@ function AppContent() {
           try {
             await copyToClipboard(HAS_WINDOW ? window.location.href : '');
             pushToast({
-              icon: '🔗',
+              icon: Link2,
               title: 'Link copied',
               message: 'Current view copied to clipboard.',
               duration: 2600,
             });
           } catch {
             pushToast({
-              icon: '⚠️',
               title: 'Copy failed',
               message: 'Clipboard access was blocked by the browser.',
               variant: 'error',
@@ -455,7 +472,7 @@ function AppContent() {
   useEffect(() => {
     if (!newUnlock) return;
     pushToast({
-      icon: newUnlock.icon,
+      icon: Trophy,
       label: 'Achievement Unlocked',
       title: newUnlock.title,
       message: newUnlock.description,
@@ -505,7 +522,7 @@ function AppContent() {
       {/* Offline Indicator */}
       {isOffline && (
         <div className="offline-banner" role="status" aria-live="polite">
-          <span aria-hidden="true">📡</span>
+          <WifiOff size={16} aria-hidden="true" />
           <span>Offline mode</span>
           <p>
             {offlineSummary?.watchlistCount || 0} watchlist titles and{' '}
@@ -519,7 +536,7 @@ function AppContent() {
       )}
       {!apiKeyStatus.configured && (
         <div className="offline-banner" role="alert" aria-live="polite">
-          <span aria-hidden="true">🔐</span>
+          <Lock size={16} aria-hidden="true" />
           <span>API key needed</span>
           <p>TMDB access requires an API key to load catalog data.</p>
           <div className="offline-actions">
@@ -558,7 +575,7 @@ function AppContent() {
               title="Keyboard shortcuts (?)"
               aria-label="Keyboard shortcuts"
             >
-              ⌨️
+              <Keyboard size={18} aria-hidden="true" />
             </button>
             <button
               className="sound-toggle"
@@ -567,7 +584,11 @@ function AppContent() {
               aria-label={`${soundEnabled ? 'Mute' : 'Unmute'} sounds`}
               title={`${soundEnabled ? 'Mute' : 'Unmute'} sounds`}
             >
-              {soundEnabled ? '🔊' : '🔇'}
+              {soundEnabled ? (
+                <Volume2 size={18} aria-hidden="true" />
+              ) : (
+                <VolumeX size={18} aria-hidden="true" />
+              )}
             </button>
             <button
               className="theme-toggle"
@@ -576,7 +597,11 @@ function AppContent() {
               aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
               title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
             >
-              {isDark ? '☀️' : '🌙'}
+              {isDark ? (
+                <Sun size={18} aria-hidden="true" />
+              ) : (
+                <Moon size={18} aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
@@ -595,21 +620,21 @@ function AppContent() {
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
             aria-current={location.pathname === '/' ? 'page' : undefined}
           >
-            🎬 Discover
+            <Clapperboard size={14} aria-hidden="true" /> Discover
           </Link>
           <Link
             to="/watchlist"
             className={`nav-link ${location.pathname === '/watchlist' ? 'active' : ''}`}
             aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
           >
-            ❤️ Watchlist
+            <Heart size={14} aria-hidden="true" /> Watchlist
           </Link>
           <Link
             to="/achievements"
             className={`nav-link ${location.pathname === '/achievements' ? 'active' : ''}`}
             aria-current={location.pathname === '/achievements' ? 'page' : undefined}
           >
-            🏆 {unlockedCount}/{totalCount}
+            <Trophy size={14} aria-hidden="true" /> {unlockedCount}/{totalCount}
           </Link>
           <Link
             to="/profile"
@@ -617,21 +642,21 @@ function AppContent() {
             title="My Profile"
             aria-current={location.pathname === '/profile' ? 'page' : undefined}
           >
-            <span className="nav-avatar">{profile.avatar}</span> Profile
+            <User size={14} aria-hidden="true" /> Profile
           </Link>
           <Link
             to="/stats"
             className={`nav-link ${location.pathname === '/stats' ? 'active' : ''}`}
             aria-current={location.pathname === '/stats' ? 'page' : undefined}
           >
-            📊 Stats
+            <BarChart3 size={14} aria-hidden="true" /> Stats
           </Link>
           <Link
             to="/calendar"
             className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}
             aria-current={location.pathname === '/calendar' ? 'page' : undefined}
           >
-            📅 Calendar
+            <Calendar size={14} aria-hidden="true" /> Calendar
           </Link>
         </nav>
       </header>
@@ -646,7 +671,7 @@ function AppContent() {
           className={`bottom-nav-item ${location.pathname === '/tonight' ? 'active' : ''}`}
           aria-current={location.pathname === '/tonight' ? 'page' : undefined}
         >
-          <span className="bottom-nav-icon">★</span>
+          <Star size={20} className="bottom-nav-icon" aria-hidden="true" />
           <span className="bottom-nav-label">Tonight</span>
         </Link>
         <Link
@@ -660,9 +685,7 @@ function AppContent() {
             }, 75);
           }}
         >
-          <span className="bottom-nav-icon" aria-hidden="true">
-            🔎
-          </span>
+          <Search size={20} className="bottom-nav-icon" aria-hidden="true" />
           <span className="bottom-nav-label">Search</span>
         </Link>
         <Link
@@ -670,7 +693,7 @@ function AppContent() {
           className={`bottom-nav-item ${location.pathname === '/watchlist' ? 'active' : ''}`}
           aria-current={location.pathname === '/watchlist' ? 'page' : undefined}
         >
-          <span className="bottom-nav-icon">❤️</span>
+          <Heart size={20} className="bottom-nav-icon" aria-hidden="true" />
           <span className="bottom-nav-label">Saved</span>
         </Link>
         <Link
@@ -678,7 +701,7 @@ function AppContent() {
           className={`bottom-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
           aria-current={location.pathname === '/profile' ? 'page' : undefined}
         >
-          <span className="bottom-nav-icon">{profile.avatar}</span>
+          <User size={20} className="bottom-nav-icon" aria-hidden="true" />
           <span className="bottom-nav-label">Profile</span>
         </Link>
         <Link
@@ -686,7 +709,7 @@ function AppContent() {
           className={`bottom-nav-item ${location.pathname === '/stats' ? 'active' : ''}`}
           aria-current={location.pathname === '/stats' ? 'page' : undefined}
         >
-          <span className="bottom-nav-icon">📊</span>
+          <BarChart3 size={20} className="bottom-nav-icon" aria-hidden="true" />
           <span className="bottom-nav-label">Taste</span>
         </Link>
       </nav>

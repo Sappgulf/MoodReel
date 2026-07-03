@@ -1,67 +1,86 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  BarChart3,
+  Calendar,
+  ClipboardList,
+  Eye,
+  Heart,
+  Mail,
+  Search,
+  Trophy,
+  WifiOff,
+} from 'lucide-react';
 
 /**
  * Pre-defined empty state variants for common scenarios
  */
 export const EMPTY_STATE_PRESETS = {
   watchlist: {
-    icon: '📋',
+    icon: ClipboardList,
     title: 'Your watchlist is empty',
     description: 'Start discovering movies and save your favorites to build the list.',
     actionText: 'Discover Movies',
     actionLink: '/',
   },
   search: {
-    icon: '🔍',
+    icon: Search,
     title: 'No results found',
     description: 'Try another mood, clear a filter, or widen the search scope.',
     actionText: 'Explore Moods',
     actionLink: '/',
   },
   favorites: {
-    icon: '❤️',
+    icon: Heart,
     title: 'No favorites yet',
     description: 'Heart the movies you love to save them here.',
     actionText: 'Discover Movies',
     actionLink: '/',
   },
   achievements: {
-    icon: '🏆',
+    icon: Trophy,
     title: 'No achievements yet',
     description: 'Start exploring to unlock your first achievement!',
     actionText: 'Start Exploring',
     actionLink: '/',
   },
   stats: {
-    icon: '📊',
+    icon: BarChart3,
     title: 'No stats yet',
     description: 'Start discovering and saving movies to unlock your stats dashboard.',
     actionText: 'Start Exploring',
     actionLink: '/',
   },
   calendar: {
-    icon: '📅',
+    icon: Calendar,
     title: 'No mood history',
     description: 'Your mood searches will appear here as soon as you start exploring.',
     actionText: 'Search by Mood',
     actionLink: '/',
   },
   watchHistory: {
-    icon: '👀',
+    icon: Eye,
     title: 'No watch history',
     description: 'Movies you view will appear here.',
     actionText: 'Discover Movies',
     actionLink: '/',
   },
   network: {
-    icon: '📡',
+    icon: WifiOff,
     title: "You're offline",
     description: 'Check your connection and try again.',
     actionText: 'Retry',
     actionLink: null,
   },
 };
+
+function renderIcon(icon, size = 40) {
+  if (!icon) return null;
+  if (React.isValidElement(icon)) return icon;
+  if (typeof icon === 'string' || typeof icon === 'number') return icon;
+  const Icon = icon;
+  return <Icon size={size} strokeWidth={1.5} aria-hidden="true" />;
+}
 
 /**
  * Reusable component for empty states
@@ -78,7 +97,7 @@ function EmptyState({
 }) {
   // Support preset variants
   const preset = variant ? EMPTY_STATE_PRESETS[variant] : null;
-  const finalIcon = icon || preset?.icon || '📭';
+  const finalIcon = icon || preset?.icon || Mail;
   const finalTitle = title || preset?.title || 'Nothing here yet';
   const finalDescription = description || preset?.description || 'Start by adding some content.';
   const finalActionLink = actionLink !== undefined ? actionLink : preset?.actionLink || '/';
@@ -87,7 +106,7 @@ function EmptyState({
   return (
     <div className="empty-state" role="status" aria-live="polite">
       <div className="empty-state-icon" aria-hidden="true">
-        {finalIcon}
+        {renderIcon(finalIcon)}
       </div>
       <h3 className="empty-state-title">{finalTitle}</h3>
       <p className="empty-state-description">{finalDescription}</p>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Clapperboard, Link2, Lock, RefreshCw } from 'lucide-react';
 import MediaImage from '../MediaImage';
 import EmptyState from '../EmptyState';
 import { getDisplayOverview, getDisplayTitle, getReleaseYear } from '../../utils/mediaUtils';
@@ -104,15 +105,23 @@ function ActivePick({
           type="button"
           className="primary-button pick-between-pick"
           onClick={() => onPick?.(item)}
+          aria-pressed={isLocked}
         >
-          {isLocked ? 'Picked' : 'Pick this'}
+          {isLocked ? (
+            <>
+              <Lock size={14} aria-hidden="true" /> Picked
+            </>
+          ) : (
+            'Pick this'
+          )}
         </button>
         <button
           type="button"
           className="btn-secondary pick-between-pass"
           onClick={() => onPass?.(item)}
+          disabled={isLocked}
         >
-          Swap out
+          <RefreshCw size={14} aria-hidden="true" /> Swap out
         </button>
       </div>
     </article>
@@ -186,7 +195,7 @@ export default function TonightDecisionPanel({
                   className="decision-reroll-chip"
                   onClick={() => onRerollCandidate?.(option)}
                 >
-                  {option.label}
+                  <RefreshCw size={12} aria-hidden="true" /> {option.label}
                 </button>
               ))}
             </div>
@@ -196,7 +205,7 @@ export default function TonightDecisionPanel({
               onClick={onShareTonight}
               aria-label="Copy tonight card to share"
             >
-              <span aria-hidden="true">🔗</span> Share card
+              <Link2 size={14} aria-hidden="true" /> Share card
             </button>
           </>
         )}
@@ -212,7 +221,7 @@ export default function TonightDecisionPanel({
             ))}
             <div className="pick-between-cta">
               <EmptyState
-                icon="🎬"
+                icon={Clapperboard}
                 title="Ready when the couch is."
                 description="MoodReel needs a vibe and at least one filter to surface three defensible picks."
                 onActionClick={() => onRunPicks?.()}

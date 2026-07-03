@@ -15,6 +15,7 @@ import SaveVibeModal from '../components/SaveVibeModal';
 import MoodPulse from '../components/MoodPulse';
 import EmojiPicker from '../components/EmojiPicker';
 import ShuffleOverlay from '../components/ShuffleOverlay';
+import { ChevronDown, ChevronUp, CloudSun, Dices, Moon, Sparkles, Sun, Sunset } from 'lucide-react';
 import ErrorState from '../components/ErrorState';
 import { CURATED_COLLECTIONS, DECISION_FEEDBACK, REROLL_INTENTS } from '../constants/homeDiscovery';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -118,6 +119,7 @@ function Home() {
   const [genres, setGenres] = useState([]);
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showExploreMore, setShowExploreMore] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchScope, setSearchScope] = useState('within');
   const [searchResults, setSearchResults] = useState([]);
@@ -690,12 +692,12 @@ function Home() {
   const timeContext = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12)
-      return { greeting: 'Good morning!', suggestion: 'uplifting', emoji: '☀️' };
+      return { greeting: 'Good morning!', suggestion: 'uplifting', icon: Sun };
     if (hour >= 12 && hour < 17)
-      return { greeting: 'Good afternoon!', suggestion: 'adventure', emoji: '🌤️' };
+      return { greeting: 'Good afternoon!', suggestion: 'adventure', icon: CloudSun };
     if (hour >= 17 && hour < 21)
-      return { greeting: 'Good evening!', suggestion: 'date night', emoji: '🌅' };
-    return { greeting: 'Late night vibes', suggestion: 'thriller', emoji: '🌙' };
+      return { greeting: 'Good evening!', suggestion: 'date night', icon: Sunset };
+    return { greeting: 'Late night vibes', suggestion: 'thriller', icon: Moon };
   }, []);
 
   // Count active filters
@@ -1275,7 +1277,7 @@ function Home() {
         <div className="context-toolbar">
           <div className="context-toolbar-left">
             <span className="context-pill">
-              <span aria-hidden="true">{timeContext.emoji}</span> {timeContext.greeting}
+              <timeContext.icon size={14} aria-hidden="true" /> {timeContext.greeting}
             </span>
             {activeFilterCount > 0 && (
               <span className="context-pill context-pill-active">
@@ -1300,7 +1302,11 @@ function Home() {
               onClick={handleSmartSurprise}
               disabled={isSurpriseLoading}
             >
-              <span aria-hidden="true">{isSurpriseLoading ? '🎲' : '✨'}</span>
+              {isSurpriseLoading ? (
+                <Dices size={14} aria-hidden="true" />
+              ) : (
+                <Sparkles size={14} aria-hidden="true" />
+              )}
               {isSurpriseLoading ? 'Shuffling…' : 'Surprise me'}
             </button>
           </div>
@@ -1372,31 +1378,49 @@ function Home() {
         />
       )}
 
-      {/* Compact Emoji Quick-Pick */}
+      {/* Explore more — collapsed by default to keep the idle surface focused */}
       {!hasAnySearch && (
-        <div className="emoji-quick-bar">
-          <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
+        <div className="explore-more">
+          <button
+            type="button"
+            className="explore-more-toggle"
+            onClick={() => setShowExploreMore(prev => !prev)}
+            aria-expanded={showExploreMore}
+          >
+            {showExploreMore ? (
+              <>
+                <ChevronUp size={16} /> Show fewer starting points
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} /> More ways to explore
+              </>
+            )}
+          </button>
+          {showExploreMore && (
+            <div className="explore-more-panel">
+              <div className="emoji-quick-bar">
+                <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
+              </div>
+              <MoodPlaylists
+                onSelectPlaylist={({ genres: plGenres, name, customFilters }) => {
+                  if (customFilters) {
+                    setMood(customFilters.mood || '');
+                    setContentType(customFilters.contentType || 'all');
+                    setSelectedGenres(customFilters.selectedGenres || []);
+                    setSelectedProviders(customFilters.selectedProviders || []);
+                    setMinRating(customFilters.minRating || 0);
+                    setAdvancedFilters(customFilters.advancedFilters || {});
+                  } else {
+                    setSelectedGenres(plGenres);
+                    setMood(name);
+                  }
+                  window.setTimeout(() => handleSearch(), 0);
+                }}
+              />
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Mood Playlists — only in idle state, as a starting-point nudge */}
-      {!hasAnySearch && (
-        <MoodPlaylists
-          onSelectPlaylist={({ genres: plGenres, name, customFilters }) => {
-            if (customFilters) {
-              setMood(customFilters.mood || '');
-              setContentType(customFilters.contentType || 'all');
-              setSelectedGenres(customFilters.selectedGenres || []);
-              setSelectedProviders(customFilters.selectedProviders || []);
-              setMinRating(customFilters.minRating || 0);
-              setAdvancedFilters(customFilters.advancedFilters || {});
-            } else {
-              setSelectedGenres(plGenres);
-              setMood(name);
-            }
-            window.setTimeout(() => handleSearch(), 0);
-          }}
-        />
       )}
 
       {/* Recent Activity — compact, only when idle */}

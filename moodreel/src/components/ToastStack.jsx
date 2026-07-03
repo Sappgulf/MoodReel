@@ -1,5 +1,26 @@
 import React from 'react';
+import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react';
 import { useToasts } from '../context/ToastContext';
+
+const variantIcons = {
+  success: CheckCircle,
+  error: XCircle,
+  warning: AlertCircle,
+  info: Info,
+};
+
+function renderToastIcon(toast) {
+  if (React.isValidElement(toast.icon)) return toast.icon;
+  if (typeof toast.icon === 'string' || typeof toast.icon === 'number') {
+    return toast.icon;
+  }
+  if (toast.icon) {
+    const Icon = toast.icon;
+    return <Icon size={18} aria-hidden="true" />;
+  }
+  const VariantIcon = variantIcons[toast.variant] || CheckCircle;
+  return <VariantIcon size={18} aria-hidden="true" />;
+}
 
 function ToastStack() {
   const { toasts, dismissToast } = useToasts();
@@ -14,7 +35,7 @@ function ToastStack() {
           role="status"
         >
           <div className="toast-icon" aria-hidden="true">
-            {toast.icon || '✅'}
+            {renderToastIcon(toast)}
           </div>
           <div className="toast-content">
             {toast.label && <p className="toast-label">{toast.label}</p>}
@@ -45,7 +66,7 @@ function ToastStack() {
               dismissToast(toast.id);
             }}
           >
-            ✕
+            <X size={14} aria-hidden="true" />
           </button>
         </div>
       ))}

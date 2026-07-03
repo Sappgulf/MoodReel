@@ -1287,9 +1287,15 @@
 }
 
 .empty-state-icon {
-  font-size: 2.75rem;
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
   margin-bottom: var(--spacing-md);
-  opacity: 0.75;
+  color: var(--color-gold);
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.18);
+  border-radius: var(--radius-full);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1302,20 +1308,19 @@
   0%,
   100% {
     transform: translateY(0);
-    opacity: 0.75;
   }
   50% {
     transform: translateY(-6px);
-    opacity: 1;
   }
 }
 
 .empty-state-title {
   font-family: var(--font-display);
-  font-size: clamp(1.25rem, 3vw, 1.6rem);
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0 0 var(--spacing-xs);
+  line-height: var(--leading-tight);
 }
 
 .empty-state-description {
@@ -1436,7 +1441,7 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  font-size: 1.25rem;
+  color: var(--color-error);
   border-radius: var(--radius-full);
   background: rgba(239, 68, 68, 0.12);
 }
@@ -1575,7 +1580,21 @@
 }
 
 .toast-icon {
-  font-size: 2rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  color: var(--color-gold);
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: var(--radius-full);
+}
+
+.toast-error .toast-icon {
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .toast-label {
@@ -1587,10 +1606,11 @@
 }
 
 .toast-title {
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
+  line-height: var(--leading-snug);
 }
 
 .toast-description {
@@ -1600,6 +1620,10 @@
 }
 
 .toast-dismiss {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);
@@ -1607,7 +1631,15 @@
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 0.8rem;
+  border-radius: var(--radius-full);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.toast-dismiss:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
 }
 
 /* =====================================================
@@ -1774,8 +1806,13 @@
 }
 
 .emoji {
-  font-size: 1.2rem;
-  line-height: 1;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-primary);
+}
+
+.emoji-btn.active .emoji {
+  color: var(--color-text-primary);
 }
 
 .emoji-label {
@@ -2198,16 +2235,18 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 3rem;
   z-index: 20;
+  color: var(--color-gold);
 }
 
 .swipe-feedback.swipe-right {
   right: var(--spacing-xl);
+  color: var(--color-success);
 }
 
 .swipe-feedback.swipe-left {
   left: var(--spacing-xl);
+  color: var(--color-error);
 }
 
 /* =====================================================

@@ -1,18 +1,33 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Drama,
+  Ghost,
+  Heart,
+  Laugh,
+  Rocket,
+  Search,
+  Smile,
+  Sparkles,
+  Swords,
+  Users,
+} from 'lucide-react';
 
-const emojiMoods = [
-  { emoji: '😊', label: 'Happy', genres: [35], keyword: 'happy', color: '#f59e0b' },
-  { emoji: '😢', label: 'Sad', genres: [18], keyword: 'sad', color: '#60a5fa' },
-  { emoji: '😱', label: 'Scary', genres: [27], keyword: 'horror', color: '#ef4444' },
-  { emoji: '💕', label: 'Romance', genres: [10749], keyword: 'romantic', color: '#f472b6' },
-  { emoji: '🚀', label: 'Sci-Fi', genres: [878], keyword: 'sci-fi', color: '#06b6d4' },
-  { emoji: '⚔️', label: 'Action', genres: [28], keyword: 'action', color: '#fb7185' },
-  { emoji: '🧙', label: 'Fantasy', genres: [14], keyword: 'fantasy', color: '#a855f7' },
-  { emoji: '🔍', label: 'Mystery', genres: [9648], keyword: 'mystery', color: '#94a3b8' },
-  { emoji: '😂', label: 'Comedy', genres: [35], keyword: 'funny', color: '#facc15' },
-  { emoji: '👨‍👩‍👧', label: 'Family', genres: [10751], keyword: 'family', color: '#4ade80' },
-  { emoji: '🎭', label: 'Drama', genres: [18], keyword: 'dramatic', color: '#93c5fd' },
-  { emoji: '📚', label: 'Documentary', genres: [99], keyword: 'documentary', color: '#34d399' },
+const moodOptions = [
+  { icon: Smile, label: 'Happy', genres: [35], keyword: 'happy', color: '#f59e0b' },
+  { icon: Drama, label: 'Sad', genres: [18], keyword: 'sad', color: '#60a5fa' },
+  { icon: Ghost, label: 'Scary', genres: [27], keyword: 'horror', color: '#ef4444' },
+  { icon: Heart, label: 'Romance', genres: [10749], keyword: 'romantic', color: '#f472b6' },
+  { icon: Rocket, label: 'Sci-Fi', genres: [878], keyword: 'sci-fi', color: '#06b6d4' },
+  { icon: Swords, label: 'Action', genres: [28], keyword: 'action', color: '#fb7185' },
+  { icon: Sparkles, label: 'Fantasy', genres: [14], keyword: 'fantasy', color: '#a855f7' },
+  { icon: Search, label: 'Mystery', genres: [9648], keyword: 'mystery', color: '#94a3b8' },
+  { icon: Laugh, label: 'Comedy', genres: [35], keyword: 'funny', color: '#facc15' },
+  { icon: Users, label: 'Family', genres: [10751], keyword: 'family', color: '#4ade80' },
+  { icon: Smile, label: 'Drama', genres: [18], keyword: 'dramatic', color: '#93c5fd' },
+  { icon: BookOpen, label: 'Documentary', genres: [99], keyword: 'documentary', color: '#34d399' },
 ];
 
 function Particle({ style }) {
@@ -25,7 +40,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
   const particleIdRef = useRef(0);
 
   const activeCount = useMemo(
-    () => emojiMoods.filter(mood => mood.genres.some(g => selectedGenres.includes(g))).length,
+    () => moodOptions.filter(mood => mood.genres.some(g => selectedGenres.includes(g))).length,
     [selectedGenres]
   );
 
@@ -64,8 +79,8 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
     [onSelect, createParticleBurst]
   );
 
-  const visibleMoods = showAllMoods ? emojiMoods : emojiMoods.slice(0, 6);
-  const hiddenMoodCount = emojiMoods.length - visibleMoods.length;
+  const visibleMoods = showAllMoods ? moodOptions : moodOptions.slice(0, 6);
+  const hiddenMoodCount = moodOptions.length - visibleMoods.length;
 
   return (
     <section className="emoji-picker" role="group" aria-label="Quick mood selection">
@@ -81,10 +96,11 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
       <div className="emoji-grid">
         {visibleMoods.map(mood => {
           const isActive = mood.genres.some(g => selectedGenres.includes(g));
+          const Icon = mood.icon;
 
           return (
             <button
-              key={mood.emoji}
+              key={mood.label}
               className={`emoji-btn ${isActive ? 'active' : ''}`}
               onClick={e => handleClick(mood, e)}
               title={mood.label}
@@ -92,7 +108,7 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
               aria-pressed={isActive}
             >
               <span className="emoji" aria-hidden="true">
-                {mood.emoji}
+                <Icon size={20} strokeWidth={2} />
               </span>
               <span className="emoji-label">{mood.label}</span>
             </button>
@@ -107,7 +123,15 @@ function EmojiPicker({ onSelect, selectedGenres = [], allowMultiple = true }) {
           onClick={() => setShowAllMoods(prev => !prev)}
           aria-expanded={showAllMoods}
         >
-          {showAllMoods ? '▲ Show fewer moods' : `▼ Show ${hiddenMoodCount} more moods`}
+          {showAllMoods ? (
+            <>
+              <ChevronUp size={14} /> Show fewer moods
+            </>
+          ) : (
+            <>
+              <ChevronDown size={14} /> Show {hiddenMoodCount} more moods
+            </>
+          )}
         </button>
       )}
 

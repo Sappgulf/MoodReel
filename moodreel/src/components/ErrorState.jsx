@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 
 function ErrorState({
   title = 'Something went wrong',
@@ -11,7 +12,7 @@ function ErrorState({
   return (
     <div className="error-state" role="alert">
       <div className="error-state-icon" aria-hidden="true">
-        ⚠️
+        <AlertTriangle size={40} strokeWidth={1.5} />
       </div>
       <div className="error-state-content">
         <h3>{title}</h3>

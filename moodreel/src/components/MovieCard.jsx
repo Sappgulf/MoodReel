@@ -4,6 +4,7 @@ import ProviderBadges from './ProviderBadges';
 import MediaImage from './MediaImage';
 import { getDisplayTitle, getReleaseYear } from '../utils/mediaUtils';
 import { useSounds } from '../hooks/useSounds';
+import { Bookmark, BookmarkCheck, Check, Eye, Heart, ThumbsDown, ThumbsUp } from 'lucide-react';
 
 /**
  * Premium movie card component with poster, info, watchlist button, and 3D parallax effect
@@ -249,7 +250,7 @@ const MovieCard = memo(function MovieCard({
           className="swipe-feedback swipe-right"
           style={{ opacity: Math.min(1, swipeOffset / 100) }}
         >
-          ❤️
+          <Heart size={28} fill="currentColor" aria-hidden="true" />
         </div>
       )}
       {swipeOffset < -20 && (
@@ -257,7 +258,7 @@ const MovieCard = memo(function MovieCard({
           className="swipe-feedback swipe-left"
           style={{ opacity: Math.min(1, -swipeOffset / 100) }}
         >
-          👎
+          <ThumbsDown size={28} aria-hidden="true" />
         </div>
       )}
 
@@ -270,7 +271,11 @@ const MovieCard = memo(function MovieCard({
           aria-pressed={isInWatchlist}
           title="Watchlist"
         >
-          <span aria-hidden="true">{isInWatchlist ? '🔖' : '📑'}</span>
+          {isInWatchlist ? (
+            <BookmarkCheck size={18} aria-hidden="true" />
+          ) : (
+            <Bookmark size={18} aria-hidden="true" />
+          )}
         </button>
       </div>
 
@@ -284,7 +289,11 @@ const MovieCard = memo(function MovieCard({
             aria-pressed={isWatched}
             title={isWatched ? 'Watched' : 'Mark watched'}
           >
-            <span aria-hidden="true">{isWatched ? '✅' : '👁️'}</span>
+            {isWatched ? (
+              <Check size={16} aria-hidden="true" />
+            ) : (
+              <Eye size={16} aria-hidden="true" />
+            )}
           </button>
         )}
 
@@ -297,7 +306,7 @@ const MovieCard = memo(function MovieCard({
             aria-pressed={isFavorite}
             title="Favorite"
           >
-            <span aria-hidden="true">{isFavorite ? '❤️' : '🤍'}</span>
+            <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />
           </button>
         )}
 
@@ -310,7 +319,7 @@ const MovieCard = memo(function MovieCard({
             title="Like"
             aria-pressed={tasteStatus === 'liked'}
           >
-            <span aria-hidden="true">👍</span>
+            <ThumbsUp size={16} aria-hidden="true" />
           </button>
         )}
         {onDislike && (
@@ -322,7 +331,7 @@ const MovieCard = memo(function MovieCard({
             title="Dislike"
             aria-pressed={tasteStatus === 'disliked'}
           >
-            <span aria-hidden="true">👎</span>
+            <ThumbsDown size={16} aria-hidden="true" />
           </button>
         )}
       </div>
