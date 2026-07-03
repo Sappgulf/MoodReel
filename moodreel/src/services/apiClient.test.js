@@ -24,6 +24,8 @@ describe('apiClient API key routing', () => {
       storage.delete(key);
     });
     axios.get.mockReset();
+    vi.stubEnv('VITE_TMDB_API_KEY', '');
+    vi.stubEnv('REACT_APP_TMDB_API_KEY', '');
   });
 
   it('uses a saved browser key instead of the proxy path', async () => {
