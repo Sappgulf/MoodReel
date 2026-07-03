@@ -7,6 +7,12 @@ Types: Added, Changed, Fixed, Performance, Security.
 
 ## [Unreleased]
 
+- Changed: Collapsed the Home Tonight setup from four separate cards into a single unified "Tonight cockpit" panel (mode + constraints + quick moods + streaming + taste recap in one flowing surface).
+- Changed: Promoted the 3 tonight picks into a dedicated `TonightDecisionPanel` that sits right after the cockpit, with an inviting ghost-state empty layout and a "Run Tonight Mode" CTA when no search has been run.
+- Changed: Hidden the `HomeDiscoveryConsole` (refine + filter + export) in idle state so the home page has fewer competing "find something" affordances; surfaced `MoodPlaylists` as its own section in idle state instead.
+- Added: Ghost pick cards with shimmer + pulse animation to visualize the Safe Bet / Best Match / Wild Card slots before the user runs Tonight Mode.
+- Changed: Tidied `HomeResultsPanel` so the "Pick Between These" decision lives in its own component instead of being embedded inside the recommendations list.
+- Changed: Compacted mobile ghost pick cards and the empty-state CTA so the idle home page is shorter on phones.
 - Fixed: Removed duplicate service worker registration from `index.html`; PWA registration now runs only from `App.jsx` with update UX.
 - Changed: CI now runs the bundle size gate (`bundle:check`) after production builds.
 - Changed: Refreshed `agent.md` and `memory.md` to match the Vite/Vitest stack and current TMDB key resolution (no hardcoded keys).

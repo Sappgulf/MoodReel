@@ -7,6 +7,8 @@ import OnMyServicesStrip from '../components/home/OnMyServicesStrip';
 import HomeResultsPanel from '../components/home/HomeResultsPanel';
 import HomeDiscoveryConsole from '../components/home/HomeDiscoveryConsole';
 import HomeTonightSetup from '../components/home/HomeTonightSetup';
+import TonightDecisionPanel from '../components/home/TonightDecisionPanel';
+import MoodPlaylists from '../components/MoodPlaylists';
 import SaveVibeModal from '../components/SaveVibeModal';
 import MoodPulse from '../components/MoodPulse';
 import EmojiPicker from '../components/EmojiPicker';
@@ -1278,33 +1280,74 @@ function Home() {
           onMoodPreset={handleMoodPreset}
           onToggleService={toggleService}
         />
-
-        {/* Horizontal Curated Collections */}
-        {!hasAnySearch && (
-          <div className="curated-strip">
-            <span className="curated-strip-label">Curated</span>
-            <div className="curated-chips">
-              {CURATED_COLLECTIONS.map(collection => (
-                <button
-                  key={collection.id}
-                  type="button"
-                  className="curated-chip"
-                  onClick={() => handleCollectionSelect(collection)}
-                >
-                  {collection.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Compact Emoji Quick-Pick */}
-        {!hasAnySearch && (
-          <div className="emoji-quick-bar">
-            <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
-          </div>
-        )}
       </section>
+
+      {/* Primary output: the 3 tonight picks (or an inviting empty state) */}
+      <TonightDecisionPanel
+        activeTonightMode={activeTonightMode}
+        tonightPicks={tonightPicks}
+        isReady={Boolean(hasAnySearch && tonightPicks.length > 0)}
+        isLoading={isBusy}
+        decisionFeedback={decisionFeedback}
+        decisionFeedbackOptions={DECISION_FEEDBACK}
+        rerollOptions={REROLL_INTENTS}
+        lockedPickId={lockedPickId}
+        activeConstraintLabels={activeConstraintLabels}
+        decisionStats={decisionStats}
+        myServicesCount={myServices.length}
+        onPickCandidate={handleDecisionPick}
+        onPassCandidate={handleDecisionPass}
+        onFeedbackCandidate={handleDecisionFeedback}
+        onRerollCandidate={handleDecisionReroll}
+        onShareTonight={handleShareTonight}
+        onRunPicks={handleSearch}
+      />
+
+      {/* Horizontal Curated Collections */}
+      {!hasAnySearch && (
+        <div className="curated-strip">
+          <span className="curated-strip-label">Curated</span>
+          <div className="curated-chips">
+            {CURATED_COLLECTIONS.map(collection => (
+              <button
+                key={collection.id}
+                type="button"
+                className="curated-chip"
+                onClick={() => handleCollectionSelect(collection)}
+              >
+                {collection.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Compact Emoji Quick-Pick */}
+      {!hasAnySearch && (
+        <div className="emoji-quick-bar">
+          <EmojiPicker onSelect={handleEmojiSelect} selectedGenres={selectedGenres} />
+        </div>
+      )}
+
+      {/* Mood Playlists — only in idle state, as a starting-point nudge */}
+      {!hasAnySearch && (
+        <MoodPlaylists
+          onSelectPlaylist={({ genres: plGenres, name, customFilters }) => {
+            if (customFilters) {
+              setMood(customFilters.mood || '');
+              setContentType(customFilters.contentType || 'all');
+              setSelectedGenres(customFilters.selectedGenres || []);
+              setSelectedProviders(customFilters.selectedProviders || []);
+              setMinRating(customFilters.minRating || 0);
+              setAdvancedFilters(customFilters.advancedFilters || {});
+            } else {
+              setSelectedGenres(plGenres);
+              setMood(name);
+            }
+            window.setTimeout(() => handleSearch(), 0);
+          }}
+        />
+      )}
 
       {/* Trending — compact, only when idle */}
       <HomeTrendingStrip
@@ -1359,47 +1402,49 @@ function Home() {
         </div>
       )}
 
-      <HomeDiscoveryConsole
-        featuredItem={featuredItem}
-        contentType={contentType}
-        setContentType={setContentType}
-        setRecommendations={setRecommendations}
-        setHasSearched={setHasSearched}
-        resultLayout={resultLayout}
-        setResultLayout={setResultLayout}
-        mood={mood}
-        setMood={setMood}
-        moodInputRef={moodInputRef}
-        recentMoods={recentMoods}
-        playSound={playSound}
-        titleQuery={titleQuery}
-        setTitleQuery={setTitleQuery}
-        titleSearchRef={titleSearchRef}
-        searchScope={searchScope}
-        setSearchScope={setSearchScope}
-        isBusy={isBusy}
-        handleSearch={handleSearch}
-        pushToast={pushToast}
-        handleEmojiSelect={handleEmojiSelect}
-        selectedGenres={selectedGenres}
-        recommendations={recommendations}
-        isLoading={isLoading}
-        setSelectedGenres={setSelectedGenres}
-        setSelectedProviders={setSelectedProviders}
-        setMinRating={setMinRating}
-        setAdvancedFilters={setAdvancedFilters}
-        minRating={minRating}
-        advancedFilters={advancedFilters}
-        handleClearFilters={handleClearFilters}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-        activeFilterCount={activeFilterCount}
-        genres={genres}
-        handleGenreClick={handleGenreClick}
-        selectedProviders={selectedProviders}
-        handleProviderToggle={handleProviderToggle}
-        providerCatalog={providerCatalog}
-      />
+      {hasAnySearch && (
+        <HomeDiscoveryConsole
+          featuredItem={featuredItem}
+          contentType={contentType}
+          setContentType={setContentType}
+          setRecommendations={setRecommendations}
+          setHasSearched={setHasSearched}
+          resultLayout={resultLayout}
+          setResultLayout={setResultLayout}
+          mood={mood}
+          setMood={setMood}
+          moodInputRef={moodInputRef}
+          recentMoods={recentMoods}
+          playSound={playSound}
+          titleQuery={titleQuery}
+          setTitleQuery={setTitleQuery}
+          titleSearchRef={titleSearchRef}
+          searchScope={searchScope}
+          setSearchScope={setSearchScope}
+          isBusy={isBusy}
+          handleSearch={handleSearch}
+          pushToast={pushToast}
+          handleEmojiSelect={handleEmojiSelect}
+          selectedGenres={selectedGenres}
+          recommendations={recommendations}
+          isLoading={isLoading}
+          setSelectedGenres={setSelectedGenres}
+          setSelectedProviders={setSelectedProviders}
+          setMinRating={setMinRating}
+          setAdvancedFilters={setAdvancedFilters}
+          minRating={minRating}
+          advancedFilters={advancedFilters}
+          handleClearFilters={handleClearFilters}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          activeFilterCount={activeFilterCount}
+          genres={genres}
+          handleGenreClick={handleGenreClick}
+          selectedProviders={selectedProviders}
+          handleProviderToggle={handleProviderToggle}
+          providerCatalog={providerCatalog}
+        />
+      )}
 
       {error && <ErrorState title="Search error" message={error} onRetry={handleSearch} />}
 
@@ -1471,20 +1516,6 @@ function Home() {
         loadMoreResults={loadMoreResults}
         searchScope={searchScope}
         loadMoreRef={loadMoreRef}
-        activeTonightMode={activeTonightMode}
-        tonightPicks={tonightPicks}
-        lockedPickId={lockedPickId}
-        activeConstraintLabels={activeConstraintLabels}
-        decisionStats={decisionStats}
-        decisionFeedback={decisionFeedback}
-        decisionFeedbackOptions={DECISION_FEEDBACK}
-        rerollOptions={REROLL_INTENTS}
-        myServicesCount={myServices.length}
-        onPickCandidate={handleDecisionPick}
-        onPassCandidate={handleDecisionPass}
-        onFeedbackCandidate={handleDecisionFeedback}
-        onRerollCandidate={handleDecisionReroll}
-        onShareTonight={handleShareTonight}
       />
     </main>
   );
