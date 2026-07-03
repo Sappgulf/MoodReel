@@ -5194,3 +5194,195 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   color: var(--color-gold);
   font-style: normal;
 }
+/* =====================================================
+   Tonight Decision Panel (primary output)
+   ===================================================== */
+
+.tonight-decision-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.78fr) minmax(0, 1.22fr);
+  gap: var(--spacing-lg);
+  align-items: stretch;
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  padding: clamp(1rem, 2.5vw, 1.35rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-3xl);
+  background:
+    linear-gradient(135deg, rgba(255, 215, 0, 0.1), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025));
+  box-shadow: var(--shadow-lg);
+}
+
+.tonight-decision-intro h2 {
+  max-width: 18rem;
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  line-height: 1.05;
+}
+
+.tonight-decision-intro p {
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.pick-between-cta {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.4rem, 1.5vw, 0.8rem) 0 0;
+  margin-top: 0.25rem;
+}
+
+.pick-between-cta .empty-state {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  width: min(100%, 32rem);
+}
+
+.pick-between-card-ghost {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  border-style: dashed;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  opacity: 0.85;
+  animation: ghostPulse 3.4s ease-in-out infinite;
+}
+
+.pick-between-card-ghost:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.pick-between-card-ghost:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.pick-between-card-ghost.locked {
+  opacity: 0.95;
+}
+
+.pick-between-art-ghost {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 7rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+}
+
+.pick-between-art-ghost .ghost-eyebrow {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pick-between-rank-overlay {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  padding: 0.22rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-full);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ghost-title,
+.ghost-line {
+  height: 0.7rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: ghostShimmer 2.2s linear infinite;
+}
+
+.ghost-title {
+  height: 1.1rem;
+  width: 70%;
+}
+
+.ghost-line {
+  width: 100%;
+}
+
+.ghost-line-short {
+  width: 55%;
+}
+
+@keyframes ghostShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ghostPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .tonight-decision-panel,
+  .pick-between-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .tonight-cockpit-modes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .tonight-cockpit-modes {
+    grid-template-columns: 1fr;
+  }
+
+  .tonight-cockpit-stats {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .pick-between-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tonight-cockpit-head {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pick-between-card-ghost,
+  .ghost-title,
+  .ghost-line {
+    animation: none !important;
+  }
+}

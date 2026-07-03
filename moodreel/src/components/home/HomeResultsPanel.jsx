@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import MediaImage from '../MediaImage';
 import MovieCard from '../MovieCard';
 import SwipeCard from '../SwipeCard';
 import EmptyState from '../EmptyState';
 import { SkeletonGrid, MovieCardSkeleton } from '../Skeleton';
-import { getDisplayOverview, getDisplayTitle, getReleaseYear } from '../../utils/mediaUtils';
-import { getRecommendationKey } from '../../utils/recommendationScoring';
 import { downloadVibeIcs } from '../../utils/icsExport';
 
 export default function HomeResultsPanel({
@@ -46,20 +42,6 @@ export default function HomeResultsPanel({
   loadMoreResults,
   searchScope,
   loadMoreRef,
-  activeTonightMode,
-  tonightPicks = [],
-  lockedPickId,
-  activeConstraintLabels = [],
-  decisionStats = {},
-  decisionFeedback = {},
-  decisionFeedbackOptions = [],
-  rerollOptions = [],
-  myServicesCount = 0,
-  onPickCandidate,
-  onPassCandidate,
-  onFeedbackCandidate,
-  onRerollCandidate,
-  onShareTonight,
 }) {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleWhen, setScheduleWhen] = useState(() => {
@@ -89,142 +71,6 @@ export default function HomeResultsPanel({
         </div>
       ) : (
         <div className="recommendations-container">
-          {filteredByServices.length > 1 && tonightPicks.length > 0 && (
-            <section className="pick-between-panel" aria-labelledby="pick-between-heading">
-              <div className="pick-between-intro">
-                <span className="section-kicker">Pick Between These</span>
-                <h2 id="pick-between-heading">
-                  Shortlist for {activeTonightMode.label.toLowerCase()}
-                </h2>
-                <p>{activeTonightMode.decisionCopy} Three picks, no doomscroll.</p>
-                <div className="decision-scoreboard" aria-label="Tonight decision summary">
-                  <span>
-                    {decisionStats.topConfidence || tonightPicks[0]?.confidence || 0}% top match
-                  </span>
-                  <span>{myServicesCount || 0} services</span>
-                  <span>{decisionStats.passedCount || 0} swapped</span>
-                </div>
-                {activeConstraintLabels.length > 0 && (
-                  <div className="pick-constraint-row">
-                    {activeConstraintLabels.slice(0, 6).map(label => (
-                      <span key={label}>{label}</span>
-                    ))}
-                  </div>
-                )}
-                <div className="decision-reroll-row" role="group" aria-label="Re-roll with intent">
-                  {rerollOptions.map(option => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      className="decision-reroll-chip"
-                      onClick={() => onRerollCandidate?.(option)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className="text-button share-tonight-btn"
-                  onClick={onShareTonight}
-                >
-                  Share tonight card
-                </button>
-              </div>
-              <div className="pick-between-grid">
-                {tonightPicks.map(pick => {
-                  const item = pick.item;
-                  const key = getRecommendationKey(item, item.media_type || 'movie');
-                  const isLocked = lockedPickId === key;
-                  const title = getDisplayTitle(item);
-                  const year = getReleaseYear(item);
-                  const overview = getDisplayOverview(item);
-                  const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
-                  const reason = pick.explanation || getRecommendationReason?.(item);
-                  const feedbackId = decisionFeedback[key];
-
-                  return (
-                    <article key={key} className={`pick-between-card ${isLocked ? 'locked' : ''}`}>
-                      <Link
-                        to={`/${item.media_type || 'movie'}/${item.id}`}
-                        state={{ item }}
-                        className="pick-between-art"
-                        aria-label={`Open ${title} details`}
-                      >
-                        <MediaImage
-                          path={item.backdrop_path || item.poster_path}
-                          type={item.backdrop_path ? 'backdrop' : 'poster'}
-                          size={item.backdrop_path ? 'w780' : 'w342'}
-                          alt=""
-                          loading={pick.slot === 'safe' ? 'eager' : 'lazy'}
-                        />
-                      </Link>
-                      <div className="pick-between-card-head">
-                        <span className="pick-between-rank">
-                          {isLocked ? 'Locked' : pick.slotLabel}
-                        </span>
-                        <span className="pick-between-confidence">
-                          {pick.confidence || 0}% {pick.confidenceLabel || 'match'}
-                        </span>
-                      </div>
-                      <h3>
-                        <Link to={`/${item.media_type || 'movie'}/${item.id}`} state={{ item }}>
-                          {title}
-                        </Link>
-                      </h3>
-                      <p>{reason || overview}</p>
-                      {pick.debateLine && <p className="pick-debate-line">{pick.debateLine}</p>}
-                      {pick.tags?.length > 0 && (
-                        <div className="pick-tag-row">
-                          {pick.tags.map(tag => (
-                            <span key={tag}>{tag}</span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="pick-between-meta">
-                        {year && <span>{year}</span>}
-                        {rating && <span>{rating} TMDB</span>}
-                        <span>{item.media_type === 'tv' ? 'Series' : 'Film'}</span>
-                      </div>
-                      <div
-                        className="not-tonight-row"
-                        role="group"
-                        aria-label={`Why not ${title}?`}
-                      >
-                        {decisionFeedbackOptions.map(option => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            className={`not-tonight-chip ${feedbackId === option.id ? 'active' : ''}`}
-                            onClick={() => onFeedbackCandidate?.(item, option)}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="pick-between-actions">
-                        <button
-                          type="button"
-                          className="primary-button pick-between-pick"
-                          onClick={() => onPickCandidate(item)}
-                        >
-                          {isLocked ? 'Picked' : 'Pick this'}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary pick-between-pass"
-                          onClick={() => onPassCandidate(item)}
-                        >
-                          Swap out
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {filteredByServices.length > 0 && (
             <div className="results-header">
               <div className="results-meta">
