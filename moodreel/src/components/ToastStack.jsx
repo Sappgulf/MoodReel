@@ -12,7 +12,6 @@ function ToastStack() {
           key={toast.id}
           className={`toast ${toast.variant ? `toast-${toast.variant}` : ''}`}
           role="status"
-          aria-label={`Dismiss ${toast.title || 'notification'}`}
         >
           <div className="toast-icon" aria-hidden="true">
             {toast.icon || '✅'}

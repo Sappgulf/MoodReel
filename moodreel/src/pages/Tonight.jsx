@@ -685,8 +685,23 @@ export default function Tonight() {
 
       {!isLoading && picks.length === 0 && !error && (
         <section className="tonight-empty-state">
+          <div className="tonight-empty-state-icon" aria-hidden="true">
+            🛋️
+          </div>
           <h2>Ready when the couch is.</h2>
-          <p>Set the vibe and constraints, then ask MoodReel for three explained picks.</p>
+          <p>
+            Set the vibe, available time, and services, then ask MoodReel for three explained picks.
+          </p>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => {
+              const input = document.querySelector('.tonight-vibe-field input');
+              input?.focus();
+            }}
+          >
+            Set the vibe
+          </button>
         </section>
       )}
 

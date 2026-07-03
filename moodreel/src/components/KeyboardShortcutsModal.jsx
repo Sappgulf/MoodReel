@@ -2,10 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
 
 const shortcuts = [
-  { keys: ['J', '↓'], description: 'Select next movie' },
-  { keys: ['K', '↑'], description: 'Select previous movie' },
-  { keys: ['Enter'], description: 'Open selected movie details' },
-  { keys: ['←', '→'], description: 'Swipe left/right (mobile)' },
+  { keys: ['⌘', 'K'], description: 'Open command palette' },
   { keys: ['?'], description: 'Show this shortcuts modal' },
   { keys: ['Esc'], description: 'Close modals' },
   { keys: ['D'], description: 'Toggle dark/light theme' },
@@ -68,7 +65,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
           ✕
         </button>
 
-        <h2 id="keyboard-shortcuts-title">⌨️ Keyboard Shortcuts</h2>
+        <h2 id="keyboard-shortcuts-title">Keyboard Shortcuts</h2>
 
         <div className="shortcuts-list">
           {shortcuts.map((shortcut, i) => (

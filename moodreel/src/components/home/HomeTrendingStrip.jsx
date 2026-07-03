@@ -22,7 +22,7 @@ export default function HomeTrendingStrip({
 
   return (
     <section className="trending-section">
-      <h2>🔥 Trending Now</h2>
+      <h2>Trending Now</h2>
       <div className="recommendations">
         {trending.map((item, idx) => (
           <MovieCard

@@ -92,21 +92,23 @@ function EmptyState({
       <h3 className="empty-state-title">{finalTitle}</h3>
       <p className="empty-state-description">{finalDescription}</p>
       {children}
-      {finalActionLink !== null ? (
-        finalActionLink.startsWith('/') ? (
-          <Link to={finalActionLink} className="empty-state-action">
+      <div className="empty-state-actions">
+        {finalActionLink !== null ? (
+          finalActionLink.startsWith('/') ? (
+            <Link to={finalActionLink} className="empty-state-action">
+              {finalActionText}
+            </Link>
+          ) : (
+            <a href={finalActionLink} className="empty-state-action">
+              {finalActionText}
+            </a>
+          )
+        ) : onActionClick ? (
+          <button type="button" onClick={onActionClick} className="empty-state-action">
             {finalActionText}
-          </Link>
-        ) : (
-          <a href={finalActionLink} className="empty-state-action">
-            {finalActionText}
-          </a>
-        )
-      ) : onActionClick ? (
-        <button type="button" onClick={onActionClick} className="empty-state-action">
-          {finalActionText}
-        </button>
-      ) : null}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

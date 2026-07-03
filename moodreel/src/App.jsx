@@ -505,9 +505,10 @@ function AppContent() {
       {/* Offline Indicator */}
       {isOffline && (
         <div className="offline-banner" role="status" aria-live="polite">
-          <span>📡 Offline mode</span>
+          <span aria-hidden="true">📡</span>
+          <span>Offline mode</span>
           <p>
-            Saved shell ready: {offlineSummary?.watchlistCount || 0} watchlist titles and{' '}
+            {offlineSummary?.watchlistCount || 0} watchlist titles and{' '}
             {offlineSummary?.vibesCount || 0} saved vibes are still available.
           </p>
           <div className="offline-actions">
@@ -517,8 +518,9 @@ function AppContent() {
         </div>
       )}
       {!apiKeyStatus.configured && (
-        <div className="offline-banner" role="status" aria-live="polite">
-          <span>🔐 API key needed</span>
+        <div className="offline-banner" role="alert" aria-live="polite">
+          <span aria-hidden="true">🔐</span>
+          <span>API key needed</span>
           <p>TMDB access requires an API key to load catalog data.</p>
           <div className="offline-actions">
             <Link to="/profile">Set a local key in Profile</Link>
@@ -547,7 +549,7 @@ function AppContent() {
               title="Quick actions (⌘K)"
               aria-label="Open quick actions"
             >
-              ⌘K
+              <span aria-hidden="true">⌘</span>K
             </button>
             <button
               className="shortcuts-btn"
@@ -649,7 +651,8 @@ function AppContent() {
         </Link>
         <Link
           to="/"
-          className="bottom-nav-item"
+          className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}
+          aria-current={location.pathname === '/' ? 'page' : undefined}
           onClick={() => {
             if (!HAS_WINDOW) return;
             window.setTimeout(() => {
@@ -657,7 +660,9 @@ function AppContent() {
             }, 75);
           }}
         >
-          <span className="bottom-nav-icon">🔎</span>
+          <span className="bottom-nav-icon" aria-hidden="true">
+            🔎
+          </span>
           <span className="bottom-nav-label">Search</span>
         </Link>
         <Link

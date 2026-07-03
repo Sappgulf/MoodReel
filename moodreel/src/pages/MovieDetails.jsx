@@ -15,21 +15,39 @@ import { getDisplayTitle } from '../utils/mediaUtils';
 
 function MovieDetailsLoading() {
   return (
-    <main role="main">
+    <main role="main" className="immersive-main">
+      <div className="movie-details-backdrop">
+        <Skeleton height="100%" className="backdrop-img" />
+      </div>
       <Link to="/" className="back-button">
         ← Back to Discover
       </Link>
       <div className="movie-details">
-        <div className="movie-details-header">
-          <div className="poster-container">
-            <Skeleton height="450px" />
+        <section className="movie-details-hero-panel glass-panel">
+          <div className="movie-details-header">
+            <div className="poster-container">
+              <Skeleton height="100%" />
+            </div>
+            <div className="movie-info">
+              <Skeleton height="2.5rem" width="75%" style={{ marginBottom: '1rem' }} />
+              <Skeleton height="1rem" width="55%" style={{ marginBottom: '1.5rem' }} />
+              <div className="movie-facts-strip">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i}>
+                    <Skeleton height="0.7rem" width="2.5rem" />
+                    <Skeleton height="0.9rem" width="4rem" />
+                  </div>
+                ))}
+              </div>
+              <Skeleton height="5rem" style={{ marginBottom: '1.5rem' }} />
+              <div className="action-buttons">
+                <Skeleton height="2.6rem" width="8rem" />
+                <Skeleton height="2.6rem" width="7rem" />
+                <Skeleton height="2.6rem" width="7rem" />
+              </div>
+            </div>
           </div>
-          <div className="movie-info">
-            <Skeleton height="3rem" width="70%" style={{ marginBottom: '1rem' }} />
-            <Skeleton height="1.5rem" width="40%" style={{ marginBottom: '1rem' }} />
-            <Skeleton height="6rem" style={{ marginBottom: '1rem' }} />
-          </div>
-        </div>
+        </section>
       </div>
     </main>
   );

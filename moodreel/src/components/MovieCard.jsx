@@ -45,23 +45,31 @@ const MovieCard = memo(function MovieCard({
   const rafRef = useRef(null);
   const tiltRef = useRef({ x: 0, y: 0 });
   const rectRef = useRef(null);
-  const reduceMotionRef = useRef(false);
+  const reduceMotionRef = useRef(
+    typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false
+  );
+  const isTouchRef = useRef(false);
 
   useEffect(() => {
-    if (window.matchMedia) {
-      const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-      reduceMotionRef.current = media.matches;
-      const handler = event => {
-        reduceMotionRef.current = event.matches;
-      };
-      if (media.addEventListener) {
-        media.addEventListener('change', handler);
-        return () => media.removeEventListener('change', handler);
-      }
-      media.addListener(handler);
-      return () => media.removeListener(handler);
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = event => {
+      reduceMotionRef.current = event.matches;
+    };
+    if (media.addEventListener) {
+      media.addEventListener('change', handler);
+      return () => media.removeEventListener('change', handler);
     }
-    return undefined;
+    media.addListener(handler);
+    return () => media.removeListener(handler);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      isTouchRef.current = window.matchMedia('(hover: none)').matches;
+    }
   }, []);
 
   useEffect(() => {
@@ -143,13 +151,13 @@ const MovieCard = memo(function MovieCard({
   }, []);
 
   const handleMouseEnter = useCallback(() => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || reduceMotionRef.current) return;
     rectRef.current = cardRef.current.getBoundingClientRect();
   }, []);
 
   const handleMouseMove = useCallback(
     e => {
-      if (!cardRef.current || reduceMotionRef.current) return;
+      if (!cardRef.current || reduceMotionRef.current || isTouchRef.current) return;
 
       const rect = cardRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -158,8 +166,8 @@ const MovieCard = memo(function MovieCard({
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
 
-      const rotateX = ((y - centerY) / centerY) * -8;
-      const rotateY = ((x - centerX) / centerX) * 8;
+      const rotateX = ((y - centerY) / centerY) * -5;
+      const rotateY = ((x - centerX) / centerX) * 5;
 
       applyTilt(rotateX, rotateY);
     },
@@ -168,16 +176,19 @@ const MovieCard = memo(function MovieCard({
 
   const handleMouseLeave = useCallback(() => {
     rectRef.current = null;
-    applyTilt(0, 0);
+    if (!reduceMotionRef.current) {
+      applyTilt(0, 0);
+    }
   }, [applyTilt]);
 
   // Swipe gestures for mobile
   const handleTouchStart = e => {
+    if (reduceMotionRef.current) return;
     touchStartX.current = e.targetTouches[0].clientX;
   };
 
   const handleTouchMove = e => {
-    if (touchStartX.current === null) return;
+    if (reduceMotionRef.current || touchStartX.current === null) return;
     const currentX = e.targetTouches[0].clientX;
     const diff = currentX - touchStartX.current;
 
@@ -203,14 +214,17 @@ const MovieCard = memo(function MovieCard({
     setSwipeOffset(0);
   };
 
-  const swipeOpacity = swipeOffset !== 0 ? Math.max(0.5, 1 - Math.abs(swipeOffset) / 300) : 1;
+  const swipeOpacity =
+    swipeOffset !== 0 && !reduceMotionRef.current
+      ? Math.max(0.5, 1 - Math.abs(swipeOffset) / 300)
+      : 1;
 
   const cardStyle = {
-    '--swipe-x': `${swipeOffset}px`,
-    '--swipe-rot': `${swipeOffset * 0.05}deg`,
+    '--swipe-x': reduceMotionRef.current ? '0px' : `${swipeOffset}px`,
+    '--swipe-rot': reduceMotionRef.current ? '0deg' : `${swipeOffset * 0.05}deg`,
     opacity: swipeOpacity,
-    willChange: 'transform',
-    ...(swipeOffset !== 0 ? { transition: 'none' } : {}),
+    willChange: reduceMotionRef.current ? 'auto' : 'transform',
+    ...(swipeOffset !== 0 && !reduceMotionRef.current ? { transition: 'none' } : {}),
   };
 
   const isRowMode = displayMode === 'row';
@@ -247,7 +261,7 @@ const MovieCard = memo(function MovieCard({
         </div>
       )}
 
-      <div className="card-actions">
+      <div className="card-actions card-actions-primary">
         <button
           type="button"
           className={`watchlist-btn ${isInWatchlist ? 'active' : ''}`}
@@ -256,8 +270,23 @@ const MovieCard = memo(function MovieCard({
           aria-pressed={isInWatchlist}
           title="Watchlist"
         >
-          {isInWatchlist ? '🔖' : '📑'}
+          <span aria-hidden="true">{isInWatchlist ? '🔖' : '📑'}</span>
         </button>
+      </div>
+
+      <div className="card-actions card-actions-secondary">
+        {onToggleWatched && (
+          <button
+            type="button"
+            className={`watched-card-btn ${isWatched ? 'active' : ''}`}
+            onClick={handleWatchedClick}
+            aria-label={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
+            aria-pressed={isWatched}
+            title={isWatched ? 'Watched' : 'Mark watched'}
+          >
+            <span aria-hidden="true">{isWatched ? '✅' : '👁️'}</span>
+          </button>
+        )}
 
         {onToggleFavorite && (
           <button
@@ -266,47 +295,35 @@ const MovieCard = memo(function MovieCard({
             onClick={handleFavoriteClick}
             aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             aria-pressed={isFavorite}
-            title="Favorites"
+            title="Favorite"
           >
-            {isFavorite ? '❤️' : '🤍'}
+            <span aria-hidden="true">{isFavorite ? '❤️' : '🤍'}</span>
           </button>
         )}
 
-        {onToggleWatched && (
+        {onLike && (
           <button
             type="button"
-            className={`watched-card-btn ${isWatched ? 'active' : ''}`}
-            onClick={handleWatchedClick}
-            aria-label={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
-            aria-pressed={isWatched}
+            className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
+            onClick={handleLike}
+            aria-label="Like this title"
+            title="Like"
+            aria-pressed={tasteStatus === 'liked'}
           >
-            {isWatched ? '✅' : '👁️'}
+            <span aria-hidden="true">👍</span>
           </button>
         )}
-
-        {(onLike || onDislike) && (
-          <div className="taste-actions" role="group" aria-label="Taste profile">
-            <button
-              type="button"
-              className={`taste-btn ${tasteStatus === 'liked' ? 'active' : ''}`}
-              onClick={handleLike}
-              aria-label="Like this title"
-              title="Like"
-              aria-pressed={tasteStatus === 'liked'}
-            >
-              👍
-            </button>
-            <button
-              type="button"
-              className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
-              onClick={handleDislike}
-              aria-label="Dislike this title"
-              title="Dislike"
-              aria-pressed={tasteStatus === 'disliked'}
-            >
-              👎
-            </button>
-          </div>
+        {onDislike && (
+          <button
+            type="button"
+            className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
+            onClick={handleDislike}
+            aria-label="Dislike this title"
+            title="Dislike"
+            aria-pressed={tasteStatus === 'disliked'}
+          >
+            <span aria-hidden="true">👎</span>
+          </button>
         )}
       </div>
 

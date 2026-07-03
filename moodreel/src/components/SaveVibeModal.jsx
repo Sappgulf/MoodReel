@@ -29,8 +29,14 @@ function SaveVibeModal({ isOpen, defaultName = '', onClose, onSave }) {
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = e => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="save-vibe-backdrop" data-app-modal="true" onMouseDown={onClose}>
+    <div className="save-vibe-backdrop" data-app-modal="true" onClick={handleBackdropClick}>
       <form
         ref={dialogRef}
         className="save-vibe-modal"
@@ -39,7 +45,7 @@ function SaveVibeModal({ isOpen, defaultName = '', onClose, onSave }) {
         aria-labelledby="save-vibe-title"
         aria-describedby="save-vibe-description"
         onSubmit={handleSubmit}
-        onMouseDown={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <button type="button" className="save-vibe-close" aria-label="Close" onClick={onClose}>
           ✕

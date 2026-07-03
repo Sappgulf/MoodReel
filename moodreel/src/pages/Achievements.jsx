@@ -20,7 +20,7 @@ function Achievements() {
 
       <div className="page-hero">
         <div>
-          <h2 className="page-title">🏆 Achievements</h2>
+          <h2 className="page-title">Achievements</h2>
           <p className="page-subtitle">Unlock badges by saving, rating, and exploring.</p>
         </div>
         <div className="page-hero-chip">
@@ -43,7 +43,7 @@ function Achievements() {
       {/* Unlocked achievements */}
       {unlockedAchievements.length > 0 && (
         <section className="achievements-section">
-          <h3>✨ Unlocked</h3>
+          <h3>Unlocked</h3>
           <div className="achievements-grid">
             {unlockedAchievements.map(achievement => (
               <div key={achievement.id} className="achievement-card unlocked">
@@ -59,7 +59,7 @@ function Achievements() {
       {/* Locked achievements */}
       {lockedAchievements.length > 0 && (
         <section className="achievements-section">
-          <h3>🔒 Locked</h3>
+          <h3>Locked</h3>
           <div className="achievements-grid">
             {lockedAchievements.map(achievement => (
               <div key={achievement.id} className="achievement-card locked">

@@ -95,6 +95,10 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
             <p className="quick-actions-kicker">Command palette</p>
             <h2 id="quick-actions-title">{title}</h2>
           </div>
+          <span className="quick-actions-shortcut-hint" aria-hidden="true">
+            <kbd>⌘</kbd>
+            <kbd>K</kbd>
+          </span>
           <button
             type="button"
             className="quick-actions-close"

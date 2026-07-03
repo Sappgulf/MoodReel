@@ -162,215 +162,219 @@ function Stats() {
         </div>
       </div>
 
-      {/* Overview Cards */}
-      <div className="stats-grid">
-        <div className="stat-card glass-card">
-          <div className="stat-value">
-            <CountUp end={stats.totalMovies} />
-          </div>
-          <div className="stat-label">Total Saved</div>
-        </div>
-        <div className="stat-card glass-card">
-          <div className="stat-value">
-            <CountUp end={stats.totalFilms} />
-          </div>
-          <div className="stat-label">Movies</div>
-        </div>
-        <div className="stat-card glass-card">
-          <div className="stat-value">
-            <CountUp end={stats.totalTV} />
-          </div>
-          <div className="stat-label">TV Shows</div>
-        </div>
-        <div className="stat-card glass-card">
-          <div className="stat-value">
-            ⭐ <CountUp end={stats.avgTmdbRating} />
-          </div>
-          <div className="stat-label">Avg TMDB</div>
-        </div>
-      </div>
-
-      {/* User Ratings */}
-      {stats.userRatingsCount > 0 && (
-        <div className="stats-section">
-          <h3>Your Ratings</h3>
-          <p className="stats-detail">
-            You've rated <strong>{stats.userRatingsCount}</strong> movies with an average of{' '}
-            <strong>★ {stats.avgUserRating}/5</strong>
-          </p>
-        </div>
-      )}
-
-      {/* Genre Pie Chart */}
-      {stats.genreData.length > 0 && (
-        <div className="stats-section">
-          <h3>🎬 Genre Breakdown</h3>
-          <GenrePieChart data={stats.genreData} size={220} />
-        </div>
-      )}
-
-      {/* Movie vs TV Ratio */}
-      {stats.totalMovies > 0 && (
-        <div className="stats-section">
-          <h3>🎬 Movies vs 📺 TV Shows</h3>
-          <div className="ratio-bar">
-            <div
-              className="ratio-movies"
-              style={{ width: `${(stats.totalFilms / stats.totalMovies) * 100}%` }}
-            >
-              {stats.totalFilms > 0 &&
-                `${Math.round((stats.totalFilms / stats.totalMovies) * 100)}%`}
+      <div className="stats-dashboard">
+        {/* Overview Cards */}
+        <div className="stats-grid stats-grid-card">
+          <div className="stat-card glass-card">
+            <div className="stat-value">
+              <CountUp end={stats.totalMovies} />
             </div>
-            <div
-              className="ratio-tv"
-              style={{ width: `${(stats.totalTV / stats.totalMovies) * 100}%` }}
-            >
-              {stats.totalTV > 0 && `${Math.round((stats.totalTV / stats.totalMovies) * 100)}%`}
-            </div>
+            <div className="stat-label">Total Saved</div>
           </div>
-          <div className="ratio-legend">
-            <span>🎬 {stats.totalFilms} Movies</span>
-            <span>📺 {stats.totalTV} TV Shows</span>
+          <div className="stat-card glass-card">
+            <div className="stat-value">
+              <CountUp end={stats.totalFilms} />
+            </div>
+            <div className="stat-label">Movies</div>
+          </div>
+          <div className="stat-card glass-card">
+            <div className="stat-value">
+              <CountUp end={stats.totalTV} />
+            </div>
+            <div className="stat-label">TV Shows</div>
+          </div>
+          <div className="stat-card glass-card">
+            <div className="stat-value">
+              <CountUp end={stats.avgTmdbRating} decimals={1} />
+            </div>
+            <div className="stat-label">Avg TMDB</div>
           </div>
         </div>
-      )}
 
-      {/* Cinematic DNA */}
-      {(stats.topActors.length > 0 || stats.topDirectors.length > 0) && (
-        <div className="stats-section dna-section glass-panel">
-          <h3>🧬 Your Cinematic DNA</h3>
-          <p className="section-subtitle">Based on your watch history and saved favorites</p>
-          <div className="dna-grid">
-            <div className="dna-category">
-              <h4>🌟 Top Stars</h4>
-              <div className="dna-list">
-                {stats.topActors.map((actor, i) => (
-                  <div key={actor.name} className="dna-item">
-                    <span className="dna-rank">#{i + 1}</span>
-                    <span className="dna-name">{actor.name}</span>
-                    <span className="dna-count">{actor.count} titles</span>
-                  </div>
-                ))}
+        {/* User Ratings */}
+        {stats.userRatingsCount > 0 && (
+          <div className="stats-section">
+            <h3>Your Ratings</h3>
+            <p className="stats-detail">
+              You've rated <strong>{stats.userRatingsCount}</strong> movies with an average of{' '}
+              <strong>{stats.avgUserRating}/5</strong>
+            </p>
+          </div>
+        )}
+
+        {/* Genre Pie Chart */}
+        {stats.genreData.length > 0 && (
+          <div className="stats-section">
+            <h3>Genre Breakdown</h3>
+            <GenrePieChart data={stats.genreData} size={220} />
+          </div>
+        )}
+
+        {/* Movie vs TV Ratio */}
+        {stats.totalMovies > 0 && (
+          <div className="stats-section">
+            <h3>Movies vs TV Shows</h3>
+            <div className="ratio-bar">
+              <div
+                className="ratio-movies"
+                style={{ width: `${(stats.totalFilms / stats.totalMovies) * 100}%` }}
+              >
+                {stats.totalFilms > 0 &&
+                  `${Math.round((stats.totalFilms / stats.totalMovies) * 100)}%`}
+              </div>
+              <div
+                className="ratio-tv"
+                style={{ width: `${(stats.totalTV / stats.totalMovies) * 100}%` }}
+              >
+                {stats.totalTV > 0 && `${Math.round((stats.totalTV / stats.totalMovies) * 100)}%`}
               </div>
             </div>
-            <div className="dna-category">
-              <h4>🎬 Top Directors</h4>
-              <div className="dna-list">
-                {stats.topDirectors.map((director, i) => (
-                  <div key={director.name} className="dna-item director-dna-item">
-                    <div className="dna-item-header">
+            <div className="ratio-legend">
+              <span>{stats.totalFilms} Movies</span>
+              <span>{stats.totalTV} TV Shows</span>
+            </div>
+          </div>
+        )}
+
+        {/* Cinematic DNA */}
+        {(stats.topActors.length > 0 || stats.topDirectors.length > 0) && (
+          <div className="stats-section dna-section">
+            <h3>Your Cinematic DNA</h3>
+            <p className="section-subtitle">Based on your watch history and saved favorites</p>
+            <div className="dna-grid">
+              <div className="dna-category">
+                <h4>Top Stars</h4>
+                <div className="dna-list">
+                  {stats.topActors.map((actor, i) => (
+                    <div key={actor.name} className="dna-item">
                       <span className="dna-rank">#{i + 1}</span>
-                      <span className="dna-name">{director.name}</span>
-                      <span className="dna-count">{director.count} titles</span>
+                      <span className="dna-name">{actor.name}</span>
+                      <span className="dna-count">{actor.count} titles</span>
                     </div>
-                    <div className="dna-movie-list">
-                      {director.movies.slice(0, 2).map((m, j) => (
-                        <span key={j} className="dna-movie-tag">
-                          {m}
-                        </span>
-                      ))}
-                      {director.movies.length > 2 && (
-                        <span className="dna-movie-tag">+{director.movies.length - 2} more</span>
-                      )}
+                  ))}
+                </div>
+              </div>
+              <div className="dna-category">
+                <h4>Top Directors</h4>
+                <div className="dna-list">
+                  {stats.topDirectors.map((director, i) => (
+                    <div key={director.name} className="dna-item director-dna-item">
+                      <div className="dna-item-header">
+                        <span className="dna-rank">#{i + 1}</span>
+                        <span className="dna-name">{director.name}</span>
+                        <span className="dna-count">{director.count} titles</span>
+                      </div>
+                      <div className="dna-movie-list">
+                        {director.movies.slice(0, 2).map((m, j) => (
+                          <span key={j} className="dna-movie-tag">
+                            {m}
+                          </span>
+                        ))}
+                        {director.movies.length > 2 && (
+                          <span className="dna-movie-tag">+{director.movies.length - 2} more</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Favorite Decades */}
-      {stats.decades.length > 0 && (
-        <div className="stats-section">
-          <h3>🕰️ Favorite Eras</h3>
-          <div className="decades-grid">
-            {stats.decades.map(([decade, count]) => (
-              <div key={decade} className="decade-item">
-                <span className="decade-label">{decade}s</span>
-                <span className="decade-count">{count} titles</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Top Moods */}
-      {stats.topMoods.length > 0 && (
-        <div className="stats-section">
-          <h3>Top Mood Searches</h3>
-          <div className="mood-bars">
-            {stats.topMoods.map(([mood, count], i) => (
-              <div key={mood} className="mood-bar-row">
-                <span className="mood-label">{mood}</span>
-                <div className="mood-bar-container">
-                  <div
-                    className="mood-bar"
-                    style={{
-                      width: `${(count / maxMoodCount) * 100}%`,
-                      background: genreColors[i % genreColors.length],
-                    }}
-                  />
+        {/* Favorite Decades */}
+        {stats.decades.length > 0 && (
+          <div className="stats-section">
+            <h3>Favorite Eras</h3>
+            <div className="decades-grid">
+              {stats.decades.map(([decade, count]) => (
+                <div key={decade} className="decade-item">
+                  <span className="decade-label">{decade}s</span>
+                  <span className="decade-count">{count} titles</span>
                 </div>
-                <span className="mood-count">{count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Discovery Timeline */}
-      {watchHistory.length > 0 && (
-        <div className="stats-section">
-          <h3>📱 Discovery Timeline</h3>
-          <div className="discovery-stats">
-            <span className="discovery-stat">
-              <strong>{watchStats.thisWeek}</strong> this week
-            </span>
-            <span className="discovery-stat">
-              <strong>{watchStats.thisMonth}</strong> this month
-            </span>
-            <span className="discovery-stat">
-              <strong>{watchStats.total}</strong> total
-            </span>
-          </div>
-          <div className="recent-discoveries">
-            <p className="section-subtitle">Recently Viewed</p>
-            <div className="discovery-grid">
-              {watchHistory.slice(0, 8).map(item => (
-                <Link
-                  key={item.id}
-                  to={`/${item.media_type}/${item.id}`}
-                  className="discovery-item"
-                >
-                  {item.poster_path ? (
-                    <MediaImage
-                      path={item.poster_path}
-                      size="w92"
-                      alt={item.title}
-                      className="discovery-poster"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="discovery-poster-placeholder">🎬</div>
-                  )}
-                </Link>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Search Activity */}
-      <div className="stats-section">
-        <h3>Search Activity</h3>
-        <p className="stats-detail">
-          You've searched <strong>{stats.searchCount}</strong> times
-        </p>
-        <Link to="/calendar" className="view-calendar-btn">
-          📅 View Mood Calendar →
-        </Link>
+        {/* Top Moods */}
+        {stats.topMoods.length > 0 && (
+          <div className="stats-section">
+            <h3>Top Mood Searches</h3>
+            <div className="mood-bars">
+              {stats.topMoods.map(([mood, count], i) => (
+                <div key={mood} className="mood-bar-row">
+                  <span className="mood-label">{mood}</span>
+                  <div className="mood-bar-container">
+                    <div
+                      className="mood-bar"
+                      style={{
+                        width: `${(count / maxMoodCount) * 100}%`,
+                        background: genreColors[i % genreColors.length],
+                      }}
+                    />
+                  </div>
+                  <span className="mood-count">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Discovery Timeline */}
+        {watchHistory.length > 0 && (
+          <div className="stats-section stats-section-wide">
+            <h3>Discovery Timeline</h3>
+            <div className="discovery-stats">
+              <span className="discovery-stat">
+                <strong>{watchStats.thisWeek}</strong> this week
+              </span>
+              <span className="discovery-stat">
+                <strong>{watchStats.thisMonth}</strong> this month
+              </span>
+              <span className="discovery-stat">
+                <strong>{watchStats.total}</strong> total
+              </span>
+            </div>
+            <div className="recent-discoveries">
+              <p className="section-subtitle">Recently Viewed</p>
+              <div className="discovery-grid">
+                {watchHistory.slice(0, 8).map(item => (
+                  <Link
+                    key={item.id}
+                    to={`/${item.media_type}/${item.id}`}
+                    className="discovery-item"
+                  >
+                    {item.poster_path ? (
+                      <MediaImage
+                        path={item.poster_path}
+                        size="w92"
+                        alt={item.title}
+                        className="discovery-poster"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="discovery-poster-placeholder" aria-hidden="true">
+                        🎬
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search Activity */}
+        <div className="stats-section">
+          <h3>Search Activity</h3>
+          <p className="stats-detail">
+            You've searched <strong>{stats.searchCount}</strong> times
+          </p>
+          <Link to="/calendar" className="view-calendar-btn">
+            View Mood Calendar →
+          </Link>
+        </div>
       </div>
 
       {/* Empty State */}

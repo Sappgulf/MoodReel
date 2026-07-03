@@ -1,16 +1,39 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-function ErrorState({ title = 'Something went wrong', message, onRetry }) {
+function ErrorState({
+  title = 'Something went wrong',
+  message,
+  onRetry,
+  retryText = 'Try Again',
+  secondaryAction,
+}) {
   return (
     <div className="error-state" role="alert">
+      <div className="error-state-icon" aria-hidden="true">
+        ⚠️
+      </div>
       <div className="error-state-content">
         <h3>{title}</h3>
         {message && <p>{message}</p>}
-        {onRetry && (
-          <button className="primary-button" onClick={onRetry}>
-            Try Again
-          </button>
-        )}
+        <div className="error-state-actions">
+          {onRetry && (
+            <button className="primary-button" onClick={onRetry}>
+              {retryText}
+            </button>
+          )}
+          {secondaryAction ? (
+            secondaryAction.to ? (
+              <Link to={secondaryAction.to} className="btn-secondary">
+                {secondaryAction.label}
+              </Link>
+            ) : (
+              <button type="button" className="btn-secondary" onClick={secondaryAction.onClick}>
+                {secondaryAction.label}
+              </button>
+            )
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -81,6 +81,7 @@ function Profile() {
   const { region, setRegion, myServices, toggleService, resetServices } = useProviderSettings();
   const { resetProfile, tasteCounts } = useTasteProfile();
   const { pushToast } = useToasts();
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'streaming' | 'data'
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(profile);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -424,112 +425,187 @@ function Profile() {
         </div>
       </div>
 
-      <div className="profile-grid">
-        <div className="persona-card glass-card">
-          <h3>🎭 Your Mood Persona</h3>
-          <div className="persona-content">
-            <span className="persona-emoji">{persona.emoji}</span>
-            <div>
-              <h4>{persona.title}</h4>
-              <p>{persona.description}</p>
+      <div className="profile-tabs" role="tablist" aria-label="Profile sections">
+        {[
+          { id: 'profile', label: 'Profile' },
+          { id: 'streaming', label: 'Streaming & Taste' },
+          { id: 'data', label: 'Data & Privacy' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`profile-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'profile' && (
+        <div className="profile-grid">
+          <div className="persona-card glass-card">
+            <h3>Your Mood Persona</h3>
+            <div className="persona-content">
+              <span className="persona-emoji">{persona.emoji}</span>
+              <div>
+                <h4>{persona.title}</h4>
+                <p>{persona.description}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bio-card glass-card">
-          <h3>📝 Bio</h3>
-          {isEditing ? (
-            <textarea
-              value={editForm.bio}
-              onChange={e => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-              aria-label="Bio"
-            />
-          ) : (
-            <p>{profile.bio}</p>
-          )}
-        </div>
+          <div className="bio-card glass-card">
+            <h3>Bio</h3>
+            {isEditing ? (
+              <textarea
+                value={editForm.bio}
+                onChange={e => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                aria-label="Bio"
+              />
+            ) : (
+              <p>{profile.bio}</p>
+            )}
+          </div>
 
-        <div className="stats-preview glass-card">
-          <h3>📽️ Discovery Stats</h3>
-          <div className="simple-stats">
-            <div className="stat-item">
-              <span className="stat-value">{stats.totalMovies}</span>
-              <span className="stat-label">Watched</span>
-            </div>
-            <Link to="/achievements" className="stat-item clickable-stat">
-              <span className="stat-value">{unlockedCount}</span>
-              <span className="stat-label">Badges</span>
-            </Link>
-            <div className="stat-item">
-              <span className="stat-value">{moodHistory.length}</span>
-              <span className="stat-label">Moods</span>
+          <div className="stats-preview glass-card">
+            <h3>Discovery Stats</h3>
+            <div className="simple-stats">
+              <div className="stat-item">
+                <span className="stat-value">{stats.totalMovies}</span>
+                <span className="stat-label">Watched</span>
+              </div>
+              <Link to="/achievements" className="stat-item clickable-stat">
+                <span className="stat-value">{unlockedCount}</span>
+                <span className="stat-label">Badges</span>
+              </Link>
+              <div className="stat-item">
+                <span className="stat-value">{moodHistory.length}</span>
+                <span className="stat-label">Moods</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {stats.genreData.length > 0 && (
-          <div className="top-genres-card glass-card">
-            <h3>🎯 Top Genres</h3>
-            <div className="genre-bars">
-              {stats.genreData.slice(0, 5).map((genre, i) => (
-                <div key={genre.name} className="genre-bar-row">
-                  <span className="genre-bar-label">{genre.name}</span>
-                  <div className="genre-bar-track">
-                    <div
-                      className="genre-bar-fill"
-                      style={{
-                        width: `${(genre.count / stats.genreData[0].count) * 100}%`,
-                        animationDelay: `${i * 0.1}s`,
-                      }}
-                    />
+          {stats.genreData.length > 0 && (
+            <div className="top-genres-card glass-card">
+              <h3>Top Genres</h3>
+              <div className="genre-bars">
+                {stats.genreData.slice(0, 5).map((genre, i) => (
+                  <div key={genre.name} className="genre-bar-row">
+                    <span className="genre-bar-label">{genre.name}</span>
+                    <div className="genre-bar-track">
+                      <div
+                        className="genre-bar-fill"
+                        style={{
+                          width: `${(genre.count / stats.genreData[0].count) * 100}%`,
+                          animationDelay: `${i * 0.1}s`,
+                        }}
+                      />
+                    </div>
+                    <span className="genre-bar-count">{genre.count}</span>
                   </div>
-                  <span className="genre-bar-count">{genre.count}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="setup-card glass-card">
+            <div className="settings-row-head">
+              <h3>Setup Checklist</h3>
+              <span>
+                {setupCompleteCount}/{setupChecklist.length}
+              </span>
+            </div>
+            <p>
+              These steps make recommendations sharper, keep Tonight Mode practical, and make the
+              installed app feel complete.
+            </p>
+            <div className="setup-checklist">
+              {setupChecklist.map(item => (
+                <div key={item.label} className={`setup-check ${item.done ? 'done' : ''}`}>
+                  <span aria-hidden="true">{item.done ? '✓' : '○'}</span>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <small>{item.done ? 'Ready' : item.action}</small>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
 
-        <div className="settings-card glass-card">
-          <h3>⚙️ Streaming Settings</h3>
-          <label htmlFor="region-select">Region</label>
-          <select id="region-select" value={region} onChange={e => setRegion(e.target.value)}>
-            {REGIONS.map(regionOption => (
-              <option key={regionOption.code} value={regionOption.code}>
-                {regionOption.label}
-              </option>
-            ))}
-          </select>
-          <div className="streaming-setup-block">
-            <div className="settings-row-head">
-              <h4>Available on my services</h4>
-              {myServices.length > 0 && (
-                <button type="button" className="text-button" onClick={resetServices}>
-                  Clear
-                </button>
-              )}
-            </div>
-            <p>Tonight Mode boosts titles that are actually streamable where you already pay.</p>
-            <div className="profile-service-grid" role="group" aria-label="Streaming services">
-              {STREAMING_SERVICE_PRESETS.map(service => (
-                <button
-                  key={service.id}
-                  type="button"
-                  className={`profile-service-chip ${myServices.includes(service.id) ? 'active' : ''}`}
-                  aria-pressed={myServices.includes(service.id)}
-                  onClick={() => toggleService(service.id)}
-                >
-                  {service.label}
-                </button>
+          <button
+            className="share-profile-btn"
+            onClick={async () => {
+              try {
+                await copyToClipboard(window.location.href);
+                pushToast({
+                  icon: '🔗',
+                  title: 'Link copied',
+                  message: 'Profile link copied to clipboard.',
+                  duration: 2600,
+                });
+              } catch (err) {
+                console.error('Copy profile link failed:', err);
+                pushToast({
+                  icon: '⚠️',
+                  title: 'Copy failed',
+                  message: 'Your browser blocked clipboard access.',
+                  variant: 'error',
+                  duration: 4000,
+                });
+              }
+            }}
+          >
+            <span aria-hidden="true">🔗</span> Share My Vibe
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'streaming' && (
+        <div className="profile-grid">
+          <div className="settings-card glass-card">
+            <h3>Streaming Settings</h3>
+            <label htmlFor="region-select">Region</label>
+            <select id="region-select" value={region} onChange={e => setRegion(e.target.value)}>
+              {REGIONS.map(regionOption => (
+                <option key={regionOption.code} value={regionOption.code}>
+                  {regionOption.label}
+                </option>
               ))}
+            </select>
+            <div className="streaming-setup-block">
+              <div className="settings-row-head">
+                <h4>Available on my services</h4>
+                {myServices.length > 0 && (
+                  <button type="button" className="text-button" onClick={resetServices}>
+                    Clear
+                  </button>
+                )}
+              </div>
+              <p>Tonight Mode boosts titles that are actually streamable where you already pay.</p>
+              <div className="profile-service-grid" role="group" aria-label="Streaming services">
+                {STREAMING_SERVICE_PRESETS.map(service => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    className={`profile-service-chip ${myServices.includes(service.id) ? 'active' : ''}`}
+                    aria-pressed={myServices.includes(service.id)}
+                    onClick={() => toggleService(service.id)}
+                  >
+                    {service.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="taste-profile-summary">
-            <h4>🎯 Taste Profile</h4>
-            <p>
+
+          <div className="settings-card glass-card">
+            <h3>Taste Profile</h3>
+            <p className="taste-profile-summary">
               Liked: {tasteCounts.liked} • Disliked: {tasteCounts.disliked}
-            </p>
-            <p>
+              <br />
               MoodReel currently sees:{' '}
               {topGenreNames.length > 0 ? topGenreNames.join(', ') : 'not enough genre signal yet'}.
             </p>
@@ -596,45 +672,26 @@ function Profile() {
             </button>
           </div>
         </div>
+      )}
 
-        <div className="setup-card glass-card">
-          <div className="settings-row-head">
-            <h3>✅ Setup Checklist</h3>
-            <span>
-              {setupCompleteCount}/{setupChecklist.length}
-            </span>
+      {activeTab === 'data' && (
+        <div className="profile-grid">
+          <div className="privacy-card glass-card">
+            <h3>Privacy & Local Data</h3>
+            <p>
+              MoodReel stores your profile, vibes, watchlist, ratings, and taste signals locally in
+              this browser. They stay on this device unless you export or share them.
+            </p>
+            <div className="privacy-data-stats" aria-label="Stored local data summary">
+              <span>{watchlist.length} watchlist</span>
+              <span>{moodHistory.length} moods</span>
+              <span>{watchHistory.length} viewed</span>
+              <span>{tasteCounts.liked + tasteCounts.disliked} taste signals</span>
+            </div>
           </div>
-          <p>
-            These steps make recommendations sharper, keep Tonight Mode practical, and make the
-            installed app feel complete.
-          </p>
-          <div className="setup-checklist">
-            {setupChecklist.map(item => (
-              <div key={item.label} className={`setup-check ${item.done ? 'done' : ''}`}>
-                <span aria-hidden="true">{item.done ? '✓' : '○'}</span>
-                <div>
-                  <strong>{item.label}</strong>
-                  <small>{item.done ? 'Ready' : item.action}</small>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="privacy-card glass-card">
-          <h3>🔒 Privacy & Local Data</h3>
-          <p>
-            MoodReel stores your profile, vibes, watchlist, ratings, and taste signals locally in
-            this browser. They stay on this device unless you export or share them.
-          </p>
-          <div className="privacy-data-stats" aria-label="Stored local data summary">
-            <span>{watchlist.length} watchlist</span>
-            <span>{moodHistory.length} moods</span>
-            <span>{watchHistory.length} viewed</span>
-            <span>{tasteCounts.liked + tasteCounts.disliked} taste signals</span>
-          </div>
-          <div className="privacy-api-key">
-            <h4>🔐 TMDB API Key</h4>
+          <div className="privacy-card glass-card">
+            <h3>TMDB API Key</h3>
             <p>{apiKeyStatusMessage}</p>
             <label htmlFor="tmdb-api-key-input" className="sr-only">
               TMDB API key
@@ -682,61 +739,40 @@ function Profile() {
               </p>
             )}
           </div>
-          <div className="privacy-actions">
-            <button type="button" className="secondary-button" onClick={handleExportData}>
-              Export data
-            </button>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => importInputRef.current?.click()}
-            >
-              Import backup
-            </button>
-            <button
-              type="button"
-              className="text-button danger-text"
-              onClick={handleResetLocalData}
-            >
-              Reset local data
-            </button>
-          </div>
-          <input
-            ref={importInputRef}
-            className="sr-only"
-            type="file"
-            accept="application/json,.json"
-            onChange={handleImportFile}
-            aria-label="Import MoodReel backup file"
-          />
-        </div>
-      </div>
 
-      <button
-        className="share-profile-btn"
-        onClick={async () => {
-          try {
-            await copyToClipboard(window.location.href);
-            pushToast({
-              icon: '🔗',
-              title: 'Link copied',
-              message: 'Profile link copied to clipboard.',
-              duration: 2600,
-            });
-          } catch (err) {
-            console.error('Copy profile link failed:', err);
-            pushToast({
-              icon: '⚠️',
-              title: 'Copy failed',
-              message: 'Your browser blocked clipboard access.',
-              variant: 'error',
-              duration: 4000,
-            });
-          }
-        }}
-      >
-        🔗 Share My Vibe
-      </button>
+          <div className="privacy-card glass-card">
+            <h3>Backup & Reset</h3>
+            <p>Export your data for safekeeping, import a backup, or reset everything.</p>
+            <div className="privacy-actions">
+              <button type="button" className="secondary-button" onClick={handleExportData}>
+                Export data
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => importInputRef.current?.click()}
+              >
+                Import backup
+              </button>
+              <button
+                type="button"
+                className="text-button danger-text"
+                onClick={handleResetLocalData}
+              >
+                Reset local data
+              </button>
+            </div>
+            <input
+              ref={importInputRef}
+              className="sr-only"
+              type="file"
+              accept="application/json,.json"
+              onChange={handleImportFile}
+              aria-label="Import MoodReel backup file"
+            />
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={showResetConfirm}

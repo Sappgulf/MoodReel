@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DiscoveryHero from '../components/home/DiscoveryHero';
 import SurpriseWinnerBanner from '../components/home/SurpriseWinnerBanner';
 import HomeTrendingStrip from '../components/home/HomeTrendingStrip';
+import RecentActivityStrip from '../components/home/RecentActivityStrip';
+import SmartCollections from '../components/home/SmartCollections';
 import ContinueWatchingStrip from '../components/home/ContinueWatchingStrip';
 import OnMyServicesStrip from '../components/home/OnMyServicesStrip';
 import HomeResultsPanel from '../components/home/HomeResultsPanel';
@@ -549,6 +551,21 @@ function Home() {
     [currentYear, handleSearch, playSound, setAdvancedFilters, setMinRating, setMood]
   );
 
+  const handleSmartCollectionSelect = useCallback(
+    suggestion => {
+      if (suggestion.mood) setMood(suggestion.mood);
+      setAdvancedFilters(prev => ({
+        ...prev,
+        ...suggestion.filters,
+        yearMax: currentYear,
+      }));
+      setMinRating(prev => Math.max(prev, suggestion.minRating || 0));
+      playSound('pop');
+      window.setTimeout(() => handleSearch(), 0);
+    },
+    [currentYear, handleSearch, playSound, setAdvancedFilters, setMinRating, setMood]
+  );
+
   const activeTonightMode = useMemo(
     () => TONIGHT_MODES.find(mode => mode.id === tonightMode) || TONIGHT_MODES[0],
     [tonightMode]
@@ -559,6 +576,7 @@ function Home() {
       setTonightPreference('tonightMode', mode.id);
       setPassedDecisionIds([]);
       setLockedPickId('');
+      const nextMood = mood.trim() || mode.mood;
       if (!mood.trim()) {
         setMood(mode.mood);
       }
@@ -569,8 +587,23 @@ function Home() {
       }));
       setMinRating(prev => Math.max(prev, mode.minRating));
       playSound('pop');
+      window.setTimeout(() => {
+        if (nextMood) addToHistory(nextMood);
+        setVisibleCount(8);
+        getRecommendations();
+      }, 0);
     },
-    [currentYear, mood, playSound, setAdvancedFilters, setMinRating, setMood, setTonightPreference]
+    [
+      currentYear,
+      mood,
+      playSound,
+      setAdvancedFilters,
+      setMinRating,
+      setMood,
+      setTonightPreference,
+      addToHistory,
+      getRecommendations,
+    ]
   );
 
   const handleConstraintToggle = useCallback(
@@ -1242,7 +1275,7 @@ function Home() {
         <div className="context-toolbar">
           <div className="context-toolbar-left">
             <span className="context-pill">
-              {timeContext.emoji} {timeContext.greeting}
+              <span aria-hidden="true">{timeContext.emoji}</span> {timeContext.greeting}
             </span>
             {activeFilterCount > 0 && (
               <span className="context-pill context-pill-active">
@@ -1254,6 +1287,11 @@ function Home() {
                 {myServices.length} service{myServices.length > 1 ? 's' : ''}
               </span>
             )}
+            {!hasAnySearch && (
+              <span className="context-pill context-pill-tip">
+                <span aria-hidden="true">⌘</span>K for quick actions
+              </span>
+            )}
           </div>
           <div className="context-toolbar-right">
             <button
@@ -1262,7 +1300,8 @@ function Home() {
               onClick={handleSmartSurprise}
               disabled={isSurpriseLoading}
             >
-              {isSurpriseLoading ? '🎲' : 'Shuffle'}
+              <span aria-hidden="true">{isSurpriseLoading ? '🎲' : '✨'}</span>
+              {isSurpriseLoading ? 'Shuffling…' : 'Surprise me'}
             </button>
           </div>
         </div>
@@ -1322,6 +1361,17 @@ function Home() {
         </div>
       )}
 
+      {/* Context-aware Smart Collections */}
+      {!hasAnySearch && (
+        <SmartCollections
+          watchlist={watchlist}
+          recentMoods={recentMoods}
+          myServices={myServices}
+          tasteCounts={tasteCounts}
+          onSelect={handleSmartCollectionSelect}
+        />
+      )}
+
       {/* Compact Emoji Quick-Pick */}
       {!hasAnySearch && (
         <div className="emoji-quick-bar">
@@ -1348,6 +1398,13 @@ function Home() {
           }}
         />
       )}
+
+      {/* Recent Activity — compact, only when idle */}
+      <RecentActivityStrip
+        recentMoods={recentMoods}
+        watchHistory={watchHistory}
+        hasAnySearch={hasAnySearch}
+      />
 
       {/* Trending — compact, only when idle */}
       <HomeTrendingStrip

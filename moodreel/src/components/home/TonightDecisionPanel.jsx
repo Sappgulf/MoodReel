@@ -192,10 +192,11 @@ export default function TonightDecisionPanel({
             </div>
             <button
               type="button"
-              className="text-button share-tonight-btn"
+              className="btn-secondary share-tonight-btn"
               onClick={onShareTonight}
+              aria-label="Copy tonight card to share"
             >
-              Share tonight card
+              <span aria-hidden="true">🔗</span> Share card
             </button>
           </>
         )}

@@ -123,7 +123,7 @@ export default function MovieDetailsHeroPanel({
               onClick={onToggleWatchlist}
               aria-pressed={isInWatchlist(content.id, mediaType)}
             >
-              {isInWatchlist(content.id, mediaType) ? '❤️ In Watchlist' : '🤍 Add to Watchlist'}
+              {isInWatchlist(content.id, mediaType) ? 'In Watchlist' : 'Add to Watchlist'}
             </button>
 
             {isInWatchlist(content.id, mediaType) && (
@@ -131,21 +131,21 @@ export default function MovieDetailsHeroPanel({
                 className={`watched-btn ${isWatched(content.id, mediaType) ? 'watched' : ''}`}
                 onClick={() => onToggleWatched(content.id, mediaType)}
               >
-                {isWatched(content.id, mediaType) ? '✅ Watched' : '👁️ Mark as Watched'}
+                {isWatched(content.id, mediaType) ? 'Watched' : 'Mark as Watched'}
               </button>
             )}
 
             {trailer && (
               <div className="trailer-actions">
                 <button className="trailer-btn" onClick={() => setShowTrailerModal(true)}>
-                  ▶️ Watch Trailer
+                  Watch Trailer
                 </button>
                 <button
                   className="pip-button"
                   onClick={() => onPlayTrailer(trailer.key, title)}
                   title="Watch in Picture-in-Picture"
                 >
-                  📍 PiP Mode
+                  PiP Mode
                 </button>
               </div>
             )}
@@ -168,14 +168,14 @@ export default function MovieDetailsHeroPanel({
               onClick={() => onLike(content, mediaType)}
               aria-pressed={tasteStatus === 'liked'}
             >
-              👍 Like
+              Like
             </button>
             <button
               className={`taste-btn ${tasteStatus === 'disliked' ? 'active' : ''}`}
               onClick={() => onDislike(content, mediaType)}
               aria-pressed={tasteStatus === 'disliked'}
             >
-              👎 Dislike
+              Dislike
             </button>
           </div>
 
@@ -189,7 +189,7 @@ export default function MovieDetailsHeroPanel({
                 className="review-toggle-btn"
                 onClick={() => setShowReviewForm(true)}
               >
-                ✏️ Write a Review
+                Write a Review
               </button>
             )}
 

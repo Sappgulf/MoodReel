@@ -108,7 +108,7 @@ function MoodCalendar() {
         </Link>
         {history.length > 0 && (
           <button onClick={handleClearHistory} className="clear-history-btn">
-            🗑️ Clear Log
+            Clear log
           </button>
         )}
       </div>
@@ -204,12 +204,12 @@ function MoodCalendar() {
         <h4>Mood Colors</h4>
         <div className="legend-items">
           {Object.entries({
-            '😊 Happy/Comedy': '#FFD700',
-            '😢 Sad/Drama': '#6B8DD6',
-            '😱 Horror/Thriller': '#DC143C',
-            '💕 Romance': '#FF69B4',
-            '🚀 Sci-Fi': '#00CED1',
-            '🧙 Fantasy': '#9C27B0',
+            'Happy / Comedy': '#FFD700',
+            'Sad / Drama': '#6B8DD6',
+            'Horror / Thriller': '#DC143C',
+            Romance: '#FF69B4',
+            'Sci-Fi': '#00CED1',
+            Fantasy: '#9C27B0',
           }).map(([label, color]) => (
             <div key={label} className="legend-item">
               <span className="legend-dot" style={{ background: color }} />
@@ -245,7 +245,7 @@ function MoodCalendar() {
       )}
 
       <Link to="/stats" className="view-stats-link">
-        📊 View Full Stats →
+        View Full Stats →
       </Link>
 
       <ConfirmDialog

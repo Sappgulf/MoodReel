@@ -71,6 +71,7 @@ function Watchlist() {
   const [noteText, setNoteText] = useState('');
   const [personalizedRecs, setPersonalizedRecs] = useState([]);
   const [recsLoading, setRecsLoading] = useState(false);
+  const [recsError, setRecsError] = useState('');
   const [recsBasedOn, setRecsBasedOn] = useState(null);
   const [showWatched, setShowWatched] = useState('all'); // 'all' | 'watched' | 'unwatched'
   const [sortBy, setSortBy] = useState('date'); // 'date' | 'rating' | 'title' | 'watched'
@@ -80,6 +81,8 @@ function Watchlist() {
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const [showSpinWheel, setShowSpinWheel] = useState(false);
   const [shareStatus, setShareStatus] = useState('');
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const moreActionsRef = useRef(null);
   const fileInputRef = useRef(null);
   const randomPickTimerRef = useRef(null);
   const navigate = useNavigate();
@@ -280,17 +283,28 @@ function Watchlist() {
     }
     const movie = getRandomMovie();
     setRandomPick(movie);
-    // Clear after 10 seconds
-    randomPickTimerRef.current = setTimeout(() => setRandomPick(null), 10000);
   }, [getRandomMovie]);
 
   useEffect(() => {
     return () => {
-      if (randomPickTimerRef.current) {
-        clearTimeout(randomPickTimerRef.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const timer = randomPickTimerRef.current;
+      if (timer) {
+        clearTimeout(timer);
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!showMoreActions) return;
+    const handleClickOutside = e => {
+      if (moreActionsRef.current && !moreActionsRef.current.contains(e.target)) {
+        setShowMoreActions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreActions]);
 
   // Matchmaker - find movies that appear in pasted friend's list
   const handleMatch = useCallback(() => {
@@ -342,6 +356,7 @@ function Watchlist() {
     if (watchlist.length === 0) return;
 
     setRecsLoading(true);
+    setRecsError('');
     const randomMovie = watchlist[Math.floor(Math.random() * watchlist.length)];
     setRecsBasedOn(randomMovie);
 
@@ -360,6 +375,7 @@ function Watchlist() {
       if (!shouldSkipLog(err)) {
         console.error('Error fetching recommendations:', err);
       }
+      setRecsError('Could not load recommendations right now.');
       setPersonalizedRecs([]);
     } finally {
       setRecsLoading(false);
@@ -436,42 +452,58 @@ function Watchlist() {
               <button
                 className="action-btn spin-wheel-btn"
                 onClick={() => setShowSpinWheel(true)}
-                title="Spin the wheel!"
+                title="Spin the wheel"
               >
-                🎡 Spin Wheel
+                <span aria-hidden="true">🎡</span> Spin Wheel
               </button>
               <button className="action-btn" onClick={handleRandomPick} title="Pick random movie">
-                🎲 Quick Pick
+                <span aria-hidden="true">🎲</span> Quick Pick
               </button>
             </>
           )}
           {sortedList.length > 0 && (
-            <>
-              <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
-                👥 Matchmaker
-              </button>
-              <button className="share-link-btn" onClick={handleShareLink}>
-                {shareStatus || '🔗 Share Link'}
-              </button>
-              <button className="export-btn" onClick={handleExport}>
-                {exportStatus || '📋 Copy'}
-              </button>
-              <button className="export-json-btn" onClick={exportData}>
-                📥 Export JSON
-              </button>
-            </>
+            <button className="action-btn" onClick={() => setShowMatchmaker(!showMatchmaker)}>
+              <span aria-hidden="true">👥</span> Matchmaker
+            </button>
           )}
-          <button className="import-btn" onClick={() => fileInputRef.current?.click()}>
-            {importStatus || '📤 Import'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            aria-label="Import watchlist backup file"
-            style={{ display: 'none' }}
-            onChange={handleImportFile}
-          />
+          <div className="watchlist-more-actions" ref={moreActionsRef}>
+            <button
+              className="action-btn"
+              onClick={() => setShowMoreActions(prev => !prev)}
+              aria-expanded={showMoreActions}
+              aria-haspopup="menu"
+            >
+              <span aria-hidden="true">⋯</span> More
+            </button>
+            {showMoreActions && (
+              <div className="watchlist-more-menu" role="menu" aria-label="Library actions">
+                {sortedList.length > 0 && (
+                  <>
+                    <button type="button" role="menuitem" onClick={handleShareLink}>
+                      <span aria-hidden="true">🔗</span> {shareStatus || 'Share link'}
+                    </button>
+                    <button type="button" role="menuitem" onClick={handleExport}>
+                      <span aria-hidden="true">📋</span> {exportStatus || 'Copy list'}
+                    </button>
+                    <button type="button" role="menuitem" onClick={exportData}>
+                      <span aria-hidden="true">📥</span> Export JSON
+                    </button>
+                  </>
+                )}
+                <button type="button" role="menuitem" onClick={() => fileInputRef.current?.click()}>
+                  <span aria-hidden="true">📤</span> {importStatus || 'Import'}
+                </button>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              aria-label="Import watchlist backup file"
+              style={{ display: 'none' }}
+              onChange={handleImportFile}
+            />
+          </div>
         </div>
       </div>
 
@@ -509,12 +541,22 @@ function Watchlist() {
                 .join(' · ')}
             </span>
           </div>
-          <Link
-            to={`/${randomPick.media_type || 'movie'}/${randomPick.id}`}
-            className="view-pick-btn"
-          >
-            View Details →
-          </Link>
+          <div className="random-pick-actions">
+            <Link
+              to={`/${randomPick.media_type || 'movie'}/${randomPick.id}`}
+              className="view-pick-btn"
+            >
+              View Details
+            </Link>
+            <button
+              type="button"
+              className="dismiss-pick-btn"
+              onClick={() => setRandomPick(null)}
+              aria-label="Dismiss random pick"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
@@ -665,7 +707,19 @@ function Watchlist() {
               {recsLoading ? '...' : '🔄 Refresh'}
             </button>
           </div>
-          {personalizedRecs.length > 0 ? (
+          {recsError ? (
+            <div className="recs-error">
+              <p>{recsError}</p>
+              <button
+                type="button"
+                className="btn-secondary btn-sm"
+                onClick={fetchPersonalizedRecs}
+                disabled={recsLoading}
+              >
+                Try again
+              </button>
+            </div>
+          ) : personalizedRecs.length > 0 ? (
             <div className="recs-grid">
               {personalizedRecs.map(movie => (
                 <MovieCard
@@ -679,9 +733,9 @@ function Watchlist() {
                 />
               ))}
             </div>
-          ) : (
+          ) : recsLoading ? (
             <SkeletonGrid count={4} />
-          )}
+          ) : null}
         </div>
       )}
 
