@@ -90,6 +90,96 @@ describe('recommendationScoring', () => {
     expect(picks.every(pick => pick.debateLine.includes(pick.item.title))).toBe(true);
   });
 
+  it('gives the highest-ranked title to Best Match, not to Safe Bet', () => {
+    const scorecards = rankRecommendations(
+      [
+        makeItem({ id: 1, title: 'Runner Up', vote_average: 7.2, vote_count: 4000 }),
+        makeItem({ id: 2, title: 'Top Ranked', vote_average: 8.6, vote_count: 6000 }),
+        makeItem({ id: 3, title: 'Third Place', vote_average: 6.9, vote_count: 900 }),
+      ],
+      { mode }
+    );
+
+    const picks = buildTonightPicks(scorecards);
+    const bestMatch = picks.find(pick => pick.slot === 'best');
+
+    expect(bestMatch.key).toBe(scorecards[0].key);
+  });
+
+  it('honours a locked pick as Best Match and never repeats it in another slot', () => {
+    const scorecards = rankRecommendations(
+      [
+        makeItem({ id: 1, title: 'Top Ranked', vote_average: 8.6, vote_count: 6000 }),
+        makeItem({ id: 2, title: 'Locked Choice', vote_average: 7.0, vote_count: 900 }),
+        makeItem({ id: 3, title: 'Spare', vote_average: 6.9, vote_count: 800 }),
+      ],
+      { mode }
+    );
+    const lockedKey = scorecards.find(card => card.item.title === 'Locked Choice').key;
+
+    const picks = buildTonightPicks(scorecards, { lockedPickId: lockedKey });
+
+    expect(picks.find(pick => pick.slot === 'best').key).toBe(lockedKey);
+    expect(picks.filter(pick => pick.key === lockedKey)).toHaveLength(1);
+  });
+
+  it('breaks near-ties in favour of a pick that differs from the ones already made', () => {
+    // Built directly so the three candidates differ only in genre overlap:
+    // "Repeat" shares both of Best Match's genres, "Distinct" shares one.
+    const card = (id, title, genre_ids, confidence) => ({
+      key: `${id}-movie`,
+      item: makeItem({ id, title, genre_ids }),
+      confidence,
+      score: confidence,
+      reasons: [],
+      penalties: [],
+    });
+    const scorecards = [
+      card(1, 'Top Pick', [35, 80], 96),
+      card(2, 'Repeat', [35, 80], 95),
+      card(3, 'Distinct', [35, 53], 94),
+    ];
+
+    const picks = buildTonightPicks(scorecards);
+
+    expect(picks.find(pick => pick.slot === 'best').item.title).toBe('Top Pick');
+    expect(picks.find(pick => pick.slot === 'safe').item.title).toBe('Distinct');
+  });
+
+  it('never puts two titles from the same franchise in the picks', () => {
+    const sequelOf = collectionId => ({ belongs_to_collection: { id: collectionId } });
+    const scorecards = rankRecommendations(
+      [
+        { ...makeItem({ id: 1, title: 'Saga I', vote_average: 8.5 }), ...sequelOf(77) },
+        { ...makeItem({ id: 2, title: 'Saga II', vote_average: 8.4 }), ...sequelOf(77) },
+        { ...makeItem({ id: 3, title: 'Saga III', vote_average: 8.3 }), ...sequelOf(77) },
+        makeItem({ id: 4, title: 'Standalone', genre_ids: [18], vote_average: 7.0 }),
+      ],
+      { mode }
+    );
+
+    const picks = buildTonightPicks(scorecards);
+    const sagaPicks = picks.filter(pick => pick.item.belongs_to_collection?.id === 77);
+
+    expect(sagaPicks.length).toBeLessThanOrEqual(1);
+  });
+
+  it('skips passed titles when rebuilding the picks', () => {
+    const scorecards = rankRecommendations(
+      [
+        makeItem({ id: 1, title: 'Passed On', vote_average: 8.6, vote_count: 6000 }),
+        makeItem({ id: 2, title: 'Next Up', vote_average: 8.0, vote_count: 3000 }),
+        makeItem({ id: 3, title: 'Also Fine', vote_average: 7.4, vote_count: 1200 }),
+      ],
+      { mode }
+    );
+    const passedKey = scorecards.find(card => card.item.title === 'Passed On').key;
+
+    const picks = buildTonightPicks(scorecards, { passedKeys: [passedKey] });
+
+    expect(picks.some(pick => pick.key === passedKey)).toBe(false);
+  });
+
   it('returns human-readable explanation text for a scorecard', () => {
     const scorecard = scoreRecommendation(makeItem({ id: 1, title: 'Cozy Laugh', runtime: 88 }), {
       mode,

@@ -722,63 +722,136 @@ export function rankRecommendations(items, context = {}) {
   });
 }
 
+const SLOT_LABELS = Object.freeze({
+  safe: 'Safe Bet',
+  best: 'Best Match',
+  wild: 'Wild Card',
+});
+
+/**
+ * The franchise/collection a title belongs to, when TMDB tells us. Two entries
+ * from the same collection are near-duplicates for decision purposes.
+ */
+function getCollectionId(item) {
+  return item?.belongs_to_collection?.id ?? null;
+}
+
+/**
+ * True when a candidate comes from the same franchise as something already
+ * picked. Two entries from one collection are never a real choice between
+ * two things, so this is a hard exclusion rather than a scoring penalty.
+ */
+function isSameFranchiseAsChosen(scorecard, chosen) {
+  const collectionId = getCollectionId(scorecard.item);
+  if (collectionId === null) return false;
+  return chosen.some(pick => getCollectionId(pick.item) === collectionId);
+}
+
+/**
+ * How much a candidate overlaps in genre with the picks already chosen,
+ * expressed in the same units as `confidence` (a 42-98 scale) so it can be
+ * traded off against ranking strength directly.
+ */
+function getGenreOverlapPenalty(scorecard, chosen) {
+  if (chosen.length === 0) return 0;
+
+  const genreIds = new Set(getGenreIds(scorecard.item));
+  let penalty = 0;
+
+  for (const pick of chosen) {
+    const sharedGenres = getGenreIds(pick.item).filter(genreId => genreIds.has(genreId)).length;
+    if (sharedGenres >= 2) penalty += 7;
+    else if (sharedGenres === 1) penalty += 3;
+  }
+
+  return penalty;
+}
+
+function decoratePick(scorecard, slot, extra = {}) {
+  const slotLabel = SLOT_LABELS[slot];
+  return {
+    ...scorecard,
+    slot,
+    slotLabel,
+    debateLine: buildDecisionDebate(scorecard, slotLabel),
+    explanation: buildRecommendationExplanation({
+      item: scorecard.item,
+      reasons: scorecard.reasons,
+      penalties: scorecard.penalties,
+      slotLabel,
+    }),
+    ...extra,
+  };
+}
+
+/**
+ * Collapse a ranked list into the three decision slots.
+ *
+ * Slots are filled in confidence order — Best Match first, so the strongest
+ * candidate always wins the slot that claims to hold it — and each subsequent
+ * slot trades a little raw score for genre/franchise distance from the picks
+ * already on the table.
+ */
 export function buildTonightPicks(scorecards, { lockedPickId = '', passedKeys = [] } = {}) {
   const passed = new Set(passedKeys);
   const available = scorecards.filter(scorecard => !passed.has(scorecard.key));
   const locked = lockedPickId ? scorecards.find(scorecard => scorecard.key === lockedPickId) : null;
   const pool = locked ? available.filter(scorecard => scorecard.key !== locked.key) : available;
-  const pick = (slot, predicate = () => true) => {
-    const match = pool.find(scorecard => predicate(scorecard));
-    if (!match) return null;
-    const index = pool.findIndex(scorecard => scorecard.key === match.key);
-    pool.splice(index, 1);
-    return {
-      ...match,
-      slot,
-      slotLabel: slot === 'safe' ? 'Safe Bet' : slot === 'best' ? 'Best Match' : 'Wild Card',
-      debateLine: buildDecisionDebate(
-        match,
-        slot === 'safe' ? 'Safe Bet' : slot === 'best' ? 'Best Match' : 'Wild Card'
-      ),
-      explanation: buildRecommendationExplanation({
-        item: match.item,
-        reasons: match.reasons,
-        penalties: match.penalties,
-        slotLabel: slot === 'safe' ? 'Safe Bet' : slot === 'best' ? 'Best Match' : 'Wild Card',
-      }),
-    };
+
+  const chosen = [];
+
+  /**
+   * Take the best remaining candidate for a slot. `preferred` marks the
+   * candidates that suit the slot; if none qualify we fall back to the whole
+   * pool rather than leaving the slot empty. Ties are broken by how different
+   * a candidate is from what has already been picked.
+   */
+  const pick = (slot, preferred = () => true) => {
+    const eligible = pool.filter(scorecard => !isSameFranchiseAsChosen(scorecard, chosen));
+    if (eligible.length === 0) return null;
+
+    const shortlist = eligible.filter(preferred);
+    const candidates = shortlist.length > 0 ? shortlist : eligible;
+
+    let best = null;
+    let bestValue = -Infinity;
+    for (const candidate of candidates) {
+      // `confidence` is the normalized ranking strength; subtracting the
+      // overlap penalty trades a little of it for a more distinct line-up.
+      const value = candidate.confidence - getGenreOverlapPenalty(candidate, chosen);
+      if (value > bestValue) {
+        bestValue = value;
+        best = candidate;
+      }
+    }
+    if (!best) return null;
+
+    pool.splice(
+      pool.findIndex(scorecard => scorecard.key === best.key),
+      1
+    );
+    const decorated = decoratePick(best, slot);
+    chosen.push(decorated);
+    return decorated;
   };
 
-  const lockedPick = locked
-    ? {
-        ...locked,
-        slot: 'best',
-        slotLabel: 'Best Match',
-        debateLine: buildDecisionDebate(locked, 'Best Match'),
-        explanation: buildRecommendationExplanation({
-          item: locked.item,
-          reasons: locked.reasons,
-          penalties: locked.penalties,
-          slotLabel: 'Best Match',
-        }),
-        locked: true,
-      }
-    : null;
+  // Best Match is resolved first so the top-ranked title cannot be consumed by
+  // another slot, then Safe Bet, then Wild Card.
+  const best = locked ? decoratePick(locked, 'best', { locked: true }) : pick('best');
+  if (best) chosen.push(...(locked ? [best] : []));
 
-  const safe =
-    pick(
-      'safe',
-      scorecard =>
-        (scorecard.item.vote_average || 0) >= 6.8 && (scorecard.item.vote_count || 0) >= 400
-    ) || pick('safe');
-  const best = lockedPick || pick('best');
-  const wild =
-    pick(
-      'wild',
-      scorecard =>
-        (scorecard.item.popularity || 0) < 120 ||
-        getGenreIds(scorecard.item).some(genreId => WILD_GENRES.has(genreId))
-    ) || pick('wild');
+  const safe = pick(
+    'safe',
+    scorecard =>
+      (scorecard.item.vote_average || 0) >= 6.8 && (scorecard.item.vote_count || 0) >= 400
+  );
+
+  const wild = pick(
+    'wild',
+    scorecard =>
+      (scorecard.item.popularity || 0) < 120 ||
+      getGenreIds(scorecard.item).some(genreId => WILD_GENRES.has(genreId))
+  );
 
   return [safe, best, wild].filter(Boolean);
 }
