@@ -10,6 +10,7 @@ import './styles/pages-extra.css';
 import './styles/animations.css';
 import './styles/polish.css';
 import './index.css';
+import './styles/glm52-revamp.css';
 import App from './App.jsx';
 
 const container = document.getElementById('root');
