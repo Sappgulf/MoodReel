@@ -391,9 +391,9 @@
   min-height: 100%;
   border-radius: var(--radius-2xl);
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--surface-card-border);
+  background: var(--surface-card);
+  box-shadow: var(--surface-card-shadow);
   transition:
     transform var(--transition-base),
     box-shadow var(--transition-base);
@@ -421,9 +421,7 @@
 .hero-featured-overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(9, 9, 11, 0.85) 90%),
-    radial-gradient(circle at top left, rgba(255, 215, 0, 0.18), transparent 30%);
+  background: var(--scrim-media);
 }
 
 .hero-featured-copy {
@@ -431,7 +429,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: var(--spacing-md) var(--spacing-lg);
-  background: linear-gradient(180deg, rgba(12, 16, 23, 0.95), rgba(12, 16, 23, 1));
+  background: var(--surface-card);
 }
 
 .hero-featured-eyebrow {
@@ -1130,7 +1128,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .rating-large .stars {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   letter-spacing: -2px;
 }
 
@@ -1419,7 +1417,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .taste-profile-actions .taste-btn.active {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   border-color: var(--color-border-gold);
   background: rgba(255, 215, 0, 0.08);
 }
@@ -1954,9 +1952,9 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 .movie-details-hero-panel {
   margin-bottom: var(--spacing-2xl);
   border-radius: var(--radius-2xl);
-  border: 1px solid var(--color-border);
-  background: linear-gradient(180deg, rgba(12, 16, 23, 0.92), rgba(12, 16, 23, 0.72));
-  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--surface-panel-border);
+  background: var(--surface-panel);
+  box-shadow: var(--surface-card-shadow);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: var(--spacing-xl);
@@ -2543,7 +2541,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   min-width: 1.35rem;
   height: 1.35rem;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-bg-glass);
   color: var(--color-text-muted);
   font-size: 0.68rem;
 }
@@ -3872,7 +3870,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 
 .setup-check.done > span {
   border-color: rgba(255, 215, 0, 0.4);
-  color: var(--color-gold);
+  color: var(--color-text-gold);
 }
 
 .setup-check strong,
@@ -4129,7 +4127,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 .section-kicker {
   display: inline-flex;
   margin-bottom: 0.25rem;
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: var(--text-xs);
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -4172,7 +4170,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   text-align: left;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--color-bg-card);
   cursor: pointer;
   transition:
     transform var(--transition-fast),
@@ -4213,7 +4211,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--color-bg-card);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 700;
@@ -4322,7 +4320,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .pick-between-rank {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   border-color: rgba(255, 215, 0, 0.26);
 }
 
@@ -4457,7 +4455,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .tonight-hero-proof strong {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-family: var(--font-display);
   font-size: clamp(3rem, 7vw, 5rem);
   line-height: 0.85;
@@ -4475,9 +4473,23 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 .tonight-decision-panel {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
   padding: clamp(1rem, 3vw, 1.35rem);
-  align-items: end;
+  align-items: start;
+}
+
+/* Without explicit placement both children auto-place into a single one of
+   the twelve columns, which squeezes the three picks into unreadable slivers
+   and leaves the rest of the panel empty. The intro takes a narrow rail and
+   the picks take the rest. */
+.tonight-decision-intro {
+  grid-column: span 4;
+  min-width: 0;
+}
+
+.tonight-decision-panel > .pick-between-grid {
+  grid-column: span 8;
+  min-width: 0;
 }
 
 .tonight-field,
@@ -4490,14 +4502,16 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 .tonight-field span,
 .tonight-control-group > span,
 .tonight-service-head span {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.tonight-field input,
+/* Text-field chrome. Range inputs are excluded: they render their own track
+   and thumb, so a bordered, padded box around one just reads as a slab. */
+.tonight-field input:not([type='range']),
 .tonight-field select {
   min-height: 2.8rem;
   width: 100%;
@@ -4505,7 +4519,12 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   color: var(--color-text-primary);
-  background: rgba(5, 7, 11, 0.54);
+  background: var(--surface-input);
+}
+
+.tonight-field input[type='range'] {
+  width: 100%;
+  margin-top: 0.4rem;
 }
 
 .tonight-vibe-field {
@@ -4543,7 +4562,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--color-bg-card);
   cursor: pointer;
   transition:
     border-color var(--transition-fast),
@@ -4567,7 +4586,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--color-bg-card);
 }
 
 .tonight-service-head,
@@ -4641,7 +4660,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   display: block;
   position: relative;
   min-height: 12rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-bg-tertiary);
 }
 
 .tonight-pick-media img {
@@ -4686,7 +4705,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 
 .tonight-pick-slot,
 .tonight-pick-confidence {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   border-color: rgba(255, 215, 0, 0.26);
   text-transform: uppercase;
 }
@@ -4716,7 +4735,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   height: 6px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-bg-glass);
   border: 1px solid rgba(255, 215, 0, 0.18);
 }
 
@@ -4744,7 +4763,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   border-radius: var(--radius-full);
   font-size: 0.68rem;
   color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-bg-card);
 }
 
 .tonight-pick-body h2 {
@@ -4769,7 +4788,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .why-pick-block span {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -4854,12 +4873,12 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-bg-card);
 }
 
 .tonight-compare-grid span,
 .tonight-insights-grid span {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -4966,7 +4985,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 
 .tonight-intel-card span,
 .maybe-tonight-copy .details-kicker {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.64rem;
   font-weight: 850;
   letter-spacing: 0.12em;
@@ -5039,7 +5058,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-bg-card);
   font-size: 0.76rem;
   font-weight: 750;
   cursor: pointer;
@@ -5084,7 +5103,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--color-bg-card);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -5107,7 +5126,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   margin: calc(var(--spacing-md) * -1) calc(var(--spacing-md) * -1) var(--spacing-sm);
   overflow: hidden;
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-bg-tertiary);
 }
 
 .pick-between-art img {
@@ -5135,7 +5154,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   padding: 0.22rem 0.5rem;
   border: 1px solid rgba(255, 215, 0, 0.24);
   border-radius: var(--radius-full);
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.02em;
@@ -5243,7 +5262,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .month-plan-card span {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.64rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -5378,7 +5397,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .maybe-tonight-card span {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-size: 0.64rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -5403,7 +5422,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   padding: 0.25rem 0.55rem;
   border: 1px solid rgba(255, 215, 0, 0.22);
   border-radius: var(--radius-full);
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   background: rgba(255, 215, 0, 0.08);
   font-size: 0.66rem;
   font-weight: 850;
@@ -5435,7 +5454,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .verdict-meter strong {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-family: var(--font-display);
   font-size: clamp(2.2rem, 5vw, 3.6rem);
   line-height: 1;
@@ -5592,7 +5611,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-bg-card);
 }
 
 .tonight-cockpit-stats .stat-value {
@@ -5668,7 +5687,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
 }
 
 .tonight-cockpit-hint em {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-style: normal;
 }
 /* =====================================================
@@ -5676,7 +5695,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
    ===================================================== */
 
 .tonight-decision-intro h2 {
-  max-width: 18rem;
+  max-width: 22rem;
   color: var(--color-text-primary);
   font-family: var(--font-display);
   font-size: clamp(1.45rem, 3vw, 2.25rem);
@@ -5734,7 +5753,7 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   height: 7rem;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--color-bg-tertiary);
   overflow: hidden;
 }
 
@@ -5846,4 +5865,46 @@ body.mood-classic ::-webkit-scrollbar-thumb {
   .ghost-line {
     animation: none !important;
   }
+}
+
+/* =====================================================
+   Tonight cockpit — refinements disclosure
+   ===================================================== */
+.tonight-cockpit-refine-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  align-self: start;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.85rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.tonight-cockpit-refine-toggle:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+.tonight-cockpit-refine-summary {
+  color: var(--color-text-gold);
+  font-weight: 700;
+}
+
+.tonight-cockpit-refinements {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.tonight-cockpit-refinements[hidden] {
+  display: none;
 }

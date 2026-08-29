@@ -26,7 +26,7 @@
   border-radius: var(--radius-full);
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   box-shadow: var(--shadow-gold-sm);
 }
 
@@ -294,7 +294,7 @@
 .view-stats-link {
   display: inline-block;
   margin-top: var(--spacing-2xl);
-  color: var(--color-gold);
+  color: var(--color-text-gold);
   font-weight: 700;
   transition:
     color 0.2s,

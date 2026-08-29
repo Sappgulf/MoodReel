@@ -223,7 +223,7 @@
   padding: 0.35rem 0.65rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-bg-card);
   color: var(--color-text-secondary);
   font-size: 0.75rem;
   font-weight: 750;
@@ -437,7 +437,7 @@
 }
 
 .star.filled {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
 }
 
 .star-rating.interactive .star:hover {
@@ -557,8 +557,9 @@
   min-height: 0;
   overflow: hidden;
   border-radius: var(--radius-2xl);
-  background: var(--color-bg-secondary);
-  box-shadow: var(--shadow-lg);
+  background: var(--surface-card);
+  border: 1px solid var(--surface-card-border);
+  box-shadow: var(--surface-card-shadow);
 }
 
 .swipe-card .swipe-card-link img {
@@ -777,7 +778,7 @@
 }
 
 .share-btn.copy:hover {
-  color: var(--color-gold);
+  color: var(--color-text-gold);
 }
 
 /* =====================================================
