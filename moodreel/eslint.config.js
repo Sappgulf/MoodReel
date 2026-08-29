@@ -2,7 +2,11 @@ import js from '@eslint/js';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
-import vitest from 'eslint-plugin-vitest';
+import vitest from '@vitest/eslint-plugin';
+
+const sharedRules = {
+  'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+};
 
 export default [
   {
@@ -34,28 +38,24 @@ export default [
     },
     rules: {
       ...react.configs.flat.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
+      ...reactHooks.configs.flat.recommended.rules,
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react/no-unescaped-entities': 'off',
       'react-hooks/rules-of-hooks': 'error',
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      ...sharedRules,
     },
     settings: { react: { version: 'detect' } },
   },
   {
-    files: ['src/**/*.test.js', 'src/setupTests.js'],
-    ...vitest.configs.recommended,
+    files: ['src/**/*.{test,spec}.{js,jsx}', 'src/setupTests.js'],
+    plugins: { vitest },
     languageOptions: {
-      ...vitest.configs.recommended.languageOptions,
-      globals: {
-        ...vitest.configs.env.languageOptions.globals,
-        ...globals.browser,
-      },
+      globals: { ...vitest.environments.env.globals, ...globals.browser },
     },
     rules: {
       ...vitest.configs.recommended.rules,
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      ...sharedRules,
     },
   },
 ];

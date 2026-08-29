@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
+import path from 'node:path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const analyze = process.env.ANALYZE === '1';
@@ -71,7 +71,7 @@ export default defineConfig(({ mode }) => {
       ...(analyze
         ? [
             visualizer({
-              filename: path.resolve(__dirname, 'build/stats.html'),
+              filename: path.resolve(import.meta.dirname, 'build/stats.html'),
               gzipSize: true,
               open: false,
             }),
@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     server: {
@@ -119,7 +119,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'build',
       sourcemap: false,
-      target: 'es2020',
+      target: 'es2022',
       chunkSizeWarningLimit: 500,
       rollupOptions: {
         output: {
