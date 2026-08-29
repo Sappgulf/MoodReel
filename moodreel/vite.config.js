@@ -6,13 +6,35 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 const analyze = process.env.ANALYZE === '1';
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   // Read TMDB key from .env files for the dev proxy. Vite's `import.meta.env`
   // only exposes these to the client bundle; for the Node-side proxy config
   // we need to load them explicitly.
   const env = loadEnv(mode, process.cwd(), '');
   const tmdbApiKey = env.TMDB_API_KEY || env.VITE_TMDB_API_KEY || env.REACT_APP_TMDB_API_KEY || '';
   const tmdbBase = env.VITE_TMDB_BASE_URL || 'https://api.themoviedb.org/3';
+
+  // A VITE_-prefixed variable is inlined verbatim into the client bundle, so a
+  // TMDB key set that way on a deployment ends up published to every visitor.
+  // A client key is also useless in production: the deployed CSP restricts
+  // connect-src to 'self', so requests go through the /api/tmdb proxy using
+  // the server-side TMDB_API_KEY instead.
+  //
+  // Vite collects client env from process.env at config time, so removing the
+  // entries here keeps them out of the bundle no matter how the deployment is
+  // configured. Local development is unaffected.
+  if (command === 'build' && mode === 'production') {
+    for (const leakedKey of ['VITE_TMDB_API_KEY', 'REACT_APP_TMDB_API_KEY']) {
+      if (process.env[leakedKey]) {
+        delete process.env[leakedKey];
+        console.warn(
+          `[moodreel] ${leakedKey} was set for a production build and has been ` +
+            'excluded from the client bundle. Use the server-side TMDB_API_KEY ' +
+            'for deployments.'
+        );
+      }
+    }
+  }
 
   return {
     plugins: [
