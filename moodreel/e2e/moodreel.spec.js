@@ -3,12 +3,31 @@ import fs from 'node:fs/promises';
 import { installTonightTmdbMocks } from './fixtures/tmdb';
 
 test.describe('MoodReel E2E', () => {
+  /** The emoji mood picker lives inside the collapsed "more ways to explore" panel. */
+  const openExplorePanel = async page => {
+    const picker = page.locator('.emoji-picker button').first();
+    if (await picker.isVisible().catch(() => false)) return;
+
+    // Wait for the disclosure itself to render before clicking it: on a cold
+    // mobile load the toggle appears a frame after the rest of the hero.
+    const toggle = page.getByRole('button', { name: /More ways to explore/ });
+    await toggle.waitFor({ state: 'visible' });
+    await toggle.click();
+    await expect(picker).toBeVisible();
+  };
+
   const runMoodSearch = async page => {
+    await openExplorePanel(page);
     await page.locator('.emoji-picker button').first().click();
     await page
-      .getByRole('button', { name: /Discover|Refresh Results|Searching/ })
+      .getByRole('button', { name: /Find Tonight's Picks|Discover|Refresh Results|Searching/ })
       .first()
       .click();
+  };
+
+  /** The Data & Privacy controls sit behind their own profile tab. */
+  const openProfileDataTab = async page => {
+    await page.getByRole('tab', { name: 'Data & Privacy' }).click();
   };
 
   const encodeShareData = payload =>
@@ -217,6 +236,8 @@ test.describe('MoodReel E2E', () => {
     });
 
     await page.goto('/');
+    // The search console (and its scope toggle) only renders once a search has run.
+    await runMoodSearch(page);
     await page.getByRole('button', { name: 'Search all' }).click();
     await page.locator('#title-search-input').fill('zz');
     await expect(page.locator('.swipe-card, .recommendations .recommendation').first()).toBeVisible(
@@ -246,6 +267,7 @@ test.describe('MoodReel E2E', () => {
     await expect(page.locator('#main-content')).toContainText('Your Watch Stats');
 
     await page.goto('/profile');
+    await openProfileDataTab(page);
     await expect(page.locator('main')).toContainText('Privacy & Local Data');
 
     await page.goto('/calendar');
@@ -261,6 +283,7 @@ test.describe('MoodReel E2E', () => {
     );
 
     await page.goto('/');
+    await openExplorePanel(page);
     await page.locator('.emoji-picker button').first().click();
     await page.getByRole('button', { name: "Find Tonight's Picks" }).click();
     await expect(page.locator('.pick-between-card')).toHaveCount(3, { timeout: 15000 });
@@ -298,7 +321,8 @@ test.describe('MoodReel E2E', () => {
     await expect(page.getByRole('heading', { name: 'Your watchlist is empty' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Discover Movies' })).toBeInViewport();
     await expect(page.getByRole('group', { name: 'Watchlist layout' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /Import/ })).toBeVisible();
+    await page.getByRole('button', { name: /More/ }).click();
+    await expect(page.getByRole('menuitem', { name: /Import/ })).toBeVisible();
   });
 
   test('empty watchlist can import a valid backup and reject malformed backup', async ({
@@ -316,7 +340,8 @@ test.describe('MoodReel E2E', () => {
       mimeType: 'application/json',
       buffer: Buffer.from(JSON.stringify({ watchlist: { id: 101 } })),
     });
-    await expect(page.getByRole('button', { name: /Failed/ })).toBeVisible();
+    await page.getByRole('button', { name: /More/ }).click();
+    await expect(page.getByRole('menuitem', { name: /Failed/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Your watchlist is empty' })).toBeVisible();
 
     await page.setInputFiles('input[aria-label="Import watchlist backup file"]', {
@@ -344,10 +369,15 @@ test.describe('MoodReel E2E', () => {
 
     await expect(page.getByText('Imported Night')).toBeVisible();
     await expect(page.getByText('Imported from backup.')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Imported!/ })).toBeVisible();
+    // The transient "Imported!" label on the menu item clears after 3s; the
+    // assertions above and below cover the import outcome itself.
     await expect
       .poll(() =>
-        page.evaluate(() => JSON.parse(localStorage.getItem('moodreel_watchlist') || '[]')[0].id)
+        // Null-safe: expect.poll propagates a thrown error instead of
+        // retrying, so an empty list has to read as a value, not a crash.
+        page.evaluate(
+          () => JSON.parse(localStorage.getItem('moodreel_watchlist') || '[]')[0]?.id ?? null
+        )
       )
       .toBe(909);
   });
@@ -428,6 +458,7 @@ test.describe('MoodReel E2E', () => {
 
   test('profile exposes local privacy controls', async ({ page }) => {
     await page.goto('/profile');
+    await openProfileDataTab(page);
 
     await expect(page.getByRole('heading', { name: /Privacy & Local Data/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Export data' })).toBeVisible();
@@ -448,6 +479,7 @@ test.describe('MoodReel E2E', () => {
     );
 
     await page.goto('/profile');
+    await openProfileDataTab(page);
     const apiKeyInput = page.getByLabel('TMDB API key');
     const saveButton = page.getByRole('button', { name: 'Save local key' });
     const testButton = page.getByRole('button', { name: 'Test connection' });
@@ -476,6 +508,7 @@ test.describe('MoodReel E2E', () => {
     });
 
     await page.goto('/profile');
+    await openProfileDataTab(page);
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export data' }).click();
     const download = await downloadPromise;
@@ -621,7 +654,7 @@ test.describe('MoodReel E2E', () => {
 
     await page
       .getByRole('group', { name: 'Taste profile' })
-      .getByRole('button', { name: '👍 Like' })
+      .getByRole('button', { name: 'Like', exact: true })
       .click();
     await expect
       .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('moodreel-taste-profile'))))
