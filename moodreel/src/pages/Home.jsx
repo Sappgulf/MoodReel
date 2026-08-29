@@ -31,33 +31,29 @@ import { useWindowSize } from '../hooks/useWindowSize';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useTonightPreferences } from '../hooks/useTonightPreferences';
+import { useGenreCatalog } from '../hooks/useGenreCatalog';
+import { useProviderCatalog } from '../hooks/useProviderCatalog';
+import { useMoodBodyTheme } from '../hooks/useMoodBodyTheme';
+import { useTitleSearch } from '../hooks/useTitleSearch';
+import { useHomeRanking } from '../hooks/useHomeRanking';
 import { useToasts } from '../context/ToastContext';
-import searchService from '../services/searchService';
 import { safeGetJSON } from '../storage/safeStorage';
 import { StorageKeys as SK } from '../storage/storageKeys';
-import {
-  fetchProviderCatalog,
-  fetchTitleProviders,
-  getCachedTitleProviders,
-} from '../services/providerService';
-import { applySearchRanking } from '../utils/searchRanking';
+import { fetchTitleProviders, getCachedTitleProviders } from '../services/providerService';
 import { copyToClipboard } from '../utils/clipboard';
 import {
-  buildTonightPicks,
   getRecommendationKey,
   NIGHT_CONSTRAINTS,
-  rankRecommendations,
   TASTE_SETTING_DEFAULTS,
   TONIGHT_MODES,
 } from '../utils/recommendationScoring';
-import { shouldSkipLog, isAbortError, getUserFacingMessage } from '../services/apiErrorUtils';
-
-function genreLabelFor(item, genres) {
-  const genreId = item.genre_ids?.[0];
-  return genres.find(genre => genre.id === genreId)?.name || '';
-}
+import { shouldSkipLog } from '../services/apiErrorUtils';
 
 const TASTE_SETTINGS_KEY = 'moodreel-taste-settings';
+
+// Stable identity so a region change yields the same empty snapshot object
+// every render instead of a fresh one.
+const EMPTY_PROVIDER_SNAPSHOT = Object.freeze({});
 
 function getReadableTitle(item) {
   return item?.title || item?.name || 'This title';
@@ -116,27 +112,56 @@ function Home() {
 
   const [visibleCount, setVisibleCount] = useState(8);
 
-  const [genres, setGenres] = useState([]);
+  const {
+    titleQuery,
+    setTitleQuery,
+    debouncedQuery,
+    searchScope,
+    setSearchScope,
+    searchResults,
+    searchError,
+    isSearchingAll,
+    retryAllScopeSearch,
+  } = useTitleSearch({
+    filters: { contentType, selectedProviders, minRating, matchType, region, advancedFilters },
+    tasteProfile: profile,
+  });
+
+  const genres = useGenreCatalog(contentType);
+  const providerCatalog = useProviderCatalog(region);
+  useMoodBodyTheme(mood);
+
   const [isCardLoading, setIsCardLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showExploreMore, setShowExploreMore] = useState(false);
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [searchScope, setSearchScope] = useState('within');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchError, setSearchError] = useState('');
-  const [isSearchingAll, setIsSearchingAll] = useState(false);
-  const [providerSnapshot, setProviderSnapshot] = useState({});
-  const [providerCatalog, setProviderCatalog] = useState([]);
+  // The provider snapshot is only valid for the region it was fetched in, so
+  // it carries that region and resets during render when the region changes.
+  const [providerSnapshotState, setProviderSnapshotState] = useState({ region: null, byKey: {} });
+  const providerSnapshot =
+    providerSnapshotState.region === region ? providerSnapshotState.byKey : EMPTY_PROVIDER_SNAPSHOT;
+  const setProviderSnapshot = useCallback(
+    updater =>
+      setProviderSnapshotState(prev => {
+        const base = prev.region === region ? prev.byKey : EMPTY_PROVIDER_SNAPSHOT;
+        return { region, byKey: typeof updater === 'function' ? updater(base) : updater };
+      }),
+    [region]
+  );
   const [resultLayout, setResultLayout] = useState('poster');
-  const [titleQuery, setTitleQuery] = useState('');
   const [showSaveVibeModal, setShowSaveVibeModal] = useState(false);
   const [passedDecisionIds, setPassedDecisionIds] = useState([]);
   const [lockedPickId, setLockedPickId] = useState('');
   const [decisionFeedback, setDecisionFeedback] = useState({});
-  const [isWinnerOverlayOpen, setIsWinnerOverlayOpen] = useState(false);
+  // Which winner card the user has dismissed. The overlay is open whenever a
+  // winner is showing and it is not the dismissed one, so a fresh winner
+  // reopens it without a state-syncing effect.
+  const [dismissedWinnerKey, setDismissedWinnerKey] = useState(null);
+  const winnerKey = surpriseMovie
+    ? `${surpriseMovie.media_type || 'movie'}:${surpriseMovie.id}`
+    : '';
+  const isWinnerOverlayOpen = Boolean(showWinnerInfo) && dismissedWinnerKey !== winnerKey;
 
   const loadMoreRef = useRef(null);
-  const searchControllerRef = useRef(null);
   const moodInputRef = useRef(null);
   const titleSearchRef = useRef(null);
   const loadMoreDebounceRef = useRef(null);
@@ -189,165 +214,12 @@ function Home() {
     handleSearch,
   });
 
-  // Dynamic Mood Themes
-  useEffect(() => {
-    const body = document.body;
-    body.classList.remove('mood-romantic', 'mood-thriller', 'mood-happy', 'mood-classic');
-
-    if (!mood) return;
-
-    const moodLower = mood.toLowerCase();
-    if (moodLower.includes('romance') || moodLower.includes('love') || moodLower.includes('date')) {
-      body.classList.add('mood-romantic');
-    } else if (
-      moodLower.includes('thrill') ||
-      moodLower.includes('scary') ||
-      moodLower.includes('horror') ||
-      moodLower.includes('dark')
-    ) {
-      body.classList.add('mood-thriller');
-    } else if (
-      moodLower.includes('happy') ||
-      moodLower.includes('uplift') ||
-      moodLower.includes('fun') ||
-      moodLower.includes('comedy')
-    ) {
-      body.classList.add('mood-happy');
-    } else if (
-      moodLower.includes('classic') ||
-      moodLower.includes('old') ||
-      moodLower.includes('noir') ||
-      moodLower.includes('retro')
-    ) {
-      body.classList.add('mood-classic');
-    }
-
-    return () =>
-      body.classList.remove('mood-romantic', 'mood-thriller', 'mood-happy', 'mood-classic');
-  }, [mood]);
-
   // Fetch trending on mount
   useEffect(() => {
     const controller = new AbortController();
     fetchTrending(controller.signal);
     return () => controller.abort();
   }, [fetchTrending]);
-
-  useEffect(() => {
-    setProviderSnapshot({});
-  }, [region]);
-
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      setDebouncedQuery(titleQuery.trim());
-    }, 400);
-    return () => clearTimeout(handle);
-  }, [titleQuery]);
-
-  const performAllSearch = useCallback(
-    async (query, controller) => {
-      try {
-        const result = await searchService.search(
-          {
-            query,
-            type: contentType,
-            genres: [],
-            providers: selectedProviders,
-            minRating,
-            matchType,
-            region,
-            ...advancedFilters,
-            page: 1,
-            multiPage: true,
-          },
-          controller.signal,
-          { tasteProfile: profile }
-        );
-
-        if (result.error) {
-          setSearchError(result.error);
-        }
-        setSearchResults(result.results || []);
-      } catch (err) {
-        if (!shouldSkipLog(err)) {
-          console.error('Error performing title search:', err);
-        }
-        if (!isAbortError(err)) {
-          setSearchError(getUserFacingMessage(err));
-        }
-      } finally {
-        setIsSearchingAll(false);
-      }
-    },
-    [contentType, selectedProviders, minRating, matchType, region, advancedFilters, profile]
-  );
-  useEffect(() => {
-    if (searchScope !== 'all') {
-      setSearchResults([]);
-      setSearchError('');
-      return;
-    }
-    if (!debouncedQuery) {
-      setSearchResults([]);
-      setSearchError('');
-      return;
-    }
-
-    if (searchControllerRef.current) {
-      searchControllerRef.current.abort();
-    }
-    const controller = new AbortController();
-    searchControllerRef.current = controller;
-    setIsSearchingAll(true);
-    setSearchError('');
-
-    performAllSearch(debouncedQuery, controller);
-
-    return () => controller.abort();
-  }, [debouncedQuery, searchScope, performAllSearch]);
-
-  // Fetch genres
-  useEffect(() => {
-    const controller = new AbortController();
-    const fetchGenres = async () => {
-      try {
-        const endpoint = contentType === 'tv' ? 'tv' : 'movie';
-        const data = await searchService.fetchGenres(endpoint, controller.signal);
-        setGenres(data);
-      } catch (err) {
-        if (!shouldSkipLog(err)) {
-          console.error('Error fetching genres:', err);
-        }
-      }
-    };
-    fetchGenres();
-    return () => controller.abort();
-  }, [contentType]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const loadProviders = async () => {
-      try {
-        const [movieProviders, tvProviders] = await Promise.all([
-          fetchProviderCatalog('movie', region, controller.signal),
-          fetchProviderCatalog('tv', region, controller.signal),
-        ]);
-        const merged = [...movieProviders, ...tvProviders].reduce((acc, provider) => {
-          if (!acc.some(p => p.id === provider.id)) {
-            acc.push(provider);
-          }
-          return acc;
-        }, []);
-        setProviderCatalog(merged);
-      } catch (err) {
-        if (!shouldSkipLog(err)) {
-          console.error('Error fetching provider catalog:', err);
-        }
-      }
-    };
-    loadProviders();
-    return () => controller.abort();
-  }, [region]);
 
   // Infinite scroll observer (debounced to prevent request storms)
   useEffect(() => {
@@ -761,8 +633,6 @@ function Home() {
       : 'Save, rate, and mark watched titles to sharpen future picks.';
   }, [genres, recentMoods, tasteCounts.liked, watchlistGenreCounts]);
 
-  // Destructure taste arrays for stable useMemo dependencies
-  const { liked: likedKeys = [], disliked: dislikedKeys = [] } = profile || {};
   const tasteSettings = useMemo(() => safeGetJSON(TASTE_SETTINGS_KEY, TASTE_SETTING_DEFAULTS), []);
 
   const heroTitle = mood ? `Tuned for "${mood}"` : 'Find what to watch tonight.';
@@ -773,192 +643,34 @@ function Home() {
 
   const heroMoodLabel = mood || timeContext.suggestion;
 
-  const filteredRecommendations = useMemo(() => {
-    if (minRating <= 0) return recommendations;
-    return recommendations.filter(m => m.vote_average >= minRating);
-  }, [recommendations, minRating]);
-
-  const tieBreakers = useCallback((a, b) => {
-    const aPopularity = a.popularity || 0;
-    const bPopularity = b.popularity || 0;
-    if (aPopularity !== bPopularity) return bPopularity - aPopularity;
-    return (b.vote_count || 0) - (a.vote_count || 0);
-  }, []);
-
-  const scopedResults = useMemo(() => {
-    if (debouncedQuery && searchScope === 'within') {
-      const filtered = filteredRecommendations.filter(item => {
-        const title = (item.title || item.name || '').toLowerCase();
-        return title.includes(debouncedQuery.toLowerCase());
-      });
-      return applySearchRanking(filtered, debouncedQuery, tieBreakers, selectedGenres, profile);
-    }
-    if (debouncedQuery && searchScope === 'all') {
-      return applySearchRanking(
-        searchResults,
-        debouncedQuery,
-        tieBreakers,
-        selectedGenres,
-        profile
-      );
-    }
-    return filteredRecommendations;
-  }, [
-    filteredRecommendations,
-    searchResults,
-    debouncedQuery,
-    searchScope,
-    tieBreakers,
-    selectedGenres,
-    profile,
-  ]);
-
-  const rankedScorecards = useMemo(() => {
-    const visibleResults = showHidden
-      ? scopedResults
-      : scopedResults.filter(
-          item => statusFor(item.id, item.media_type || contentType) !== 'disliked'
-        );
-    const savedKeys = watchlist.map(item => getRecommendationKey(item, item.media_type || 'movie'));
-    const watchedKeys = watchlist
-      .filter(item => isWatched(item.id, item.media_type || 'movie'))
-      .map(item => getRecommendationKey(item, item.media_type || 'movie'));
-    const watchHistoryKeys = watchHistory
-      .slice(0, 30)
-      .map(item => getRecommendationKey(item, item.media_type || 'movie'));
-    const providerDataByKey = visibleResults.reduce((acc, item) => {
-      const mediaType = item.media_type || contentType;
-      const providerKey = `${item.id}-${mediaType}-${region}`;
-      acc[getRecommendationKey(item, mediaType)] =
-        providerSnapshot[providerKey] || getCachedTitleProviders(item.id, mediaType, region);
-      return acc;
-    }, {});
-
-    return rankRecommendations(visibleResults, {
-      mode: activeTonightMode,
-      constraints: activeConstraintIds,
+  const { getProviderKey, getRecommendationReason, filteredByServices, tonightPicks } =
+    useHomeRanking({
+      recommendations,
+      searchResults,
+      debouncedQuery,
+      searchScope,
+      minRating,
       selectedGenres,
-      providerDataByKey,
-      myServices,
-      likedKeys,
-      dislikedKeys,
-      savedKeys,
-      watchedKeys,
-      watchHistoryKeys,
-      watchlistGenreCounts,
-      tasteSettings,
-      contentType,
-      currentYear,
-    });
-  }, [
-    scopedResults,
-    showHidden,
-    statusFor,
-    contentType,
-    region,
-    watchHistory,
-    likedKeys,
-    dislikedKeys,
-    tasteSettings,
-    watchlist,
-    isWatched,
-    watchlistGenreCounts,
-    activeTonightMode,
-    activeConstraintIds,
-    selectedGenres,
-    providerSnapshot,
-    myServices,
-    currentYear,
-  ]);
-
-  const tasteAdjustedResults = useMemo(
-    () => rankedScorecards.map(scorecard => scorecard.item),
-    [rankedScorecards]
-  );
-
-  const scorecardByKey = useMemo(() => {
-    return new Map(rankedScorecards.map(scorecard => [scorecard.key, scorecard]));
-  }, [rankedScorecards]);
-
-  const getProviderKey = useCallback(
-    item => {
-      return `${item.id}-${item.media_type || contentType}-${region}`;
-    },
-    [contentType, region]
-  );
-
-  const getRecommendationReason = useCallback(
-    item => {
-      const mediaType = item.media_type || contentType;
-      const scorecard = scorecardByKey.get(getRecommendationKey(item, mediaType));
-      if (scorecard?.explanation) return scorecard.explanation;
-      const status = statusFor(item.id, mediaType);
-      if (status === 'liked') return 'Because you liked this title';
-      const cached =
-        providerSnapshot[getProviderKey(item)] ||
-        getCachedTitleProviders(item.id, mediaType, region);
-      if (
-        myServices.length > 0 &&
-        cached?.flatrate?.some(provider => myServices.includes(provider.id))
-      ) {
-        return 'Available on one of your services';
-      }
-      const genreLabel = genreLabelFor(item, genres);
-      const matchingWatchlistGenres = (item.genre_ids || []).filter(
-        genreId => watchlistGenreCounts[genreId] > 0
-      );
-      if (mood && genreLabel) return `Matches your ${mood} mood through ${genreLabel}`;
-      if (matchingWatchlistGenres.length > 0 && genreLabel) {
-        return `Boosted by your saved ${genreLabel} picks`;
-      }
-      if (watchHistory.some(historyItem => historyItem.media_type === mediaType)) {
-        return `More ${mediaType === 'tv' ? 'series' : 'movies'} based on your history`;
-      }
-      if (item.vote_average >= 8) return 'Highly rated by TMDB viewers';
-      return item.media_type === 'tv' ? 'Series pick for this vibe' : 'Movie pick for this vibe';
-    },
-    [
-      contentType,
-      scorecardByKey,
+      profile,
+      showHidden,
       statusFor,
-      providerSnapshot,
-      getProviderKey,
+      contentType,
       region,
-      myServices,
       genres,
       mood,
+      watchlist,
+      isWatched,
       watchHistory,
       watchlistGenreCounts,
-    ]
-  );
-
-  const filteredByServices = useMemo(() => {
-    if (myServices.length === 0) return tasteAdjustedResults;
-    return tasteAdjustedResults.filter(item => {
-      const mediaType = item.media_type || contentType;
-      const cached =
-        providerSnapshot[getProviderKey(item)] ||
-        getCachedTitleProviders(item.id, mediaType, region);
-      if (!cached) return true;
-      const ids = [
-        ...cached.flatrate.map(p => p.id),
-        ...cached.rent.map(p => p.id),
-        ...cached.buy.map(p => p.id),
-      ];
-      return myServices.some(id => ids.includes(id));
-    });
-  }, [tasteAdjustedResults, myServices, providerSnapshot, getProviderKey, contentType, region]);
-
-  const tonightPicks = useMemo(() => {
-    const visibleKeys = new Set(
-      filteredByServices.map(item => getRecommendationKey(item, item.media_type || contentType))
-    );
-    const visibleScorecards = rankedScorecards.filter(scorecard => visibleKeys.has(scorecard.key));
-    return buildTonightPicks(visibleScorecards, {
+      myServices,
+      providerSnapshot,
+      activeTonightMode,
+      activeConstraintIds,
+      tasteSettings,
+      currentYear,
       lockedPickId,
-      passedKeys: passedDecisionIds,
+      passedDecisionIds,
     });
-  }, [contentType, filteredByServices, lockedPickId, passedDecisionIds, rankedScorecards]);
 
   const decisionStats = useMemo(
     () => ({
@@ -1174,18 +886,14 @@ function Home() {
     });
   }, [filteredByServices, handleSurpriseMe, profile, recommendations, trending, watchHistory]);
 
-  useEffect(() => {
-    setIsWinnerOverlayOpen(Boolean(showWinnerInfo));
-  }, [showWinnerInfo, surpriseMovie?.id, surpriseMovie?.media_type]);
-
   const handleShuffleDismiss = useCallback(() => {
     if (showWinnerInfo) {
-      setIsWinnerOverlayOpen(false);
+      setDismissedWinnerKey(winnerKey);
       return;
     }
 
     closeSurprise();
-  }, [closeSurprise, showWinnerInfo]);
+  }, [closeSurprise, showWinnerInfo, winnerKey]);
 
   useEffect(() => {
     if (filteredByServices.length === 0) return;
@@ -1219,7 +927,14 @@ function Home() {
     });
 
     return () => controller.abort();
-  }, [filteredByServices, contentType, getProviderKey, providerSnapshot, region]);
+  }, [
+    filteredByServices,
+    contentType,
+    getProviderKey,
+    providerSnapshot,
+    region,
+    setProviderSnapshot,
+  ]);
 
   const isBusy = isLoading || isSearchingAll;
   const hasAnySearch = hasSearched || (searchScope === 'all' && debouncedQuery);
@@ -1530,18 +1245,7 @@ function Home() {
       {error && <ErrorState title="Search error" message={error} onRetry={handleSearch} />}
 
       {searchError && searchScope === 'all' && (
-        <ErrorState
-          title="Search error"
-          message={searchError}
-          onRetry={() => {
-            if (!debouncedQuery) return;
-            const controller = new AbortController();
-            searchControllerRef.current = controller;
-            setIsSearchingAll(true);
-            setSearchError('');
-            performAllSearch(debouncedQuery, controller);
-          }}
-        />
+        <ErrorState title="Search error" message={searchError} onRetry={retryAllScopeSearch} />
       )}
 
       <HomeResultsPanel
