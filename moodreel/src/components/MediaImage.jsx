@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FALLBACK_BACKDROP,
   FALLBACK_POSTER,
@@ -31,8 +31,14 @@ function MediaImage({
       }));
   }, [path, size, sources, type]);
   const sourceKey = useMemo(() => JSON.stringify(imageSources), [imageSources]);
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const [failed, setFailed] = useState(false);
+  // Attempt state is tagged with the source list it belongs to, so a new
+  // `sourceKey` restarts the fallback chain during render instead of via a
+  // state-syncing effect.
+  const [attempt, setAttempt] = useState({ key: sourceKey, index: 0, failed: false });
+  const isCurrentAttempt = attempt.key === sourceKey;
+  const sourceIndex = isCurrentAttempt ? attempt.index : 0;
+  const failed = isCurrentAttempt ? attempt.failed : false;
+
   const fallbackSrc = fallback || (type === 'backdrop' ? FALLBACK_BACKDROP : FALLBACK_POSTER);
   const src = useMemo(() => {
     if (failed) return fallbackSrc;
@@ -43,23 +49,18 @@ function MediaImage({
       : getPosterUrl(candidate.path, candidate.size);
   }, [failed, fallbackSrc, imageSources, sourceIndex]);
 
-  useEffect(() => {
-    setSourceIndex(0);
-    setFailed(false);
-  }, [sourceKey]);
-
   const handleError = useCallback(
     event => {
       if (failed) return;
       if (sourceIndex < imageSources.length - 1) {
-        setSourceIndex(index => index + 1);
+        setAttempt({ key: sourceKey, index: sourceIndex + 1, failed: false });
         return;
       }
-      setFailed(true);
+      setAttempt({ key: sourceKey, index: sourceIndex, failed: true });
       event.currentTarget.onerror = null;
       onError?.(event);
     },
-    [failed, imageSources.length, onError, sourceIndex]
+    [failed, imageSources.length, onError, sourceIndex, sourceKey]
   );
 
   return (

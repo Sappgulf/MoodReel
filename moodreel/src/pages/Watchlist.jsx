@@ -397,27 +397,29 @@ function Watchlist() {
     }
   }, [watchlist]);
 
-  // Load personalized recs on mount if watchlist has items
+  // Load personalized recs on mount if watchlist has items. This is a data
+  // fetch, not derived state: it kicks off a network request whose loading
+  // flag is set synchronously, and it is guarded so it cannot cascade.
   useEffect(() => {
     if (watchlist.length >= 3 && personalizedRecs.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPersonalizedRecs();
     }
   }, [watchlist.length, personalizedRecs.length, fetchPersonalizedRecs]);
 
-  const [visibleCount, setVisibleCount] = useState(12);
-
-  // Reset pagination when list changes
-  useEffect(() => {
-    setVisibleCount(12);
-  }, [activeTab, sortBy, showWatched, activeLane, deferredSearchTerm]);
+  // Pagination is tagged with the filter set it belongs to, so changing any
+  // filter resets the page size during render instead of in an effect.
+  const paginationKey = [activeTab, sortBy, showWatched, activeLane, deferredSearchTerm].join('|');
+  const [pagination, setPagination] = useState({ key: paginationKey, count: 12 });
+  const visibleCount = pagination.key === paginationKey ? pagination.count : 12;
 
   const visibleItems = useMemo(() => {
     return sortedList.slice(0, visibleCount);
   }, [sortedList, visibleCount]);
 
   const handleLoadMore = useCallback(() => {
-    setVisibleCount(prev => prev + 12);
-  }, []);
+    setPagination({ key: paginationKey, count: visibleCount + 12 });
+  }, [paginationKey, visibleCount]);
 
   return (
     <div className={`watchlist-page ${!hasSavedItems ? 'watchlist-page-empty' : ''}`}>

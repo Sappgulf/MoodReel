@@ -1,15 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
 
-function SaveVibeModal({ isOpen, defaultName = '', onClose, onSave }) {
+function SaveVibeModalBody({ defaultName = '', onClose, onSave }) {
   const [name, setName] = useState(defaultName);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setName(defaultName);
-    }
-  }, [defaultName, isOpen]);
 
   const handleSubmit = useCallback(
     e => {
@@ -22,12 +16,10 @@ function SaveVibeModal({ isOpen, defaultName = '', onClose, onSave }) {
   );
 
   const { dialogRef } = useModalDialog({
-    isOpen,
+    isOpen: true,
     onClose,
     focusRef: inputRef,
   });
-
-  if (!isOpen) return null;
 
   const handleBackdropClick = e => {
     if (e.target === e.currentTarget) {
@@ -78,6 +70,12 @@ function SaveVibeModal({ isOpen, defaultName = '', onClose, onSave }) {
       </form>
     </div>
   );
+}
+
+/** Remounted per open so the name field always seeds from `defaultName`. */
+function SaveVibeModal({ isOpen, ...props }) {
+  if (!isOpen) return null;
+  return <SaveVibeModalBody {...props} />;
 }
 
 export default React.memo(SaveVibeModal);

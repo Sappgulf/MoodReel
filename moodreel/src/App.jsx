@@ -35,7 +35,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { StorageKeys as SK } from './storage/storageKeys';
-import { getApiKeyStatus } from './services/apiClient';
+import { useApiKeyStatus } from './hooks/useApiKeyStatus';
 
 // Lazy load secondary routes for code-splitting
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
@@ -115,12 +115,12 @@ function AppContent() {
   const { width, isMobile } = useWindowSize();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [celebratedUnlockId, setCelebratedUnlockId] = useState(null);
   const [isOffline, setIsOffline] = useState(() => (HAS_NAVIGATOR ? !navigator.onLine : false));
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = React.useRef(null);
   const isBottomNavCompact = isMobile && width <= 380;
-  const [apiKeyStatus, setApiKeyStatus] = useState(() => getApiKeyStatus());
+  const apiKeyStatus = useApiKeyStatus();
   const lastSearchFallbackRef = useRef({ key: '', at: 0 });
 
   const openQuickActions = useCallback(() => {
@@ -301,31 +301,6 @@ function AppContent() {
     [pushToast]
   );
 
-  // Keep API-key status in sync with profile edits in the same tab.
-  useEffect(() => {
-    if (!HAS_WINDOW) return;
-    setApiKeyStatus(getApiKeyStatus());
-  }, [routePath]);
-
-  useEffect(() => {
-    if (!HAS_WINDOW) return;
-
-    const handleApiKeyUpdate = () => {
-      setApiKeyStatus(getApiKeyStatus());
-    };
-
-    const handleStorage = () => {
-      handleApiKeyUpdate();
-    };
-
-    window.addEventListener('moodreel:api-key-updated', handleApiKeyUpdate);
-    window.addEventListener('storage', handleStorage);
-    return () => {
-      window.removeEventListener('moodreel:api-key-updated', handleApiKeyUpdate);
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, []);
-
   useEffect(() => {
     if (!HAS_WINDOW) return;
 
@@ -459,13 +434,14 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOverlayOpen, openQuickActions, showQuickActions, showShortcuts, toggleSounds, toggleTheme]);
 
-  // Trigger confetti on achievement unlock
+  const showConfetti = Boolean(newUnlock) && celebratedUnlockId !== newUnlock?.id;
+
+  // Confetti is derived from the latest unlock rather than mirrored into
+  // state: it shows until the timer below marks that unlock as celebrated.
   useEffect(() => {
-    if (newUnlock) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 2500);
-      return () => clearTimeout(timer);
-    }
+    if (!newUnlock) return undefined;
+    const timer = setTimeout(() => setCelebratedUnlockId(newUnlock.id), 2500);
+    return () => clearTimeout(timer);
   }, [newUnlock]);
 
   // Show achievement toast in global toast stack

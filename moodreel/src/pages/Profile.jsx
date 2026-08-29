@@ -8,6 +8,7 @@ import { useWatchHistory } from '../hooks/useWatchHistory';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 import { useTasteProfile } from '../hooks/useTasteProfile';
 import { useToasts } from '../context/ToastContext';
+import { useApiKeyStatus } from '../hooks/useApiKeyStatus';
 import {
   clearUserApiKey,
   getApiKeyStatus,
@@ -89,7 +90,7 @@ function Profile() {
     safeGetJSON(TASTE_SETTINGS_KEY, DEFAULT_TASTE_SETTINGS)
   );
   const importInputRef = useRef(null);
-  const [apiKeyStatus, setApiKeyStatus] = useState(() => getApiKeyStatus());
+  const apiKeyStatus = useApiKeyStatus();
   const [apiKeyInput, setApiKeyInput] = useState(() => {
     const status = getApiKeyStatus();
     return status.source === 'user' ? status.value || '' : '';
@@ -255,13 +256,9 @@ function Profile() {
     const hadInput = apiKeyInput.trim().length > 0;
     const saved = saveUserApiKey(apiKeyInput);
     const status = getApiKeyStatus();
-    setApiKeyStatus(status);
     setApiKeyInput(status.source === 'user' ? status.value || '' : '');
     setApiKeyTestStatus('idle');
     setApiKeyTestMessage('');
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
-    }
 
     if (!saved && apiKeyInput.trim()) {
       pushToast({
@@ -311,12 +308,8 @@ function Profile() {
   const handleClearApiKey = () => {
     clearUserApiKey();
     setApiKeyInput('');
-    setApiKeyStatus(getApiKeyStatus());
     setApiKeyTestStatus('idle');
     setApiKeyTestMessage('');
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('moodreel:api-key-updated'));
-    }
     pushToast({
       icon: '🧹',
       title: 'API key removed',
@@ -329,7 +322,6 @@ function Profile() {
     setApiKeyTestStatus('testing');
     try {
       await testTmdbConnection();
-      setApiKeyStatus(getApiKeyStatus());
       setApiKeyTestStatus('pass');
       setApiKeyTestMessage('Connection verified.');
       pushToast({
@@ -340,7 +332,6 @@ function Profile() {
       });
     } catch (error) {
       const message = getApiTestFailureCopy(error);
-      setApiKeyStatus(getApiKeyStatus());
       setApiKeyTestStatus('fail');
       setApiKeyTestMessage(message);
       pushToast({

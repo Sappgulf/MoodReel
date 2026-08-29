@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { StorageKeys as SK } from '../storage/storageKeys';
 import { safeGetJSON, safeSetJSON } from '../storage/safeStorage';
@@ -238,9 +238,9 @@ const ACHIEVEMENT_DEFS = [
  * Hook for managing achievements and gamification
  */
 export function useAchievements() {
-  const [unlockedIds, setUnlockedIds] = useState(() => {
-    return safeGetJSON(ACHIEVEMENTS_KEY, []);
-  });
+  // Achievements earned in a previous session. Anything earned in *this*
+  // session is derived from `stats` below rather than mirrored into state.
+  const [previouslyUnlockedIds] = useState(() => safeGetJSON(ACHIEVEMENTS_KEY, []));
 
   const [stats, setStats] = useState(() => {
     return safeGetJSON(STATS_KEY, {
@@ -268,42 +268,46 @@ export function useAchievements() {
 
   const [newUnlock, setNewUnlock] = useState(null);
 
+  // Unlocks are a pure function of past unlocks plus the current stats, so
+  // they are derived during render instead of recomputed by an effect.
+  const unlockedIds = useMemo(() => {
+    const earned = new Set(previouslyUnlockedIds);
+    for (const achievement of ACHIEVEMENT_DEFS) {
+      if (achievement.condition(stats)) earned.add(achievement.id);
+    }
+    return ACHIEVEMENT_DEFS.filter(def => earned.has(def.id)).map(def => def.id);
+  }, [previouslyUnlockedIds, stats]);
+
   // Persist to localStorage
   useEffect(() => {
     safeSetJSON(ACHIEVEMENTS_KEY, unlockedIds);
   }, [unlockedIds]);
 
+  // Announce anything unlocked since the last render pass. The toast is
+  // scheduled rather than set synchronously so it cannot cascade renders.
+  const announcedIdsRef = useRef(null);
+  useEffect(() => {
+    const known = announcedIdsRef.current;
+    announcedIdsRef.current = new Set(unlockedIds);
+    // First run just records the baseline: nothing is "new" on mount.
+    if (known === null) return undefined;
+
+    const freshId = unlockedIds.find(id => !known.has(id));
+    if (!freshId) return undefined;
+
+    const achievement = ACHIEVEMENT_DEFS.find(def => def.id === freshId);
+    if (!achievement) return undefined;
+
+    const showTimer = setTimeout(() => setNewUnlock(achievement), 0);
+    const hideTimer = setTimeout(() => setNewUnlock(null), 4000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [unlockedIds]);
+
   useEffect(() => {
     safeSetJSON(STATS_KEY, stats);
-  }, [stats]);
-
-  // Check for new achievements
-  // Use functional setState to avoid dependency on unlockedIds (prevents infinite loop)
-  const checkAchievements = useCallback(() => {
-    setUnlockedIds(prevUnlockedIds => {
-      let newUnlockedIds = prevUnlockedIds;
-      let latestUnlock = null;
-
-      ACHIEVEMENT_DEFS.forEach(achievement => {
-        if (!prevUnlockedIds.includes(achievement.id) && achievement.condition(stats)) {
-          if (newUnlockedIds === prevUnlockedIds) {
-            newUnlockedIds = [...prevUnlockedIds];
-          }
-          newUnlockedIds.push(achievement.id);
-          latestUnlock = achievement;
-        }
-      });
-
-      // Show toast for the latest unlock
-      if (latestUnlock) {
-        setTimeout(() => {
-          setNewUnlock(latestUnlock);
-          setTimeout(() => setNewUnlock(null), 4000);
-        }, 0);
-      }
-
-      return newUnlockedIds;
-    });
   }, [stats]);
 
   // Track movie save
@@ -448,11 +452,6 @@ export function useAchievements() {
   const dismissToast = useCallback(() => {
     setNewUnlock(null);
   }, []);
-
-  // Check achievements when stats change
-  useEffect(() => {
-    checkAchievements();
-  }, [stats, checkAchievements]);
 
   const { level, exp, currentLevelExp, nextLevelExp, progressToNextLevel } = useMemo(() => {
     const totalXp = Math.max(

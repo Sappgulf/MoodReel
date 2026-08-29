@@ -5,19 +5,12 @@ import MediaImage from './MediaImage';
 
 const SWIPE_THRESHOLD = 100;
 
-function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
+function SwipeCardBody({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
   const [offset, setOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isExiting, setIsExiting] = useState(null);
   const startX = useRef(0);
   const cardRef = useRef(null);
-
-  // Reset animation state when movie changes (new card appears)
-  useEffect(() => {
-    setOffset(0);
-    setIsDragging(false);
-    setIsExiting(null);
-  }, [movie?.id]);
 
   // Preload the next card art so swipes do not reveal a blank shell.
   useEffect(() => {
@@ -26,26 +19,6 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
     const img = new Image();
     img.src = getPosterUrl(nextArtPath, nextMovie?.poster_path ? 'w342' : 'w780');
   }, [nextMovie?.backdrop_path, nextMovie?.poster_path]);
-
-  // Keyboard support for swiping
-  useEffect(() => {
-    const handleKeyDown = e => {
-      // Only act if not in an input field
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        triggerSwipe('right');
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        triggerSwipe('left');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movie, onSwipeLeft, onSwipeRight]);
 
   const triggerSwipe = useCallback(
     direction => {
@@ -65,6 +38,25 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
     },
     [movie, onSwipeLeft, onSwipeRight]
   );
+
+  // Keyboard support for swiping
+  useEffect(() => {
+    const handleKeyDown = e => {
+      // Only act if not in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        triggerSwipe('right');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        triggerSwipe('left');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [triggerSwipe]);
 
   const title = movie.title || movie.name;
   const posterPath = movie.poster_path || movie.backdrop_path;
@@ -154,6 +146,14 @@ function SwipeCard({ movie, nextMovie, onSwipeLeft, onSwipeRight, mediaType }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Remounted whenever the card changes so drag/exit animation state always
+ * starts from scratch without a state-resetting effect.
+ */
+function SwipeCard(props) {
+  return <SwipeCardBody key={props.movie?.id ?? 'empty'} {...props} />;
 }
 
 export default React.memo(SwipeCard);

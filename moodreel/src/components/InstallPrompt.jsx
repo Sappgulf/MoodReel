@@ -28,7 +28,9 @@ function isIosSafari() {
 function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
+  );
   const [showIosHelp, setShowIosHelp] = useState(false);
 
   const readDismissPreference = () => {
@@ -43,11 +45,7 @@ function InstallPrompt() {
   };
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-      return;
-    }
+    if (window.matchMedia('(display-mode: standalone)').matches) return undefined;
 
     // Check if dismissed recently
     const dismissed = readDismissPreference();

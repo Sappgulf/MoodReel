@@ -114,11 +114,14 @@ function Stats() {
       topActors,
       topDirectors,
       searchCount: history.length,
+      // Titles without a release date are skipped rather than bucketed into
+      // the current decade, which also keeps this computation pure.
       decades: Object.entries(
         watchlist.reduce((acc, movie) => {
-          const year = new Date(
-            movie.release_date || movie.first_air_date || Date.now()
-          ).getFullYear();
+          const released = movie.release_date || movie.first_air_date;
+          if (!released) return acc;
+          const year = new Date(released).getFullYear();
+          if (!Number.isFinite(year)) return acc;
           const decade = Math.floor(year / 10) * 10;
           acc[decade] = (acc[decade] || 0) + 1;
           return acc;

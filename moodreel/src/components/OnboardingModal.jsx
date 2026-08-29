@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
 import { TOP_STREAMING_SERVICES } from '../constants/streamingServices';
 import { StorageKeys as SK } from '../storage/storageKeys';
@@ -41,7 +41,7 @@ const slides = [
  * First-time onboarding modal with feature highlights
  */
 function OnboardingModal() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(() => !safeGetRaw(SK.ONBOARDED, null));
   const [currentSlide, setCurrentSlide] = useState(0);
   const [starterPrefs, setStarterPrefs] = useState({
     contentType: 'any',
@@ -52,13 +52,6 @@ function OnboardingModal() {
   });
 
   const touchStart = useRef(null);
-
-  useEffect(() => {
-    const hasOnboarded = safeGetRaw(SK.ONBOARDED, null);
-    if (!hasOnboarded) {
-      setShow(true);
-    }
-  }, []);
 
   const handleClose = useCallback(() => {
     safeSetJSON(TASTE_SETTINGS_KEY, {

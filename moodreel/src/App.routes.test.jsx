@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 vi.mock('./services/apiClient', () => ({
+  API_KEY_CHANGED_EVENT: 'moodreel:api-key-updated',
+  notifyApiKeyChange: vi.fn(),
   clearUserApiKey: vi.fn(),
   ensureArray: vi.fn(value => (Array.isArray(value) ? value : [])),
   ensureNumber: vi.fn((value, fallback = 0) => (Number.isFinite(value) ? value : fallback)),

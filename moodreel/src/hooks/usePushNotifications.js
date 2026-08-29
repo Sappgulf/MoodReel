@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { resolvePublicEnv } from '../utils/publicEnv';
 import { StorageKeys as SK } from '../storage/storageKeys';
 import { safeGetJSON, safeSetJSON, safeRemove } from '../storage/safeStorage';
@@ -12,22 +12,16 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
-  const [subscription, setSubscription] = useState(null);
-  const [isSupported, setIsSupported] = useState(false);
-
-  useEffect(() => {
-    setIsSupported('Notification' in window && 'serviceWorker' in navigator);
-
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
-
-    // Restore subscription from storage
-    const restored = safeGetJSON(SK.PUSH_SUBSCRIPTION, null);
-    if (restored) {
-      setSubscription(restored);
-    }
-  }, []);
+  // Subscription and support are read once at mount: browser capability is
+  // static, and the stored subscription only changes through this hook.
+  const [subscription, setSubscription] = useState(() => safeGetJSON(SK.PUSH_SUBSCRIPTION, null));
+  const [isSupported] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      typeof navigator !== 'undefined' &&
+      'serviceWorker' in navigator
+  );
 
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {

@@ -9,8 +9,7 @@ import { useModalDialog } from '../hooks/useModalDialog';
  * Designed as a drop-in replacement for window.confirm / window.prompt
  * so call sites can stay synchronous-ish by gating with a state value.
  */
-function ConfirmDialog({
-  isOpen,
+function ConfirmDialogBody({
   mode = 'confirm',
   title = 'Are you sure?',
   message = '',
@@ -23,18 +22,14 @@ function ConfirmDialog({
   onCancel,
 }) {
   const [value, setValue] = React.useState(initialValue);
-  const { dialogRef } = useModalDialog({ isOpen });
+  const { dialogRef } = useModalDialog({ isOpen: true });
   const inputRef = React.useRef(null);
   React.useEffect(() => {
-    if (isOpen && mode === 'prompt' && inputRef.current) {
+    if (mode === 'prompt' && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [isOpen, mode]);
-
-  React.useEffect(() => {
-    if (isOpen) setValue(initialValue);
-  }, [isOpen, initialValue]);
+  }, [mode]);
 
   const handleConfirm = useCallback(() => {
     if (mode === 'prompt') {
@@ -65,8 +60,6 @@ function ConfirmDialog({
     },
     [handleCancel]
   );
-
-  if (!isOpen) return null;
 
   return (
     <div
@@ -128,6 +121,15 @@ function ConfirmDialog({
       </div>
     </div>
   );
+}
+
+/**
+ * `ConfirmDialogBody` is remounted on every open so its draft input value
+ * always starts from `initialValue` without an effect that resets state.
+ */
+function ConfirmDialog({ isOpen, ...props }) {
+  if (!isOpen) return null;
+  return <ConfirmDialogBody {...props} />;
 }
 
 export default ConfirmDialog;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
 
 const shortcuts = [
@@ -13,13 +13,8 @@ const shortcuts = [
  * Keyboard shortcuts help modal
  */
 function KeyboardShortcutsModal({ isOpen, onClose }) {
-  const [visible, setVisible] = useState(false);
   const { dialogRef } = useModalDialog({ isOpen, onClose });
   const touchStart = useRef(null);
-
-  useEffect(() => {
-    setVisible(isOpen);
-  }, [isOpen]);
 
   const handleTouchStart = e => {
     touchStart.current = e.targetTouches[0].clientX;
@@ -36,7 +31,7 @@ function KeyboardShortcutsModal({ isOpen, onClose }) {
     touchStart.current = null;
   };
 
-  if (!visible) return null;
+  if (!isOpen) return null;
 
   return (
     <div

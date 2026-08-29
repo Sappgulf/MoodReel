@@ -113,6 +113,10 @@ export default function HomeDiscoveryConsole({
     });
   }, []);
 
+  // Read out the one field the export card needs so the memo dependency is
+  // the primitive itself rather than the whole filters object.
+  const activeSortBy = advancedFilters?.sortBy;
+
   const handleExportCard = useCallback(async () => {
     if (!window?.document) return;
 
@@ -146,8 +150,8 @@ export default function HomeDiscoveryConsole({
       if (selectedGenres.length) filterParts.push(`${selectedGenres.length} genres`);
       if (selectedProviders.length) filterParts.push(`${selectedProviders.length} services`);
       if (minRating > 0) filterParts.push(`${minRating}+ minimum rating`);
-      if (advancedFilters?.sortBy && advancedFilters.sortBy !== 'popularity.desc') {
-        filterParts.push(`Sorted ${advancedFilters.sortBy.replace('.', ' ')}`);
+      if (activeSortBy && activeSortBy !== 'popularity.desc') {
+        filterParts.push(`Sorted ${activeSortBy.replace('.', ' ')}`);
       }
       const filterText = filterParts.length
         ? filterParts.join(' · ')
@@ -349,7 +353,7 @@ export default function HomeDiscoveryConsole({
     searchScope,
     selectedGenres.length,
     selectedProviders.length,
-    advancedFilters?.sortBy,
+    activeSortBy,
     wrapText,
     drawRoundedRect,
   ]);

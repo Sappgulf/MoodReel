@@ -107,17 +107,32 @@ export function getApiKeyStatus() {
   };
 }
 
+export const API_KEY_CHANGED_EVENT = 'moodreel:api-key-updated';
+
+/**
+ * Broadcast an API-key change so every `useApiKeyStatus` subscriber re-reads
+ * the status from storage. Call after any mutation of the stored key.
+ */
+export function notifyApiKeyChange() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(API_KEY_CHANGED_EVENT));
+}
+
 export function saveUserApiKey(value) {
   const trimmed = typeof value === 'string' ? value.trim() : '';
   if (!trimmed) {
     safeRemove(SK.TMDB_API_KEY_USER);
+    notifyApiKeyChange();
     return false;
   }
-  return safeSetRaw(SK.TMDB_API_KEY_USER, trimmed);
+  const saved = safeSetRaw(SK.TMDB_API_KEY_USER, trimmed);
+  notifyApiKeyChange();
+  return saved;
 }
 
 export function clearUserApiKey() {
   safeRemove(SK.TMDB_API_KEY_USER);
+  notifyApiKeyChange();
 }
 
 function getApiKey() {
@@ -360,6 +375,7 @@ const apiClient = {
   isExpectedTmdbErrorForLogging,
   shouldSkipLog,
   getApiKeyStatus,
+  notifyApiKeyChange,
   saveUserApiKey,
   clearUserApiKey,
   testTmdbConnection,

@@ -34,7 +34,6 @@ export function useMovieDetails() {
   const { playSound } = useSounds();
   const [content, setContent] = useState(null);
   const [similar, setSimilar] = useState([]);
-  const [providers, setProviders] = useState(null);
   const [allProviders, setAllProviders] = useState(null);
   const [trailer, setTrailer] = useState(null);
   const [cast, setCast] = useState([]);
@@ -42,7 +41,9 @@ export function useMovieDetails() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewText, setReviewText] = useState('');
+  // The review draft is tagged with the title it belongs to so navigating to
+  // another title reseeds it from storage during render, not in an effect.
+  const [reviewDraft, setReviewDraft] = useState({ id: null, text: null });
   const [showTrailerModal, setShowTrailerModal] = useState(false);
   const [isLimitedDetails, setIsLimitedDetails] = useState(false);
 
@@ -66,6 +67,11 @@ export function useMovieDetails() {
 
   const userRating = getRating(id);
   const userReview = getReview(id);
+  // Seed the draft from the saved review whenever the title changes; edits
+  // after that live in `reviewDraft`.
+  const reviewText =
+    reviewDraft.id === id && reviewDraft.text !== null ? reviewDraft.text : userReview || '';
+  const setReviewText = text => setReviewDraft({ id, text });
 
   const localFallbackItem = useMemo(() => {
     if (routedItem) return { ...routedItem, media_type: mediaType };
@@ -86,7 +92,6 @@ export function useMovieDetails() {
       setError('');
       setContent(null);
       setSimilar([]);
-      setProviders(null);
       setAllProviders(null);
       setTrailer(null);
       setCast([]);
@@ -139,7 +144,6 @@ export function useMovieDetails() {
           setContent(localFallbackItem);
           setIsLimitedDetails(true);
           setSimilar([]);
-          setProviders(null);
           setAllProviders(null);
           setTrailer(null);
           setCast([]);
@@ -167,24 +171,6 @@ export function useMovieDetails() {
       controller.abort();
     };
   }, [id, mediaType, addToHistory, isValidId, requestNonce, localFallbackItem]);
-
-  useEffect(() => {
-    if (!allProviders) {
-      setProviders(null);
-      return;
-    }
-    setProviders(
-      allProviders?.[region] ||
-        allProviders?.US ||
-        allProviders?.[Object.keys(allProviders || {})[0]] ||
-        null
-    );
-  }, [allProviders, region]);
-
-  useEffect(() => {
-    const savedReview = getReview(id);
-    setReviewText(savedReview || '');
-  }, [id, getReview]);
 
   const handleToggleWatchlist = useCallback(() => {
     if (content) {
@@ -257,6 +243,14 @@ export function useMovieDetails() {
     setRequestNonce(count => count + 1);
   }, []);
 
+  // `providers` is a pure projection of the fetched provider map for the
+  // active region, so it is derived rather than mirrored into state.
+  const providers = useMemo(() => {
+    if (!allProviders) return null;
+    return (
+      allProviders[region] || allProviders.US || allProviders[Object.keys(allProviders)[0]] || null
+    );
+  }, [allProviders, region]);
   const providerSections = useMemo(() => buildProviderSections(providers), [providers]);
 
   const tonightVerdict = useMemo(

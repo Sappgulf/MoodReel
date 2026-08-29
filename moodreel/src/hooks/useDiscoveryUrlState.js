@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export function useDiscoveryUrlState({
@@ -27,8 +27,13 @@ export function useDiscoveryUrlState({
 }) {
   const location = useLocation();
   const hasHydratedRef = useRef(false);
-  const [shouldRunHydratedSearch, setShouldRunHydratedSearch] = useState(false);
+  // A ref latch, not state: hydrating the URL should schedule one search, and
+  // scheduling it must not itself trigger a render pass.
+  const shouldRunHydratedSearchRef = useRef(false);
 
+  // One-shot hydration from an external source (the URL and any shared-vibe
+  // payload) into state owned by the calling page. It runs exactly once,
+  // guarded by `hasHydratedRef`, so it cannot cascade.
   useEffect(() => {
     if (hasHydratedRef.current) return;
     const params = new URLSearchParams(location.search);
@@ -68,7 +73,7 @@ export function useDiscoveryUrlState({
       if (typeof f.minRating === 'number') setMinRating(f.minRating);
       if (f.advancedFilters) setAdvancedFilters(prev => ({ ...prev, ...f.advancedFilters }));
       hasHydratedRef.current = true;
-      if (f.mood) setShouldRunHydratedSearch(true);
+      if (f.mood) shouldRunHydratedSearchRef.current = true;
       return;
     }
 
@@ -102,7 +107,7 @@ export function useDiscoveryUrlState({
     hasHydratedRef.current = true;
 
     if (moodParam) {
-      setShouldRunHydratedSearch(true);
+      shouldRunHydratedSearchRef.current = true;
     }
   }, [
     location.search,
@@ -119,10 +124,10 @@ export function useDiscoveryUrlState({
   ]);
 
   useEffect(() => {
-    if (!shouldRunHydratedSearch || !mood.trim()) return;
-    setShouldRunHydratedSearch(false);
+    if (!shouldRunHydratedSearchRef.current || !mood.trim()) return;
+    shouldRunHydratedSearchRef.current = false;
     handleSearch();
-  }, [handleSearch, mood, shouldRunHydratedSearch]);
+  }, [handleSearch, mood]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;

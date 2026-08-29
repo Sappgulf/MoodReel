@@ -43,11 +43,12 @@ export function useRecentSearches() {
 export function useVoiceSearch() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [isSupported, setIsSupported] = useState(false);
-
-  useEffect(() => {
-    setIsSupported('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
-  }, []);
+  // Speech-recognition support never changes at runtime, so read it once.
+  const [isSupported] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
+  );
 
   const startListening = useCallback(() => {
     if (!isSupported) return;

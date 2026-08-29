@@ -1,18 +1,19 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog';
 
-function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actions' }) {
+function QuickActionsModalBody({ onClose, actions = [], title = 'Quick Actions' }) {
   const [query, setQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  // Highlight is stored with the query it belongs to so a new query resets the
+  // selection during render instead of via a state-syncing effect.
+  const [selection, setSelection] = useState({ query: '', index: 0 });
+  const selectedIndex = selection.query === query ? selection.index : 0;
+  const setSelectedIndex = next =>
+    setSelection(prev => ({
+      query,
+      index: typeof next === 'function' ? next(prev.query === query ? prev.index : 0) : next,
+    }));
   const inputRef = useRef(null);
-  const { dialogRef } = useModalDialog({ isOpen, onClose, focusRef: inputRef });
-
-  useEffect(() => {
-    if (!isOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-    }
-  }, [isOpen]);
+  const { dialogRef } = useModalDialog({ isOpen: true, onClose, focusRef: inputRef });
 
   const filteredActions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -31,12 +32,6 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
       return haystack.includes(normalizedQuery);
     });
   }, [actions, query]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
-
-  if (!isOpen) return null;
 
   const selectAction = action => {
     if (!action) return;
@@ -155,6 +150,12 @@ function QuickActionsModal({ isOpen, onClose, actions = [], title = 'Quick Actio
       </div>
     </div>
   );
+}
+
+/** Remounted per open so query and highlight always start clean. */
+function QuickActionsModal({ isOpen, ...props }) {
+  if (!isOpen) return null;
+  return <QuickActionsModalBody {...props} />;
 }
 
 export default React.memo(QuickActionsModal);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import MovieCard from '../components/MovieCard';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -63,51 +63,48 @@ function emojiForMood(mood) {
 function SharedList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [sharedItems, setSharedItems] = useState([]);
-  const [sharedBy, setSharedBy] = useState('');
-  const [error, setError] = useState('');
-  const [vibeApplied, setVibeApplied] = useState(false);
   const { isInWatchlist, toggleWatchlist, isWatched, toggleWatched } = useWatchlist();
 
-  useEffect(() => {
+  // The shared payload lives entirely in the URL, so decode it during render
+  // instead of copying it into state from an effect.
+  const shared = useMemo(() => {
     const data = searchParams.get('data');
-    if (!data) {
-      setError('No shared list found in URL');
-      return;
-    }
+    if (!data) return { error: 'No shared list found in URL' };
 
     let decoded;
     try {
       decoded = decodeSharePayload(data);
     } catch (e) {
       console.error('Error parsing shared payload:', e);
-      setError('Could not decode shared list');
-      return;
+      return { error: 'Could not decode shared list' };
     }
 
     if (decoded && decoded.type === 'vibe' && decoded.filters) {
-      // Briefly surface the shared vibe via <meta> tags so social
-      // link previews show the right title + image before the redirect.
-      updateVibeOgMeta(decoded);
-      try {
-        sessionStorage.setItem('moodreel:shared-vibe', JSON.stringify(decoded));
-      } catch (err) {
-        console.warn('Could not persist shared vibe', err);
-      }
-      if (!vibeApplied) {
-        setVibeApplied(true);
-        navigate('/', { replace: true });
-      }
-      return;
+      return { vibe: decoded };
     }
 
-    if (decoded && decoded.items && Array.isArray(decoded.items)) {
-      setSharedItems(decoded.items);
-      setSharedBy(decoded.sharedBy || 'A friend');
-    } else {
-      setError('Invalid list format');
+    if (decoded && Array.isArray(decoded.items)) {
+      return { items: decoded.items, sharedBy: decoded.sharedBy || 'A friend' };
     }
-  }, [searchParams, navigate, vibeApplied]);
+
+    return { error: 'Invalid list format' };
+  }, [searchParams]);
+
+  const { error = '', items: sharedItems = [], sharedBy = '', vibe } = shared;
+
+  // A shared vibe is handed to Discover rather than rendered here.
+  useEffect(() => {
+    if (!vibe) return;
+    // Briefly surface the shared vibe via <meta> tags so social link previews
+    // show the right title + image before the redirect.
+    updateVibeOgMeta(vibe);
+    try {
+      sessionStorage.setItem('moodreel:shared-vibe', JSON.stringify(vibe));
+    } catch (err) {
+      console.warn('Could not persist shared vibe', err);
+    }
+    navigate('/', { replace: true });
+  }, [navigate, vibe]);
 
   if (error) {
     return (
