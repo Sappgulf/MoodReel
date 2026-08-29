@@ -63,14 +63,20 @@ function resolveClientApiKeyStatus() {
   };
 }
 
-// Use the same-origin proxy only when no client-side key is configured.
-// This keeps server-key deployments private while preserving the documented
-// local/Profile key workflow for development and personal use.
+// In a production build the proxy is the only viable transport: the deployed
+// Content-Security-Policy restricts connect-src to 'self', so a direct call to
+// api.themoviedb.org is blocked by the browser no matter which key made it.
+//
+// This previously deferred to any client-side key, which meant a build-time
+// VITE_TMDB_API_KEY both baked a secret into the public bundle and pushed
+// every request onto the blocked direct path, leaving the deployed app unable
+// to load anything. Client keys remain the dev/local workflow, where the CSP
+// does not apply.
 function shouldUseProxy() {
   if (!proxyAvailable) return false;
   if (typeof window === 'undefined') return false;
   if (import.meta.env.DEV) return false;
-  return !resolveClientApiKeyStatus().hasKey;
+  return true;
 }
 
 function resolveEnvApiKey() {
@@ -87,6 +93,17 @@ function resolveStoredApiKey() {
 }
 
 export function getApiKeyStatus() {
+  // The proxy takes precedence when it is in use, otherwise the UI would claim
+  // a client key is serving requests that actually go through the server.
+  if (shouldUseProxy()) {
+    return {
+      configured: true,
+      source: API_KEY_SOURCE_PROXY,
+      value: null,
+      hasKey: true,
+    };
+  }
+
   const clientStatus = resolveClientApiKeyStatus();
   if (clientStatus.hasKey) return clientStatus;
 
