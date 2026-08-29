@@ -1,11 +1,11 @@
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
+/** Machine-readable marker so the client can report a setup problem precisely. */
+const PROXY_NOT_CONFIGURED = 'PROXY_NOT_CONFIGURED';
+
+/** The proxy's server-side TMDB key, or null when the deployment lacks one. */
 function getApiKey() {
-  const key = process.env.TMDB_API_KEY;
-  if (!key) {
-    throw new Error('TMDB_API_KEY environment variable is not set');
-  }
-  return key;
+  return process.env.TMDB_API_KEY || null;
 }
 
 function setCorsHeaders(res) {
@@ -35,6 +35,20 @@ export default async function handler(req, res) {
   }
 
   const apiKey = getApiKey();
+  if (!apiKey) {
+    // Answer with a structured, identifiable response instead of throwing.
+    // Throwing here crashed the function, so callers got Vercel's generic HTML
+    // error page and the app could not tell "deployment is missing its key"
+    // apart from "TMDB is having a bad day" — it just failed silently.
+    res.status(503).json({
+      status_code: 503,
+      status_message:
+        'TMDB proxy is not configured: set the TMDB_API_KEY environment variable on the deployment.',
+      code: PROXY_NOT_CONFIGURED,
+    });
+    return;
+  }
+
   const tmdbUrl = new URL(`${TMDB_BASE_URL}${path}`);
 
   const params = { ...req.query };

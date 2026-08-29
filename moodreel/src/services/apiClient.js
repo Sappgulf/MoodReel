@@ -23,6 +23,11 @@ const API_KEY_SOURCE_PROXY = 'proxy';
 const API_KEY_SOURCE_MISSING = 'missing';
 
 let proxyAvailable = true;
+// Distinct from `proxyAvailable`: the endpoint exists and answers, but the
+// deployment has no server-side TMDB key. That is a setup problem worth
+// reporting honestly rather than a reason to change transport.
+let proxyConfigured = true;
+const PROXY_NOT_CONFIGURED = 'PROXY_NOT_CONFIGURED';
 
 function resolveClientApiKeyStatus() {
   const envApiKey = resolveEnvApiKey();
@@ -94,8 +99,10 @@ function resolveStoredApiKey() {
 
 export function getApiKeyStatus() {
   // The proxy takes precedence when it is in use, otherwise the UI would claim
-  // a client key is serving requests that actually go through the server.
-  if (shouldUseProxy()) {
+  // a client key is serving requests that actually go through the server. A
+  // proxy that has told us it lacks a key is deliberately not counted as
+  // configured, so the app surfaces the problem instead of failing silently.
+  if (shouldUseProxy() && proxyConfigured) {
     return {
       configured: true,
       source: API_KEY_SOURCE_PROXY,
@@ -107,20 +114,14 @@ export function getApiKeyStatus() {
   const clientStatus = resolveClientApiKeyStatus();
   if (clientStatus.hasKey) return clientStatus;
 
-  if (shouldUseProxy()) {
-    return {
-      configured: true,
-      source: API_KEY_SOURCE_PROXY,
-      value: null,
-      hasKey: true,
-    };
-  }
-
   return {
     configured: false,
     source: API_KEY_SOURCE_MISSING,
     value: null,
     hasKey: false,
+    // The deployment's proxy answered but has no server-side key. A visitor
+    // cannot fix that with their own key, so the UI says something different.
+    proxyUnconfigured: shouldUseProxy() && !proxyConfigured,
   };
 }
 
@@ -259,15 +260,21 @@ function normalizeApiError(err, path) {
   const retryAfterHeader = err?.response?.headers?.['retry-after'];
   const retryAfter = retryAfterHeader ? Number(retryAfterHeader) : null;
 
-  return new TmdbApiError({
+  const error = new TmdbApiError({
     code: `TMDB_HTTP_${status}`,
     message: body?.status_message || getUserFacingMessage({ code: `TMDB_HTTP_${status}`, status }),
     path,
     status,
     retryAfter,
-    retryable: status >= 500 || status === 429 || status === 408,
+    // A proxy with no key configured will not fix itself by being asked again.
+    retryable:
+      body?.code !== PROXY_NOT_CONFIGURED && (status >= 500 || status === 429 || status === 408),
     cause: err,
   });
+  // Carry the proxy's own marker so callers can tell a deployment setup
+  // problem apart from an upstream outage.
+  error.proxyCode = body?.code;
+  return error;
 }
 
 export function ensureString(value, fallback = '') {
@@ -355,6 +362,11 @@ export async function tmdbGet(
 
       if (useProxy && normalized.status === 404) {
         proxyAvailable = false;
+      }
+
+      if (useProxy && normalized.proxyCode === PROXY_NOT_CONFIGURED) {
+        proxyConfigured = false;
+        notifyApiKeyChange();
       }
 
       if (import.meta.env.DEV && !shouldSkipLog(normalized)) {

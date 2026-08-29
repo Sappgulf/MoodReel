@@ -513,10 +513,19 @@ function AppContent() {
       {!apiKeyStatus.configured && (
         <div className="offline-banner" role="alert" aria-live="polite">
           <Lock size={16} aria-hidden="true" />
-          <span>API key needed</span>
-          <p>TMDB access requires an API key to load catalog data.</p>
+          <span>{apiKeyStatus.proxyUnconfigured ? 'Catalog unavailable' : 'API key needed'}</span>
+          <p>
+            {apiKeyStatus.proxyUnconfigured
+              ? 'This deployment has no TMDB key configured on the server, so no catalog data can load.'
+              : 'TMDB access requires an API key to load catalog data.'}
+          </p>
           <div className="offline-actions">
-            <Link to="/profile">Set a local key in Profile</Link>
+            {/* A visitor cannot supply a key for a misconfigured deployment:
+                its Content-Security-Policy only permits same-origin requests,
+                so a browser-stored key would be blocked too. */}
+            {!apiKeyStatus.proxyUnconfigured && (
+              <Link to="/profile">Set a local key in Profile</Link>
+            )}
           </div>
         </div>
       )}
